@@ -21,7 +21,7 @@
         "elevation_ft": 44,
         "frequency": "112.9",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -43,29 +43,7 @@
         "longitude": -61.391889,
         "frequency": "0",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_BGI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -59.483833,
-          13.075056
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_BGI",
-        "type": "VOR",
-        "ident": "BGI",
-        "name": "ANTILLES FRANCAISES",
-        "latitude": 13.075056,
-        "longitude": -59.483833,
-        "frequency": "0",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -87,29 +65,7 @@
         "longitude": 8.436944,
         "frequency": "114.3",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_ELB",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          10.396111,
-          42.73
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_ELB",
-        "type": "VOR",
-        "ident": "ELB",
-        "name": "ITALIE",
-        "latitude": 42.73,
-        "longitude": 10.396111,
-        "frequency": "114.7",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -131,29 +87,7 @@
         "longitude": 7.861944,
         "frequency": "114.5",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_ALG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          8.243056,
-          40.627778
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_ALG",
-        "type": "VOR",
-        "ident": "ALG",
-        "name": "ITALIE",
-        "latitude": 40.627778,
-        "longitude": 8.243056,
-        "frequency": "113.8",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -175,7 +109,7 @@
         "longitude": 1.359167,
         "frequency": "114.95",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -197,7 +131,7 @@
         "longitude": 55.420308,
         "frequency": "115.9",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -220,7 +154,7 @@
         "elevation_ft": 561,
         "frequency": "111.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -242,7 +176,7 @@
         "longitude": 2.108056,
         "frequency": "116.7",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -264,7 +198,7 @@
         "longitude": 2.771944,
         "frequency": "114.1",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -287,7 +221,7 @@
         "elevation_ft": 820,
         "frequency": "114.75",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -310,7 +244,7 @@
         "elevation_ft": 650,
         "frequency": "117.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -333,7 +267,7 @@
         "elevation_ft": 732,
         "frequency": "115.2",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -356,7 +290,7 @@
         "elevation_ft": 486,
         "frequency": "112.9",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -378,7 +312,7 @@
         "longitude": 5.097328,
         "frequency": "111.45",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -400,7 +334,7 @@
         "longitude": 1.656567,
         "frequency": "115.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -423,7 +357,7 @@
         "elevation_ft": 584,
         "frequency": "113.8",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -446,7 +380,7 @@
         "elevation_ft": 1154,
         "frequency": "113",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -469,7 +403,7 @@
         "elevation_ft": 335,
         "frequency": "112.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -492,30 +426,7 @@
         "elevation_ft": 577,
         "frequency": "115.6",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_AJO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          8.774664,
-          41.770522
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_AJO",
-        "type": "VOR",
-        "ident": "AJO",
-        "name": "FRANCE",
-        "latitude": 41.770522,
-        "longitude": 8.774664,
-        "elevation_ft": 2142,
-        "frequency": "114.8",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -538,7 +449,7 @@
         "elevation_ft": 4514,
         "frequency": "115.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -561,7 +472,7 @@
         "elevation_ft": 699,
         "frequency": "116.7",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -584,7 +495,7 @@
         "elevation_ft": 574,
         "frequency": "117.7",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -607,30 +518,7 @@
         "elevation_ft": 861,
         "frequency": "116",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_CNM",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          6.870942,
-          43.560356
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_CNM",
-        "type": "VOR",
-        "ident": "CNM",
-        "name": "FRANCE",
-        "latitude": 43.560356,
-        "longitude": 6.870942,
-        "elevation_ft": 1595,
-        "frequency": "111.4",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -653,7 +541,7 @@
         "elevation_ft": 159,
         "frequency": "114.6",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -676,7 +564,7 @@
         "elevation_ft": 1057,
         "frequency": "111.25",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -699,7 +587,7 @@
         "elevation_ft": 1375,
         "frequency": "114.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -722,7 +610,7 @@
         "elevation_ft": 980,
         "frequency": "111.8",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -745,7 +633,7 @@
         "elevation_ft": 1076,
         "frequency": "109.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -768,7 +656,7 @@
         "elevation_ft": 210,
         "frequency": "113.75",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -791,7 +679,7 @@
         "elevation_ft": 163,
         "frequency": "109",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -814,30 +702,7 @@
         "elevation_ft": 656,
         "frequency": "113.65",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_REN",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.741667,
-          48.06925
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_REN",
-        "type": "VOR",
-        "ident": "REN",
-        "name": "FRANCE",
-        "latitude": 48.06925,
-        "longitude": -1.741667,
-        "elevation_ft": 126,
-        "frequency": "109.25",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -859,7 +724,7 @@
         "longitude": -8.425389,
         "frequency": "116.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -882,7 +747,7 @@
         "elevation_ft": 1089,
         "frequency": "116.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -905,7 +770,7 @@
         "elevation_ft": 78,
         "frequency": "114.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -927,7 +792,7 @@
         "longitude": 6.295583,
         "frequency": "117.1",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -950,7 +815,7 @@
         "elevation_ft": 560,
         "frequency": "116.8",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -973,7 +838,7 @@
         "elevation_ft": 38,
         "frequency": "113.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -995,7 +860,7 @@
         "longitude": 6.129642,
         "frequency": "114.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1017,53 +882,7 @@
         "longitude": -1.702,
         "frequency": "112.3",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_PON",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          2.0359,
-          49.096072
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_PON",
-        "type": "VOR",
-        "ident": "PON",
-        "name": "FRANCE",
-        "latitude": 49.096072,
-        "longitude": 2.0359,
-        "elevation_ft": 318,
-        "frequency": "111.6",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_SDG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          55.509806,
-          -20.884833
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_SDG",
-        "type": "VOR",
-        "ident": "SDG",
-        "name": "REUNION",
-        "latitude": -20.884833,
-        "longitude": 55.509806,
-        "elevation_ft": 57,
-        "frequency": "112.9",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1086,7 +905,7 @@
         "elevation_ft": 971,
         "frequency": "112.7",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1109,7 +928,7 @@
         "elevation_ft": 886,
         "frequency": "117.45",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1131,29 +950,7 @@
         "longitude": 7.2235,
         "frequency": "110.85",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_LTO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          166.211667,
-          -22.005444
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_LTO",
-        "type": "VOR",
-        "ident": "LTO",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -22.005444,
-        "longitude": 166.211667,
-        "frequency": "112.9",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1176,7 +973,7 @@
         "elevation_ft": 497,
         "frequency": "110.2",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1199,7 +996,7 @@
         "elevation_ft": 200,
         "frequency": "116.1",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1222,7 +1019,7 @@
         "elevation_ft": 8.85,
         "frequency": "109.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1244,30 +1041,7 @@
         "longitude": 6.255919,
         "frequency": "113",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_BTA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          9.474822,
-          42.573583
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_BTA",
-        "type": "VOR",
-        "ident": "BTA",
-        "name": "FRANCE",
-        "latitude": 42.573583,
-        "longitude": 9.474822,
-        "elevation_ft": 36,
-        "frequency": "114.15",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1290,53 +1064,7 @@
         "elevation_ft": 151,
         "frequency": "116.25",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_BTZ",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.510278,
-          43.466631
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_BTZ",
-        "type": "VOR",
-        "ident": "BTZ",
-        "name": "FRANCE",
-        "latitude": 43.466631,
-        "longitude": -1.510278,
-        "elevation_ft": 276,
-        "frequency": "114.15",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_FGI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          9.083411,
-          41.502186
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_FGI",
-        "type": "VOR",
-        "ident": "FGI",
-        "name": "FRANCE",
-        "latitude": 41.502186,
-        "longitude": 9.083411,
-        "elevation_ft": 144,
-        "frequency": "116.7",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1359,7 +1087,7 @@
         "elevation_ft": 7,
         "frequency": "114.45",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1382,7 +1110,7 @@
         "elevation_ft": 213,
         "frequency": "114.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1405,30 +1133,7 @@
         "elevation_ft": 315,
         "frequency": "117.8",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_HOI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -176.201833,
-          -13.239583
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_HOI",
-        "type": "VOR",
-        "ident": "HOI",
-        "name": "WALLIS ET FUTUNA",
-        "latitude": -13.239583,
-        "longitude": -176.201833,
-        "elevation_ft": 80,
-        "frequency": "113",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1451,7 +1156,7 @@
         "elevation_ft": 4783,
         "frequency": "115.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1474,7 +1179,7 @@
         "elevation_ft": 197,
         "frequency": "111.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1497,30 +1202,7 @@
         "elevation_ft": 413,
         "frequency": "117.35",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_CFA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.192194,
-          45.787472
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_CFA",
-        "type": "VOR",
-        "ident": "CFA",
-        "name": "FRANCE",
-        "latitude": 45.787472,
-        "longitude": 3.192194,
-        "elevation_ft": 1093,
-        "frequency": "114.35",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1543,7 +1225,7 @@
         "elevation_ft": 771,
         "frequency": "108.8",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1566,7 +1248,7 @@
         "elevation_ft": 48,
         "frequency": "112.9",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1589,7 +1271,7 @@
         "elevation_ft": 41,
         "frequency": "109.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1612,7 +1294,7 @@
         "elevation_ft": 299,
         "frequency": "112.6",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1635,7 +1317,7 @@
         "elevation_ft": 301,
         "frequency": "109.65",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1658,7 +1340,7 @@
         "elevation_ft": 1039,
         "frequency": "113.9",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1681,52 +1363,7 @@
         "elevation_ft": 249,
         "frequency": "114.45",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_JSY",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -2.046153,
-          49.221103
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_JSY",
-        "type": "VOR",
-        "ident": "JSY",
-        "name": "FRANCE",
-        "latitude": 49.221103,
-        "longitude": -2.046153,
-        "frequency": "112.2",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_PLS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          57.662222,
-          -20.42
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_PLS",
-        "type": "VOR",
-        "ident": "PLS",
-        "name": "REUNION",
-        "latitude": -20.42,
-        "longitude": 57.662222,
-        "elevation_ft": 282,
-        "frequency": "113.7",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1749,7 +1386,7 @@
         "elevation_ft": 1021,
         "frequency": "110.45",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1771,7 +1408,7 @@
         "longitude": -60.977056,
         "frequency": "112.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1793,7 +1430,7 @@
         "longitude": -61.800167,
         "frequency": "0",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1815,7 +1452,7 @@
         "longitude": 3.435,
         "frequency": "0",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1837,7 +1474,7 @@
         "longitude": -61.785361,
         "frequency": "0",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1859,29 +1496,7 @@
         "longitude": -2.6025,
         "frequency": "109.4",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_VLI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          168.243889,
-          -17.662222
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_VLI",
-        "type": "VOR",
-        "ident": "VLI",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -17.662222,
-        "longitude": 168.243889,
-        "frequency": "0",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1903,7 +1518,7 @@
         "longitude": -55.183333,
         "frequency": "0",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1926,7 +1541,7 @@
         "elevation_ft": 55,
         "frequency": "115.95",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -1948,74 +1563,7 @@
         "longitude": 1.387072,
         "frequency": "115.95",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_NTS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.612961,
-          47.160856
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_NTS",
-        "type": "VOR",
-        "ident": "NTS",
-        "name": "FRANCE",
-        "latitude": 47.160856,
-        "longitude": -1.612961,
-        "frequency": "115.5",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_PAS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          5.999917,
-          46.163694
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_PAS",
-        "type": "VOR",
-        "ident": "PAS",
-        "name": "SUISSE",
-        "latitude": 46.163694,
-        "longitude": 5.999917,
-        "frequency": "116.6",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_CHX",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.741872,
-          46.871206
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_CHX",
-        "type": "VOR",
-        "ident": "CHX",
-        "name": "FRANCE",
-        "latitude": 46.871206,
-        "longitude": 1.741872,
-        "elevation_ft": 516,
-        "frequency": "108.65",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2038,7 +1586,7 @@
         "elevation_ft": 424,
         "frequency": "113.3",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2061,7 +1609,7 @@
         "elevation_ft": 1079,
         "frequency": "110.4",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2084,7 +1632,7 @@
         "elevation_ft": 104.36,
         "frequency": "113.6",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2107,7 +1655,7 @@
         "elevation_ft": 547,
         "frequency": "108.25",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2130,30 +1678,7 @@
         "elevation_ft": 313,
         "frequency": "110.65",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_VOR_MGA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          166.473167,
-          -22.315389
-        ]
-      },
-      "properties": {
-        "id": "NAV_VOR_MGA",
-        "type": "VOR",
-        "ident": "MGA",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -22.315389,
-        "longitude": 166.473167,
-        "elevation_ft": 121,
-        "frequency": "113",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2176,7 +1701,481 @@
         "elevation_ft": 41,
         "frequency": "113.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_PON",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.0359,
+          49.096072
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_PON",
+        "type": "VOR",
+        "ident": "PON",
+        "name": "FRANCE",
+        "latitude": 49.096072,
+        "longitude": 2.0359,
+        "elevation_ft": 318,
+        "frequency": "111.6",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_ELB",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.396111,
+          42.73
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_ELB",
+        "type": "VOR",
+        "ident": "ELB",
+        "name": "ITALIE",
+        "latitude": 42.73,
+        "longitude": 10.396111,
+        "frequency": "114.7",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_ALG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.243056,
+          40.627778
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_ALG",
+        "type": "VOR",
+        "ident": "ALG",
+        "name": "ITALIE",
+        "latitude": 40.627778,
+        "longitude": 8.243056,
+        "frequency": "113.8",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_SDG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.509806,
+          -20.884833
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_SDG",
+        "type": "VOR",
+        "ident": "SDG",
+        "name": "REUNION",
+        "latitude": -20.884833,
+        "longitude": 55.509806,
+        "elevation_ft": 57,
+        "frequency": "112.9",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_FGI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.083411,
+          41.502186
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_FGI",
+        "type": "VOR",
+        "ident": "FGI",
+        "name": "FRANCE",
+        "latitude": 41.502186,
+        "longitude": 9.083411,
+        "elevation_ft": 144,
+        "frequency": "116.7",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_HOI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.201833,
+          -13.239583
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_HOI",
+        "type": "VOR",
+        "ident": "HOI",
+        "name": "WALLIS ET FUTUNA",
+        "latitude": -13.239583,
+        "longitude": -176.201833,
+        "elevation_ft": 112,
+        "frequency": "113",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_MGA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.473167,
+          -22.315389
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_MGA",
+        "type": "VOR",
+        "ident": "MGA",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -22.315389,
+        "longitude": 166.473167,
+        "elevation_ft": 131,
+        "frequency": "113",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_AJO",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.774664,
+          41.770522
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_AJO",
+        "type": "VOR",
+        "ident": "AJO",
+        "name": "FRANCE",
+        "latitude": 41.770522,
+        "longitude": 8.774664,
+        "elevation_ft": 2142,
+        "frequency": "114.8",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_BTA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.474822,
+          42.573583
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_BTA",
+        "type": "VOR",
+        "ident": "BTA",
+        "name": "FRANCE",
+        "latitude": 42.573583,
+        "longitude": 9.474822,
+        "elevation_ft": 36,
+        "frequency": "114.15",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_PLS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          57.662389,
+          -20.420028
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_PLS",
+        "type": "VOR",
+        "ident": "PLS",
+        "name": "REUNION",
+        "latitude": -20.420028,
+        "longitude": 57.662389,
+        "elevation_ft": 282,
+        "frequency": "113.7",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_REN",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.741694,
+          48.069139
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_REN",
+        "type": "VOR",
+        "ident": "REN",
+        "name": "FRANCE",
+        "latitude": 48.069139,
+        "longitude": -1.741694,
+        "elevation_ft": 126,
+        "frequency": "109.25",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_BTZ",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.510278,
+          43.466631
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_BTZ",
+        "type": "VOR",
+        "ident": "BTZ",
+        "name": "FRANCE",
+        "latitude": 43.466631,
+        "longitude": -1.510278,
+        "elevation_ft": 276,
+        "frequency": "114.15",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_VLI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          168.243931,
+          -17.66215
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_VLI",
+        "type": "VOR",
+        "ident": "VLI",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -17.66215,
+        "longitude": 168.243931,
+        "frequency": "0",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_BGI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.483828,
+          13.07505
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_BGI",
+        "type": "VOR",
+        "ident": "BGI",
+        "name": "ANTILLES FRANCAISES",
+        "latitude": 13.07505,
+        "longitude": -59.483828,
+        "frequency": "0",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_CHX",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.741872,
+          46.871206
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_CHX",
+        "type": "VOR",
+        "ident": "CHX",
+        "name": "FRANCE",
+        "latitude": 46.871206,
+        "longitude": 1.741872,
+        "elevation_ft": 516,
+        "frequency": "108.65",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_JSY",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.046144,
+          49.221106
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_JSY",
+        "type": "VOR",
+        "ident": "JSY",
+        "name": "FRANCE",
+        "latitude": 49.221106,
+        "longitude": -2.046144,
+        "frequency": "112.2",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_NTS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.612961,
+          47.160856
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_NTS",
+        "type": "VOR",
+        "ident": "NTS",
+        "name": "FRANCE",
+        "latitude": 47.160856,
+        "longitude": -1.612961,
+        "frequency": "115.5",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_PAS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.999906,
+          46.163717
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_PAS",
+        "type": "VOR",
+        "ident": "PAS",
+        "name": "FRANCE",
+        "latitude": 46.163717,
+        "longitude": 5.999906,
+        "frequency": "116.6",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_CNM",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.870942,
+          43.560356
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_CNM",
+        "type": "VOR",
+        "ident": "CNM",
+        "name": "FRANCE",
+        "latitude": 43.560356,
+        "longitude": 6.870942,
+        "elevation_ft": 1595,
+        "frequency": "111.4",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_LTO",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.211667,
+          -22.005444
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_LTO",
+        "type": "VOR",
+        "ident": "LTO",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -22.005444,
+        "longitude": 166.211667,
+        "frequency": "112.9",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_VOR_CFA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.192194,
+          45.787472
+        ]
+      },
+      "properties": {
+        "id": "NAV_VOR_CFA",
+        "type": "VOR",
+        "ident": "CFA",
+        "name": "FRANCE",
+        "latitude": 45.787472,
+        "longitude": 3.192194,
+        "frequency": "114.35",
+        "source": "SIA",
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2199,7 +2198,7 @@
         "elevation_ft": 1431,
         "frequency": "430",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2222,29 +2221,7 @@
         "elevation_ft": 645,
         "frequency": "354",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_ABN",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          8.221389,
-          44.055278
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_ABN",
-        "type": "NDB",
-        "ident": "ABN",
-        "name": "ITALIE",
-        "latitude": 44.055278,
-        "longitude": 8.221389,
-        "frequency": "420",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2266,7 +2243,7 @@
         "longitude": 166.075639,
         "frequency": "325.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2288,7 +2265,7 @@
         "longitude": -56.385861,
         "frequency": "402",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2311,7 +2288,7 @@
         "elevation_ft": 1562,
         "frequency": "395",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2334,7 +2311,7 @@
         "elevation_ft": 439,
         "frequency": "397",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2356,7 +2333,7 @@
         "longitude": 55.36225,
         "frequency": "352",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2379,7 +2356,7 @@
         "elevation_ft": 1500,
         "frequency": "428",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2401,7 +2378,7 @@
         "longitude": 167.451083,
         "frequency": "332",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2423,7 +2400,7 @@
         "longitude": 166.572056,
         "frequency": "402",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2445,7 +2422,7 @@
         "longitude": 168.035806,
         "frequency": "388",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2468,7 +2445,7 @@
         "elevation_ft": 652,
         "frequency": "309",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2491,7 +2468,7 @@
         "elevation_ft": 522,
         "frequency": "367",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2514,7 +2491,7 @@
         "elevation_ft": 636,
         "frequency": "347",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2537,7 +2514,7 @@
         "elevation_ft": 412,
         "frequency": "391",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2560,7 +2537,7 @@
         "elevation_ft": 106,
         "frequency": "404",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2583,53 +2560,7 @@
         "elevation_ft": 138,
         "frequency": "327",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_MD",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          166.467278,
-          -22.478
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_MD",
-        "type": "NDB",
-        "ident": "MD",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -22.478,
-        "longitude": 166.467278,
-        "elevation_ft": 52,
-        "frequency": "383",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_MG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          166.473083,
-          -22.269889
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_MG",
-        "type": "NDB",
-        "ident": "MG",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -22.269889,
-        "longitude": 166.473083,
-        "elevation_ft": 66,
-        "frequency": "394",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2651,7 +2582,7 @@
         "longitude": -61.630944,
         "frequency": "385",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2674,7 +2605,7 @@
         "elevation_ft": 71,
         "frequency": "375",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2697,7 +2628,7 @@
         "elevation_ft": 774,
         "frequency": "350",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2720,30 +2651,7 @@
         "elevation_ft": 164,
         "frequency": "322",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_KQ",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          164.87225,
-          -21.104861
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_KQ",
-        "type": "NDB",
-        "ident": "KQ",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -21.104861,
-        "longitude": 164.87225,
-        "elevation_ft": 23,
-        "frequency": "305",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2766,7 +2674,7 @@
         "elevation_ft": 414,
         "frequency": "338",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2788,7 +2696,7 @@
         "longitude": -4.432222,
         "frequency": "428",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2810,7 +2718,7 @@
         "longitude": 167.238028,
         "frequency": "264",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2832,7 +2740,7 @@
         "longitude": 1.8205,
         "frequency": "315",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2855,7 +2763,7 @@
         "elevation_ft": 655,
         "frequency": "380",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2878,7 +2786,7 @@
         "elevation_ft": 383,
         "frequency": "339",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2900,7 +2808,7 @@
         "longitude": 166.187611,
         "frequency": "354",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2923,7 +2831,7 @@
         "elevation_ft": 432,
         "frequency": "322",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2946,7 +2854,7 @@
         "elevation_ft": 12,
         "frequency": "327.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2969,7 +2877,7 @@
         "elevation_ft": 89,
         "frequency": "382",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -2991,29 +2899,7 @@
         "longitude": 164.261056,
         "frequency": "313",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_DX",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.028147,
-          43.697386
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_DX",
-        "type": "NDB",
-        "ident": "DX",
-        "name": "FRANCE",
-        "latitude": 43.697386,
-        "longitude": -1.028147,
-        "frequency": "334",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3035,7 +2921,7 @@
         "longitude": 2.012417,
         "frequency": "418",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3057,7 +2943,7 @@
         "longitude": -178.069472,
         "frequency": "326",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3079,7 +2965,7 @@
         "longitude": 6.732256,
         "frequency": "289",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3102,7 +2988,7 @@
         "elevation_ft": 695,
         "frequency": "288.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3125,30 +3011,7 @@
         "elevation_ft": 67,
         "frequency": "398",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_BL",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          163.663361,
-          -19.722136
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_BL",
-        "type": "NDB",
-        "ident": "BL",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -19.722136,
-        "longitude": 163.663361,
-        "elevation_ft": 334,
-        "frequency": "342",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3170,7 +3033,7 @@
         "longitude": 2.097444,
         "frequency": "286.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3193,30 +3056,7 @@
         "elevation_ft": 62,
         "frequency": "347",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_AA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -145.5091,
-          -17.356378
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_AA",
-        "type": "NDB",
-        "ident": "AA",
-        "name": "POLYNESIE FRANCAISE",
-        "latitude": -17.356378,
-        "longitude": -145.5091,
-        "elevation_ft": 58,
-        "frequency": "332.5",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3239,7 +3079,7 @@
         "elevation_ft": 51,
         "frequency": "384",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3262,30 +3102,7 @@
         "elevation_ft": 54,
         "frequency": "339",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_HH",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -151.027028,
-          -16.689611
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_HH",
-        "type": "NDB",
-        "ident": "HH",
-        "name": "POLYNESIE FRANCAISE",
-        "latitude": -16.689611,
-        "longitude": -151.027028,
-        "elevation_ft": 53,
-        "frequency": "345",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3308,7 +3125,7 @@
         "elevation_ft": 56,
         "frequency": "383",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3331,7 +3148,7 @@
         "elevation_ft": 50,
         "frequency": "376",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3354,7 +3171,7 @@
         "elevation_ft": 286,
         "frequency": "353",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3377,7 +3194,7 @@
         "elevation_ft": 78,
         "frequency": "282.5",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3400,7 +3217,7 @@
         "elevation_ft": 58,
         "frequency": "341",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3423,7 +3240,7 @@
         "elevation_ft": 51,
         "frequency": "370",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3446,7 +3263,7 @@
         "elevation_ft": 188,
         "frequency": "359",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3468,7 +3285,7 @@
         "longitude": -52.362972,
         "frequency": "327",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3491,30 +3308,7 @@
         "elevation_ft": 160,
         "frequency": "369",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_RL",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.099036,
-          46.17635
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_RL",
-        "type": "NDB",
-        "ident": "RL",
-        "name": "FRANCE",
-        "latitude": 46.17635,
-        "longitude": -1.099036,
-        "elevation_ft": 130,
-        "frequency": "322",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3536,7 +3330,7 @@
         "longitude": 6.525172,
         "frequency": "378",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3559,7 +3353,7 @@
         "elevation_ft": 928,
         "frequency": "321",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3582,7 +3376,7 @@
         "elevation_ft": 282,
         "frequency": "404",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3605,7 +3399,7 @@
         "elevation_ft": 1182,
         "frequency": "397",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3628,30 +3422,7 @@
         "elevation_ft": 831,
         "frequency": "364",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_ZR",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.283025,
-          43.327081
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_ZR",
-        "type": "NDB",
-        "ident": "ZR",
-        "name": "FRANCE",
-        "latitude": 43.327081,
-        "longitude": 3.283025,
-        "elevation_ft": 107,
-        "frequency": "397",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3674,7 +3445,7 @@
         "elevation_ft": 343,
         "frequency": "413",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3697,7 +3468,7 @@
         "elevation_ft": 1469,
         "frequency": "294",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3720,7 +3491,7 @@
         "elevation_ft": 1492,
         "frequency": "383",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3743,7 +3514,7 @@
         "elevation_ft": 1012,
         "frequency": "424",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3766,7 +3537,7 @@
         "elevation_ft": 1488,
         "frequency": "384",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3789,7 +3560,7 @@
         "elevation_ft": 53,
         "frequency": "383",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3812,30 +3583,7 @@
         "elevation_ft": 46,
         "frequency": "339",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_AGO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          0.426883,
-          45.710731
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_AGO",
-        "type": "NDB",
-        "ident": "AGO",
-        "name": "FRANCE",
-        "latitude": 45.710731,
-        "longitude": 0.426883,
-        "elevation_ft": 456,
-        "frequency": "404",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3857,98 +3605,7 @@
         "longitude": -1.128806,
         "frequency": "358",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_TW",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.025281,
-          43.530619
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_TW",
-        "type": "NDB",
-        "ident": "TW",
-        "name": "FRANCE",
-        "latitude": 43.530619,
-        "longitude": 1.025281,
-        "elevation_ft": 813,
-        "frequency": "406",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_TS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.486786,
-          43.507286
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_TS",
-        "type": "NDB",
-        "ident": "TS",
-        "name": "FRANCE",
-        "latitude": 43.507286,
-        "longitude": 1.486786,
-        "elevation_ft": 844,
-        "frequency": "423",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_TOE",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.679892,
-          43.481117
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_TOE",
-        "type": "NDB",
-        "ident": "TOE",
-        "name": "FRANCE",
-        "latitude": 43.481117,
-        "longitude": 1.679892,
-        "elevation_ft": 898,
-        "frequency": "415",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_TLB",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.441389,
-          43.946389
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_TLB",
-        "type": "NDB",
-        "ident": "TLB",
-        "name": "FRANCE",
-        "latitude": 43.946389,
-        "longitude": 1.441389,
-        "frequency": "368",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -3971,30 +3628,7 @@
         "elevation_ft": 650,
         "frequency": "332",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_HO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -176.197444,
-          -13.2405
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_HO",
-        "type": "NDB",
-        "ident": "HO",
-        "name": "WALLIS ET FUTUNA",
-        "latitude": -13.2405,
-        "longitude": -176.197444,
-        "elevation_ft": 77,
-        "frequency": "315",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4017,7 +3651,7 @@
         "elevation_ft": 913,
         "frequency": "388",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4040,7 +3674,7 @@
         "elevation_ft": 605,
         "frequency": "428",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4063,7 +3697,7 @@
         "elevation_ft": 655,
         "frequency": "320",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4086,7 +3720,7 @@
         "elevation_ft": 544,
         "frequency": "417",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4109,118 +3743,7 @@
         "elevation_ft": 558,
         "frequency": "420",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_OIA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -51.797778,
-          3.859722
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_OIA",
-        "type": "NDB",
-        "ident": "OIA",
-        "name": "GUYANE FRANCAISE",
-        "latitude": 3.859722,
-        "longitude": -51.797778,
-        "frequency": "340",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_SLU",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -61.006056,
-          14.014139
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_SLU",
-        "type": "NDB",
-        "ident": "SLU",
-        "name": "ANTILLES FRANCAISES",
-        "latitude": 14.014139,
-        "longitude": -61.006056,
-        "frequency": "0",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_SON",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          167.216556,
-          -15.506194
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_SON",
-        "type": "NDB",
-        "ident": "SON",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -15.506194,
-        "longitude": 167.216556,
-        "frequency": "0",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_DOM",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -61.295639,
-          15.550944
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_DOM",
-        "type": "NDB",
-        "ident": "DOM",
-        "name": "ANTILLES FRANCAISES",
-        "latitude": 15.550944,
-        "longitude": -61.295639,
-        "frequency": "273",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_NDB_MH",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -146.062139,
-          -14.432978
-        ]
-      },
-      "properties": {
-        "id": "NAV_NDB_MH",
-        "type": "NDB",
-        "ident": "MH",
-        "name": "POLYNESIE FRANCAISE",
-        "latitude": -14.432978,
-        "longitude": -146.062139,
-        "elevation_ft": 57,
-        "frequency": "284.5",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4243,7 +3766,7 @@
         "elevation_ft": 681,
         "frequency": "394",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4265,7 +3788,7 @@
         "longitude": -56.169444,
         "frequency": "386",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4288,7 +3811,7 @@
         "elevation_ft": 884,
         "frequency": "346",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4311,7 +3834,7 @@
         "elevation_ft": 752,
         "frequency": "410",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4333,7 +3856,7 @@
         "longitude": -145.654272,
         "frequency": "393",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4356,7 +3879,7 @@
         "elevation_ft": 613,
         "frequency": "351",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4379,7 +3902,7 @@
         "elevation_ft": 374,
         "frequency": "321",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4402,7 +3925,7 @@
         "elevation_ft": 955,
         "frequency": "419",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4425,7 +3948,7 @@
         "elevation_ft": 174,
         "frequency": "351",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4448,7 +3971,277 @@
         "elevation_ft": 1164,
         "frequency": "358",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_SLU",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.006056,
+          14.014139
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_SLU",
+        "type": "NDB",
+        "ident": "SLU",
+        "name": "ANTILLES FRANCAISES",
+        "latitude": 14.014139,
+        "longitude": -61.006056,
+        "frequency": "0",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_DOM",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.295639,
+          15.550944
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_DOM",
+        "type": "NDB",
+        "ident": "DOM",
+        "name": "ANTILLES FRANCAISES",
+        "latitude": 15.550944,
+        "longitude": -61.295639,
+        "frequency": "273",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_OA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -147.660444,
+          -14.955917
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_OA",
+        "type": "NDB",
+        "ident": "OA",
+        "name": "POLYNESIE FRANCAISE",
+        "latitude": -14.955917,
+        "longitude": -147.660444,
+        "elevation_ft": 54,
+        "frequency": "358",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_AA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -145.5091,
+          -17.356378
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_AA",
+        "type": "NDB",
+        "ident": "AA",
+        "name": "POLYNESIE FRANCAISE",
+        "latitude": -17.356378,
+        "longitude": -145.5091,
+        "elevation_ft": 58,
+        "frequency": "332.5",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_MG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.473083,
+          -22.269889
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_MG",
+        "type": "NDB",
+        "ident": "MG",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -22.269889,
+        "longitude": 166.473083,
+        "elevation_ft": 66,
+        "frequency": "394",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_BL",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          163.663361,
+          -19.722136
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_BL",
+        "type": "NDB",
+        "ident": "BL",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -19.722136,
+        "longitude": 163.663361,
+        "frequency": "342",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_MD",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.467278,
+          -22.478
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_MD",
+        "type": "NDB",
+        "ident": "MD",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -22.478,
+        "longitude": 166.467278,
+        "frequency": "383",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_HO",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.197444,
+          -13.2405
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_HO",
+        "type": "NDB",
+        "ident": "HO",
+        "name": "WALLIS ET FUTUNA",
+        "latitude": -13.2405,
+        "longitude": -176.197444,
+        "elevation_ft": 126,
+        "frequency": "315",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_KQ",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          164.87225,
+          -21.104861
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_KQ",
+        "type": "NDB",
+        "ident": "KQ",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -21.104861,
+        "longitude": 164.87225,
+        "frequency": "305",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_RL",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.099036,
+          46.17635
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_RL",
+        "type": "NDB",
+        "ident": "RL",
+        "name": "FRANCE",
+        "latitude": 46.17635,
+        "longitude": -1.099036,
+        "elevation_ft": 130,
+        "frequency": "322",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_OIA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -51.8,
+          3.860278
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_OIA",
+        "type": "NDB",
+        "ident": "OIA",
+        "name": "GUYANE FRANCAISE",
+        "latitude": 3.860278,
+        "longitude": -51.8,
+        "frequency": "340",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_TW",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.025281,
+          43.530619
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_TW",
+        "type": "NDB",
+        "ident": "TW",
+        "name": "FRANCE",
+        "latitude": 43.530619,
+        "longitude": 1.025281,
+        "elevation_ft": 813,
+        "frequency": "406",
+        "source": "SIA",
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4471,30 +4264,75 @@
         "elevation_ft": 249,
         "frequency": "354",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
       "type": "Feature",
-      "id": "NAV_NDB_OA",
+      "id": "NAV_NDB_ZR",
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -147.660444,
-          -14.955917
+          3.283025,
+          43.327081
         ]
       },
       "properties": {
-        "id": "NAV_NDB_OA",
+        "id": "NAV_NDB_ZR",
         "type": "NDB",
-        "ident": "OA",
-        "name": "POLYNESIE FRANCAISE",
-        "latitude": -14.955917,
-        "longitude": -147.660444,
-        "elevation_ft": 5,
-        "frequency": "358",
+        "ident": "ZR",
+        "name": "FRANCE",
+        "latitude": 43.327081,
+        "longitude": 3.283025,
+        "elevation_ft": 107,
+        "frequency": "397",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_SON",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          167.2166,
+          -15.506131
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_SON",
+        "type": "NDB",
+        "ident": "SON",
+        "name": "NOUVELLE CALEDONIE",
+        "latitude": -15.506131,
+        "longitude": 167.2166,
+        "frequency": "0",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_NDB_DX",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.028147,
+          43.697386
+        ]
+      },
+      "properties": {
+        "id": "NAV_NDB_DX",
+        "type": "NDB",
+        "ident": "DX",
+        "name": "FRANCE",
+        "latitude": 43.697386,
+        "longitude": -1.028147,
+        "elevation_ft": 99,
+        "frequency": "334",
+        "source": "SIA",
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4517,7 +4355,7 @@
         "elevation_ft": 577,
         "channel": "103X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4539,7 +4377,7 @@
         "longitude": 8.436944,
         "channel": "90X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4561,7 +4399,7 @@
         "longitude": 6.130278,
         "channel": "91X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4584,29 +4422,7 @@
         "elevation_ft": 44,
         "channel": "76X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_PAS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          5.999917,
-          46.163694
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_PAS",
-        "type": "DME",
-        "ident": "PAS",
-        "name": "SUISSE",
-        "latitude": 46.163694,
-        "longitude": 5.999917,
-        "channel": "113X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4628,7 +4444,7 @@
         "longitude": -1.700833,
         "channel": "70X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4650,7 +4466,7 @@
         "longitude": 7.861944,
         "channel": "92X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4672,7 +4488,7 @@
         "longitude": 1.359167,
         "channel": "96Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4694,30 +4510,7 @@
         "longitude": 55.420308,
         "channel": "106X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_SDG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          55.509806,
-          -20.884833
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_SDG",
-        "type": "DME",
-        "ident": "SDG",
-        "name": "REUNION",
-        "latitude": -20.884833,
-        "longitude": 55.509806,
-        "elevation_ft": 57,
-        "channel": "76X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4740,7 +4533,7 @@
         "elevation_ft": 561,
         "channel": "53Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4762,7 +4555,7 @@
         "longitude": 2.108056,
         "channel": "114X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4784,7 +4577,7 @@
         "longitude": 2.771944,
         "channel": "88X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4807,7 +4600,7 @@
         "elevation_ft": 38,
         "channel": "80X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4830,7 +4623,7 @@
         "elevation_ft": 55,
         "channel": "106Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4852,7 +4645,7 @@
         "longitude": 7.224414,
         "channel": "33Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4875,7 +4668,7 @@
         "elevation_ft": 564,
         "channel": "38Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4898,7 +4691,7 @@
         "elevation_ft": 163,
         "channel": "27X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4920,7 +4713,7 @@
         "longitude": 1.656567,
         "channel": "103Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4943,7 +4736,7 @@
         "elevation_ft": 650,
         "channel": "120X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4965,7 +4758,7 @@
         "longitude": 5.097328,
         "channel": "51Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -4988,76 +4781,7 @@
         "elevation_ft": 486,
         "channel": "76X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CFA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.192194,
-          45.787472
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CFA",
-        "type": "DME",
-        "ident": "CFA",
-        "name": "FRANCE",
-        "latitude": 45.787472,
-        "longitude": 3.192194,
-        "elevation_ft": 1093,
-        "channel": "90Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_TBO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          0.145747,
-          43.332211
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_TBO",
-        "type": "DME",
-        "ident": "TBO",
-        "name": "FRANCE",
-        "latitude": 43.332211,
-        "longitude": 0.145747,
-        "elevation_ft": 1039,
-        "channel": "86X",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_AJO",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          8.774461,
-          41.770092
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_AJO",
-        "type": "DME",
-        "ident": "AJO",
-        "name": "FRANCE",
-        "latitude": 41.770092,
-        "longitude": 8.774461,
-        "elevation_ft": 2142,
-        "channel": "95X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5080,7 +4804,7 @@
         "elevation_ft": 4514,
         "channel": "100X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5103,7 +4827,7 @@
         "elevation_ft": 656,
         "channel": "83Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5126,7 +4850,7 @@
         "elevation_ft": 699,
         "channel": "114X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5149,7 +4873,7 @@
         "elevation_ft": 151,
         "channel": "109Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5172,7 +4896,7 @@
         "elevation_ft": 126,
         "channel": "29Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5195,7 +4919,7 @@
         "elevation_ft": 574,
         "channel": "124X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5218,7 +4942,7 @@
         "elevation_ft": 159,
         "channel": "93X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5241,7 +4965,7 @@
         "elevation_ft": 1057,
         "channel": "49Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5264,7 +4988,7 @@
         "elevation_ft": 1375,
         "channel": "92X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5287,7 +5011,7 @@
         "elevation_ft": 210,
         "channel": "84Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5310,7 +5034,7 @@
         "elevation_ft": 732,
         "channel": "99X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5333,30 +5057,7 @@
         "elevation_ft": 537,
         "channel": "32Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_LIL",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.114286,
-          50.56615
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_LIL",
-        "type": "DME",
-        "ident": "LIL",
-        "name": "FRANCE",
-        "latitude": 50.56615,
-        "longitude": 3.114286,
-        "elevation_ft": 151,
-        "channel": "44Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5379,7 +5080,7 @@
         "elevation_ft": 860,
         "channel": "30Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5402,7 +5103,7 @@
         "elevation_ft": 365,
         "channel": "48Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5425,7 +5126,7 @@
         "elevation_ft": 351,
         "channel": "36Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5448,7 +5149,7 @@
         "elevation_ft": 673,
         "channel": "30Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5471,7 +5172,7 @@
         "elevation_ft": 435,
         "channel": "120Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5493,7 +5194,7 @@
         "longitude": 3.056519,
         "channel": "95Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5515,7 +5216,7 @@
         "longitude": -8.425389,
         "channel": "111X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5538,7 +5239,7 @@
         "elevation_ft": 69,
         "channel": "50Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5561,7 +5262,7 @@
         "elevation_ft": 222,
         "channel": "53Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5584,7 +5285,7 @@
         "elevation_ft": 1089,
         "channel": "112X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5607,7 +5308,7 @@
         "elevation_ft": 78,
         "channel": "93Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5629,7 +5330,7 @@
         "longitude": 6.255919,
         "channel": "77X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5651,7 +5352,7 @@
         "longitude": -4.139786,
         "channel": "22X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5673,7 +5374,7 @@
         "longitude": 2.209892,
         "channel": "44Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5696,30 +5397,7 @@
         "elevation_ft": 863,
         "channel": "28X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_NA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          7.206069,
-          43.647811
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_NA",
-        "type": "DME",
-        "ident": "NA",
-        "name": "FRANCE",
-        "latitude": 43.647811,
-        "longitude": 7.206069,
-        "elevation_ft": 30,
-        "channel": "44X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5742,7 +5420,7 @@
         "elevation_ft": 571,
         "channel": "42X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5765,29 +5443,7 @@
         "elevation_ft": 308,
         "channel": "46X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_HOC",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          7.665444,
-          47.466556
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_HOC",
-        "type": "DME",
-        "ident": "HOC",
-        "name": "SUISSE",
-        "latitude": 47.466556,
-        "longitude": 7.665444,
-        "channel": "79X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5809,7 +5465,7 @@
         "longitude": 2.193572,
         "channel": "50Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5832,7 +5488,7 @@
         "elevation_ft": 820,
         "channel": "94Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5855,7 +5511,7 @@
         "elevation_ft": 863,
         "channel": "44Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5878,7 +5534,7 @@
         "elevation_ft": 872,
         "channel": "52X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5901,7 +5557,7 @@
         "elevation_ft": 516,
         "channel": "22Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5924,7 +5580,7 @@
         "elevation_ft": 298,
         "channel": "22X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5947,7 +5603,7 @@
         "elevation_ft": 886,
         "channel": "121Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5970,7 +5626,7 @@
         "elevation_ft": 860,
         "channel": "52Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -5993,7 +5649,7 @@
         "elevation_ft": 46,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6016,30 +5672,7 @@
         "elevation_ft": 385,
         "channel": "100Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_NI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          7.206111,
-          43.654861
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_NI",
-        "type": "DME",
-        "ident": "NI",
-        "name": "FRANCE",
-        "latitude": 43.654861,
-        "longitude": 7.206111,
-        "elevation_ft": 66,
-        "channel": "36Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6062,7 +5695,7 @@
         "elevation_ft": 289,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6085,7 +5718,7 @@
         "elevation_ft": 34,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6108,7 +5741,7 @@
         "elevation_ft": 971,
         "channel": "74X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6131,7 +5764,7 @@
         "elevation_ft": 286,
         "channel": "54Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6153,7 +5786,7 @@
         "longitude": 166.211639,
         "channel": "76X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6176,7 +5809,7 @@
         "elevation_ft": 466,
         "channel": "52Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6199,7 +5832,7 @@
         "elevation_ft": 200,
         "channel": "108X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6222,7 +5855,7 @@
         "elevation_ft": 185,
         "channel": "42Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6245,7 +5878,7 @@
         "elevation_ft": 185,
         "channel": "32X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6268,53 +5901,7 @@
         "elevation_ft": 174,
         "channel": "38X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_RL",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.191044,
-          46.177972
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_RL",
-        "type": "DME",
-        "ident": "RL",
-        "name": "FRANCE",
-        "latitude": 46.177972,
-        "longitude": -1.191044,
-        "elevation_ft": 66,
-        "channel": "32Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_AN",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          4.902222,
-          43.911511
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_AN",
-        "type": "DME",
-        "ident": "AN",
-        "name": "FRANCE",
-        "latitude": 43.911511,
-        "longitude": 4.902222,
-        "elevation_ft": 168,
-        "channel": "42X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6337,30 +5924,7 @@
         "elevation_ft": 271,
         "channel": "46Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_PYR",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -0.412264,
-          43.375281
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_PYR",
-        "type": "DME",
-        "ident": "PYR",
-        "name": "FRANCE",
-        "latitude": 43.375281,
-        "longitude": -0.412264,
-        "elevation_ft": 663,
-        "channel": "38X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6383,53 +5947,7 @@
         "elevation_ft": 36,
         "channel": "88Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_BTZ",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.510278,
-          43.466631
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_BTZ",
-        "type": "DME",
-        "ident": "BTZ",
-        "name": "FRANCE",
-        "latitude": 43.466631,
-        "longitude": -1.510278,
-        "elevation_ft": 276,
-        "channel": "88Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_HOI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -176.201833,
-          -13.239583
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_HOI",
-        "type": "DME",
-        "ident": "HOI",
-        "name": "WALLIS ET FUTUNA",
-        "latitude": -13.239583,
-        "longitude": -176.201833,
-        "elevation_ft": 113,
-        "channel": "77X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6452,7 +5970,7 @@
         "elevation_ft": 131,
         "channel": "42X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6475,7 +5993,7 @@
         "elevation_ft": 144,
         "channel": "114X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6498,7 +6016,7 @@
         "elevation_ft": 467,
         "channel": "30Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6521,7 +6039,7 @@
         "elevation_ft": 213,
         "channel": "90X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6544,7 +6062,7 @@
         "elevation_ft": 7,
         "channel": "91Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6567,7 +6085,7 @@
         "elevation_ft": 315,
         "channel": "125X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6590,29 +6108,7 @@
         "elevation_ft": 1248,
         "channel": "30X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_LFU",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          167.240556,
-          -20.774194
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_LFU",
-        "type": "DME",
-        "ident": "LFU",
-        "name": "NOUVELLE CALEDONIE",
-        "latitude": -20.774194,
-        "longitude": 167.240556,
-        "channel": "80X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6635,53 +6131,7 @@
         "elevation_ft": 554,
         "channel": "20Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_TBN",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.371458,
-          43.621836
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_TBN",
-        "type": "DME",
-        "ident": "TBN",
-        "name": "FRANCE",
-        "latitude": 43.621836,
-        "longitude": 1.371458,
-        "elevation_ft": 535,
-        "channel": "30X",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_TG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.358258,
-          43.634517
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_TG",
-        "type": "DME",
-        "ident": "TG",
-        "name": "FRANCE",
-        "latitude": 43.634517,
-        "longitude": 1.358258,
-        "elevation_ft": 528,
-        "channel": "26X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6704,7 +6154,7 @@
         "elevation_ft": 4783,
         "channel": "101X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6727,7 +6177,7 @@
         "elevation_ft": 387,
         "channel": "84X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6750,7 +6200,7 @@
         "elevation_ft": 1490,
         "channel": "120X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6773,7 +6223,7 @@
         "elevation_ft": 2822,
         "channel": "71X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6796,7 +6246,7 @@
         "elevation_ft": 348,
         "channel": "117Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6819,30 +6269,7 @@
         "elevation_ft": 2258,
         "channel": "122X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_NT",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.619333,
-          47.144219
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_NT",
-        "type": "DME",
-        "ident": "NT",
-        "name": "FRANCE",
-        "latitude": 47.144219,
-        "longitude": -1.619333,
-        "elevation_ft": 132,
-        "channel": "36X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6865,7 +6292,7 @@
         "elevation_ft": 771,
         "channel": "25X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6888,7 +6315,7 @@
         "elevation_ft": 285,
         "channel": "86Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6910,7 +6337,7 @@
         "longitude": -56.169722,
         "channel": "26X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6933,7 +6360,7 @@
         "elevation_ft": 48,
         "channel": "76X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6956,7 +6383,7 @@
         "elevation_ft": 41,
         "channel": "33Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -6979,52 +6406,7 @@
         "elevation_ft": 299,
         "channel": "73X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_JSY",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -2.046111,
-          49.221111
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_JSY",
-        "type": "DME",
-        "ident": "JSY",
-        "name": "FRANCE",
-        "latitude": 49.221111,
-        "longitude": -2.046111,
-        "channel": "59X",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_PLS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          57.662222,
-          -20.42
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_PLS",
-        "type": "DME",
-        "ident": "PLS",
-        "name": "REUNION",
-        "latitude": -20.42,
-        "longitude": 57.662222,
-        "elevation_ft": 2165,
-        "channel": "84X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7047,52 +6429,7 @@
         "elevation_ft": 1021,
         "channel": "41Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CAN",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -0.455278,
-          49.173197
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CAN",
-        "type": "DME",
-        "ident": "CAN",
-        "name": "FRANCE",
-        "latitude": 49.173197,
-        "longitude": -0.455278,
-        "elevation_ft": 269,
-        "channel": "91Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CHX",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.741872,
-          46.871206
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CHX",
-        "type": "DME",
-        "ident": "CHX",
-        "name": "FRANCE",
-        "latitude": 46.871206,
-        "longitude": 1.741872,
-        "channel": "23Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7115,30 +6452,7 @@
         "elevation_ft": 301,
         "channel": "33Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_ZR",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.346183,
-          43.322472
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_ZR",
-        "type": "DME",
-        "ident": "ZR",
-        "name": "FRANCE",
-        "latitude": 43.322472,
-        "longitude": 3.346183,
-        "elevation_ft": 88,
-        "channel": "30Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7161,30 +6475,7 @@
         "elevation_ft": 673,
         "channel": "123X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_NTS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.612961,
-          47.160856
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_NTS",
-        "type": "DME",
-        "ident": "NTS",
-        "name": "FRANCE",
-        "latitude": 47.160856,
-        "longitude": -1.612961,
-        "elevation_ft": 92,
-        "channel": "102X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7207,7 +6498,7 @@
         "elevation_ft": 183,
         "channel": "54Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7229,7 +6520,7 @@
         "longitude": -60.977056,
         "channel": "71X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7250,7 +6541,7 @@
         "latitude": 17.125889,
         "longitude": -61.800167,
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7273,28 +6564,7 @@
         "elevation_ft": 304,
         "channel": "47Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_BGI",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -59.483833,
-          13.075056
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_BGI",
-        "type": "DME",
-        "ident": "BGI",
-        "name": "ANTILLES FRANCAISES",
-        "latitude": 13.075056,
-        "longitude": -59.483833,
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7315,7 +6585,7 @@
         "latitude": 39.698611,
         "longitude": 3.435,
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7337,7 +6607,7 @@
         "longitude": 7.2235,
         "channel": "45Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7358,7 +6628,7 @@
         "latitude": 12.001722,
         "longitude": -61.785361,
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7380,7 +6650,7 @@
         "longitude": -2.6025,
         "channel": "31X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7401,7 +6671,7 @@
         "latitude": 10.466222,
         "longitude": -61.391889,
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7422,7 +6692,7 @@
         "latitude": 5.453611,
         "longitude": -55.183333,
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7445,7 +6715,7 @@
         "elevation_ft": 1005,
         "channel": "38Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7467,7 +6737,7 @@
         "longitude": 6.381278,
         "channel": "30X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7489,7 +6759,7 @@
         "longitude": 4.916503,
         "channel": "50X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7512,7 +6782,7 @@
         "elevation_ft": 738,
         "channel": "42X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7534,7 +6804,7 @@
         "longitude": 6.146353,
         "channel": "18X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7557,7 +6827,7 @@
         "elevation_ft": 235,
         "channel": "32X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7580,30 +6850,7 @@
         "elevation_ft": 336,
         "channel": "18Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_NG",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          4.417553,
-          43.765892
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_NG",
-        "type": "DME",
-        "ident": "NG",
-        "name": "FRANCE",
-        "latitude": 43.765892,
-        "longitude": 4.417553,
-        "elevation_ft": 340,
-        "channel": "32Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7626,7 +6873,7 @@
         "elevation_ft": 981,
         "channel": "36Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7649,7 +6896,7 @@
         "elevation_ft": 830,
         "channel": "54Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7672,7 +6919,7 @@
         "elevation_ft": 69,
         "channel": "38Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7694,7 +6941,7 @@
         "longitude": 1.854706,
         "channel": "21Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7717,76 +6964,7 @@
         "elevation_ft": 289,
         "channel": "88X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CX",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.742697,
-          46.872922
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CX",
-        "type": "DME",
-        "ident": "CX",
-        "name": "FRANCE",
-        "latitude": 46.872922,
-        "longitude": 1.742697,
-        "elevation_ft": 517,
-        "channel": "40X",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_MPV",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          5.218997,
-          43.432406
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_MPV",
-        "type": "DME",
-        "ident": "MPV",
-        "name": "FRANCE",
-        "latitude": 43.432406,
-        "longitude": 5.218997,
-        "elevation_ft": 94,
-        "channel": "48Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_BZ",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.513028,
-          43.467417
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_BZ",
-        "type": "DME",
-        "ident": "BZ",
-        "name": "FRANCE",
-        "latitude": 43.467417,
-        "longitude": -1.513028,
-        "elevation_ft": 223,
-        "channel": "50Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7809,7 +6987,7 @@
         "elevation_ft": 579,
         "channel": "50X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7832,7 +7010,7 @@
         "elevation_ft": 807,
         "channel": "32X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7855,30 +7033,7 @@
         "elevation_ft": 42,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CF",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.183236,
-          45.789381
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CF",
-        "type": "DME",
-        "ident": "CF",
-        "name": "FRANCE",
-        "latitude": 45.789381,
-        "longitude": 3.183236,
-        "elevation_ft": 1079,
-        "channel": "48X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7900,7 +7055,7 @@
         "longitude": 166.2035,
         "channel": "36X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7923,7 +7078,7 @@
         "elevation_ft": 52,
         "channel": "36X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7946,7 +7101,7 @@
         "elevation_ft": 604,
         "channel": "32Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -7969,30 +7124,7 @@
         "elevation_ft": 63,
         "channel": "20X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_OS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          0.000331,
-          43.188708
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_OS",
-        "type": "DME",
-        "ident": "OS",
-        "name": "FRANCE",
-        "latitude": 43.188708,
-        "longitude": 0.000331,
-        "elevation_ft": 1235,
-        "channel": "32X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8015,30 +7147,7 @@
         "elevation_ft": 919,
         "channel": "54Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_TBS",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.349575,
-          43.642456
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_TBS",
-        "type": "DME",
-        "ident": "TBS",
-        "name": "FRANCE",
-        "latitude": 43.642456,
-        "longitude": 1.349575,
-        "elevation_ft": 540,
-        "channel": "44X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8061,7 +7170,7 @@
         "elevation_ft": 2165,
         "channel": "102Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8084,7 +7193,7 @@
         "elevation_ft": 1292,
         "channel": "38X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8107,7 +7216,7 @@
         "elevation_ft": 196,
         "channel": "18Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8130,7 +7239,7 @@
         "elevation_ft": 1943,
         "channel": "44Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8152,29 +7261,7 @@
         "longitude": 6.448056,
         "channel": "86X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_GVA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          6.132222,
-          46.253917
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_GVA",
-        "type": "DME",
-        "ident": "GVA",
-        "name": "SUISSE",
-        "latitude": 46.253917,
-        "longitude": 6.132222,
-        "channel": "104Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8197,7 +7284,7 @@
         "elevation_ft": 604,
         "channel": "94X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8220,7 +7307,7 @@
         "elevation_ft": 420,
         "channel": "38X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8243,7 +7330,7 @@
         "elevation_ft": 337,
         "channel": "20Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8266,7 +7353,7 @@
         "elevation_ft": 430,
         "channel": "44X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8289,7 +7376,7 @@
         "elevation_ft": 368,
         "channel": "56Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8312,7 +7399,7 @@
         "elevation_ft": 357,
         "channel": "22Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8335,7 +7422,7 @@
         "elevation_ft": 408,
         "channel": "40Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8358,7 +7445,7 @@
         "elevation_ft": 360,
         "channel": "24X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8380,7 +7467,7 @@
         "longitude": 1.387072,
         "channel": "106Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8403,7 +7490,7 @@
         "elevation_ft": 400,
         "channel": "30Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8426,7 +7513,7 @@
         "elevation_ft": 979,
         "channel": "22X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8449,30 +7536,7 @@
         "elevation_ft": 896,
         "channel": "95X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_CMD",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          6.950061,
-          43.556747
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_CMD",
-        "type": "DME",
-        "ident": "CMD",
-        "name": "FRANCE",
-        "latitude": 43.556747,
-        "longitude": 6.950061,
-        "elevation_ft": 28,
-        "channel": "40Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8495,30 +7559,7 @@
         "elevation_ft": 100,
         "channel": "30Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_PT",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          0.314747,
-          46.594558
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_PT",
-        "type": "DME",
-        "ident": "PT",
-        "name": "FRANCE",
-        "latitude": 46.594558,
-        "longitude": 0.314747,
-        "elevation_ft": 413,
-        "channel": "46Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8541,7 +7582,7 @@
         "elevation_ft": 104.36,
         "channel": "83X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8564,30 +7605,7 @@
         "elevation_ft": 40,
         "channel": "22Y",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_ROA",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          3.999269,
-          46.059158
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_ROA",
-        "type": "DME",
-        "ident": "ROA",
-        "name": "FRANCE",
-        "latitude": 46.059158,
-        "longitude": 3.999269,
-        "elevation_ft": 1079,
-        "channel": "41X",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8610,7 +7628,7 @@
         "elevation_ft": 313,
         "channel": "43Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8633,7 +7651,7 @@
         "elevation_ft": 308,
         "channel": "36X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8655,7 +7673,7 @@
         "longitude": -61.541864,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8678,7 +7696,7 @@
         "elevation_ft": 121,
         "channel": "77X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8700,7 +7718,7 @@
         "longitude": -61.015458,
         "channel": "36X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8723,7 +7741,7 @@
         "elevation_ft": 41,
         "channel": "82X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8746,30 +7764,7 @@
         "elevation_ft": 55,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "NAV_DME_RM",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          0.525833,
-          44.823
-        ]
-      },
-      "properties": {
-        "id": "NAV_DME_RM",
-        "type": "DME",
-        "ident": "RM",
-        "name": "FRANCE",
-        "latitude": 44.823,
-        "longitude": 0.525833,
-        "elevation_ft": 220,
-        "channel": "18Y",
-        "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8792,7 +7787,7 @@
         "elevation_ft": 217,
         "channel": "48Y",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
       }
     },
     {
@@ -8815,7 +7810,804 @@
         "elevation_ft": 200,
         "channel": "40X",
         "source": "SIA",
-        "airac": "2025-09-04"
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_SDG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          55.509806,
+          -20.884833
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_SDG",
+        "type": "DME",
+        "ident": "SDG",
+        "name": "REUNION",
+        "latitude": -20.884833,
+        "longitude": 55.509806,
+        "elevation_ft": 57,
+        "channel": "76X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_HOI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.201833,
+          -13.239583
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_HOI",
+        "type": "DME",
+        "ident": "HOI",
+        "name": "WALLIS ET FUTUNA",
+        "latitude": -13.239583,
+        "longitude": -176.201833,
+        "elevation_ft": 113,
+        "channel": "77X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CMD",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.950061,
+          43.556747
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CMD",
+        "type": "DME",
+        "ident": "CMD",
+        "name": "FRANCE",
+        "latitude": 43.556747,
+        "longitude": 6.950061,
+        "elevation_ft": 28,
+        "channel": "40Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_AJO",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8.774461,
+          41.770092
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_AJO",
+        "type": "DME",
+        "ident": "AJO",
+        "name": "FRANCE",
+        "latitude": 41.770092,
+        "longitude": 8.774461,
+        "elevation_ft": 2142,
+        "channel": "95X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CAN",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.455278,
+          49.173197
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CAN",
+        "type": "DME",
+        "ident": "CAN",
+        "name": "FRANCE",
+        "latitude": 49.173197,
+        "longitude": -0.455278,
+        "elevation_ft": 269,
+        "channel": "91Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CHX",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.741872,
+          46.871206
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CHX",
+        "type": "DME",
+        "ident": "CHX",
+        "name": "FRANCE",
+        "latitude": 46.871206,
+        "longitude": 1.741872,
+        "channel": "23Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_TBO",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.145747,
+          43.332211
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_TBO",
+        "type": "DME",
+        "ident": "TBO",
+        "name": "FRANCE",
+        "latitude": 43.332211,
+        "longitude": 0.145747,
+        "elevation_ft": 1039,
+        "channel": "86X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_ROA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.999269,
+          46.059158
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_ROA",
+        "type": "DME",
+        "ident": "ROA",
+        "name": "FRANCE",
+        "latitude": 46.059158,
+        "longitude": 3.999269,
+        "elevation_ft": 1079,
+        "channel": "41X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_MPV",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.218997,
+          43.432406
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_MPV",
+        "type": "DME",
+        "ident": "MPV",
+        "name": "FRANCE",
+        "latitude": 43.432406,
+        "longitude": 5.218997,
+        "elevation_ft": 94,
+        "channel": "48Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_PLS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          57.662389,
+          -20.420028
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_PLS",
+        "type": "DME",
+        "ident": "PLS",
+        "name": "REUNION",
+        "latitude": -20.420028,
+        "longitude": 57.662389,
+        "elevation_ft": 2165,
+        "channel": "84X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_RL",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.191053,
+          46.177953
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_RL",
+        "type": "DME",
+        "ident": "RL",
+        "name": "FRANCE",
+        "latitude": 46.177953,
+        "longitude": -1.191053,
+        "elevation_ft": 119,
+        "channel": "32Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_BZ",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.513028,
+          43.467417
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_BZ",
+        "type": "DME",
+        "ident": "BZ",
+        "name": "FRANCE",
+        "latitude": 43.467417,
+        "longitude": -1.513028,
+        "elevation_ft": 280,
+        "channel": "50Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_BTZ",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.510278,
+          43.466631
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_BTZ",
+        "type": "DME",
+        "ident": "BTZ",
+        "name": "FRANCE",
+        "latitude": 43.466631,
+        "longitude": -1.510278,
+        "elevation_ft": 276,
+        "channel": "88Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_PT",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.314747,
+          46.594558
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_PT",
+        "type": "DME",
+        "ident": "PT",
+        "name": "FRANCE",
+        "latitude": 46.594558,
+        "longitude": 0.314747,
+        "elevation_ft": 461,
+        "channel": "46Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_RM",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.525833,
+          44.823
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_RM",
+        "type": "DME",
+        "ident": "RM",
+        "name": "FRANCE",
+        "latitude": 44.823,
+        "longitude": 0.525833,
+        "elevation_ft": 220,
+        "channel": "18Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_PYR",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.412264,
+          43.375281
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_PYR",
+        "type": "DME",
+        "ident": "PYR",
+        "name": "FRANCE",
+        "latitude": 43.375281,
+        "longitude": -0.412264,
+        "elevation_ft": 676,
+        "channel": "38X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_BGI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.483828,
+          13.07505
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_BGI",
+        "type": "DME",
+        "ident": "BGI",
+        "name": "ANTILLES FRANCAISES",
+        "latitude": 13.07505,
+        "longitude": -59.483828,
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CX",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.742697,
+          46.872922
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CX",
+        "type": "DME",
+        "ident": "CX",
+        "name": "FRANCE",
+        "latitude": 46.872922,
+        "longitude": 1.742697,
+        "elevation_ft": 517,
+        "channel": "40X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_PAS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.999906,
+          46.163717
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_PAS",
+        "type": "DME",
+        "ident": "PAS",
+        "name": "SUISSE",
+        "latitude": 46.163717,
+        "longitude": 5.999906,
+        "channel": "113X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_JSY",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2.046144,
+          49.221106
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_JSY",
+        "type": "DME",
+        "ident": "JSY",
+        "name": "FRANCE",
+        "latitude": 49.221106,
+        "longitude": -2.046144,
+        "channel": "59X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_HOC",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.665449,
+          47.466547
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_HOC",
+        "type": "DME",
+        "ident": "HOC",
+        "name": "SUISSE",
+        "latitude": 47.466547,
+        "longitude": 7.665449,
+        "channel": "79X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_NTS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.612961,
+          47.160856
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_NTS",
+        "type": "DME",
+        "ident": "NTS",
+        "name": "FRANCE",
+        "latitude": 47.160856,
+        "longitude": -1.612961,
+        "elevation_ft": 92,
+        "channel": "102X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_NT",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.619333,
+          47.144219
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_NT",
+        "type": "DME",
+        "ident": "NT",
+        "name": "FRANCE",
+        "latitude": 47.144219,
+        "longitude": -1.619333,
+        "elevation_ft": 132,
+        "channel": "36X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_LIL",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.114286,
+          50.56615
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_LIL",
+        "type": "DME",
+        "ident": "LIL",
+        "name": "FRANCE",
+        "latitude": 50.56615,
+        "longitude": 3.114286,
+        "elevation_ft": 151,
+        "channel": "44Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_OS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.000331,
+          43.188708
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_OS",
+        "type": "DME",
+        "ident": "OS",
+        "name": "FRANCE",
+        "latitude": 43.188708,
+        "longitude": 0.000331,
+        "elevation_ft": 1235,
+        "channel": "32X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_NI",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.206111,
+          43.654861
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_NI",
+        "type": "DME",
+        "ident": "NI",
+        "name": "FRANCE",
+        "latitude": 43.654861,
+        "longitude": 7.206111,
+        "elevation_ft": 66,
+        "channel": "36Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_NA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          7.206069,
+          43.647811
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_NA",
+        "type": "DME",
+        "ident": "NA",
+        "name": "FRANCE",
+        "latitude": 43.647811,
+        "longitude": 7.206069,
+        "elevation_ft": 30,
+        "channel": "44X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CF",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.183236,
+          45.789381
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CF",
+        "type": "DME",
+        "ident": "CF",
+        "name": "FRANCE",
+        "latitude": 45.789381,
+        "longitude": 3.183236,
+        "channel": "48X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CFA",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.192194,
+          45.787472
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CFA",
+        "type": "DME",
+        "ident": "CFA",
+        "name": "FRANCE",
+        "latitude": 45.787472,
+        "longitude": 3.192194,
+        "channel": "90Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_TG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.358258,
+          43.634517
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_TG",
+        "type": "DME",
+        "ident": "TG",
+        "name": "FRANCE",
+        "latitude": 43.634517,
+        "longitude": 1.358258,
+        "elevation_ft": 528,
+        "channel": "26X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_TBS",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.349575,
+          43.642456
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_TBS",
+        "type": "DME",
+        "ident": "TBS",
+        "name": "FRANCE",
+        "latitude": 43.642456,
+        "longitude": 1.349575,
+        "elevation_ft": 545,
+        "channel": "44X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_TBN",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.371458,
+          43.621836
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_TBN",
+        "type": "DME",
+        "ident": "TBN",
+        "name": "FRANCE",
+        "latitude": 43.621836,
+        "longitude": 1.371458,
+        "elevation_ft": 535,
+        "channel": "30X",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_NG",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          4.417553,
+          43.765892
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_NG",
+        "type": "DME",
+        "ident": "NG",
+        "name": "FRANCE",
+        "latitude": 43.765892,
+        "longitude": 4.417553,
+        "elevation_ft": 340,
+        "channel": "32Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_ZR",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3.346183,
+          43.322472
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_ZR",
+        "type": "DME",
+        "ident": "ZR",
+        "name": "FRANCE",
+        "latitude": 43.322472,
+        "longitude": 3.346183,
+        "elevation_ft": 88,
+        "channel": "30Y",
+        "source": "SIA",
+        "airac": "2026-05-14"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "NAV_DME_CNM",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.870111,
+          43.559972
+        ]
+      },
+      "properties": {
+        "id": "NAV_DME_CNM",
+        "type": "DME",
+        "ident": "CNM",
+        "name": "FRANCE",
+        "latitude": 43.559972,
+        "longitude": 6.870111,
+        "elevation_ft": 1600,
+        "channel": "51X",
+        "source": "SIA",
+        "airac": "2026-05-14"
       }
     }
   ]
