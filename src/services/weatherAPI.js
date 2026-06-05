@@ -197,8 +197,12 @@ export const weatherAPI = {
     };
 
     return {
+      // 🔧 A5 — Météo SIMULÉE : tag explicite pour que les consommateurs (perf)
+      // ne la traitent JAMAIS comme un METAR réel (plus d'ISA déguisé).
+      isMock: true,
       raw: data.raw,
       decoded: {
+        isMock: true,
         station: icao,
         time: new Date().toISOString(),
         wind: {

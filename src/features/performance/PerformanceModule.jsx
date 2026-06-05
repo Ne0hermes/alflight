@@ -11,6 +11,7 @@ import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCal
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
 import dataBackupManager from '../../utils/dataBackupManager';
+import { resolveWindComponent } from '../../utils/windComponent';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
 // 🎨 Charte éditoriale ALFlight
@@ -424,14 +425,20 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // décollage si le centrage n'a pas encore produit la masse atterrissage.
   const landingMass = flightPlan?.weightBalance?.landingWeight || takeoffMass;
 
-  // OAT : null → 15 (ISA fallback)
-  const takeoffTemp = departureTemp !== null && departureTemp !== undefined ? departureTemp : 15;
-  const landingTemp = arrivalTemp !== null && arrivalTemp !== undefined ? arrivalTemp
-                     : (departureTemp !== null && departureTemp !== undefined ? departureTemp : 15);
+  // 🔧 A5 — Fiabilité météo : une météo SIMULÉE (isMock) ou absente ne doit pas
+  // alimenter la perf comme réelle. On NE fabrique plus d'ISA 15° à ce niveau :
+  // température réelle, ou null si indisponible (le résolveur traite null en aval).
+  const depWxReliable = !!departureWeather?.metar && !departureWeather.metar.isMock;
+  const arrWxReliable = !!arrivalWeather?.metar && !arrivalWeather.metar.isMock;
+  const depTempOk = depWxReliable && departureTemp !== null && departureTemp !== undefined;
+  const arrTempOk = arrWxReliable && arrivalTemp !== null && arrivalTemp !== undefined;
+  const takeoffTemp = depTempOk ? departureTemp : null;
+  const landingTemp = arrTempOk ? arrivalTemp : (depTempOk ? departureTemp : null);
 
-  // Altitude pression
-  const takeoffPa = departureAirport?.elevation || 0;
-  const landingPa = arrivalAirport?.elevation || takeoffPa || 0;
+  // 🔧 A5 — Altitude pression : élévation terrain réelle, ou null si absente
+  // (plus de « niveau mer » fabriqué). 0 reste une élévation valide (bord de mer).
+  const takeoffPa = Number.isFinite(departureAirport?.elevation) ? departureAirport.elevation : null;
+  const landingPa = Number.isFinite(arrivalAirport?.elevation) ? arrivalAirport.elevation : takeoffPa;
 
   // ─── COMPOSANTE VENT SIGNÉE SUR LA PISTE ACTIVE ───
   // On charge les pistes de l'aérodrome et on calcule le vent projeté sur la
@@ -441,22 +448,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const departureRunwayWind = useActiveRunwayWind(departureIcao, departureWeather);
   const arrivalRunwayWind = useActiveRunwayWind(arrivalIcao, arrivalWeather);
 
-  // Vitesse brute du vent (fallback si pas de piste sélectionnable)
-  const takeoffWindRaw = departureWeather?.metar?.decoded?.wind?.speed || 0;
-  const landingWindRaw = arrivalWeather?.metar?.decoded?.wind?.speed
-                       ?? arrivalWeather?.decoded?.wind?.speed
-                       ?? arrivalWeather?.wind?.speed
-                       ?? arrivalWeather?.metar?.wind?.speed
-                       ?? departureWeather?.metar?.decoded?.wind?.speed
-                       ?? 0;
-
-  // Composante signée si dispo (piste détectée), sinon fallback vitesse brute supposée face
-  const takeoffWindComponent = typeof departureRunwayWind.headwindComponent === 'number'
-    ? departureRunwayWind.headwindComponent
-    : takeoffWindRaw;
-  const landingWindComponent = typeof arrivalRunwayWind.headwindComponent === 'number'
-    ? arrivalRunwayWind.headwindComponent
-    : landingWindRaw;
+  // 🔧 A5 — Composante vent signée sur la piste active. Direction INDÉTERMINÉE
+  // (Variable/Calme, pas de piste) ⇒ 0 conservateur, JAMAIS un vent de face
+  // supposé (qui sous-estimerait les distances). Voir utils/windComponent.
+  const takeoffWindComponent = resolveWindComponent(departureRunwayWind.headwindComponent).component;
+  const landingWindComponent = resolveWindComponent(arrivalRunwayWind.headwindComponent).component;
 
   // Pour les inputs de la matrice : on injecte la composante SIGNÉE.
   // Le résolveur d'abaque détectera le signe pour filtrer les courbes
