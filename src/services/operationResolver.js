@@ -212,6 +212,20 @@ export function interpolateY(points, x) {
  * @param {object} inputs     { mass, oat, pressureAltitude, headwind, ... }
  * @returns {object}          OperationResult typé (cf. ResultStatus)
  */
+/**
+ * 🔧 A5/P0 — Entrées indispensables au calcul (le vent a un défaut conservateur 0).
+ * Retourne la liste des entrées manquantes (null/NaN) pour renvoyer MISSING_INPUT
+ * au lieu de calculer sur une valeur inventée.
+ */
+export function missingRequiredInputs(conditions = {}) {
+  const ok = (v) => typeof v === 'number' && Number.isFinite(v);
+  const missing = [];
+  if (!ok(conditions.temperature))       missing.push('température');
+  if (!ok(conditions.pressure_altitude)) missing.push('altitude');
+  if (!ok(conditions.mass))              missing.push('masse');
+  return missing;
+}
+
 export function resolveOperation(aircraft, operationId, inputs = {}) {
   // ── 1. Validation de l'id ──
   if (!isValidOperationId(operationId)) {
@@ -236,6 +250,17 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     const conditionsForTable = inputsToConditions(inputs);
     const tableResult = resolveOperationFromTables(aircraft, operationId, conditionsForTable);
     if (tableResult) {
+      // 🔧 A5/P0 — Données présentes mais entrée(s) requise(s) manquante(s) ⇒ MISSING_INPUT.
+      const missingTbl = missingRequiredInputs(conditionsForTable);
+      if (missingTbl.length > 0) {
+        return {
+          operationId,
+          operationLabel: opDef.labelFr,
+          status: ResultStatus.MISSING_INPUT,
+          missingInputs: missingTbl,
+          reason: `Donnée(s) requise(s) manquante(s) : ${missingTbl.join(', ')} — performance non calculée (aucune valeur inventée).`
+        };
+      }
       // Adapter le status string vers ResultStatus enum
       let mappedStatus = ResultStatus.COMPUTED;
       if (tableResult.status === 'MISSING_INPUT') mappedStatus = ResultStatus.MISSING_INPUT;
@@ -280,6 +305,20 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
   // puis IDW 4D en fallback si le graphe n'a pas de paramètre familial déclaré.
   const abaqueData = model?.data || { graphs: [graph] };
   const conditions = inputsToConditions(inputs);
+
+  // 🔧 A5/P0 — Entrée(s) requise(s) manquante(s) ⇒ on REFUSE de calculer (pas
+  // d'ISA ni de masse inventée). La matrice affiche « donnée manquante ».
+  const missingAbac = missingRequiredInputs(conditions);
+  if (missingAbac.length > 0) {
+    return {
+      operationId,
+      operationLabel: opDef.labelFr,
+      status: ResultStatus.MISSING_INPUT,
+      missingInputs: missingAbac,
+      reason: `Donnée(s) requise(s) manquante(s) : ${missingAbac.join(', ')} — performance non calculée (aucune valeur inventée).`,
+      source: { kind: 'abac', modelId: model?.id, modelName: model?.name, graphId: graph?.id, graphName: graph?.name }
+    };
+  }
 
   const cascade = evaluateAbacCascade(abaqueData, conditions);
 
