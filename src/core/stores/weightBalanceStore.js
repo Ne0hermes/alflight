@@ -60,14 +60,6 @@ export const useWeightBalanceStore = create(
       // Utiliser weightBalance s'il existe, sinon créer depuis armLengths
       let wb = aircraft.weightBalance;
 
-      // 🐛 DEBUG CG CALCULATION
-      console.log('🔍 [WB-STORE] Aircraft:', aircraft.registration);
-      console.log('  - aircraft.arms:', aircraft.arms);
-      console.log('  - aircraft.weightBalance:', aircraft.weightBalance);
-      console.log('  - aircraft.cgEnvelope:', aircraft.cgEnvelope);
-      console.log('  - aircraft.cgLimits (racine):', aircraft.cgLimits);
-      console.log('  - wb?.cgLimits:', wb?.cgLimits);
-
       if (!wb || !wb.emptyWeightArm) {
         // 🔧 A6/P0 — Bras dérivés de armLengths SANS fabrication. Absent ⇒ null
         // (au lieu de 2.00/2.90/3.50… inventés, qui produisaient un CG faux mais
@@ -88,7 +80,6 @@ export const useWeightBalanceStore = create(
           fuelArm: armOrNull(aircraft.armLengths?.fuelArm),
           cgLimits: null // l'enveloppe réelle est recalculée plus bas via cgEnvelope
         };
-        console.log('  ⚠️ Bras dérivés de armLengths (null si absent — A6/P0)');
       }
 
       // 🔧 FIX CRITIQUE: TOUJOURS utiliser cgEnvelope comme source de vérité
@@ -106,7 +97,6 @@ export const useWeightBalanceStore = create(
           aft: parseOrNull(aircraft.cgEnvelope.aftCG),
           forwardVariable: aircraft.cgEnvelope.forwardPoints || []
         };
-        console.log('  ✅ [WB-STORE] cgLimits créé depuis cgEnvelope (source de vérité):', wb.cgLimits);
       } else if (!wb.cgLimits && aircraft.cgLimits) {
         // PRIORITÉ 2: aircraft.cgLimits (racine)
         wb.cgLimits = {
@@ -114,21 +104,14 @@ export const useWeightBalanceStore = create(
           aft: parseOrNull(aircraft.cgLimits.aft),
           forwardVariable: aircraft.cgLimits.forwardVariable || []
         };
-        console.log('  ✅ [WB-STORE] cgLimits créé depuis aircraft.cgLimits:', wb.cgLimits);
       } else if (!wb.cgLimits) {
         // PRIORITÉ 3: Aucune donnée disponible
         wb.cgLimits = { forward: null, aft: null, forwardVariable: [] };
         console.warn('  ⚠️ [WB-STORE] Aucune donnée cgEnvelope/cgLimits, cgLimits = null');
       } else {
         // wb.cgLimits existe déjà - le garder tel quel
-        console.log('  ℹ️ [WB-STORE] wb.cgLimits existe déjà, conservation:', wb.cgLimits);
       }
 
-      console.log('  - wb.emptyWeightArm:', wb.emptyWeightArm);
-      console.log('  - wb.fuelArm:', wb.fuelArm);
-      console.log('  - wb.frontLeftSeatArm:', wb.frontLeftSeatArm);
-      console.log('  - wb.cgLimits (final):', wb.cgLimits);
-      
       // Vérifier que toutes les propriétés requises existent
       // NOTE: baggageArm et auxiliaryArm ne sont plus requis (compartiments dynamiques)
       const requiredProps = [
@@ -219,22 +202,9 @@ export const useWeightBalanceStore = create(
         baggageMoment +
         fuelMoment;
 
-      // 🐛 DEBUG MOMENT CALCULATION
-      console.log('📊 [WB-STORE] Moment calculation:');
-      console.log(`  - Empty: ${emptyWeight} kg × ${wb.emptyWeightArm} m = ${emptyMoment.toFixed(1)} kg.m`);
-      console.log(`  - Front L: ${loads.frontLeft || 0} kg × ${wb.frontLeftSeatArm} m = ${frontLeftMoment.toFixed(1)} kg.m`);
-      console.log(`  - Front R: ${loads.frontRight || 0} kg × ${wb.frontRightSeatArm} m = ${frontRightMoment.toFixed(1)} kg.m`);
-      console.log(`  - Rear L: ${loads.rearLeft || 0} kg × ${wb.rearLeftSeatArm} m = ${rearLeftMoment.toFixed(1)} kg.m`);
-      console.log(`  - Rear R: ${loads.rearRight || 0} kg × ${wb.rearRightSeatArm} m = ${rearRightMoment.toFixed(1)} kg.m`);
-      console.log(`  - Baggage: ${baggageWeight} kg (moment: ${baggageMoment.toFixed(1)} kg.m)`);
-      console.log(`  - Fuel: ${loads.fuel || 0} kg × ${wb.fuelArm} m = ${fuelMoment.toFixed(1)} kg.m`);
-      console.log(`  - TOTAL MOMENT: ${totalMoment.toFixed(1)} kg.m`);
-
       // Calcul du CG
       const cg = totalWeight > 0 ? totalMoment / totalWeight : 0;
-      console.log(`  - TOTAL WEIGHT: ${totalWeight.toFixed(1)} kg`);
-      console.log(`  - CG: ${totalMoment.toFixed(1)} ÷ ${totalWeight.toFixed(1)} = ${cg.toFixed(4)} m (${(cg * 1000).toFixed(0)} mm)`);
-      
+
       // 🔧 A6/P0 — Bras manquant pour une station CHARGÉE ⇒ CG non fiable.
       const warnings = [];
       const missingArms = [
