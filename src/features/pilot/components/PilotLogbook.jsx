@@ -1010,7 +1010,7 @@ const PilotLogbook = ({ showFormProp }) => {
       {/* Statistiques globales - Afficher seulement si on n'est pas dans le formulaire */}
       {!isFormVisible && (
         <div style={{ backgroundColor: 'var(--bg-overlay)', padding: '20px', borderRadius: 'var(--radius-sm)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', marginBottom: '12px' }}>Statistiques de vol</h3>
+          <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: '600', marginBottom: '12px' }}>Statistiques de vol</h3>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={handleImport}
@@ -1042,57 +1042,57 @@ const PilotLogbook = ({ showFormProp }) => {
             {/* Total général - Plus important */}
             <div style={{ borderLeft: '3px solid var(--text-secondary)', paddingLeft: '12px' }}>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total général</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', color: 'var(--app-bg)' }}>{totals.totalHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600', color: 'var(--accent-primary)' }}>{totals.totalHours.toFixed(1)}h</p>
             </div>
 
             {/* Fonction à bord */}
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>CDB</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.picHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.picHours.toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Copilote</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.copilotHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.copilotHours.toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Double commande</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.dualCommandHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.dualCommandHours.toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Instructeur</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.instructorHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.instructorHours.toFixed(1)}h</p>
             </div>
 
             {/* Conditions de vol */}
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Jour</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{(totals.totalHours - totals.nightHours).toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{(totals.totalHours - totals.nightHours).toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Nuit</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.nightHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.nightHours.toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>IFR</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.ifrHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.ifrHours.toFixed(1)}h</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Voyage</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.crossCountryHours.toFixed(1)}h</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.crossCountryHours.toFixed(1)}h</p>
             </div>
 
             {/* Atterrissages et approches */}
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. jour</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.dayLandings}</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.dayLandings}</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Att. nuit</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.nightLandings}</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.nightLandings}</p>
             </div>
             <div>
               <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Approches</p>
-              <p style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold' }}>{totals.approaches}</p>
+              <p style={{ fontSize: 'var(--fs-title)', fontWeight: '600' }}>{totals.approaches}</p>
             </div>
           </div>
         </div>
@@ -1116,8 +1116,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 1: Date */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>1. DATE</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>1. DATE</span>
             </div>
             <div style={{ width: '250px' }}>
               <label style={labelStyle}>Date *</label>
@@ -1133,8 +1133,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 2: Départ */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>2. DÉPART</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>2. DÉPART</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
               <div>
@@ -1173,8 +1173,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 3: Arrivée */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>3. ARRIVÉE</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>3. ARRIVÉE</span>
             </div>
             
             {/* Arrivée et heures */}
@@ -1236,14 +1236,14 @@ const PilotLogbook = ({ showFormProp }) => {
           <div style={{ marginBottom: '24px' }}>
             <div style={{
               fontSize: 'var(--fs-body)',
-              fontWeight: 'bold',
-              color: 'rgb(0, 0, 0)',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
               backgroundColor: 'transparent',
               marginBottom: '12px',
               borderBottom: '1px solid var(--border-subtle)',
               paddingBottom: '4px'
             }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>3 BIS. SEGMENTS DE VOL</span>
+              <span style={{ color: 'var(--text-primary)' }}>3 BIS. SEGMENTS DE VOL</span>
             </div>
 
             {/* Temps total de vol */}
@@ -1268,7 +1268,7 @@ const PilotLogbook = ({ showFormProp }) => {
                   }
                 }}
                 placeholder="1:30"
-                style={{...inputStyle, backgroundColor: 'rgba(242, 105, 33, 0.10)', fontWeight: 'bold', maxWidth: '200px'}}
+                style={{...inputStyle, backgroundColor: 'rgba(242, 105, 33, 0.10)', fontWeight: '500', maxWidth: '200px'}}
                 pattern="\d{1,3}:\d{2}"
                 title="Format: HH:MM (ex: 1:30)"
                 required
@@ -1352,7 +1352,7 @@ const PilotLogbook = ({ showFormProp }) => {
                       style={{
                         ...inputStyle,
                         fontSize: 'var(--fs-body)',
-                        fontFamily: 'monospace',
+                        fontFamily: 'var(--font-sans)',
                         textAlign: 'center',
                         letterSpacing: '1px'
                       }}
@@ -1542,8 +1542,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 4: Avion */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>4. AVION</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>4. AVION</span>
             </div>
             {/* Première ligne : Immatriculation */}
             <div style={{ marginBottom: '16px' }}>
@@ -1630,8 +1630,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 5: Atterrissages */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>5. ATTERRISSAGES</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>5. ATTERRISSAGES</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'end' }}>
               <div>
@@ -1681,8 +1681,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
           {/* Section 6: Observations */}
           <div style={{ marginBottom: '24px' }}>
-            <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'rgb(0, 0, 0)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
-              <span style={{ color: 'rgb(0, 0, 0)' }}>6. OBSERVATIONS</span>
+            <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-primary)', backgroundColor: 'transparent', marginBottom: '12px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '4px' }}>
+              <span style={{ color: 'var(--text-primary)' }}>6. OBSERVATIONS</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
               <div>

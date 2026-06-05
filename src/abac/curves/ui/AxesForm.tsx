@@ -607,7 +607,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         )}
         {xAxisExpanded && (
         <div style={styles.helperText}>
-          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{xAxisType}</code>
+          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'var(--font-sans)' }}>{xAxisType}</code>
           {xAxisType !== 'custom' && (
             <span style={{ marginLeft: '12px' }}>
               <strong>Titre affiché:</strong> {config.xAxis.title}
@@ -707,7 +707,7 @@ export const AxesForm: React.FC<AxesFormProps> = ({ onSubmit, initialConfig, isW
         )}
         {yAxisExpanded && (
         <div style={styles.helperText}>
-          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'monospace' }}>{yAxisType}</code>
+          <strong>Variable système:</strong> <code style={{ backgroundColor: 'var(--bg-overlay)', padding: '2px 6px', borderRadius: '3px', fontFamily: 'var(--font-sans)' }}>{yAxisType}</code>
           {yAxisType !== 'custom' && (
             <span style={{ marginLeft: '12px' }}>
               <strong>Titre affiché:</strong> {config.yAxis.title}

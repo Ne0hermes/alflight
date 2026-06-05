@@ -20,7 +20,7 @@ const commonStyles = {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
   },
   label: {
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -155,9 +155,9 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
     // Par défaut, tous les avions peuvent se poser sur dur
     const defaultSurfaces = ['hard', 'asphalt', 'concrete', 'bituminous', 'tarmac'];
 
-    // Si l'avion a des surfaces configurées
-    if (selectedAircraft?.compatibleSurfaces) {
-      return selectedAircraft.compatibleSurfaces;
+    // Si l'avion a des surfaces configurées (champ réel : compatibleRunwaySurfaces)
+    if (selectedAircraft?.compatibleRunwaySurfaces?.length) {
+      return selectedAircraft.compatibleRunwaySurfaces;
     }
 
     // Si c'est un avion léger, ajouter herbe
@@ -328,7 +328,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   }, [flightPlan?.performance]);
 
   return (
-    <div style={commonStyles.container}>
+    <>
       {/* Alerte si pas de bilan carburant */}
       {!hasFuelData && (
         <div style={commonStyles.infoBoxWarning}>
@@ -366,7 +366,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
               </div>
               <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                = {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
+                ≈ {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 30 min de déroutement (borné par l'autonomie)
               </div>
             </div>
 
@@ -379,7 +379,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
               </div>
               <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                = ({convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} - {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)}) {getSymbol('fuel')} / {(selectedAircraft?.fuelConsumption || 40).toFixed(0)} {getSymbol('fuelConsumption')} × {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 0.5
+                ≈ {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 30 min (ou l'autonomie restante si inférieure)
               </div>
             </div>
 
@@ -603,6 +603,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
 
       {/* Module de déroutement complet */}
       <AlternatesModule
+        wizardMode
         customRadius={coneZone ? null : searchRadius.radiusAtDep * 1.852} // Convertir NM en km si pas de cône
         showRadiusCircle={true}
         useConeZone={!!coneZone} // Nouveau prop pour utiliser la zone cône
@@ -612,7 +613,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
           aircraftType: filters.hideIncompatibleType ? aircraftType : null
         }}
       />
-    </div>
+    </>
   );
 });
 

@@ -636,7 +636,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: 'var(--radius-sm)',
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-sans)',
             lineHeight: '1.5',
             color: 'var(--text-primary)',
             border: '1px solid var(--text-tertiary)'
@@ -655,7 +655,7 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
             backgroundColor: 'var(--bg-overlay)', 
             padding: '12px', 
             borderRadius: 'var(--radius-sm)',
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-sans)',
             lineHeight: '1.5',
             color: 'var(--text-primary)',
             border: '1px solid var(--text-tertiary)'
