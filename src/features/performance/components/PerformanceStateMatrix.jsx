@@ -31,12 +31,13 @@ const STATUS_VISUAL = {
     badge: 'Calculé', badgeBg: 'var(--text-primary)'
   },
   NOT_IMPLEMENTED: {
-    bg: 'var(--bg-overlay)', border: 'var(--accent-primary)', text: 'var(--accent-primary)',
-    badge: 'Non implémenté', badgeBg: 'var(--accent-primary)'
+    // Gris neutre (fini l'orange flashy) — texte blanc, comme l'analyse de pistes.
+    bg: 'var(--bg-overlay)', border: 'var(--border-regular)', text: 'var(--text-primary)',
+    badge: 'Non implémenté', badgeBg: 'var(--bg-raised)', badgeText: 'var(--text-primary)'
   },
   MISSING_INPUT: {
-    bg: 'var(--bg-overlay)', border: 'var(--accent-primary)', text: 'var(--accent-primary)',
-    badge: 'Input manquant', badgeBg: 'var(--accent-primary)'
+    bg: 'var(--bg-overlay)', border: 'var(--border-regular)', text: 'var(--text-primary)',
+    badge: 'Input manquant', badgeBg: 'var(--bg-raised)', badgeText: 'var(--text-primary)'
   },
   AMBIGUOUS: {
     bg: 'var(--bg-overlay)', border: 'var(--color-red-critical)', text: 'var(--color-red-critical)',
@@ -62,6 +63,8 @@ const STATUS_VISUAL = {
 export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État de performance — couverture exhaustive', phases, safetyFactor = DEFAULT_SAFETY_FACTOR }) {
   const state = useMemo(() => generatePerformanceState(aircraft, inputs), [aircraft, inputs]);
   const [expandedOp, setExpandedOp] = useState(null);
+  // Repli de la matrice. null = défaut intelligent (replié si tout est non-implémenté).
+  const [collapsed, setCollapsed] = useState(null);
 
   // Filtrage par phases si fourni — on ne montre que les opérations dont la phase est dans la liste.
   const filteredOps = useMemo(() => {
@@ -88,6 +91,11 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
   const coverageRatio = coverage.total > 0 ? (coverage.computed / coverage.total) : 0;
   const coverageColor = coverageRatio >= 0.8 ? 'var(--text-primary)' : coverageRatio >= 0.5 ? 'var(--accent-primary)' : 'var(--color-red-critical)';
 
+  // Section entièrement non-implémentée → repliée par défaut + titre explicite.
+  const allNotImplemented = coverage.total > 0 && coverage.notImplemented === coverage.total;
+  const isCollapsed = collapsed === null ? allNotImplemented : collapsed;
+  const displayTitle = allNotImplemented ? `${title} — à implémenter (non fonctionnelle)` : title;
+
   return (
     <div style={{
       border: '1px solid var(--border-regular)',
@@ -96,16 +104,21 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
       marginBottom: 16,
       overflow: 'hidden'
     }}>
-      {/* En-tête avec barre de couverture */}
-      <div style={{
-        padding: 12,
-        backgroundColor: 'var(--bg-overlay)',
-        borderBottom: '1px solid var(--border-subtle)'
-      }}>
+      {/* En-tête avec barre de couverture (cliquable : replier/déplier) */}
+      <div
+        onClick={() => setCollapsed(!isCollapsed)}
+        style={{
+          padding: 12,
+          backgroundColor: 'var(--bg-overlay)',
+          borderBottom: isCollapsed ? 'none' : '1px solid var(--border-subtle)',
+          cursor: 'pointer'
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{isCollapsed ? '▶' : '▼'}</span>
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
-              {title}
+              {displayTitle}
             </h3>
           </div>
           <div style={{
@@ -142,7 +155,8 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
         )}
       </div>
 
-      {/* Lignes */}
+      {/* Lignes (masquées si replié) */}
+      {!isCollapsed && (
       <div>
         {filteredOps.map(op => {
           const result = state.results[op.id];
@@ -221,7 +235,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                   padding: '3px 8px',
                   borderRadius: 4,
                   backgroundColor: visual.badgeBg,
-                  color: 'var(--app-bg)',
+                  color: visual.badgeText || 'var(--app-bg)',
                   whiteSpace: 'nowrap'
                 }}>
                   {visual.badge}
@@ -431,8 +445,10 @@ Bracket tenté en auto : {step.bracketResult.error}
           );
         })}
       </div>
+      )}
 
-      {/* Pied avec horodatage */}
+      {/* Pied avec horodatage (masqué si replié) */}
+      {!isCollapsed && (
       <div style={{
         padding: '6px 12px',
         backgroundColor: 'var(--bg-overlay)',
@@ -444,6 +460,7 @@ Bracket tenté en auto : {step.bracketResult.error}
         Généré à {new Date(state.generatedAt).toLocaleTimeString()} —
         Avion : <code>{state.aircraftId || '(non identifié)'}</code>
       </div>
+      )}
     </div>
   );
 }

@@ -74,8 +74,9 @@ const palette = {
 const fontFamily = {
   // Police principale — Century Gothic et fallbacks libres pour le web
   sans: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif",
-  // Police monospace — JetBrains Mono pour data technique
-  mono: "'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', 'SF Mono', Menlo, Consolas, monospace",
+  // `mono` = ALIAS de `sans` : police UNIQUE (Century Gothic) PARTOUT, valeurs comprises.
+  // Plus de JetBrains Mono ; l'alignement des chiffres passe par tabular-nums (cf. data/dataLg).
+  mono: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', 'Avant Garde', system-ui, sans-serif",
 };
 
 /* ---------------------------------------------------------------------------
@@ -156,6 +157,7 @@ const typography = {
     lineHeight: 1.4,
     letterSpacing: '0',
     fontWeight: 500,
+    fontVariantNumeric: 'tabular-nums', // chiffres à chasse fixe (alignement colonnes)
   },
   dataLg: {
     fontFamily: fontFamily.mono,
@@ -163,6 +165,7 @@ const typography = {
     lineHeight: 1.1,
     letterSpacing: '-0.01em',
     fontWeight: 500,
+    fontVariantNumeric: 'tabular-nums',
   },
 };
 

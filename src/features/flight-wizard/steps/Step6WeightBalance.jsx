@@ -28,7 +28,7 @@ const commonStyles = {
     marginBottom: '16px'
   },
   label: {
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -469,7 +469,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         return (
           <div style={commonStyles.container}>
             <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p style={{ fontSize: 'var(--fs-title)', color: theme.colors.textSecondary }}>
+              <p style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                 Aucun avion sélectionné. Veuillez sélectionner un avion à l'étape 1.
               </p>
             </div>
@@ -481,7 +481,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         return (
           <div style={commonStyles.container}>
             <div style={{ textAlign: 'center', padding: '40px' }}>
-              <p style={{ fontSize: 'var(--fs-title)', color: theme.colors.textSecondary, marginBottom: '12px' }}>
+              <p style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary, marginBottom: '12px' }}>
                 Chargement des données de masse et centrage…
               </p>
 

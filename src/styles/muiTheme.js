@@ -340,7 +340,7 @@ const muiTheme = createTheme({
             backgroundColor: 'transparent !important',
             padding: '0 !important',
             // Typographie unifiée (eyebrow mono ALFlight)
-            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+            fontFamily: "var(--font-sans) !important",
             fontSize: '11px !important',
             fontWeight: 500,
             letterSpacing: '0.12em',
@@ -518,7 +518,7 @@ const muiTheme = createTheme({
           width: '100%',
           backgroundColor: 'transparent !important',
           padding: '0 !important',
-          fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+          fontFamily: "var(--font-sans) !important",
           fontSize: '11px !important',
           fontWeight: 500,
           letterSpacing: '0.12em',
@@ -725,7 +725,7 @@ const muiTheme = createTheme({
             width: '100%',
             backgroundColor: 'transparent !important',
             padding: '0 !important',
-            fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace !important",
+            fontFamily: "var(--font-sans) !important",
             fontSize: '11px !important',
             fontWeight: 500,
             letterSpacing: '0.12em',
@@ -807,7 +807,7 @@ const muiTheme = createTheme({
       styleOverrides: {
         label: {
           color: ALFLIGHT_COLORS.textTertiary,
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-sans)',
           fontSize: '11px',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
@@ -854,7 +854,7 @@ const muiTheme = createTheme({
         tooltip: {
           backgroundColor: ALFLIGHT_COLORS.bgRaised,
           color: ALFLIGHT_COLORS.textPrimary,
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-sans)',
           fontSize: '11px',
           letterSpacing: '0.06em',
           border: `1px solid ${ALFLIGHT_COLORS.borderSubtle}`,
@@ -877,7 +877,7 @@ const muiTheme = createTheme({
           backgroundColor: ALFLIGHT_COLORS.bgOverlay,
           color: ALFLIGHT_COLORS.textSecondary,
           borderRadius: '8px', // aligné sur --radius-sm (8px partout)
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-sans)',
           fontSize: '11px',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
@@ -898,7 +898,7 @@ const muiTheme = createTheme({
         },
         head: {
           color: ALFLIGHT_COLORS.textTertiary,
-          fontFamily: "'JetBrains Mono', monospace",
+          fontFamily: 'var(--font-sans)',
           fontSize: '11px',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',

@@ -314,7 +314,7 @@ const VFRNavigationTable = ({
         {!hideTitle && (
           <h3 style={{
             fontSize: 'var(--fs-title)',
-            fontWeight: 'bold',
+            fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -365,7 +365,7 @@ const VFRNavigationTable = ({
                 marginBottom: '8px'
               }}>
                 <Sunset size={18} color="var(--accent-primary)" />
-                <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
+                <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
                   ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera au crépuscule ou de nuit
                 </span>
               </div>
@@ -406,13 +406,13 @@ const VFRNavigationTable = ({
               <tbody>
                 {navigationData.map((seg, idx) => (
                   <tr key={idx}>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {idx + 1}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: '500' }}>
                       {seg.from}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', fontWeight: '500' }}>
                       {seg.to}
                     </td>
                     <td style={{ padding: '4px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
@@ -436,7 +436,7 @@ const VFRNavigationTable = ({
                           borderRadius: 'var(--radius-sm)',
                           textAlign: 'center',
                           fontSize: 'var(--fs-body)',
-                          fontWeight: 'bold',
+                          fontWeight: '500',
                           backgroundColor: 'rgba(242, 105, 33, 0.10)'
                         }}
                         min="0"
@@ -444,13 +444,13 @@ const VFRNavigationTable = ({
                         step="500"
                       />
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500', color: 'var(--text-secondary)' }}>
                       {seg.magneticHeading}°
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: 'bold' }}>
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {formatTime(seg.estimatedTime)}
                     </td>
                     <td style={{
@@ -460,7 +460,7 @@ const VFRNavigationTable = ({
                       backgroundColor: 'var(--bg-overlay)',
                       minWidth: '80px',
                       color: 'var(--text-primary)',
-                      fontWeight: 'bold'
+                      fontWeight: '500'
                     }}>
                       {departureTimeTheoretical ? addMinutesToTime(departureTimeTheoretical, seg.cumulativeETEMinutes) : '-'}
                     </td>
@@ -488,14 +488,14 @@ const VFRNavigationTable = ({
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Sunset size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Crépuscule</span>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>Crépuscule</span>
                             </div>
                           );
                         } else if (status === 'night') {
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Moon size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 'bold' }}>Nuit</span>
+                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>Nuit</span>
                             </div>
                           );
                         }
@@ -544,7 +544,7 @@ const VFRNavigationTable = ({
                             gap: '4px',
                             marginBottom: '4px',
                             color: 'var(--text-secondary)',
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             fontSize: 'var(--fs-body)'
                           }}>
                             <AlertTriangle size={16} />
@@ -620,7 +620,7 @@ const VFRNavigationTable = ({
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
                                       fontSize: 'var(--fs-caption)',
-                                      fontWeight: 'bold',
+                                      fontWeight: '500',
                                       color: 'var(--text-primary)',
                                       marginBottom: '1px'
                                     }}>
@@ -669,7 +669,7 @@ const VFRNavigationTable = ({
                                   {airspace.frequencies.map((freq, fIdx) => (
                                     <div key={fIdx} style={{
                                       fontSize: 'var(--fs-caption)',
-                                      fontWeight: 'bold',
+                                      fontWeight: '500',
                                       color: 'var(--text-secondary)',
                                       marginBottom: '1px'
                                     }}>
@@ -692,7 +692,7 @@ const VFRNavigationTable = ({
                 ))}
                 
                 {/* Ligne des totaux */}
-                <tr style={{ backgroundColor: 'var(--bg-overlay)', fontWeight: 'bold' }}>
+                <tr style={{ backgroundColor: 'var(--bg-overlay)', fontWeight: '600' }}>
                   <td colSpan="5" style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'right' }}>
                     TOTAUX:
                   </td>

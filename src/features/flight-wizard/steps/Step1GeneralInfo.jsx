@@ -322,7 +322,7 @@ const styles = {
     flex: 1,
   },
   label: {
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',
@@ -334,7 +334,7 @@ const styles = {
   },
   input: {
     padding: '14px 16px',
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'var(--app-bg-alpha-80)',
@@ -344,7 +344,7 @@ const styles = {
   },
   select: {
     padding: '14px 16px',
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     borderRadius: 'var(--radius-sm)',
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'var(--app-bg-alpha-80)',
@@ -399,14 +399,14 @@ const styles = {
     flexShrink: 0,
   },
   radioText: {
-    fontSize: 'var(--fs-title)',
-    fontWeight: '600',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '400',
     color: theme.colors.textPrimary,
     whiteSpace: 'nowrap',
   },
   radioTextDisabled: {
-    fontSize: 'var(--fs-title)',
-    fontWeight: '600',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '400',
     color: 'rgba(255, 255, 255, 0.4)',
     whiteSpace: 'nowrap',
   },

@@ -7,6 +7,7 @@ import { useNavigationResults } from './useNavigationResults';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useFuelStore } from '@core/stores/fuelStore'; // Accès direct au store pour fobFuel
+import { isSurfaceCompatible } from '@utils/runwaySurface';
 import {
   calculateSearchZone,
   isAirportInSearchZone,
@@ -553,15 +554,18 @@ export const useAlternateSelection = () => {
     // Formule exacte demandée: FOB / Consommation × Vitesse × 0.5
     // Autonomie au départ = FOB / consommation
     const enduranceAtDep = fobLiters / consumption;
-    // Rayon = vitesse × autonomie × 0.5 (demi-autonomie pour aller-retour théorique)
-    const radiusAtDep = cruiseSpeed * enduranceAtDep * 0.5;
+    // 🔧 RAYON DE DÉROUTEMENT (corrige le cône surdimensionné).
+    // AVANT : × autonomie × 0.5 = demi-autonomie TOTALE (≈75 min de vol) → cercle énorme,
+    // incohérent avec le libellé « 20-30 min de déroutement ».
+    // APRÈS : distance parcourue en un temps de déroutement cible (~30 min), BORNÉE par
+    // l'autonomie réellement disponible (si peu de carburant, le rayon diminue).
+    const DIVERSION_TIME_H = 0.5; // 30 min de vol de déroutement (cf. libellé « 20-30 min »)
+    const radiusAtDep = cruiseSpeed * Math.min(enduranceAtDep, DIVERSION_TIME_H);
 
-    // RAYON À L'ARRIVÉE (R2): Basé sur carburant restant théorique
-    // Autonomie à l'arrivée = (FOB - carburant_vol) / consommation
+    // RAYON À L'ARRIVÉE (R2): même logique, bornée par le carburant restant théorique
     const fuelAtArrival = Math.max(0, fobLiters - tripFuel);
     const enduranceAtArr = fuelAtArrival / consumption;
-    // Rayon à l'arrivée
-    const radiusAtArr = cruiseSpeed * enduranceAtArr * 0.5;
+    const radiusAtArr = cruiseSpeed * Math.min(enduranceAtArr, DIVERSION_TIME_H);
 
     console.log('🔺 [CONE ZONE PARAMS] Calcul (formule: FOB/Conso×Vit×0.5):', {
       fobLiters: fobLiters.toFixed(1) + ' L',
@@ -755,9 +759,14 @@ export const useAlternateSelection = () => {
 
     // 🔧 FIX: Utiliser le rayon du cône (basé sur FOB réel) si disponible
     // sinon utiliser le rayon de la zone pilule (basé sur capacité max)
-    const effectiveRadius = (coneZoneParams && !coneZoneParams.isEstimate)
+    // Borne de sécurité : même en mode estimé (sans FOB, rayon basé sur la capacité
+    // max), la zone affichée/dessinée ne dépasse pas un rayon de déroutement
+    // raisonnable (~30 min de vol). Évite la « pilule » géante sur la carte.
+    const cruiseKt = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120;
+    const baseRadius = (coneZoneParams && !coneZoneParams.isEstimate)
       ? coneZoneParams.radiusAtDep
       : searchZone.dynamicRadius;
+    const effectiveRadius = Math.min(baseRadius, cruiseKt * 0.5);
 
     console.log('✅ [dynamicParams] Calculés:', {
       requiredRunwayLength: minRunwayLength,
@@ -971,19 +980,11 @@ export const useAlternateSelection = () => {
           // Récupérer la longueur de piste (peut être à différents endroits)
           const runwayLength = runway.length || runway.dimensions?.length || 0;
 
-          // 1. Vérifier la SURFACE EN PREMIER (critère le plus important)
-          const runwaySurface = normalizeSurface(runway.surface);
-          if (runwaySurface && selectedAircraft.compatibleRunwaySurfaces?.length > 0) {
-            const isSurfaceCompatible = selectedAircraft.compatibleRunwaySurfaces.some(
-              compatible => normalizeSurface(compatible) === runwaySurface
-            );
-            if (!isSurfaceCompatible) {
-              // Log pour debug LFGC
-              if (airport.icao === 'LFGC') {
-                console.log(`❌ [LFGC] Piste surface incompatible: ${runwaySurface} pas dans [${selectedAircraft.compatibleRunwaySurfaces.join(', ')}]`);
-              }
-              return false; // Surface incompatible - REJET
-            }
+          // 1. Vérifier la SURFACE EN PREMIER (critère le plus important).
+          // Util partagé : tolère surfaces combinées (CONC+ASPH) et synonymes
+          // (MACADAM, BITUM…) → fini les faux « surface incompatible ».
+          if (!isSurfaceCompatible(runway.surface, selectedAircraft.compatibleRunwaySurfaces)) {
+            return false; // Surface incompatible - REJET
           }
 
           // 2. Vérifier la longueur minimale si l'avion a un critère

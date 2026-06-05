@@ -481,20 +481,27 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
   return (
     <div
       style={{
-        backgroundColor: 'var(--bg-canvas)',
+        // Mode wizard (étape Déroutements) : conteneur transparent, sans pleine
+        // page ni padding — il s'insère dans l'étape sans créer un 2e cadre.
+        backgroundColor: wizardMode ? 'transparent' : 'var(--bg-canvas)',
         color: 'var(--text-primary)',
         fontFamily: tokens.fontFamily.sans,
-        minHeight: '100vh',
-        padding: `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
+        minHeight: wizardMode ? 'auto' : '100vh',
+        padding: wizardMode
+          ? 0
+          : `clamp(${tokens.spacing[6]}, 4vw, ${tokens.spacing[9]}) clamp(${tokens.spacing[5]}, 3vw, ${tokens.spacing[8]})`,
         boxSizing: 'border-box',
       }}
     >
-      {/* 🎨 Hero éditorial unifié */}
-      <ModuleHero
-        image="/assets/photos/hero-alternates.jpg"
-        eyebrow="OPS · DÉROUTEMENTS"
-        title="Déroutements"
-      />
+      {/* 🎨 Hero éditorial unifié — masqué en mode wizard (l'étape a déjà son
+          titre « Déroutements » : éviter le doublon titre + photo). */}
+      {!wizardMode && (
+        <ModuleHero
+          image="/assets/photos/hero-alternates.jpg"
+          eyebrow="OPS · DÉROUTEMENTS"
+          title="Déroutements"
+        />
+      )}
 
       {/* Indicateur de rate limiting météo */}
       <WeatherRateLimitIndicator />

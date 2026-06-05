@@ -215,28 +215,13 @@ export const LandingPage = ({ onNavigate, isProfileConfigured = true }) => {
               e.currentTarget.style.backgroundColor = 'var(--accent-primary)';
             }}
           >
-            <Plane size={16} />
-            <span style={styles.primaryButtonText}>Je prépare mon vol</span>
-          </button>
-
-          {/* Bouton secondary — wizard avion (outline orange) */}
-          <button
-            type="button"
-            style={styles.secondaryButton}
-            onClick={() => onNavigate('aircraft-wizard')}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--accent-soft)';
-              e.currentTarget.style.color = 'var(--accent-hover)';
-              e.currentTarget.style.borderColor = 'var(--accent-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'var(--accent-primary)';
-              e.currentTarget.style.borderColor = 'var(--accent-primary)';
-            }}
-          >
-            <Settings size={16} />
-            <span style={styles.secondaryButtonText}>Configurer un avion</span>
+            <div style={styles.heroIconWrap}>
+              <Plane size={18} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+              <span style={styles.primaryButtonEyebrow}>MISSION · PLAN DE VOL</span>
+              <span style={styles.primaryButtonText}>Je prépare mon vol</span>
+            </div>
           </button>
         </div>
       </section>
@@ -459,33 +444,41 @@ const styles = {
     marginTop: tokens.spacing[2],
   },
 
+  // Icône hero (suit la couleur du bouton via color:inherit) — wrap 32×32 façon datasheet.
+  heroIconWrap: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    flexShrink: 0,
+    color: 'inherit',
+  },
+
   // ─── Bouton primary — wizard vol (orange plein, accent unique) ───
   primaryButton: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px',
+    gap: tokens.spacing[4],
     width: '100%',
-    padding: '20px 24px',
+    padding: '14px 16px',
+    minHeight: '64px',
+    textAlign: 'center',
     backgroundColor: 'var(--accent-primary)',
     color: 'var(--text-inverse)',
     border: 'none',
     borderRadius: tokens.radius?.sm || '2px',
     cursor: 'pointer',
     fontFamily: tokens.fontFamily.sans,
-    fontSize: 'var(--fs-title)',
-    fontWeight: 600,
     transition: `background-color ${tokens.motion.fast}`,
   },
   primaryButtonText: {
     fontFamily: tokens.fontFamily.sans,
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     letterSpacing: '0.02em',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
+    color: 'var(--text-inverse)',
   },
   primaryButtonEyebrow: {
     fontFamily: tokens.fontFamily.mono,
@@ -501,30 +494,25 @@ const styles = {
   // "un seul accent plein par écran" de la charte ALFlight.
   secondaryButton: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
+    gap: tokens.spacing[4],
     width: '100%',
-    padding: '20px 24px',
+    padding: '14px 16px',
+    minHeight: '64px',
+    textAlign: 'left',
     backgroundColor: 'transparent',
     color: 'var(--accent-primary)',
     border: '1px solid var(--accent-primary)',
     borderRadius: tokens.radius?.sm || '2px',
     cursor: 'pointer',
     fontFamily: tokens.fontFamily.sans,
-    fontSize: 'var(--fs-title)',
-    fontWeight: 600,
     transition: `background-color ${tokens.motion.fast}, color ${tokens.motion.fast}, border-color ${tokens.motion.fast}`,
   },
   secondaryButtonText: {
     fontFamily: tokens.fontFamily.sans,
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: 600,
     letterSpacing: '0.02em',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
   },
   secondaryButtonEyebrow: {
     fontFamily: tokens.fontFamily.mono,
