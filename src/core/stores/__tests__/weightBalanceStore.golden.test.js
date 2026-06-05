@@ -75,3 +75,34 @@ describe('weightBalanceStore.calculateWeightBalance — golden (comportement act
     expect(r.isWithinLimits).toBe(false);
   });
 });
+
+// ── Phase 2 (A2) — le store interpole l'enveloppe avant (verdict corrigé) ──
+const AIRCRAFT_VAR_FWD = {
+  registration: 'F-VARF',
+  fuelType: 'AVGAS 100LL',
+  emptyWeight: 850,
+  weights: { emptyWeight: 850, mtow: 1100 },
+  weightBalance: {
+    emptyWeightArm: 2.00, frontLeftSeatArm: 2.00, frontRightSeatArm: 2.00,
+    rearLeftSeatArm: 2.00, rearRightSeatArm: 2.00, baggageArm: 2.00,
+    auxiliaryArm: 2.00, fuelArm: 2.00,
+  },
+  // Limite avant qui se resserre avec la masse : 2.05 @600 kg → 1.95 @1000 kg.
+  cgEnvelope: { forwardPoints: [{ weight: 600, cg: 2.05 }, { weight: 1000, cg: 1.95 }], aftCG: 2.60 },
+};
+
+describe('weightBalanceStore — Phase 2 : enveloppe interpolée (A2)', () => {
+  it('applique la limite avant À la masse réelle, pas forwardPoints[0]', () => {
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 0, frontRight: 0, rearLeft: 0, rearRight: 0, baggage: 0, auxiliary: 0, fuel: 150,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(AIRCRAFT_VAR_FWD);
+    // total = 850 + 150 = 1000 ; moment = 850×2 + 150×2 = 2000 ; cg = 2.00
+    expect(r.totalWeight).toBe(1000);
+    expect(r.cg).toBe(2);
+    // limite avant interpolée à 1000 kg = 1.95 (et non le point[0] figé = 2.05)
+    expect(r.cgLimits.forward).toBeCloseTo(1.95, 6);
+    // 2.00 ∈ [1.95, 2.60] → DANS les limites ; l'ancien rectangle (2.05) disait HORS
+    expect(r.isWithinCG).toBe(true);
+  });
+});
