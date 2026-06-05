@@ -3,6 +3,7 @@ import { Plane, AlertTriangle, CheckCircle, Info, Ruler, Wind, ChevronDown, Chev
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useAircraft } from '@core/contexts';
+import { isSurfaceCompatible } from '@utils/runwaySurface';
 
 const SURFACE_TYPES = {
   'ASPH': { name: 'Asphalte', icon: '🛣️', quality: 1 },
@@ -54,7 +55,7 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
 
   // Utiliser compatibleRunwaySurfaces depuis les données d'avion
   if (aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0) {
-    if (!aircraft.compatibleRunwaySurfaces.includes(surface)) {
+    if (!isSurfaceCompatible(runway.surface?.type || runway.surface, aircraft.compatibleRunwaySurfaces)) {
       compatible = false;
       reasons.push(`❌ Surface ${surfaceInfo.name || surface} non autorisée pour cet avion`);
     } else {

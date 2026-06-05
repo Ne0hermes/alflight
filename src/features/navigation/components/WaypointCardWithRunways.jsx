@@ -7,6 +7,7 @@ import { SimpleAirportSelector as AirportSelector } from './SimpleAirportSelecto
 import { VFRPointInserter } from './VFRPointInserter';
 import { coordinateConversions } from '@utils/unitConversions';
 import { usePerformanceCalculations } from '@shared/hooks/usePerformanceCalculations';
+import { isSurfaceCompatible } from '@utils/runwaySurface';
 
 // Composant pour une carte de waypoint avec analyse des pistes intégrée
 export const WaypointCardWithRunways = memo(({
@@ -141,29 +142,19 @@ export const WaypointCardWithRunways = memo(({
       console.log('⚠️ Utilisation distances statiques (legacy):', requiredDistances);
     }
 
-    // Si aucune donnée de performance n'est disponible, aucune piste n'est compatible
-    if (!requiredDistances) {
-      console.log('❌ Aucune donnée de performance disponible');
-      return { compatible: 0, total: runways.length };
-    }
-
     const compatibleCount = runways.filter(runway => {
-      // Vérifier la surface si l'avion a des restrictions définies
-      const aircraftSurfaces = selectedAircraft.compatibleRunwaySurfaces || [];
-      const surfaceType = runway.surface?.type || runway.surface || '';
-
-      // Si l'avion a des restrictions de surface, vérifier la compatibilité
-      if (aircraftSurfaces.length > 0) {
-        const surfaceCompatible = aircraftSurfaces.includes(surfaceType);
-        if (!surfaceCompatible) {
-          console.log(`❌ Surface ${surfaceType} non compatible avec ${aircraftSurfaces.join(', ')}`);
-          return false;
-        }
+      // 1. SURFACE — util partagé (tolère CONC+ASPH, MACADAM… ; liste avion vide = OK).
+      const surfaceRaw = runway.surface?.type || runway.surface;
+      if (!isSurfaceCompatible(surfaceRaw, selectedAircraft.compatibleRunwaySurfaces)) {
+        return false;
       }
+      // 2. DISTANCES — sans données de performance, on ne peut pas juger la distance :
+      // on n'exclut PAS sur ce critère (compatible « sous réserve perf ») au lieu de
+      // renvoyer 0 piste compatible comme avant.
+      if (!requiredDistances) return true;
 
       const todaFeet = Math.round((runway.dimensions?.toda || runway.dimensions?.length || 0) * 3.28084);
       const ldaFeet = Math.round((runway.dimensions?.lda || runway.dimensions?.length || 0) * 3.28084);
-
       return todaFeet >= requiredDistances.takeoffDistance &&
         ldaFeet >= requiredDistances.landingDistance;
     }).length;
@@ -398,9 +389,10 @@ export const WaypointCardWithRunways = memo(({
                   const aircraftSurfaces = selectedAircraft?.compatibleRunwaySurfaces || [];
                   const surfaceType = runway.surface?.type || runway.surface || 'Non spécifiée';
 
-                  // Si aircraftSurfaces est vide, toutes surfaces sont considérées compatibles (pas de restriction)
-                  // Sinon, vérifier que la surface est dans la liste
-                  const surfaceCompatible = aircraftSurfaces.length === 0 || aircraftSurfaces.includes(surfaceType);
+                  // Util partagé : tolère surfaces combinées (CONC+ASPH) et synonymes.
+                  // On passe la surface BRUTE (pas le fallback "Non spécifiée") pour
+                  // qu'une piste sans surface connue ne soit pas rejetée à tort.
+                  const surfaceCompatible = isSurfaceCompatible(runway.surface?.type || runway.surface, aircraftSurfaces);
 
                   // Calculer les distances requises (même logique que getRunwayCompatibility)
                   const airportAltitude = waypoint.elevation || vacData?.elevation || 0;
