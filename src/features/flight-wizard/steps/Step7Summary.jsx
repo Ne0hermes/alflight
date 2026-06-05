@@ -8,6 +8,7 @@ import { useNavigationResults } from '@features/navigation/hooks/useNavigationRe
 import { useUnits } from '@hooks/useUnits';
 import { useFuelStore } from '@core/stores/fuelStore';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
@@ -205,7 +206,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     }
 
     // Paramètres (utilise le taux de descente modifiable)
-    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 120; // kt
+    // 🔧 FIX D : vitesse canonique, plus de 120 kt fabriqué. Absente → pas de TOD affiché.
+    const groundSpeed = getCruiseSpeedKt(selectedAircraft);
+    if (!groundSpeed) {
+      return null;
+    }
 
     // Calculs
     const descentTimeMinutes = altitudeToDescent / descentRate;
@@ -282,20 +287,20 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     const contingencyFuel = fuelData?.contingency?.ltr || 0;
     const fuelForRange = Math.max(0, usableFuel - taxiFuel - contingencyFuel);
 
-    // Consommation et vitesse de l'avion
-    const fuelConsumption = flightPlan.aircraft.fuelConsumption || 40; // L/h
-    const cruiseSpeed = flightPlan.aircraft.cruiseSpeedKt || 120; // kt
+    // Consommation et vitesse de l'avion (canonique — plus de 40 lph / 120 kt fabriqués ; null si absent)
+    const fuelConsumption = getFuelConsumptionLph(flightPlan.aircraft);
+    const cruiseSpeed = getCruiseSpeedKt(flightPlan.aircraft);
 
-    // Autonomie avec carburant disponible pour le vol (heures)
-    const endurance = fuelForRange / fuelConsumption;
+    // Autonomie avec carburant disponible pour le vol (heures) — null si conso absente
+    const endurance = fuelConsumption ? fuelForRange / fuelConsumption : null;
 
-    // Rayon maximum (distance simple)
-    const maxRadiusNM = endurance * cruiseSpeed;
-    const maxRadiusKM = maxRadiusNM * 1.852;
+    // Rayon maximum (distance simple) — null si vitesse/autonomie absente (pas de chiffre inventé)
+    const maxRadiusNM = (cruiseSpeed && endurance != null) ? endurance * cruiseSpeed : null;
+    const maxRadiusKM = maxRadiusNM != null ? maxRadiusNM * 1.852 : null;
 
     // Rayon aller-retour (distance divisée par 2)
-    const roundTripRadiusNM = maxRadiusNM / 2;
-    const roundTripRadiusKM = maxRadiusKM / 2;
+    const roundTripRadiusNM = maxRadiusNM != null ? maxRadiusNM / 2 : null;
+    const roundTripRadiusKM = maxRadiusKM != null ? maxRadiusKM / 2 : null;
 
     return {
       usableFuel,
@@ -1090,7 +1095,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             </div>
 
             {/* Autonomie et rayons d'action */}
-            {actionRadii.fuelForRange > 0 && (
+            {actionRadii.fuelForRange > 0 && actionRadii.endurance != null && (
               <>
                 {/* Carburant pour le vol */}
                 <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>

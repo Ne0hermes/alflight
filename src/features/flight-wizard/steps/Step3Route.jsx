@@ -7,6 +7,8 @@ import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
+import { getCruiseSpeedKt } from '@utils/aircraftPerf';
+import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
 // SUPPRIMÉ: useUnits - plus nécessaire
 
 // Styles communs
@@ -74,6 +76,11 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
   const { selectedAircraft, setSelectedAircraft } = useAircraft();
   // SUPPRIMÉ: useUnits() - plus nécessaire (calcul searchRadius retiré)
 
+  // 🔧 FIX F : distance totale du trajet (NM) via le hook canonique, affichée DÈS la
+  // définition du trajet (avant elle n'était visible qu'en synthèse, étape 7).
+  const flightType = flightPlan.generalInfo?.flightType || 'VFR';
+  const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
+
   // Points VFR chargés depuis AIXM
   const [vfrPoints, setVfrPoints] = useState([]);
   const [loadingVFR, setLoadingVFR] = useState(false);
@@ -117,7 +124,18 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
     // Paramètres par défaut
     const descentRate = 500; // ft/min
-    const groundSpeed = selectedAircraft?.cruiseSpeedKt || 120; // kt
+    // 🔧 FIX D : vitesse canonique (plus de 120 kt fabriqué). Avion incomplet → erreur explicite.
+    const groundSpeed = getCruiseSpeedKt(selectedAircraft);
+    if (!groundSpeed) {
+      return {
+        error: true,
+        message: 'Vitesse de croisière non renseignée (avion incomplet)',
+        cruiseAltitude,
+        targetAltitude,
+        terrainElevation,
+        arrivalAerodrome: lastWaypoint.name || 'Destination'
+      };
+    }
 
     // Calculs
     const descentTimeMinutes = altitudeToDescent / descentRate;
@@ -371,6 +389,23 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           todCalculation={null}
         />
       </div>
+
+      {/* 🔧 FIX F : distance totale du trajet, visible dès la définition du trajet */}
+      {navigationResults?.totalDistance > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 16px', marginTop: '12px',
+          backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)',
+          borderLeft: '4px solid var(--accent-primary)'
+        }}>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 'var(--fs-body)' }}>
+            Distance totale du trajet
+          </span>
+          <span style={{ fontWeight: 700, color: 'var(--accent-primary)', fontSize: 'var(--fs-title)', fontVariantNumeric: 'tabular-nums' }}>
+            {navigationResults.totalDistance.toFixed(1)} NM
+          </span>
+        </div>
+      )}
 
       {/* Module de navigation complet pour la gestion des waypoints */}
       <div style={commonStyles.section}>
