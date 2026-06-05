@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { getFuelDensity } from '@utils/fuelDensity';
+import { cgLimitsAtMass } from '@utils/cgEnvelope';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
@@ -230,9 +231,16 @@ export const useWeightBalanceStore = create(
         totalWeight >= minTakeoffWeight &&
         totalWeight <= maxTakeoffWeight;
       
-      const isWithinCG = 
-        cg >= wb.cgLimits.forward &&
-        cg <= wb.cgLimits.aft;
+      // 🔧 A2/A3 — Enveloppe RÉELLE interpolée à la masse (remplace le rectangle
+      // constant [forwardPoints[0].cg, aftCG]). Source : aircraft.cgEnvelope
+      // (courbe avant variable + modèle arrière 2-points), sinon limites scalaires.
+      const cgLimitsAtTOW = cgLimitsAtMass(
+        aircraft.cgEnvelope || aircraft.cgLimits || wb.cgLimits,
+        totalWeight
+      );
+      const isWithinCG = (cgLimitsAtTOW.forward !== null && cgLimitsAtTOW.aft !== null)
+        ? (cg >= cgLimitsAtTOW.forward && cg <= cgLimitsAtTOW.aft)
+        : false; // enveloppe incomplète → fail-closed (conservateur)
       
       const result = {
         totalWeight: parseFloat(totalWeight.toFixed(1)),
@@ -240,7 +248,9 @@ export const useWeightBalanceStore = create(
         cg: parseFloat(cg.toFixed(3)),
         isWithinLimits: isWithinWeight && isWithinCG,
         isWithinWeight,
-        isWithinCG
+        isWithinCG,
+        // Limites CG effectivement appliquées À cette masse (interpolées).
+        cgLimits: { forward: cgLimitsAtTOW.forward, aft: cgLimitsAtTOW.aft }
       };
       
 

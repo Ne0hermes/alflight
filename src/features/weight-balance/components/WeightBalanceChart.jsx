@@ -11,6 +11,7 @@
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 import { SCENARIO_COLORS } from '../scenarioColors';
+import { isWithinEnvelope } from '@utils/cgEnvelope';
 
 export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) => {
   // Source unique : l'enveloppe CG saisie dans « Gestion des avions ».
@@ -19,7 +20,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
   const hasCgEnvelopeData = cgEnvelope &&
     cgEnvelope.forwardPoints &&
     cgEnvelope.forwardPoints.length > 0 &&
-    cgEnvelope.aftCG;
+    (cgEnvelope.aftCG || cgEnvelope.aftMinCG || cgEnvelope.aftMaxCG);
 
   // ─── Échelles CG (mm) + masse (kg) ────────────────────────────────────────
   const scales = useMemo(() => {
@@ -29,10 +30,12 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     const forwardCGs = cgEnvelope.forwardPoints
       .map(p => parseFloat(p.cg))
       .filter(cg => !isNaN(cg));
-    const aftCG = parseFloat(cgEnvelope.aftCG);
+    const legacyAftCG = parseFloat(cgEnvelope.aftCG);
+    const aftCGs = [cgEnvelope.aftMinCG, cgEnvelope.aftMaxCG, legacyAftCG]
+      .map((v) => parseFloat(v)).filter((v) => !isNaN(v));
 
-    const cgMin = Math.min(...forwardCGs, aftCG);
-    const cgMax = Math.max(...forwardCGs, aftCG);
+    const cgMin = Math.min(...forwardCGs, ...aftCGs);
+    const cgMax = Math.max(...forwardCGs, ...aftCGs);
     const cgRange = cgMax - cgMin;
 
     const envelopeWeights = [
@@ -65,45 +68,10 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     return 350 - (weightValue - scales.weightMin) / (scales.weightMax - scales.weightMin) * 300;
   };
 
-  // Vérification d'appartenance à l'enveloppe (sur les valeurs CG/masse réelles —
-  // INDÉPENDANT de l'axe affiché ; le verdict est donc identique sur les 2 graphes).
-  const isPointWithinEnvelope = (weight, cg) => {
-    if (!cgEnvelope?.forwardPoints) return false;
-    const cgInMeters = cg;
-
-    const aftCG = parseFloat(cgEnvelope.aftCG);
-    if (!isNaN(aftCG) && cgInMeters > aftCG) return false;
-
-    const sortedForwardPoints = [...cgEnvelope.forwardPoints]
-      .filter(p => p.weight && p.cg && !isNaN(parseFloat(p.weight)) && !isNaN(parseFloat(p.cg)))
-      .map(p => ({ weight: parseFloat(p.weight), cg: parseFloat(p.cg) }))
-      .sort((a, b) => a.weight - b.weight);
-
-    if (sortedForwardPoints.length === 0) return false;
-
-    const minEnvelopeWeight = sortedForwardPoints[0].weight;
-    const maxEnvelopeWeight = Math.max(
-      sortedForwardPoints[sortedForwardPoints.length - 1].weight,
-      parseFloat(cgEnvelope.aftMaxWeight) || 0
-    );
-
-    if (weight < minEnvelopeWeight || weight > maxEnvelopeWeight) return false;
-
-    if (weight <= sortedForwardPoints[0].weight) {
-      return cgInMeters >= sortedForwardPoints[0].cg;
-    }
-    if (weight >= sortedForwardPoints[sortedForwardPoints.length - 1].weight) {
-      return cgInMeters >= sortedForwardPoints[sortedForwardPoints.length - 1].cg;
-    }
-    for (let i = 0; i < sortedForwardPoints.length - 1; i++) {
-      if (weight >= sortedForwardPoints[i].weight && weight <= sortedForwardPoints[i + 1].weight) {
-        const ratio = (weight - sortedForwardPoints[i].weight) / (sortedForwardPoints[i + 1].weight - sortedForwardPoints[i].weight);
-        const interpolatedCg = sortedForwardPoints[i].cg + ratio * (sortedForwardPoints[i + 1].cg - sortedForwardPoints[i].cg);
-        return cgInMeters >= interpolatedCg;
-      }
-    }
-    return true;
-  };
+  // Verdict d'appartenance à l'enveloppe — SOURCE UNIQUE (utils/cgEnvelope),
+  // identique au moteur weightBalanceStore : limite avant variable + arrière
+  // 2-points (A2/A3). Enveloppe absente/indéterminée → fail-closed (false).
+  const isPointWithinEnvelope = (weight, cg) => isWithinEnvelope(cgEnvelope, weight, cg) === true;
 
   const criticalScenariosWithinLimits = useMemo(() => {
     if (!scenarios) return false;
@@ -140,13 +108,16 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
 
     const aftMaxWeight = parseFloat(cgEnvelope.aftMaxWeight);
     const aftMinWeight = parseFloat(cgEnvelope.aftMinWeight);
-    const aftCG = parseFloat(cgEnvelope.aftCG);
+    // Modèle arrière 2-points (rétro-compat aftCG constant) — A3.
+    const legacyAftCG = parseFloat(cgEnvelope.aftCG);
+    const aftMaxCG = !isNaN(parseFloat(cgEnvelope.aftMaxCG)) ? parseFloat(cgEnvelope.aftMaxCG) : legacyAftCG;
+    const aftMinCG = !isNaN(parseFloat(cgEnvelope.aftMinCG)) ? parseFloat(cgEnvelope.aftMinCG) : legacyAftCG;
 
-    if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftCG)) {
-      points.push({ w: aftMaxWeight, cg: aftCG, label: 'Aft Max' });
+    if (!isNaN(aftMaxWeight) && aftMaxWeight > 0 && !isNaN(aftMaxCG)) {
+      points.push({ w: aftMaxWeight, cg: aftMaxCG, label: 'Aft Max' });
     }
-    if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftCG) && aftMinWeight !== aftMaxWeight) {
-      points.push({ w: aftMinWeight, cg: aftCG, label: 'Aft Min' });
+    if (!isNaN(aftMinWeight) && aftMinWeight > 0 && !isNaN(aftMinCG) && aftMinWeight !== aftMaxWeight) {
+      points.push({ w: aftMinWeight, cg: aftMinCG, label: 'Aft Min' });
     }
     return points;
   }, [aircraft, cgEnvelope]);
