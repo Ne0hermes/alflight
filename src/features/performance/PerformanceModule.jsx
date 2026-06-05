@@ -428,8 +428,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // 🔧 A5 — Fiabilité météo : une météo SIMULÉE (isMock) ou absente ne doit pas
   // alimenter la perf comme réelle. On NE fabrique plus d'ISA 15° à ce niveau :
   // température réelle, ou null si indisponible (le résolveur traite null en aval).
-  const depWxReliable = !!departureWeather?.metar && !departureWeather.metar.isMock;
-  const arrWxReliable = !!arrivalWeather?.metar && !arrivalWeather.metar.isMock;
+  const depWxReliable = !!departureWeather?.metar?.decoded;
+  const arrWxReliable = !!arrivalWeather?.metar?.decoded;
   const depTempOk = depWxReliable && departureTemp !== null && departureTemp !== undefined;
   const arrTempOk = arrWxReliable && arrivalTemp !== null && arrivalTemp !== undefined;
   const takeoffTemp = depTempOk ? departureTemp : null;
@@ -453,6 +453,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // supposé (qui sous-estimerait les distances). Voir utils/windComponent.
   const takeoffWindComponent = resolveWindComponent(departureRunwayWind.headwindComponent).component;
   const landingWindComponent = resolveWindComponent(arrivalRunwayWind.headwindComponent).component;
+  // Vitesse brute du vent — AFFICHAGE seulement (jamais utilisée pour la perf).
+  const takeoffWindSpeed = departureWeather?.metar?.decoded?.wind?.speed ?? 0;
+  const landingWindSpeed = arrivalWeather?.metar?.decoded?.wind?.speed ?? 0;
 
   // Pour les inputs de la matrice : on injecte la composante SIGNÉE.
   // Le résolveur d'abaque détectera le signe pour filtrer les courbes
@@ -762,7 +765,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              {takeoffWindRaw} kt
+              {takeoffWindSpeed} kt
               {departureWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
                   / {departureWeather.metar.decoded.wind.direction}°
@@ -862,7 +865,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              {landingWindRaw} kt
+              {landingWindSpeed} kt
               {arrivalWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
                   / {arrivalWeather.metar.decoded.wind.direction}°
