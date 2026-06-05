@@ -11,7 +11,6 @@ import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCal
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
 import dataBackupManager from '../../utils/dataBackupManager';
-import { getFuelDensity } from '../../utils/fuelDensity';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
 // 🎨 Charte éditoriale ALFlight
@@ -419,13 +418,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // Mass : calculations.totalWeight → emptyWeight → 1000 (PAS le MTOW comme avant)
   const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000;
 
-  // Mass atterrissage : décollage - carburant consommé
-  // Densité via la source unique getFuelDensity (constants.js), alias normalisés,
-  // cohérent avec WeightBalanceStore + ScenarioCards. Fallback AVGAS 0.72.
-  const fuelConsumedLtr = (fuelData?.trip?.ltr || 0) + (fuelData?.roulage?.ltr || 0);
-  const fuelDensity = getFuelDensity(selectedAircraft?.fuelType) ?? 0.72;
-  const landingMassFromConsumption = takeoffMass - (fuelConsumedLtr * fuelDensity);
-  const landingMass = flightPlan?.weightBalance?.landingWeight || landingMassFromConsumption;
+  // Mass atterrissage : SOURCE UNIQUE = module de centrage (scenarios.landing,
+  // écrit dans flightPlan.weightBalance.landingWeight par Step6WeightBalance).
+  // Plus de recalcul parallèle ici (anomalie A4). Fallback conservateur = masse
+  // décollage si le centrage n'a pas encore produit la masse atterrissage.
+  const landingMass = flightPlan?.weightBalance?.landingWeight || takeoffMass;
 
   // OAT : null → 15 (ISA fallback)
   const takeoffTemp = departureTemp !== null && departureTemp !== undefined ? departureTemp : 15;

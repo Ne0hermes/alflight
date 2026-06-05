@@ -2,8 +2,6 @@
  * Modèle de données pour le plan de vol
  * Contient toutes les informations collectées pendant le wizard
  */
-import { DENSITIES } from '@utils/unitConversions';
-
 export class FlightPlanData {
   constructor() {
     // Étape 1 : Informations générales
@@ -228,32 +226,12 @@ export class FlightPlanData {
    * Calcule la masse et centrage
    */
   calculateWeightBalance() {
-    const { emptyWeight } = this.aircraft;
-    const { passengers, passengersWeight, baggage } = this.weightBalance;
-    const { confirmed: fuelLiters } = this.fuel;
-
-    // Déterminer la densité selon le type de carburant
-    const isJet = this.aircraft.fuelType?.toUpperCase().includes('JET');
-    const density = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
-
-    // Conversion carburant L -> kg
-    const fuelWeight = fuelLiters * density;
-    this.weightBalance.fuel = fuelWeight;
-
-    // Masse au décollage
-    this.weightBalance.takeoffWeight = emptyWeight +
-      (passengers * passengersWeight) +
-      baggage +
-      fuelWeight;
-
-    // Masse à l'atterrissage (sans le carburant consommé)
-    const consumedFuel = (this.fuel.climb + this.fuel.cruise) * density;
-    this.weightBalance.landingWeight = this.weightBalance.takeoffWeight - consumedFuel;
-
-    // Vérification des limites
-    this.weightBalance.withinLimits = this.weightBalance.takeoffWeight <= this.aircraft.maxWeight;
-
-    this.updateTimestamp();
+    // ⚠️ A4 — Moteur de masse PARALLÈLE SUPPRIMÉ. Le calcul masse & centrage est
+    // délégué au module de centrage canonique (weightBalanceStore +
+    // calculateScenarios) : masse décollage = calculations.totalWeight ; masse &
+    // CG atterrissage = scenarios.landing. Ces valeurs sont injectées dans
+    // this.weightBalance par Step6WeightBalance. Cette méthode ne recalcule donc
+    // plus rien (formule passagers×poids et densité divergentes éliminées).
     return this.weightBalance;
   }
 
@@ -261,8 +239,10 @@ export class FlightPlanData {
    * Met à jour la masse et centrage
    */
   updateWeightBalance(data) {
+    // Fusionne les valeurs déjà calculées par le module de centrage (A4) — pas de recalcul.
     this.weightBalance = { ...this.weightBalance, ...data };
-    this.calculateWeightBalance();
+    this.updateTimestamp();
+    return this.weightBalance;
   }
 
   /**
