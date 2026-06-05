@@ -33,11 +33,15 @@ export const InterpolationStatus = Object.freeze({
  * conditions attendu par l'interpolateur IDW.
  */
 export function inputsToConditions(inputs = {}) {
+  // 🔧 A5/P0 — Plus de défaut FABRIQUÉ (ISA 15°, masse 1000, alt 0). Une entrée
+  // absente reste null ⇒ resolveOperation la détecte et renvoie MISSING_INPUT au
+  // lieu de calculer sur une valeur inventée. Le vent garde 0 (calme conservateur).
+  const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   return {
-    temperature:       inputs.oat            ?? inputs.temperature       ?? 15,
-    pressure_altitude: inputs.pressureAltitude ?? inputs.pressure_altitude ?? 0,
-    mass:              inputs.mass           ?? inputs.massTakeoff       ?? inputs.massLanding ?? 1000,
-    wind:              inputs.headwind       ?? inputs.windComponent     ?? inputs.wind ?? 0
+    temperature:       num(inputs.oat) ?? num(inputs.temperature),
+    pressure_altitude: num(inputs.pressureAltitude) ?? num(inputs.pressure_altitude),
+    mass:              num(inputs.mass) ?? num(inputs.massTakeoff) ?? num(inputs.massLanding),
+    wind:              num(inputs.headwind) ?? num(inputs.windComponent) ?? num(inputs.wind) ?? 0
   };
 }
 
