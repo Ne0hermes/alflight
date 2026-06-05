@@ -5,6 +5,7 @@ import { useNavigationStore } from '../stores/navigationStore';
 import { useFuelStore } from '../stores/fuelStore';
 import { useWeightBalanceStore } from '../stores/weightBalanceStore';
 import { useWeatherStore } from '../stores/weatherStore';
+import { getFuelDensity } from '@utils/fuelDensity';
 
 // Contexte pour les données d'avion uniquement
 const AircraftContext = createContext();
@@ -435,7 +436,7 @@ export const WeightBalanceProvider = memo(({ children }) => {
   // Mise à jour du poids du carburant
   React.useEffect(() => {
     if (selectedAircraft && fobFuel?.ltr) {
-      const fuelDensity = selectedAircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
+      const fuelDensity = getFuelDensity(selectedAircraft.fuelType) ?? 0.72;
       updateFuelLoad(fobFuel.ltr, fuelDensity);
     }
   }, [selectedAircraft, fobFuel?.ltr, updateFuelLoad]);
