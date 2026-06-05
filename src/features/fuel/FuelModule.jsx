@@ -291,18 +291,20 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     if (!selectedAircraft) return 'Avion non sélectionné';
 
     const distance = maxDistanceAlternate.distance.toFixed(1);
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
+    // 🔧 FIX D (fin Phase 4.2) : source unique, plus de fallback fabriqué (|| 100 / || 30).
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+    const consumptionLph = getFuelConsumptionLph(selectedAircraft);
+    if (!cruiseSpeed || !consumptionLph) {
+      return 'Vitesse de croisière ou consommation manquante (avion incomplet)';
+    }
     const timeHours = maxDistanceAlternate.distance / cruiseSpeed;
 
     // Arrondir à 2 décimales pour éviter d'afficher "0.0h"
     const timeFormatted = timeHours.toFixed(2);
 
-    // CANONIQUE → user pref. La valeur du store est en lph (canonique).
-    // On la convertit pour affichage selon les préférences utilisateur.
-    // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
+    // Conso canonique (lph) → préférence utilisateur. getSymbol attend une CATÉGORIE.
     const consumptionUserUnit = getUnit('fuelConsumption');
-    const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
-    const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
+    const consumptionDisplay = toUserUnit(consumptionLph, 'fuelConsumption', consumptionUserUnit) || consumptionLph;
     const consumptionSymbol = getSymbol('fuelConsumption');
 
     // Formule simplifiée : la réserve finale (final reserve) est comptée séparément
@@ -317,15 +319,20 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     }
 
     const distance = Math.round(navigationResults.totalDistance);
-    const cruiseSpeed = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 100;
-    const timeHours = (navigationResults.totalDistance / cruiseSpeed).toFixed(1);
+    // 🔧 FIX D (fin Phase 4.2) : source unique getCruiseSpeedKt/getFuelConsumptionLph —
+    // plus de fallback fabriqué (|| 100 kt / || 30 lph). Avion incomplet → on ne fabrique
+    // pas une équation fausse, on le signale.
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+    const consumptionLph = getFuelConsumptionLph(selectedAircraft);
+    if (!cruiseSpeed || !consumptionLph) {
+      return 'Vitesse de croisière ou consommation manquante (avion incomplet)';
+    }
+    // Arrondi à 2 décimales (cohérent avec l'alternate) : 28/120 = 0,23 et non « 0,2 »
+    const timeHours = (navigationResults.totalDistance / cruiseSpeed).toFixed(2);
 
-    // CANONIQUE → user pref. La valeur du store est en lph (canonique).
-    // On la convertit pour affichage selon les préférences utilisateur.
-    // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
+    // Conso canonique (lph) → préférence utilisateur. getSymbol attend une CATÉGORIE.
     const consumptionUserUnit = getUnit('fuelConsumption');
-    const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
-    const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
+    const consumptionDisplay = toUserUnit(consumptionLph, 'fuelConsumption', consumptionUserUnit) || consumptionLph;
     const consumptionSymbol = getSymbol('fuelConsumption');
 
     return `${distance} NM ÷ ${cruiseSpeed} kt = ${timeHours}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol}`;

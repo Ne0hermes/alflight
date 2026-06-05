@@ -477,6 +477,28 @@ export const useAircraftStore = create(
         newList[index] = validatedAircraft;
         set({ aircraftList: newList, isLoading: false });
 
+        // 2bis. 🔧 FIX CRITIQUE (bug A) : persister AUSSI dans IndexedDB, indépendamment de Supabase.
+        // IndexedDB est la source de vérité au boot ; sans cette écriture, toute édition d'un avion
+        // existant (masse à vide, capacité carburant, réservoirs) était PERDUE au reload — car le bloc
+        // Supabase ci-dessous rethrow sans session (RLS) et rien n'était écrit en local.
+        // saveAircraftData fait un put() (upsert par id) → pas de doublon. Symétrique d'addAircraft.
+        try {
+          const dataBackupManager = await import('@utils/dataBackupManager').then(m => m.default);
+          const storageAircraft = {
+            ...validatedAircraft,
+            aircraftId: validatedAircraft.id,
+            _metadata: {
+              ...validatedAircraft._metadata,
+              savedAt: new Date().toISOString(),
+              storageFormat: 'STORAGE_UNITS (ltr/lph/kg/kt)'
+            }
+          };
+          await dataBackupManager.saveAircraftData(storageAircraft);
+          console.log('✅ [AircraftStore] Avion mis à jour dans IndexedDB (STORAGE units):', storageAircraft.registration);
+        } catch (idbError) {
+          console.error('❌ [AircraftStore] Erreur sauvegarde IndexedDB (update):', idbError);
+        }
+
         // 3. Sauvegarder dans Supabase en arrière-plan
         try {
           console.log('📤 Mise à jour de l\'avion dans Supabase:', validatedAircraft.registration);

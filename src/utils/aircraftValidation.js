@@ -65,6 +65,34 @@ export function validateAndRepairAircraft(aircraft) {
     repairedAircraft.weighingReport = savedWeighingReport;
   }
   
+  // 🔧 FIX (bug B) — MASSE À VIDE : CHAMP CANONIQUE UNIQUE.
+  // La masse à vide vivait en 3 représentations divergentes, écrites par des formulaires différents :
+  //   • AircraftModule (édition) écrit la RACINE emptyWeight (+ masses.emptyMass)
+  //   • le wizard écrit weights.emptyWeight (mappé aussi vers la racine)
+  // Les lecteurs M&C (weightBalanceStore, calculations) lisaient weights.emptyWeight EN PREMIER →
+  // un weights.emptyWeight stale (ex. 620) masquait la racine fraîche (900) → valeur erronée affichée.
+  // On réconcilie ICI, au chokepoint unique de validation (add/update/load), AVANT le remplissage
+  // par défaut. Précédence : RACINE emptyWeight d'abord (les DEUX formulaires l'écrivent toujours),
+  // puis weights.emptyWeight (anciens avions), puis masses.emptyMass. La valeur retenue est propagée
+  // aux 3 emplacements → quel que soit l'ordre de lecture, tout concorde. Aucun form n'écrit
+  // weights « frais » en laissant la racine stale, donc racine-d'abord est sûr.
+  {
+    const canonicalEmpty = [
+      repairedAircraft.emptyWeight,
+      repairedAircraft.weights?.emptyWeight,
+      repairedAircraft.masses?.emptyMass
+    ].map(v => parseFloat(v)).find(v => Number.isFinite(v) && v > 0);
+    if (canonicalEmpty !== undefined) {
+      repairedAircraft.emptyWeight = canonicalEmpty;
+      if (repairedAircraft.weights && typeof repairedAircraft.weights === 'object') {
+        repairedAircraft.weights.emptyWeight = canonicalEmpty;
+      }
+      if (repairedAircraft.masses && typeof repairedAircraft.masses === 'object') {
+        repairedAircraft.masses.emptyMass = canonicalEmpty;
+      }
+    }
+  }
+
   // Réparer les propriétés de base SANS écraser les autres
   Object.keys(DEFAULT_AIRCRAFT_VALUES).forEach(key => {
     if (repairedAircraft[key] === undefined || repairedAircraft[key] === null) {

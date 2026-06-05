@@ -10,6 +10,7 @@ import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
 import { useAlternateSelection } from '@features/alternates/hooks/useAlternateSelection';
 import { useFuelStore } from '@core/stores/fuelStore';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 // Styles communs
 const commonStyles = {
@@ -223,14 +224,15 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
         (flightPlan.fuel?.climb || 0) +
         (flightPlan.fuel?.cruise || 0);
       const remainingFuel = totalFuel - fuelUsed;
-      const fuelConsumption = flightPlan.aircraft?.fuelConsumption || 40;
-      const cruiseSpeed = flightPlan.aircraft?.cruiseSpeed || 120;
-      const remainingEndurance = remainingFuel / fuelConsumption;
-      const radiusNM = remainingEndurance * cruiseSpeed;
+      // 🔧 FIX D : vitesse/conso canoniques, plus de 40 lph / 120 kt fabriqués (null si absent).
+      const fuelConsumption = getFuelConsumptionLph(flightPlan.aircraft);
+      const cruiseSpeed = getCruiseSpeedKt(flightPlan.aircraft);
+      const remainingEndurance = fuelConsumption ? remainingFuel / fuelConsumption : null;
+      const radiusNM = (cruiseSpeed && remainingEndurance != null) ? remainingEndurance * cruiseSpeed : null;
 
       return {
         radiusAtDep: radiusNM,
-        radiusAtArr: radiusNM * 0.7, // Estimation
+        radiusAtArr: radiusNM != null ? radiusNM * 0.7 : null, // Estimation
         fuelRemaining: remainingFuel,
         endurance: remainingEndurance,
         isCone: false
@@ -366,7 +368,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
               </div>
               <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                ≈ {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 30 min de déroutement (borné par l'autonomie)
+                ≈ {getCruiseSpeedKt(selectedAircraft) ?? '—'} kt × 30 min de déroutement (borné par l'autonomie)
               </div>
             </div>
 
@@ -379,7 +381,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
                 Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
               </div>
               <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                ≈ {selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120} kt × 30 min (ou l'autonomie restante si inférieure)
+                ≈ {getCruiseSpeedKt(selectedAircraft) ?? '—'} kt × 30 min (ou l'autonomie restante si inférieure)
               </div>
             </div>
 
