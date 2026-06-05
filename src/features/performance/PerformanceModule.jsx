@@ -541,7 +541,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       gap: 10,
       flexWrap: 'wrap'
     }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-primary)' }}>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)' }}>
         Marge réglementaire appliquée aux distances :
       </span>
       <select
@@ -732,14 +732,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           - 🧮 La matrice de couverture (résolveur cascade : bracket / slope-follow / IDW) */}
 
       {/* ════════════════ PHASE DÉCOLLAGE ════════════════ */}
-      <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--text-secondary)' }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--text-secondary)' }}>
         Phase Décollage
         {departureAirport?.name && <span style={{ fontWeight: 400, fontSize: 14, marginLeft: 8, color: 'var(--text-tertiary)' }}>— {departureAirport.name} ({departureAirport.icao})</span>}
       </h2>
 
       {/* Récapitulatif conditions décollage */}
       <div style={sx.combine(sx.spacing.mb(4))}>
-        <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span>Conditions de décollage</span>
           {departureAirport?.name && (
             <span style={{ fontWeight: 500, fontSize: 12, color: 'var(--text-tertiary)' }}>
@@ -753,7 +753,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Thermometer size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>TEMPÉRATURE</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {Number(takeoffTemp).toFixed(0)}°C
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 6, fontWeight: 400 }}>
                 {departureTemp !== null && departureTemp !== undefined ? 'METAR' : 'ISA'}
@@ -765,7 +765,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <MapPin size={14} style={{ marginRight: 6, color: 'var(--text-secondary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>ALT. PRESSION</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {takeoffPa} ft
             </p>
           </div>
@@ -774,7 +774,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Scale size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>MASSE</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {Number(takeoffMass).toFixed(1)} kg
               {calculations?.isWithinLimits === false && (
                 <span style={{ fontSize: 11, color: 'var(--color-red-critical)', marginLeft: 6, fontWeight: 600 }}>Hors limites</span>
@@ -786,7 +786,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Wind size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {takeoffWindSpeed} kt
               {departureWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
@@ -797,7 +797,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             {departureRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 Piste <strong>{departureRunwayWind.bestRunway.ident}</strong> :{' '}
-                <span style={{ color: takeoffWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 700 }}>
+                <span style={{ color: takeoffWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 600 }}>
                   {takeoffWindComponent >= 0 ? '↑ face' : '↓ arrière'} {Math.abs(takeoffWindComponent).toFixed(1)} kt
                 </span>
                 {departureRunwayWind.crosswindComponent > 0 && (
@@ -824,20 +824,20 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       )}
 
       {/* ════════════════ PHASE MONTÉE / CROISIÈRE ════════════════ */}
-      <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 32, marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--accent-primary)' }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginTop: 32, marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--accent-primary)' }}>
         Phase Montée &amp; Croisière
       </h2>
       {renderClimbCruiseMatrix()}
 
       {/* ════════════════ PHASE ATTERRISSAGE ════════════════ */}
-      <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 32, marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--text-primary)' }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginTop: 32, marginBottom: 12, paddingBottom: 8, borderBottom: '3px solid var(--text-primary)' }}>
         Phase Atterrissage
         {arrivalAirport?.name && <span style={{ fontWeight: 400, fontSize: 14, marginLeft: 8, color: 'var(--text-tertiary)' }}>— {arrivalAirport.name} ({arrivalAirport.icao})</span>}
       </h2>
 
       {/* Récapitulatif conditions atterrissage */}
       <div style={sx.combine(sx.spacing.mb(4))}>
-        <h4 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span>Conditions d'atterrissage</span>
           {arrivalAirport?.name && (
             <span style={{ fontWeight: 500, fontSize: 12, color: 'var(--text-tertiary)' }}>
@@ -851,7 +851,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Thermometer size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>TEMPÉRATURE</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {Number(landingTemp).toFixed(0)}°C
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 6, fontWeight: 400 }}>
                 {arrivalTemp !== null && arrivalTemp !== undefined
@@ -865,7 +865,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <MapPin size={14} style={{ marginRight: 6, color: 'var(--text-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>ALT. PRESSION</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {landingPa} ft
             </p>
           </div>
@@ -874,7 +874,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Scale size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>MASSE</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {Number(landingMass).toFixed(1)} kg
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 6, fontWeight: 400 }}>
                 {flightPlan?.weightBalance?.landingWeight ? 'Step 6' : 'Estimée'}
@@ -886,7 +886,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <Wind size={14} style={{ marginRight: 6, color: 'var(--accent-primary)' }} />
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
               {landingWindSpeed} kt
               {arrivalWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
@@ -897,7 +897,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             {arrivalRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 Piste <strong>{arrivalRunwayWind.bestRunway.ident}</strong> :{' '}
-                <span style={{ color: landingWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 700 }}>
+                <span style={{ color: landingWindComponent >= 0 ? 'var(--text-primary)' : 'var(--color-red-critical)', fontWeight: 600 }}>
                   {landingWindComponent >= 0 ? '↑ face' : '↓ arrière'} {Math.abs(landingWindComponent).toFixed(1)} kt
                 </span>
                 {arrivalRunwayWind.crosswindComponent > 0 && (
@@ -951,7 +951,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                 }}>
                   <h4 style={{
                     fontSize: 'var(--fs-title)',
-                    fontWeight: '700',
+                    fontWeight: '600',
                     color: 'var(--text-primary)',
                     marginBottom: '6px'
                   }}>

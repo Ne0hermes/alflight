@@ -8,6 +8,7 @@ import { theme } from '../../../styles/theme';
 import { useNavigation, useWeather } from '@core/contexts';
 import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
+import { separateRunwayDirections } from '@utils/runwayDirections';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 /**
@@ -585,11 +586,11 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                     {currentSection === 'runways' && (
                       <div style={styles.section}>
                         {aerodrome.runways && aerodrome.runways.length > 0 ? (
-                          aerodrome.runways.map((rwy, idx) => (
+                          aerodrome.runways.flatMap(separateRunwayDirections).map((rwy, idx) => (
                             <div key={idx} style={styles.runwayCard}>
                               <div style={styles.runwayHeader}>
                                 <span style={styles.runwayDesignation}>
-                                  {rwy.designation || rwy.identifier}
+                                  Piste {rwy.runwayNumber || rwy.designation || rwy.identifier}
                                 </span>
                                 <span style={styles.runwayDimensions}>
                                   {rwy.length}m × {rwy.width}m
@@ -611,7 +612,7 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                               </div>
                               <div style={styles.runwayInfo}>
                                 <span>Surface: {rwy.surface || 'N/A'}</span>
-                                {rwy.qfu && <span>• QFU: {parseFloat(rwy.qfu).toFixed(1)}°</span>}
+                                {rwy.qfu != null && <span>• QFU: {String(Math.round(rwy.qfu)).padStart(3, '0')}°</span>}
                                 {rwy.ils && <span>• ILS CAT {rwy.ils.category}</span>}
                               </div>
                             </div>

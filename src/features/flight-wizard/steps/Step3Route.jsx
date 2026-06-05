@@ -15,7 +15,7 @@ const commonStyles = {
     padding: 0
   },
   label: {
-    fontSize: 'var(--fs-title)',
+    fontSize: 'var(--fs-body)',
     fontWeight: '600',
     color: theme.colors.textPrimary,
     display: 'flex',

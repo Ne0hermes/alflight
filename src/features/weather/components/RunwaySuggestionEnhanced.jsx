@@ -4,6 +4,7 @@ import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
 import { getFallbackRunways, getFallbackAirport } from '@data/fallbackRunways';
+import { isSurfaceCompatible } from '@utils/runwaySurface';
 
 // Calcul de la différence d'angle entre deux directions
 const calculateAngleDifference = (heading1, heading2) => {
@@ -351,26 +352,8 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
       return true;
     }
 
-    // Vérification exacte
-    let isCompatible = aircraft.compatibleRunwaySurfaces.includes(surfaceType);
-
-    // Si pas compatible, vérifier les surfaces combinées (ex: "CONC+ASPH" contient "ASPH")
-    if (!isCompatible && typeof surfaceType === 'string' && surfaceType.includes('+')) {
-      isCompatible = aircraft.compatibleRunwaySurfaces.some(compatibleSurface =>
-        surfaceType.includes(compatibleSurface)
-      );
-    }
-
-    // Si pas compatible, vérifier les variantes courantes (ASPH inclut ASPHALT, etc.)
-    if (!isCompatible) {
-      const surfaceUpper = surfaceType.toUpperCase();
-      isCompatible = aircraft.compatibleRunwaySurfaces.some(compatibleSurface => {
-        const compatUpper = compatibleSurface.toUpperCase();
-        return surfaceUpper.includes(compatUpper) || compatUpper.includes(surfaceUpper);
-      });
-    }
-
-    return isCompatible;
+    // Util partagé : surfaces combinées (CONC+ASPH) + synonymes (MACADAM, BITUM…).
+    return isSurfaceCompatible(surfaceType, aircraft.compatibleRunwaySurfaces);
   });
 
   console.log('🔍 [RunwaySuggestionEnhanced] Après filtre compatibilité:', {
@@ -532,8 +515,6 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
                     fontWeight: analysis === takeoffRunway || analysis === landingRunway ? 'bold' : 'normal'
                   }}>
                     {analysis.ident}
-                    {analysis === takeoffRunway && ' 🛫'}
-                    {analysis === landingRunway && ' 🛬'}
                   </td>
                   <td style={{ padding: '6px', textAlign: 'center' }}>
                     {analysis.heading}°

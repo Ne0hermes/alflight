@@ -85,20 +85,24 @@ body {
    3. TYPOGRAPHIE
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
-  color: var(--color-text) !important;
+  color: var(--color-text) !important;      /* ivoire — garantit la lisibilité des en-têtes */
   font-family: var(--font-family) !important;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  line-height: 1.2;
+  font-weight: 600;                         /* 600 marqué — plus de 700 systématique */
+  text-transform: none;                     /* plus d'UPPERCASE forcé : laisse le composant décider.
+                                               Corrige les en-têtes d'accordéon MUI (subtitle1 → <h6>)
+                                               qui s'affichaient en MAJUSCULES non voulues. */
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
+/* Tailles alignées sur l'échelle charté (4 paliers). NB : ne touche que les <h*>
+   natifs bruts — les <Typography variant> MUI gardent les tailles de leur thème. */
+h1 { font-size: var(--fs-heading); }  /* 28px (était 2.5rem) */
+h2 { font-size: var(--fs-heading); }  /* 28px (était 2rem)   */
+h3 { font-size: var(--fs-title); }    /* 20px (était 1.75rem)*/
+h4 { font-size: var(--fs-title); }    /* 20px (était 1.5rem) */
+h5 { font-size: var(--fs-body); }     /* 14px (était 1.25rem)*/
+h6 { font-size: var(--fs-body); }     /* 14px (était 1rem)   */
 
 p, span, div {
   color: var(--color-text-secondary);
@@ -129,12 +133,16 @@ a:not(.MuiButtonBase-root):hover {
 /* ============================================
    4. BOUTONS - STYLE UNIFIÉ
    ============================================ */
-button,
+/* NB : on EXCLUT les boutons MUI (.MuiButtonBase-root) de cette règle globale —
+   sinon ce background/border !important écrase les variantes du thème (un bouton
+   « outlined » se retrouvait peint en orange plein comme un « contained »).
+   muiTheme.js gère désormais contained / outlined / text à la charte. */
+button:not(.MuiButtonBase-root),
 .btn,
-[type="button"],
-[type="submit"],
-[type="reset"],
-[role="button"],
+[type="button"]:not(.MuiButtonBase-root),
+[type="submit"]:not(.MuiButtonBase-root),
+[type="reset"]:not(.MuiButtonBase-root),
+[role="button"]:not(.MuiButtonBase-root),
 input[type="button"] {
   background: var(--button-bg) !important;
   background-color: var(--button-bg) !important;
@@ -142,9 +150,9 @@ input[type="button"] {
   color: var(--button-text) !important;
   border: 1px solid var(--button-border) !important;
   border-radius: var(--radius-md) !important;
-  padding: 12px 24px !important;
-  font-size: 16px !important;
-  font-weight: bold !important;
+  padding: 8px 20px !important;
+  font-size: var(--fs-body) !important;
+  font-weight: 600 !important;
   font-family: var(--font-family) !important;
   cursor: pointer !important;
   transition: all 0.2s !important;

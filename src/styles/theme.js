@@ -44,7 +44,7 @@ export const theme = {
   fonts: {
     primary: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', system-ui, sans-serif",
     secondary: "'Century Gothic', 'URW Gothic', 'Questrial', system-ui, sans-serif",
-    mono: "'JetBrains Mono', 'IBM Plex Mono', 'Roboto Mono', monospace",
+    mono: "'Century Gothic', 'URW Gothic', 'Questrial', 'Jost', system-ui, sans-serif", // alias sans — police unique (plus de JetBrains Mono)
   },
 
   // ─── Gradients — simplifiés en aplat orange (pas de gradient bordeaux historique) ───
