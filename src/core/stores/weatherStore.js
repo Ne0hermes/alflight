@@ -42,9 +42,14 @@ export const useWeatherStore = create(
           };
           state.lastUpdate[upperIcao] = Date.now();
           delete state.loading[upperIcao];
+          // 🔧 A5 — Plus de météo fabriquée : METAR indisponible ⇒ erreur explicite
+          // (l'UI affiche « Météo non disponible » au lieu d'un faux METAR).
+          if (!metar || !metar.decoded) {
+            state.errors[upperIcao] = 'Météo non disponible';
+          }
         });
-        
-        return true;
+
+        return !!(metar && metar.decoded);
       } catch (error) {
         set(state => {
           state.errors[upperIcao] = error.message;
