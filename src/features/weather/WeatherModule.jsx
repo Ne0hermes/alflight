@@ -617,6 +617,16 @@ const WeatherCard = memo(({ icao, label, customBorderColor, customBgColor, custo
         </button>
       </div>
       
+      {/* 🔧 A5 — Météo indisponible (plus de METAR fabriqué) */}
+      {!weather.metar?.decoded && (
+        <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mt(3))}>
+          <p style={sx.combine(sx.text.sm, sx.text.bold)}>⚠️ Météo non disponible</p>
+          <p style={sx.combine(sx.text.xs, sx.spacing.mt(1))}>
+            Le service météo (AVWX) n'a pas renvoyé de METAR pour {icao}. Aucune donnée n'est inventée.
+          </p>
+        </div>
+      )}
+
       {/* METAR brut - affiché en premier et bien visible */}
       {weather.metar?.raw && (
         <div style={sx.combine(sx.spacing.mt(3))}>

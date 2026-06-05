@@ -1,7 +1,7 @@
 // src/features/weight-balance/components/ScenarioCards.jsx
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
-import { FUEL_DENSITIES } from '@utils/constants';
+import { getFuelDensity } from '@utils/fuelDensity';
 import { SCENARIO_COLORS } from '../scenarioColors';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
@@ -19,11 +19,7 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
   const fuelInfo = useMemo(() => {
     if (!aircraft) return null;
 
-    const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
-    const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
-                        FUEL_DENSITIES[normalizedFuelType] ||
-                        FUEL_DENSITIES['JET A-1'] ||
-                        0.84;
+    const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
 
     const fuelCapacityKg = (aircraft.fuelCapacity || 0) * fuelDensity;
     const fuelArm = aircraft.weightBalance?.fuelArm || 0;

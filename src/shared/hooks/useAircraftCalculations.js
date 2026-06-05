@@ -1,6 +1,7 @@
 // src/shared/hooks/useAircraftCalculations.js
 import { useMemo, useCallback } from 'react';
 import { useAircraft } from '@core/contexts';
+import { getFuelDensity } from '@utils/fuelDensity';
 
 /**
  * Hook optimisé pour tous les calculs liés aux avions
@@ -45,7 +46,7 @@ export const useAircraftCalculations = () => {
     galToL: (gallons) => gallons * 3.78541,
     fuelToWeight: (liters) => {
       if (!selectedAircraft) return 0;
-      const density = selectedAircraft.fuelType === 'JET A-1' ? 0.84 : 0.72;
+      const density = getFuelDensity(selectedAircraft.fuelType) ?? 0.72;
       return liters * density;
     }
   }), [selectedAircraft]);

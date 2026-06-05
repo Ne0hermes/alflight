@@ -18,6 +18,8 @@
 //   4. getUnitLabel(category) pour afficher le symbole (mm, kg, L…)
 
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
+import { FUEL_DENSITIES as CANON } from '@utils/constants';
+import { getFuelDensity as canonicalFuelDensity } from '@utils/fuelDensity';
 
 // ─── Unités canoniques internes (storage) ──────────────────────────────────
 export const STORAGE_UNITS = {
@@ -31,12 +33,14 @@ export const STORAGE_UNITS = {
   runway: 'm'
 };
 
-// ─── Densités carburant standard (kg/L) ────────────────────────────────────
+// ─── Densités carburant (kg/L) — SOURCE UNIQUE : constants.js (anomalie A1) ──
+// Schéma de clés courtes conservé pour rétro-compat ; VALEURS issues de l'unique
+// table canonique (plus de 0.80 Jet ni 0.74 MOGAS divergents).
 export const FUEL_DENSITIES = {
-  AVGAS: 0.72,    // AVGAS 100LL
-  'JET-A1': 0.80, // JET A-1
-  MOGAS: 0.74,    // MOGAS UL91, essence auto
-  default: 0.72   // fallback (suppose AVGAS)
+  AVGAS: CANON['AVGAS 100LL'],   // 0.72
+  'JET-A1': CANON['JET A-1'],    // 0.84 (était 0.80)
+  MOGAS: CANON['MOGAS'],         // 0.72 (était 0.74)
+  default: CANON['AVGAS 100LL']  // 0.72
 };
 
 /**
@@ -139,7 +143,8 @@ export function convertMoment(value, units, direction) {
  * @returns {number} densité en kg/L
  */
 export function getFuelDensity(fuelType) {
-  return FUEL_DENSITIES[fuelType] || FUEL_DENSITIES.default;
+  // Source unique + normalisation des alias ('JET A-1' vs 'JET-A1'…).
+  return canonicalFuelDensity(fuelType) ?? FUEL_DENSITIES.default;
 }
 
 /**

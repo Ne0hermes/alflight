@@ -11,7 +11,7 @@ import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCal
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
 import dataBackupManager from '../../utils/dataBackupManager';
-import { FUEL_DENSITIES } from '../../utils/constants';
+import { resolveWindComponent } from '../../utils/windComponent';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
 // 🎨 Charte éditoriale ALFlight
@@ -331,14 +331,23 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     }
 
     // Sauvegarder les résultats de décollage
+    // 🔧 A9 — Facteur de sécurité PERSISTÉ : on enregistre la marge choisie ET les
+    // distances majorées (brut conservé), pour que synthèse/PDF reflètent le chiffre
+    // opérationnel, pas seulement l'écran. La marge est appliquée UNE seule fois ici.
+    const sf = safetyFactor?.value > 1 ? safetyFactor.value : 1;
+    const fx = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * sf) : null);
+    flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.departure = {
       ...flightPlan.performance.departure,
       icao: departureAirport.icao,
       name: departureAirport.name,
       takeoff: {
         groundRoll: result.groundRoll,
+        groundRollFactored: fx(result.groundRoll),
         toda50ft: result.distance50ft,
+        toda50ftFactored: fx(result.distance50ft),
         toda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
+        toda15mFactored: fx(result.distance50ft),
         outOfRange: result.outOfRange,
         conditions: {
           ...metadata.conditions,
@@ -372,14 +381,21 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     }
 
     // Sauvegarder les résultats d'atterrissage
+    // 🔧 A9 — Facteur de sécurité PERSISTÉ (cf. décollage) : marge + distances majorées.
+    const sf = safetyFactor?.value > 1 ? safetyFactor.value : 1;
+    const fx = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * sf) : null);
+    flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.arrival = {
       ...flightPlan.performance.arrival,
       icao: arrivalAirport.icao,
       name: arrivalAirport.name,
       landing: {
         groundRoll: result.groundRoll,
+        groundRollFactored: fx(result.groundRoll),
         lda50ft: result.distance50ft,
+        lda50ftFactored: fx(result.distance50ft),
         lda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
+        lda15mFactored: fx(result.distance50ft),
         outOfRange: result.outOfRange,
         conditions: {
           ...metadata.conditions,
@@ -419,22 +435,26 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // Mass : calculations.totalWeight → emptyWeight → 1000 (PAS le MTOW comme avant)
   const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000;
 
-  // Mass atterrissage : décollage - carburant consommé
-  // Densité dépendant du type carburant de l'avion (FUEL_DENSITIES centralisé,
-  // cohérent avec WeightBalanceStore + ScenarioCards). Fallback AVGAS 100LL.
-  const fuelConsumedLtr = (fuelData?.trip?.ltr || 0) + (fuelData?.roulage?.ltr || 0);
-  const fuelDensity = FUEL_DENSITIES[selectedAircraft?.fuelType] || FUEL_DENSITIES['AVGAS 100LL'];
-  const landingMassFromConsumption = takeoffMass - (fuelConsumedLtr * fuelDensity);
-  const landingMass = flightPlan?.weightBalance?.landingWeight || landingMassFromConsumption;
+  // Mass atterrissage : SOURCE UNIQUE = module de centrage (scenarios.landing,
+  // écrit dans flightPlan.weightBalance.landingWeight par Step6WeightBalance).
+  // Plus de recalcul parallèle ici (anomalie A4). Fallback conservateur = masse
+  // décollage si le centrage n'a pas encore produit la masse atterrissage.
+  const landingMass = flightPlan?.weightBalance?.landingWeight || takeoffMass;
 
-  // OAT : null → 15 (ISA fallback)
-  const takeoffTemp = departureTemp !== null && departureTemp !== undefined ? departureTemp : 15;
-  const landingTemp = arrivalTemp !== null && arrivalTemp !== undefined ? arrivalTemp
-                     : (departureTemp !== null && departureTemp !== undefined ? departureTemp : 15);
+  // 🔧 A5 — Fiabilité météo : une météo SIMULÉE (isMock) ou absente ne doit pas
+  // alimenter la perf comme réelle. On NE fabrique plus d'ISA 15° à ce niveau :
+  // température réelle, ou null si indisponible (le résolveur traite null en aval).
+  const depWxReliable = !!departureWeather?.metar?.decoded;
+  const arrWxReliable = !!arrivalWeather?.metar?.decoded;
+  const depTempOk = depWxReliable && departureTemp !== null && departureTemp !== undefined;
+  const arrTempOk = arrWxReliable && arrivalTemp !== null && arrivalTemp !== undefined;
+  const takeoffTemp = depTempOk ? departureTemp : null;
+  const landingTemp = arrTempOk ? arrivalTemp : (depTempOk ? departureTemp : null);
 
-  // Altitude pression
-  const takeoffPa = departureAirport?.elevation || 0;
-  const landingPa = arrivalAirport?.elevation || takeoffPa || 0;
+  // 🔧 A5 — Altitude pression : élévation terrain réelle, ou null si absente
+  // (plus de « niveau mer » fabriqué). 0 reste une élévation valide (bord de mer).
+  const takeoffPa = Number.isFinite(departureAirport?.elevation) ? departureAirport.elevation : null;
+  const landingPa = Number.isFinite(arrivalAirport?.elevation) ? arrivalAirport.elevation : takeoffPa;
 
   // ─── COMPOSANTE VENT SIGNÉE SUR LA PISTE ACTIVE ───
   // On charge les pistes de l'aérodrome et on calcule le vent projeté sur la
@@ -444,22 +464,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const departureRunwayWind = useActiveRunwayWind(departureIcao, departureWeather);
   const arrivalRunwayWind = useActiveRunwayWind(arrivalIcao, arrivalWeather);
 
-  // Vitesse brute du vent (fallback si pas de piste sélectionnable)
-  const takeoffWindRaw = departureWeather?.metar?.decoded?.wind?.speed || 0;
-  const landingWindRaw = arrivalWeather?.metar?.decoded?.wind?.speed
-                       ?? arrivalWeather?.decoded?.wind?.speed
-                       ?? arrivalWeather?.wind?.speed
-                       ?? arrivalWeather?.metar?.wind?.speed
-                       ?? departureWeather?.metar?.decoded?.wind?.speed
-                       ?? 0;
-
-  // Composante signée si dispo (piste détectée), sinon fallback vitesse brute supposée face
-  const takeoffWindComponent = typeof departureRunwayWind.headwindComponent === 'number'
-    ? departureRunwayWind.headwindComponent
-    : takeoffWindRaw;
-  const landingWindComponent = typeof arrivalRunwayWind.headwindComponent === 'number'
-    ? arrivalRunwayWind.headwindComponent
-    : landingWindRaw;
+  // 🔧 A5 — Composante vent signée sur la piste active. Direction INDÉTERMINÉE
+  // (Variable/Calme, pas de piste) ⇒ 0 conservateur, JAMAIS un vent de face
+  // supposé (qui sous-estimerait les distances). Voir utils/windComponent.
+  const takeoffWindComponent = resolveWindComponent(departureRunwayWind.headwindComponent).component;
+  const landingWindComponent = resolveWindComponent(arrivalRunwayWind.headwindComponent).component;
+  // Vitesse brute du vent — AFFICHAGE seulement (jamais utilisée pour la perf).
+  const takeoffWindSpeed = departureWeather?.metar?.decoded?.wind?.speed ?? 0;
+  const landingWindSpeed = arrivalWeather?.metar?.decoded?.wind?.speed ?? 0;
 
   // Pour les inputs de la matrice : on injecte la composante SIGNÉE.
   // Le résolveur d'abaque détectera le signe pour filtrer les courbes
@@ -514,8 +526,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   );
 
   // Dropdown de sélection du facteur de sécurité réglementaire.
-  // Placé en tête du module : le pilote choisit la marge à appliquer aux
-  // distances affichées. N'affecte PAS les calculs amont ni le stockage.
+  // Placé en tête du module : le pilote choisit la marge réglementaire. Elle est
+  // appliquée aux distances affichées ET persistée dans flightPlan.performance
+  // (synthèse/PDF) — A9. N'affecte PAS l'interpolation brute (appliquée une seule fois).
   const renderSafetyFactorSelector = () => (
     <div style={{
       marginBottom: 12,
@@ -551,6 +564,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       <span style={{ fontSize: 11, color: 'var(--accent-primary)', fontStyle: 'italic' }}>
         {safetyFactor.description}
       </span>
+      <div style={{ flexBasis: '100%', fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.4 }}>
+        Cette marge est appliquée aux distances affichées <strong>et enregistrée avec le plan de vol</strong> (synthèse/PDF).
+        {' '}⚠ Ces distances n'intègrent <strong>pas</strong> de facteur de dégradation propre à l'avion
+        (<em>K-factor</em> : usure moteur/cellule, traînée réelle d'une immatriculation donnée) ; elles supposent un appareil conforme au MANEX.
+      </div>
     </div>
   );
 
@@ -769,7 +787,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              {takeoffWindRaw} kt
+              {takeoffWindSpeed} kt
               {departureWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
                   / {departureWeather.metar.decoded.wind.direction}°
@@ -869,7 +887,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, letterSpacing: 0.4 }}>VENT</span>
             </div>
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              {landingWindRaw} kt
+              {landingWindSpeed} kt
               {arrivalWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
                   / {arrivalWeather.metar.decoded.wind.direction}°
