@@ -1,7 +1,7 @@
 // src/core/stores/weightBalanceStore.js
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { FUEL_DENSITIES } from '@utils/constants';
+import { getFuelDensity } from '@utils/fuelDensity';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
@@ -157,12 +157,8 @@ export const useWeightBalanceStore = create(
       // Si fobFuel est fourni, utiliser ce poids de carburant pour le calcul
       // (sans modifier le state - cela doit être fait séparément)
       if (fobFuel?.ltr) {
-        // Utiliser FUEL_DENSITIES pour une détection robuste du type de carburant
-        const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
-        const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
-                            FUEL_DENSITIES[normalizedFuelType] ||
-                            FUEL_DENSITIES['JET A-1'] ||
-                            0.84;
+        // Densité depuis la source unique (constants.js), alias normalisés.
+        const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
         const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
         // Créer une copie des loads avec le nouveau poids de carburant pour ce calcul
         loads = { ...loads, fuel: fuelWeight };

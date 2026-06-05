@@ -12,7 +12,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
-import { FUEL_DENSITIES } from '@utils/constants';
+import { getFuelDensity } from '@utils/fuelDensity';
 import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
@@ -569,11 +569,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
             {/* Type de carburant */}
             {selectedAircraft?.fuelType && (() => {
-              const normalizedFuelType = selectedAircraft.fuelType?.replace(/-/g, ' ');
-              const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] ||
-                FUEL_DENSITIES[normalizedFuelType] ||
-                FUEL_DENSITIES['JET A-1'] ||
-                0.84;
+              const fuelDensity = getFuelDensity(selectedAircraft.fuelType) ?? 0.84;
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

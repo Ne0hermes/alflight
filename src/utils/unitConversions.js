@@ -1,10 +1,12 @@
 // Utilitaire pour les conversions d'unités
 // Gère toutes les conversions entre différents systèmes d'unités pour l'aviation
+import { FUEL_DENSITIES } from './constants';
 
-// Conversions de carburant
+// Conversions de carburant — densités sourcées depuis l'UNIQUE table canonique
+// (constants.js). Jet A-1 = 0.84 ; l'ancienne 0.80 était divergente (anomalie A1).
 export const DENSITIES = {
-  AVGAS: 0.72,
-  JET_A1: 0.80
+  AVGAS: FUEL_DENSITIES['AVGAS 100LL'],
+  JET_A1: FUEL_DENSITIES['JET A-1']
 };
 
 export const fuelConversions = {
