@@ -1,5 +1,5 @@
 // src/features/weight-balance/utils/calculations.js
-import { FUEL_DENSITIES } from '@utils/constants';
+import { getFuelDensity } from '@utils/fuelDensity';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
 const getFuelLiters = (fobFuel) => {
@@ -24,12 +24,8 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
 
   const wb = aircraft.weightBalance;
 
-  // Utiliser FUEL_DENSITIES pour une détection robuste du type de carburant
-  const normalizedFuelType = aircraft.fuelType?.replace(/-/g, ' ');
-  const fuelDensity = FUEL_DENSITIES[aircraft.fuelType] ||
-                      FUEL_DENSITIES[normalizedFuelType] ||
-                      FUEL_DENSITIES['JET A-1'] ||
-                      0.84;
+  // Densité depuis la source unique (constants.js), alias normalisés.
+  const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
 
   // Valeurs par défaut pour éviter les NaN
   const safeTotalWeight = calculations.totalWeight || 0;

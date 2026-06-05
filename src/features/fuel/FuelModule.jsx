@@ -9,6 +9,7 @@ import { useFuelSync } from '@hooks/useFuelSync';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit } from '@utils/unitsDisplay';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
@@ -130,11 +131,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     if (navigationResults.totalDistance > 0) {
       // CONVENTION CANONIQUE : selectedAircraft.fuelConsumption est TOUJOURS en lph.
       // Aucune détection d'unité nécessaire — les calculs internes sont en SI.
-      const consumptionLph = parseFloat(selectedAircraft.fuelConsumption) || 0;
+      const consumptionLph = getFuelConsumptionLph(selectedAircraft) || 0;
+      const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
 
       let tripLtr;
-      if (consumptionLph > 0) {
-        const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
+      if (consumptionLph > 0 && cruiseSpeed) {
         const timeHours = navigationResults.totalDistance / cruiseSpeed;
         tripLtr = timeHours * consumptionLph;
       } else {
@@ -149,7 +150,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       // Calculer final reserve (conso TOUJOURS en lph)
       const reserveMinutes = navigationResults.regulationReserveMinutes || 30;
       const reserveHours = reserveMinutes / 60;
-      const reserveConsumptionLph = parseFloat(selectedAircraft.fuelConsumption) || 30;
+      const reserveConsumptionLph = getFuelConsumptionLph(selectedAircraft) || 0;
       const reserveLtr = reserveConsumptionLph * reserveHours;
 
       const reserveGal = convert(reserveLtr, 'fuel', 'ltr', { toUnit: 'gal' });

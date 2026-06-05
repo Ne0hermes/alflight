@@ -12,7 +12,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
-import { FUEL_DENSITIES } from '@utils/constants';
+import { getFuelDensity } from '@utils/fuelDensity';
 import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
@@ -569,11 +569,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
             {/* Type de carburant */}
             {selectedAircraft?.fuelType && (() => {
-              const normalizedFuelType = selectedAircraft.fuelType?.replace(/-/g, ' ');
-              const fuelDensity = FUEL_DENSITIES[selectedAircraft.fuelType] ||
-                FUEL_DENSITIES[normalizedFuelType] ||
-                FUEL_DENSITIES['JET A-1'] ||
-                0.84;
+              const fuelDensity = getFuelDensity(selectedAircraft.fuelType) ?? 0.84;
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -587,6 +583,42 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </div>
               );
             })()}
+
+            {/* 🔧 A7 — Vitesses de référence (V-speeds) : saisies dans « Mes avions »,
+                jusqu'ici jamais affichées. Référence pilote (bug-speeds). */}
+            {selectedAircraft?.speeds && [
+              ['Vr', selectedAircraft.speeds.vr], ['Vx', selectedAircraft.speeds.vx],
+              ['Vy', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
+              ['Vref', selectedAircraft.speeds.vref], ['Vglide', selectedAircraft.speeds.vglide],
+              ['Vso', selectedAircraft.speeds.vso], ['Vs1', selectedAircraft.speeds.vs1],
+              ['Va', selectedAircraft.speeds.va], ['Vno', selectedAircraft.speeds.vno],
+              ['Vne', selectedAircraft.speeds.vne], ['Vle', selectedAircraft.speeds.vle],
+              ['Vlo', selectedAircraft.speeds.vlo],
+            ].filter(([, v]) => v != null && v !== '').length > 0 && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  Vitesses de référence (AFM)
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+                  {[
+                    ['Vr', selectedAircraft.speeds.vr], ['Vx', selectedAircraft.speeds.vx],
+                    ['Vy', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
+                    ['Vref', selectedAircraft.speeds.vref], ['Vglide', selectedAircraft.speeds.vglide],
+                    ['Vso', selectedAircraft.speeds.vso], ['Vs1', selectedAircraft.speeds.vs1],
+                    ['Va', selectedAircraft.speeds.va], ['Vno', selectedAircraft.speeds.vno],
+                    ['Vne', selectedAircraft.speeds.vne], ['Vle', selectedAircraft.speeds.vle],
+                    ['Vlo', selectedAircraft.speeds.vlo],
+                  ].filter(([, v]) => v != null && v !== '').map(([label, v]) => (
+                    <span key={label} style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-primary)' }}>
+                      <strong style={{ color: 'var(--accent-primary)' }}>{label}</strong> {v} kt
+                    </span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: 6, fontStyle: 'italic' }}>
+                  Référence pilote (saisies dans « Mes avions ») — non utilisées dans les calculs de distance.
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
 
@@ -705,6 +737,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             title="Performances Décollage / Atterrissage"
             containerStyle={{ marginTop: '24px' }}
           >
+            {/* 🔧 A9 — Marge réglementaire persistée (facteur de sécurité) */}
+            {flightPlan.performance.safetyFactor && flightPlan.performance.safetyFactor.value > 1 && (
+              <div style={{ marginBottom: 12, padding: 10, backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--accent-primary)', borderRadius: 8, fontSize: 'var(--fs-caption)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--accent-primary)' }}>⚠ Marge réglementaire retenue : {flightPlan.performance.safetyFactor.label}.</strong>{' '}
+                Les distances ci-dessous sont <strong>majorées</strong> (× {flightPlan.performance.safetyFactor.value}) ; valeurs brutes MANEX également enregistrées avec le plan.
+                {' '}Aucun facteur de dégradation propre à l'avion (K-factor) n'est inclus.
+              </div>
+            )}
             {/* DÉPART - Performances de décollage */}
             {flightPlan.performance.departure?.takeoff && (
               <div style={{ marginBottom: '20px' }}>
@@ -778,7 +818,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.groundRoll
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.groundRoll)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.groundRollFactored ?? flightPlan.performance.departure.takeoff.groundRoll)} m`
                             : '—'}
                         </div>
                       </div>
@@ -790,7 +830,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda50ft
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ft)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ftFactored ?? flightPlan.performance.departure.takeoff.toda50ft)} m`
                             : '—'}
                         </div>
                       </div>
@@ -802,7 +842,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda15m
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda15m)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda15mFactored ?? flightPlan.performance.departure.takeoff.toda15m)} m`
                             : '—'}
                         </div>
                       </div>
@@ -898,7 +938,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.groundRoll
-                            ? `${Math.round(flightPlan.performance.arrival.landing.groundRoll)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.groundRollFactored ?? flightPlan.performance.arrival.landing.groundRoll)} m`
                             : '—'}
                         </div>
                       </div>
@@ -910,7 +950,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda50ft
-                            ? `${Math.round(flightPlan.performance.arrival.landing.lda50ft)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.lda50ftFactored ?? flightPlan.performance.arrival.landing.lda50ft)} m`
                             : '—'}
                         </div>
                       </div>
@@ -922,7 +962,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda15m
-                            ? `${Math.round(flightPlan.performance.arrival.landing.lda15m)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.lda15mFactored ?? flightPlan.performance.arrival.landing.lda15m)} m`
                             : '—'}
                         </div>
                       </div>

@@ -13,6 +13,8 @@
     "dev:full-tracked": "concurrently \"vite\" \"node scripts/autoTracker.cjs\" \"node scripts/claude-code-tracker.cjs\"",
     "dev:old": "vite",
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "compress-photos": "node scripts/compress-hero-photos.mjs",
     "preview": "vite preview",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
@@ -111,7 +113,8 @@
     "tsx": "^4.22.4",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
-    "vite-plugin-pwa": "^1.0.2"
+    "vite-plugin-pwa": "^1.0.2",
+    "vitest": "^4.1.8"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.30.1"
