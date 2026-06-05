@@ -705,7 +705,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             {flightPlan.performance.safetyFactor && flightPlan.performance.safetyFactor.value > 1 && (
               <div style={{ marginBottom: 12, padding: 10, backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--accent-primary)', borderRadius: 8, fontSize: 'var(--fs-caption)', lineHeight: 1.5 }}>
                 <strong style={{ color: 'var(--accent-primary)' }}>⚠ Marge réglementaire retenue : {flightPlan.performance.safetyFactor.label}.</strong>{' '}
-                Distance opérationnelle = distance MANEX × {flightPlan.performance.safetyFactor.value} (valeurs majorées enregistrées avec le plan).
+                Les distances ci-dessous sont <strong>majorées</strong> (× {flightPlan.performance.safetyFactor.value}) ; valeurs brutes MANEX également enregistrées avec le plan.
                 {' '}Aucun facteur de dégradation propre à l'avion (K-factor) n'est inclus.
               </div>
             )}
@@ -782,7 +782,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.groundRoll
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.groundRoll)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.groundRollFactored ?? flightPlan.performance.departure.takeoff.groundRoll)} m`
                             : '—'}
                         </div>
                       </div>
@@ -794,7 +794,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda50ft
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ft)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda50ftFactored ?? flightPlan.performance.departure.takeoff.toda50ft)} m`
                             : '—'}
                         </div>
                       </div>
@@ -806,7 +806,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.departure.takeoff.toda15m
-                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda15m)} m`
+                            ? `${Math.round(flightPlan.performance.departure.takeoff.toda15mFactored ?? flightPlan.performance.departure.takeoff.toda15m)} m`
                             : '—'}
                         </div>
                       </div>
@@ -902,7 +902,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-title)', fontWeight: '700', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.groundRoll
-                            ? `${Math.round(flightPlan.performance.arrival.landing.groundRoll)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.groundRollFactored ?? flightPlan.performance.arrival.landing.groundRoll)} m`
                             : '—'}
                         </div>
                       </div>
@@ -914,7 +914,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda50ft
-                            ? `${Math.round(flightPlan.performance.arrival.landing.lda50ft)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.lda50ftFactored ?? flightPlan.performance.arrival.landing.lda50ft)} m`
                             : '—'}
                         </div>
                       </div>
@@ -926,7 +926,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                         </div>
                         <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                           {flightPlan.performance.arrival.landing.lda15m
-                            ? `${Math.round(flightPlan.performance.arrival.landing.lda15m)} m`
+                            ? `${Math.round(flightPlan.performance.arrival.landing.lda15mFactored ?? flightPlan.performance.arrival.landing.lda15m)} m`
                             : '—'}
                         </div>
                       </div>
