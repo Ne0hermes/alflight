@@ -701,6 +701,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             title="Performances Décollage / Atterrissage"
             containerStyle={{ marginTop: '24px' }}
           >
+            {/* 🔧 A9 — Marge réglementaire persistée (facteur de sécurité) */}
+            {flightPlan.performance.safetyFactor && flightPlan.performance.safetyFactor.value > 1 && (
+              <div style={{ marginBottom: 12, padding: 10, backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--accent-primary)', borderRadius: 8, fontSize: 'var(--fs-caption)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--accent-primary)' }}>⚠ Marge réglementaire retenue : {flightPlan.performance.safetyFactor.label}.</strong>{' '}
+                Distance opérationnelle = distance MANEX × {flightPlan.performance.safetyFactor.value} (valeurs majorées enregistrées avec le plan).
+                {' '}Aucun facteur de dégradation propre à l'avion (K-factor) n'est inclus.
+              </div>
+            )}
             {/* DÉPART - Performances de décollage */}
             {flightPlan.performance.departure?.takeoff && (
               <div style={{ marginBottom: '20px' }}>
