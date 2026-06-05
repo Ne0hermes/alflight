@@ -583,6 +583,42 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </div>
               );
             })()}
+
+            {/* 🔧 A7 — Vitesses de référence (V-speeds) : saisies dans « Mes avions »,
+                jusqu'ici jamais affichées. Référence pilote (bug-speeds). */}
+            {selectedAircraft?.speeds && [
+              ['Vr', selectedAircraft.speeds.vr], ['Vx', selectedAircraft.speeds.vx],
+              ['Vy', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
+              ['Vref', selectedAircraft.speeds.vref], ['Vglide', selectedAircraft.speeds.vglide],
+              ['Vso', selectedAircraft.speeds.vso], ['Vs1', selectedAircraft.speeds.vs1],
+              ['Va', selectedAircraft.speeds.va], ['Vno', selectedAircraft.speeds.vno],
+              ['Vne', selectedAircraft.speeds.vne], ['Vle', selectedAircraft.speeds.vle],
+              ['Vlo', selectedAircraft.speeds.vlo],
+            ].filter(([, v]) => v != null && v !== '').length > 0 && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-subtle)' }}>
+                <div style={{ fontSize: 'var(--fs-caption)', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  Vitesses de référence (AFM)
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
+                  {[
+                    ['Vr', selectedAircraft.speeds.vr], ['Vx', selectedAircraft.speeds.vx],
+                    ['Vy', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
+                    ['Vref', selectedAircraft.speeds.vref], ['Vglide', selectedAircraft.speeds.vglide],
+                    ['Vso', selectedAircraft.speeds.vso], ['Vs1', selectedAircraft.speeds.vs1],
+                    ['Va', selectedAircraft.speeds.va], ['Vno', selectedAircraft.speeds.vno],
+                    ['Vne', selectedAircraft.speeds.vne], ['Vle', selectedAircraft.speeds.vle],
+                    ['Vlo', selectedAircraft.speeds.vlo],
+                  ].filter(([, v]) => v != null && v !== '').map(([label, v]) => (
+                    <span key={label} style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-primary)' }}>
+                      <strong style={{ color: 'var(--accent-primary)' }}>{label}</strong> {v} kt
+                    </span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: 6, fontStyle: 'italic' }}>
+                  Référence pilote (saisies dans « Mes avions ») — non utilisées dans les calculs de distance.
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
 
