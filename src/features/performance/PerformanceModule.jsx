@@ -331,14 +331,23 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     }
 
     // Sauvegarder les résultats de décollage
+    // 🔧 A9 — Facteur de sécurité PERSISTÉ : on enregistre la marge choisie ET les
+    // distances majorées (brut conservé), pour que synthèse/PDF reflètent le chiffre
+    // opérationnel, pas seulement l'écran. La marge est appliquée UNE seule fois ici.
+    const sf = safetyFactor?.value > 1 ? safetyFactor.value : 1;
+    const fx = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * sf) : null);
+    flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.departure = {
       ...flightPlan.performance.departure,
       icao: departureAirport.icao,
       name: departureAirport.name,
       takeoff: {
         groundRoll: result.groundRoll,
+        groundRollFactored: fx(result.groundRoll),
         toda50ft: result.distance50ft,
+        toda50ftFactored: fx(result.distance50ft),
         toda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
+        toda15mFactored: fx(result.distance50ft),
         outOfRange: result.outOfRange,
         conditions: {
           ...metadata.conditions,
@@ -372,14 +381,21 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     }
 
     // Sauvegarder les résultats d'atterrissage
+    // 🔧 A9 — Facteur de sécurité PERSISTÉ (cf. décollage) : marge + distances majorées.
+    const sf = safetyFactor?.value > 1 ? safetyFactor.value : 1;
+    const fx = (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v * sf) : null);
+    flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.arrival = {
       ...flightPlan.performance.arrival,
       icao: arrivalAirport.icao,
       name: arrivalAirport.name,
       landing: {
         groundRoll: result.groundRoll,
+        groundRollFactored: fx(result.groundRoll),
         lda50ft: result.distance50ft,
+        lda50ftFactored: fx(result.distance50ft),
         lda15m: result.distance50ft, // Utiliser la même valeur pour 15m/50ft
+        lda15mFactored: fx(result.distance50ft),
         outOfRange: result.outOfRange,
         conditions: {
           ...metadata.conditions,
@@ -510,8 +526,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   );
 
   // Dropdown de sélection du facteur de sécurité réglementaire.
-  // Placé en tête du module : le pilote choisit la marge à appliquer aux
-  // distances affichées. N'affecte PAS les calculs amont ni le stockage.
+  // Placé en tête du module : le pilote choisit la marge réglementaire. Elle est
+  // appliquée aux distances affichées ET persistée dans flightPlan.performance
+  // (synthèse/PDF) — A9. N'affecte PAS l'interpolation brute (appliquée une seule fois).
   const renderSafetyFactorSelector = () => (
     <div style={{
       marginBottom: 12,
@@ -547,6 +564,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       <span style={{ fontSize: 11, color: 'var(--accent-primary)', fontStyle: 'italic' }}>
         {safetyFactor.description}
       </span>
+      <div style={{ flexBasis: '100%', fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.4 }}>
+        Cette marge est appliquée aux distances affichées <strong>et enregistrée avec le plan de vol</strong> (synthèse/PDF).
+        {' '}⚠ Ces distances n'intègrent <strong>pas</strong> de facteur de dégradation propre à l'avion
+        (<em>K-factor</em> : usure moteur/cellule, traînée réelle d'une immatriculation donnée) ; elles supposent un appareil conforme au MANEX.
+      </div>
     </div>
   );
 
