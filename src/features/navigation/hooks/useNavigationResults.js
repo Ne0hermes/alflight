@@ -1,5 +1,6 @@
 // src/features/navigation/hooks/useNavigationResults.js
 import { useMemo } from 'react';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 export const useNavigationResults = (waypoints, flightType, selectedAircraft) => {
   return useMemo(() => {
@@ -37,12 +38,12 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
     }
     
     // Calcul du temps de vol
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
-    const totalTime = totalDistance > 0 ? Math.round((totalDistance / cruiseSpeed) * 60) : 0; // en minutes
-    
-    // Calcul du carburant nécessaire
-    const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h
-    const fuelRequired = totalTime > 0 ? (totalTime / 60) * fuelConsumption : 0;
+    // 🔧 A6/P0 — Vitesse/conso depuis la source unique (null si non renseigné),
+    // plus de 100/30 fabriqués. Sans donnée ⇒ on ne calcule pas (0), pas d'invention.
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+    const totalTime = (totalDistance > 0 && cruiseSpeed) ? Math.round((totalDistance / cruiseSpeed) * 60) : 0; // min
+    const fuelConsumption = getFuelConsumptionLph(selectedAircraft);
+    const fuelRequired = (totalTime > 0 && fuelConsumption) ? (totalTime / 60) * fuelConsumption : 0;
 
     // Calcul de la réserve réglementaire
     let regulationReserveMinutes = 30; // Base VFR jour
@@ -59,7 +60,7 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
       regulationReserveMinutes = 20; // Vol local de jour
     }
     
-    const regulationReserveLiters = (regulationReserveMinutes / 60) * fuelConsumption;
+    const regulationReserveLiters = fuelConsumption ? (regulationReserveMinutes / 60) * fuelConsumption : 0;
     
     const result = {
       totalDistance: Math.round(totalDistance * 10) / 10,
