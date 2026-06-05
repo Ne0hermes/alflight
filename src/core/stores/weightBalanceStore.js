@@ -37,21 +37,22 @@ export const useWeightBalanceStore = create(
       
       // Utiliser les masses directement depuis aircraft ou depuis masses
       // Prioriser weights.emptyWeight (nouveau format) puis emptyWeight (legacy)
+      // 🔧 A6/P0 — Plus de masse FABRIQUÉE. Absente ⇒ NaN ⇒ calcul refusé (return
+      // null ci-dessous), jamais un 600/1150 inventé qui masquerait une surcharge.
       const emptyWeight = parseFloat(
         aircraft.weights?.emptyWeight ||
         aircraft.emptyWeight ||
-        aircraft.masses?.emptyMass ||
-        600
+        aircraft.masses?.emptyMass
       );
-      const minTakeoffWeight = parseFloat(aircraft.minTakeoffWeight || aircraft.masses?.minTakeoffMass || 600);
-      const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight || 1150);
+      const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight);
+      // minTakeoffWeight optionnel : absent ⇒ pas de borne basse imposée (au lieu d'inventer 600).
+      const minTakeoffWeight = parseFloat(aircraft.minTakeoffWeight || aircraft.masses?.minTakeoffMass);
       
-      // Vérifier les propriétés requises de l'avion
-      if (!emptyWeight || !minTakeoffWeight || !maxTakeoffWeight) {
-        console.error('WeightBalanceStore - Missing aircraft weight properties:', {
-          emptyWeight,
-          minTakeoffWeight,
-          maxTakeoffWeight
+      // Masse à vide et MTOW indispensables. Absentes ⇒ calcul refusé (P0) ;
+      // l'UI doit afficher « masse à vide / MTOW non renseignée », jamais un chiffre.
+      if (!Number.isFinite(emptyWeight) || !Number.isFinite(maxTakeoffWeight)) {
+        console.error('WeightBalanceStore - Masse à vide / MTOW non renseignée:', {
+          emptyWeight, maxTakeoffWeight, registration: aircraft.registration
         });
         return null;
       }
@@ -68,25 +69,26 @@ export const useWeightBalanceStore = create(
       console.log('  - wb?.cgLimits:', wb?.cgLimits);
 
       if (!wb || !wb.emptyWeightArm) {
-        // Fallback vers armLengths si weightBalance n'existe pas
-                wb = {
-          emptyWeightArm: aircraft.armLengths?.emptyMassArm || 2.00,
-          frontLeftSeatArm: aircraft.armLengths?.frontSeat1Arm || 2.00,
-          frontRightSeatArm: aircraft.armLengths?.frontSeat2Arm || 2.00,
-          rearLeftSeatArm: aircraft.armLengths?.rearSeat1Arm || 2.90,
-          rearRightSeatArm: aircraft.armLengths?.rearSeat2Arm || 2.90,
-          baggageArm: aircraft.armLengths?.standardBaggageArm || 3.50,
-          auxiliaryArm: aircraft.armLengths?.aftBaggageExtensionArm || aircraft.armLengths?.baggageTubeArm || 3.70,
-          fuelArm: aircraft.armLengths?.fuelArm || 2.18,
-          cgLimits: aircraft.cgEnvelope ? {
-            forward: parseFloat(aircraft.cgEnvelope.forwardPoints?.[0]?.cg) || 2.00,
-            aft: parseFloat(aircraft.cgEnvelope.aftCG) || 2.45
-          } : {
-            forward: 2.00,
-            aft: 2.45
-          }
+        // 🔧 A6/P0 — Bras dérivés de armLengths SANS fabrication. Absent ⇒ null
+        // (au lieu de 2.00/2.90/3.50… inventés, qui produisaient un CG faux mais
+        // d'apparence valide). Un bras null d'une station CHARGÉE rend le CG non
+        // fiable ⇒ isWithinCG = null + warning (détection plus bas).
+        const armOrNull = (v) => {
+          const n = parseFloat(v);
+          return Number.isFinite(n) && n !== 0 ? n : null;
         };
-        console.log('  ⚠️ Using fallback weightBalance from armLengths');
+        wb = {
+          emptyWeightArm: armOrNull(aircraft.armLengths?.emptyMassArm),
+          frontLeftSeatArm: armOrNull(aircraft.armLengths?.frontSeat1Arm),
+          frontRightSeatArm: armOrNull(aircraft.armLengths?.frontSeat2Arm),
+          rearLeftSeatArm: armOrNull(aircraft.armLengths?.rearSeat1Arm),
+          rearRightSeatArm: armOrNull(aircraft.armLengths?.rearSeat2Arm),
+          baggageArm: armOrNull(aircraft.armLengths?.standardBaggageArm),
+          auxiliaryArm: armOrNull(aircraft.armLengths?.aftBaggageExtensionArm) || armOrNull(aircraft.armLengths?.baggageTubeArm),
+          fuelArm: armOrNull(aircraft.armLengths?.fuelArm),
+          cgLimits: null // l'enveloppe réelle est recalculée plus bas via cgEnvelope
+        };
+        console.log('  ⚠️ Bras dérivés de armLengths (null si absent — A6/P0)');
       }
 
       // 🔧 FIX CRITIQUE: TOUJOURS utiliser cgEnvelope comme source de vérité
@@ -170,18 +172,25 @@ export const useWeightBalanceStore = create(
       let baggageMoment = 0;
       
       // Si l'avion a des compartiments bagages définis, les utiliser
+      let baggageArmMissing = false;
       if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
         aircraft.baggageCompartments.forEach((compartment, index) => {
           const loadKey = `baggage_${compartment.id || index}`;
           const weight = loads[loadKey] || 0;
-          const arm = parseFloat(compartment.arm) || 3.50;
+          const arm = parseFloat(compartment.arm); // A6/P0 : plus de 3.50 inventé
+          if (weight > 0 && !Number.isFinite(arm)) baggageArmMissing = true;
           baggageWeight += weight;
-          baggageMoment += weight * arm;
+          baggageMoment += weight * (Number.isFinite(arm) ? arm : 0);
         });
       } else {
         // Sinon, utiliser les compartiments par défaut
         baggageWeight = (loads.baggage || 0) + (loads.auxiliary || 0);
-        baggageMoment = (loads.baggage || 0) * wb.baggageArm + (loads.auxiliary || 0) * wb.auxiliaryArm;
+        const bArm = parseFloat(wb.baggageArm);
+        const aArm = parseFloat(wb.auxiliaryArm);
+        if ((loads.baggage || 0) > 0 && !Number.isFinite(bArm)) baggageArmMissing = true;
+        if ((loads.auxiliary || 0) > 0 && !Number.isFinite(aArm)) baggageArmMissing = true;
+        baggageMoment = (loads.baggage || 0) * (Number.isFinite(bArm) ? bArm : 0) +
+                        (loads.auxiliary || 0) * (Number.isFinite(aArm) ? aArm : 0);
       }
       
       const totalWeight = 
@@ -226,29 +235,48 @@ export const useWeightBalanceStore = create(
       console.log(`  - TOTAL WEIGHT: ${totalWeight.toFixed(1)} kg`);
       console.log(`  - CG: ${totalMoment.toFixed(1)} ÷ ${totalWeight.toFixed(1)} = ${cg.toFixed(4)} m (${(cg * 1000).toFixed(0)} mm)`);
       
-      // Vérification des limites
-      const isWithinWeight = 
-        totalWeight >= minTakeoffWeight &&
-        totalWeight <= maxTakeoffWeight;
-      
+      // 🔧 A6/P0 — Bras manquant pour une station CHARGÉE ⇒ CG non fiable.
+      const warnings = [];
+      const missingArms = [
+        { w: emptyWeight, a: wb.emptyWeightArm, label: 'masse à vide' },
+        { w: loads.frontLeft, a: wb.frontLeftSeatArm, label: 'siège avant gauche' },
+        { w: loads.frontRight, a: wb.frontRightSeatArm, label: 'siège avant droit' },
+        { w: loads.rearLeft, a: wb.rearLeftSeatArm, label: 'siège arrière gauche' },
+        { w: loads.rearRight, a: wb.rearRightSeatArm, label: 'siège arrière droit' },
+        { w: loads.fuel, a: wb.fuelArm, label: 'carburant' },
+      ].filter((x) => (parseFloat(x.w) || 0) > 0 && !Number.isFinite(parseFloat(x.a))).map((x) => x.label);
+      if (baggageArmMissing) missingArms.push('bagages');
+      const cgReliable = missingArms.length === 0;
+      if (!cgReliable) warnings.push(`Bras de levier manquant(s) : ${missingArms.join(', ')} — centrage non vérifiable`);
+
+      // Vérification des limites (borne basse seulement si minTakeoffWeight connu).
+      const isWithinWeight = totalWeight <= maxTakeoffWeight &&
+        (Number.isFinite(minTakeoffWeight) ? totalWeight >= minTakeoffWeight : true);
+
       // 🔧 A2/A3 — Enveloppe RÉELLE interpolée à la masse (remplace le rectangle
-      // constant [forwardPoints[0].cg, aftCG]). Source : aircraft.cgEnvelope
-      // (courbe avant variable + modèle arrière 2-points), sinon limites scalaires.
+      // constant [forwardPoints[0].cg, aftCG]).
       const cgLimitsAtTOW = cgLimitsAtMass(
         aircraft.cgEnvelope || aircraft.cgLimits || wb.cgLimits,
         totalWeight
       );
-      const isWithinCG = (cgLimitsAtTOW.forward !== null && cgLimitsAtTOW.aft !== null)
-        ? (cg >= cgLimitsAtTOW.forward && cg <= cgLimitsAtTOW.aft)
-        : false; // enveloppe incomplète → fail-closed (conservateur)
-      
+      // CG non fiable (bras manquant) ⇒ isWithinCG = null (pas un faux « OK »).
+      const isWithinCG = !cgReliable ? null
+        : ((cgLimitsAtTOW.forward !== null && cgLimitsAtTOW.aft !== null)
+            ? (cg >= cgLimitsAtTOW.forward && cg <= cgLimitsAtTOW.aft)
+            : false); // enveloppe incomplète → fail-closed
+
+      // Fail-closed : centrage non fiable ou inconnu ⇒ jamais « dans les limites ».
+      const isWithinLimits = cgReliable && isWithinWeight && isWithinCG === true;
+
       const result = {
         totalWeight: parseFloat(totalWeight.toFixed(1)),
         totalMoment: parseFloat(totalMoment.toFixed(1)),
         cg: parseFloat(cg.toFixed(3)),
-        isWithinLimits: isWithinWeight && isWithinCG,
+        isWithinLimits,
         isWithinWeight,
         isWithinCG,
+        cgReliable,
+        warnings,
         // Limites CG effectivement appliquées À cette masse (interpolées).
         cgLimits: { forward: cgLimitsAtTOW.forward, aft: cgLimitsAtTOW.aft }
       };
