@@ -967,6 +967,45 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               Aucun compartiment bagage configuré pour cet avion.
             </div>
           )}
+
+          {/* ─── Répartition du carburant PAR RÉSERVOIR (centrage) ───
+              Demande pilote : quand l'avion a des réservoirs (bras différents),
+              saisir les litres dans chaque réservoir pour un centrage exact,
+              plafonné à la capacité de chaque réservoir. Le moment est calculé
+              avec le bras de CHAQUE réservoir (cf. weightBalanceStore). */}
+          {Array.isArray(aircraft.additionalFuelTanks) && aircraft.additionalFuelTanks.length > 0 && (() => {
+            const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
+            const density = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
+            const fobLtr = typeof fobFuel === 'number' ? fobFuel : (fobFuel?.ltr || 0);
+            const distributed = aircraft.additionalFuelTanks.reduce(
+              (s, t, i) => s + (parseFloat(loads[`fuel_${t.id ?? i}`]) || 0), 0
+            );
+            const mismatch = fobLtr > 0 && Math.abs(distributed - fobLtr) > 0.5;
+            return (
+              <div style={{ marginTop: '24px' }}>
+                <h4 style={{ ...commonStyles.label, fontSize: 'var(--fs-title)', marginBottom: '6px' }}>
+                  Répartition du carburant par réservoir
+                </h4>
+                <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
+                  Litres dans chaque réservoir (chacun a son propre bras de levier). FOB total : {fobLtr.toFixed(0)} L.
+                </p>
+                <div style={commonStyles.grid2}>
+                  {aircraft.additionalFuelTanks.map((tank, i) => (
+                    <FuelTankInput
+                      key={tank.id ?? i}
+                      tank={tank}
+                      density={density}
+                      liters={loads[`fuel_${tank.id ?? i}`] ?? ''}
+                      onChange={(v) => onLoadChange(`fuel_${tank.id ?? i}`, v)}
+                    />
+                  ))}
+                </div>
+                <div style={{ marginTop: '10px', fontSize: 'var(--fs-body)', fontWeight: '600', color: mismatch ? 'var(--color-red-critical)' : theme.colors.textSecondary }}>
+                  Total réparti : {distributed.toFixed(0)} L / FOB {fobLtr.toFixed(0)} L {fobLtr > 0 ? (mismatch ? '⚠️ écart avec le FOB' : '✓') : ''}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </section>
     );
@@ -1011,6 +1050,55 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             )}
           </div>
         </div>
+      </div>
+    );
+  });
+
+  // Champ de saisie carburant PAR RÉSERVOIR (centrage). Saisie en LITRES,
+  // plafonnée à la capacité du réservoir ; convertie en kg via la densité pour
+  // le moment (chaque réservoir a son propre bras de levier).
+  const FuelTankInput = memo(({ tank, liters, onChange, density }) => {
+    const cap = parseFloat(tank.capacity);
+    const arm = parseFloat(tank.arm);
+    const L = parseFloat(liters) || 0;
+    const weight = L * density;
+    const moment = Number.isFinite(arm) ? weight * arm : null;
+    const exceeds = Number.isFinite(cap) && cap > 0 && L > cap;
+    return (
+      <div style={{ ...commonStyles.card, padding: '12px' }}>
+        <label style={{ ...commonStyles.label, marginBottom: '6px' }}>
+          {tank.name || 'Réservoir'}{tank.type ? ` · ${tank.type}` : ''} (L)
+        </label>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          max={Number.isFinite(cap) ? cap : undefined}
+          value={liters ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))}
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            fontSize: 'var(--fs-body)',
+            color: 'var(--text-primary)',
+            backgroundColor: 'var(--app-bg)',
+            border: `1px solid ${exceeds ? 'var(--color-red-critical)' : 'var(--border-subtle)'}`,
+            borderRadius: 'var(--radius-sm)',
+            outline: 'none',
+            boxSizing: 'border-box'
+          }}
+        />
+        {exceeds && (
+          <div style={{ marginTop: '4px', fontSize: 'var(--fs-caption)', color: 'var(--color-red-critical)', fontWeight: '600' }}>
+            ⚠️ Dépasse la capacité : {L} L &gt; {cap} L
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '8px', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cap:</span><span style={{ color: theme.colors.textPrimary }}>{Number.isFinite(cap) ? `${cap} L` : '—'}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Bras:</span>{Number.isFinite(arm) ? <span style={{ color: theme.colors.textPrimary }}>{arm.toFixed(2)} m</span> : <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>MANQUANT</span>}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Moment:</span>{moment !== null ? <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>{moment.toFixed(1)}</span> : <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>N/A</span>}</div>
+        </div>
+        <div style={{ marginTop: '4px', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>≈ {weight.toFixed(1)} kg (densité {density})</div>
       </div>
     );
   });
