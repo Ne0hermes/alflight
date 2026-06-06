@@ -420,23 +420,6 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         />
       </div>
 
-      {/* Note: Sélection des déroutements déplacée à l'étape 7 */}
-      <div style={{
-        padding: '16px',
-        backgroundColor: 'var(--bg-overlay)',
-        borderRadius: 'var(--radius-sm)',
-        borderLeft: '4px solid var(--accent-primary)',
-        marginTop: '20px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-          <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Sélection des déroutements</span>
-        </div>
-        <p style={{ margin: 0, fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
-          La sélection des aérodromes de déroutement se fait à l'<strong>étape 7</strong>, après le bilan carburant.
-          Cela permet d'utiliser le <strong>FOB (Fuel On Board)</strong> pour calculer une zone de recherche
-          en forme de cône, plus précise et adaptée à votre autonomie réelle.
-        </p>
-      </div>
     </div>
   );
 });

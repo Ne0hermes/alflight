@@ -8,6 +8,7 @@ import { EditorialHeading, ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
+import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
@@ -21,7 +22,7 @@ import { Step3VAC } from './steps/Step3VAC';
 import { Step5Fuel } from './steps/Step5Fuel';
 import { Step5Performance } from './steps/Step5Performance';
 import { Step6WeightBalance } from './steps/Step6WeightBalance';
-import { Step7Alternates } from './steps/Step7Alternates';  // NOUVEAU: Étape déroutements après W&B
+import { Step7Alternates } from './steps/Step7Alternates';  // Étape Déroutements — désormais en position 3 (juste après le trajet)
 import { Step7Summary } from './steps/Step7Summary';
 
 // Photo de présentation + intitulé par étape (cohérence avec les modules type
@@ -29,11 +30,11 @@ import { Step7Summary } from './steps/Step7Summary';
 const STEP_HERO = {
   1: { image: '/assets/photos/hero-pilot.jpg', eyebrow: 'ÉTAPE 1 · PRÉPARATION' },
   2: { image: '/assets/photos/hero-navigation.jpg', eyebrow: 'ÉTAPE 2 · NAVIGATION' },
-  3: { image: '/assets/photos/hero-weather.jpg', eyebrow: 'ÉTAPE 3 · TERRAINS & MÉTÉO' },
-  4: { image: '/assets/photos/hero-fuel.jpg', eyebrow: 'ÉTAPE 4 · CARBURANT' },
-  5: { image: '/assets/photos/hero-weight-balance.jpg', eyebrow: 'ÉTAPE 5 · MASSE & CENTRAGE' },
-  6: { image: '/assets/photos/hero-performance.jpg', eyebrow: 'ÉTAPE 6 · PERFORMANCES' },
-  7: { image: '/assets/photos/hero-alternates.jpg', eyebrow: 'ÉTAPE 7 · DÉROUTEMENTS' },
+  3: { image: '/assets/photos/hero-alternates.jpg', eyebrow: 'ÉTAPE 3 · DÉROUTEMENTS' },
+  4: { image: '/assets/photos/hero-weather.jpg', eyebrow: 'ÉTAPE 4 · TERRAINS & MÉTÉO' },
+  5: { image: '/assets/photos/hero-fuel.jpg', eyebrow: 'ÉTAPE 5 · CARBURANT' },
+  6: { image: '/assets/photos/hero-weight-balance.jpg', eyebrow: 'ÉTAPE 6 · MASSE & CENTRAGE' },
+  7: { image: '/assets/photos/hero-performance.jpg', eyebrow: 'ÉTAPE 7 · PERFORMANCES' },
   8: { image: '/assets/photos/hero-logbook.jpg', eyebrow: 'ÉTAPE 8 · SYNTHÈSE' },
 };
 
@@ -49,7 +50,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   const aircraftList = aircraftSelectors.useAircraftList();
   const selectedAircraft = aircraftSelectors.useSelectedAircraft(); // Hook pour récupérer l'avion sélectionné
   const { setWaypoints, waypoints, segmentAltitudes } = useNavigation();
-  const { setFobFuel } = useFuel();
+  const { setFobFuel, calculateTotal } = useFuel();
   const { setWeatherData } = useWeather();
   const navigationResults = useNavigationResults();
 
@@ -249,34 +250,63 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         flightPlan.generalInfo.callsign &&
         flightPlan.generalInfo.date &&
         flightPlan.aircraft.registration
-      )
+      ),
+      errorMessage: 'Veuillez renseigner l\'indicatif, la date et l\'avion avant de continuer.'
     },
     {
       number: 2,
-      title: 'Définition du Trajet et Déroutements',
+      title: 'Définition du Trajet',
       description: '',
       component: Step3Route,
       validate: () => Boolean(
         flightPlan.route.departure.icao &&
         flightPlan.route.arrival.icao
-      )
+      ),
+      errorMessage: 'Veuillez définir un aérodrome de départ et un aérodrome d\'arrivée avant de continuer.'
     },
     {
+      // ⬆️ Déroutements remonté juste après le trajet : la sélection de l'alternate doit
+      // précéder la météo (METAR/TAF + pistes du dégagement) ET le bilan carburant
+      // (calcul du carburant de dégagement). Cf. audit « paradoxe du bilan carburant ».
       number: 3,
+      title: 'Déroutements',
+      description: 'Sélection de l\'aérodrome de dégagement',
+      component: Step7Alternates,
+      // Garde-fou : au moins un déroutement doit être sélectionné. Source de vérité =
+      // store alternates (lu en direct, robuste vis-à-vis du timing de synchronisation).
+      validate: () => (useAlternatesStore.getState().selectedAlternates?.length || 0) > 0,
+      errorMessage: 'Veuillez sélectionner au moins un aérodrome de déroutement : il est nécessaire au calcul du carburant de dégagement (bilan carburant).'
+    },
+    {
+      number: 4,
       title: 'Informations aérodromes et Météo',
-      description: 'Données détaillées, cartes VAC et météo',
+      description: 'Données détaillées, cartes VAC et météo (départ, arrivée et déroutement)',
       component: Step3VAC,
       validate: () => true // Optionnel - peut continuer sans VAC
     },
     {
-      number: 4,
+      number: 5,
       title: 'Bilan Carburant',
       description: '',
       component: Step5Fuel,
-      validate: () => flightPlan.fuel.confirmed > 0
+      // Garde-fou : le FOB confirmé doit couvrir le minimum requis (carburant de
+      // dégagement inclus, désormais calculé car l'alternate est choisi à l'étape 3).
+      validate: () => {
+        const fob = flightPlan.fuel.confirmed || 0;
+        const totalRequired = calculateTotal('ltr');
+        return fob > 0 && fob >= totalRequired - 0.01;
+      },
+      errorMessage: () => {
+        const fob = flightPlan.fuel.confirmed || 0;
+        const totalRequired = calculateTotal('ltr');
+        if (!fob) {
+          return 'Veuillez confirmer la quantité de carburant à embarquer (FOB - Fuel On Board) avant de continuer.';
+        }
+        return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis (carburant de dégagement inclus), ${Math.round(fob)} L confirmés. Augmentez le carburant embarqué.`;
+      }
     },
     {
-      number: 5,
+      number: 6,
       title: 'Masse et Centrage',
       description: 'Passagers et bagages',
       component: Step6WeightBalance,
@@ -289,16 +319,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       }
     },
     {
-      number: 6,
+      number: 7,
       title: 'Performances',
       component: Step5Performance,
       validate: () => true // Toujours valide, données calculées automatiquement
-    },
-    {
-      number: 7,
-      title: 'Déroutements',
-      component: Step7Alternates,
-      validate: () => true // La sélection d'alternates est optionnelle
     },
     {
       number: 8,
@@ -320,25 +344,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
    * Marque l'étape courante comme complétée et passe à la suivante
    */
   const handleNext = useCallback(() => {
-    // Logs de débogage détaillés pour TOUTES les étapes
+    // Log de débogage générique (les détails par étape sont gérés par chaque validate())
     console.log(`🔍 [Wizard] Validation étape ${currentStep} - ${currentStepConfig.title}`);
-
-    if (currentStep === 1) {
-      console.log('  - callsign:', flightPlan.generalInfo.callsign);
-      console.log('  - date:', flightPlan.generalInfo.date);
-      console.log('  - aircraft.registration:', flightPlan.aircraft.registration);
-    } else if (currentStep === 2) {
-      console.log('  - departure.icao:', flightPlan.route.departure.icao);
-      console.log('  - arrival.icao:', flightPlan.route.arrival.icao);
-    } else if (currentStep === 3) {
-      console.log('  - VAC step (optionnel)');
-    } else if (currentStep === 5) {
-      console.log('  - fuel.confirmed:', flightPlan.fuel.confirmed);
-      console.log('  - fuel.confirmed > 0:', flightPlan.fuel.confirmed > 0);
-    } else if (currentStep === 6) {
-      console.log('  - weightBalance.withinLimits:', flightPlan.weightBalance.withinLimits);
-      console.log('  - withinLimits !== false:', flightPlan.weightBalance.withinLimits !== false);
-    }
 
     const isValid = currentStepConfig.validate();
     console.log(`  ➡️ Résultat validation:`, isValid);
@@ -357,12 +364,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         localStorage.setItem('flightPlanCurrentStep', nextStep.toString());
       }
     } else {
-      // Message d'erreur personnalisé selon l'étape
-      let errorMessage = 'Veuillez compléter tous les champs requis';
-
-      if (currentStep === 5) {
-        errorMessage = 'Veuillez confirmer la quantité de carburant à embarquer (FOB - Fuel On Board) avant de continuer.';
-      }
+      // Message d'erreur piloté par la config de l'étape (string ou fonction).
+      // Plus de numéro d'étape en dur (qui se désynchronise au moindre réordonnancement).
+      const rawMessage = currentStepConfig.errorMessage;
+      const errorMessage = (typeof rawMessage === 'function' ? rawMessage() : rawMessage)
+        || 'Veuillez compléter tous les champs requis';
 
       console.error('❌ [Wizard] Validation échouée pour étape', currentStep);
       // Toast non-bloquant au lieu d'alert() natif

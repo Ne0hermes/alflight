@@ -303,28 +303,17 @@ export const AlternatesMapView = memo(({
         {/* Ajuster automatiquement la vue */}
         {bounds && <FitBounds bounds={bounds} />}
 
-        {/* Cercles de rayon d'action autour du départ et de l'arrivée */}
+        {/* Cercle du RAYON D'ACTION autour de l'aérodrome de base (départ).
+            Rayon = distance de navigation. Le cercle d'arrivée a été retiré :
+            la zone de déroutement part uniquement de la base. Couleur orange (charte). */}
         {dynamicRadius && searchZone && searchZone.departure && (
           <Circle
             center={[searchZone.departure.lat, searchZone.departure.lon]}
             radius={dynamicRadius * 1852}
             pathOptions={{
-              color: 'var(--color-red-critical)',
-              fillColor: 'var(--color-red-critical)',
-              fillOpacity: 0.1,
-              weight: 2,
-              dashArray: '5, 10'
-            }}
-          />
-        )}
-        {dynamicRadius && searchZone && searchZone.arrival && (
-          <Circle
-            center={[searchZone.arrival.lat, searchZone.arrival.lon]}
-            radius={dynamicRadius * 1852}
-            pathOptions={{
-              color: 'var(--text-primary)',
-              fillColor: 'var(--text-primary)',
-              fillOpacity: 0.1,
+              color: 'var(--accent-primary)',
+              fillColor: 'var(--accent-primary)',
+              fillOpacity: 0.08,
               weight: 2,
               dashArray: '5, 10'
             }}
@@ -373,9 +362,9 @@ export const AlternatesMapView = memo(({
             center={marker.position}
             radius={6}
             pathOptions={{
-              color: 'var(--text-secondary)',
-              fillColor: 'var(--text-secondary)',
-              fillOpacity: 0.8,
+              color: 'var(--accent-primary)',
+              fillColor: 'var(--accent-primary)',
+              fillOpacity: 0.9,
               weight: 2
             }}
           >

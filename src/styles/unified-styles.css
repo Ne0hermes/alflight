@@ -248,6 +248,33 @@ select:focus {
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
+/* 🟠 MENUS DÉROULANTS NATIFS — identité « dropdown » charte orange
+   ------------------------------------------------------------------
+   Demande pilote : au repos un <select> reprenait le style des <input>
+   (bordure ivoire neutre) → on ne voyait pas que c'était un menu déroulant ;
+   l'orange n'apparaissait qu'au clic. On lui donne donc dès le repos une
+   bordure ORANGE + une flèche chevron orange (identique au CustomSelect),
+   pour qu'il soit immédiatement reconnaissable. Plus vif au survol / focus.
+   NB: les <select> du module avion sont en style inline (inputStyle) ; le
+   !important + la spécificité (:not([multiple])) priment sur l'inline. */
+select:not([multiple]) {
+  border-color: var(--accent-primary) !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f26921' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 14px !important;
+  padding-right: 36px !important;
+  cursor: pointer;
+}
+
+select:not([multiple]):hover,
+select:not([multiple]):focus {
+  border-color: var(--color-orange-bright) !important;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: var(--color-text-muted) !important;

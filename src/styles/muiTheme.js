@@ -445,6 +445,22 @@ const muiTheme = createTheme({
           color: ALFLIGHT_COLORS.textPrimary,
           borderRadius: '8px',
           fontFamily: "'Century Gothic', 'Questrial', sans-serif",
+          // 🟠 IDENTITÉ « MENU DÉROULANT » (charte orange) — demande pilote.
+          // Au repos un <Select> reprenait l'apparence d'un champ texte (bordure
+          // quasi invisible) ; l'orange n'apparaissait qu'au clic, donc on ne
+          // distinguait pas un dropdown d'un input. On donne donc une bordure
+          // ORANGE dès le repos AUX SEULS inputs contenant un Select (:has) —
+          // les champs texte restent neutres, ce qui crée le contraste attendu.
+          // Plus vive au survol / focus.
+          '&:has(.MuiSelect-select) .MuiOutlinedInput-notchedOutline': {
+            borderColor: `${ALFLIGHT_COLORS.accent} !important`,
+          },
+          '&:has(.MuiSelect-select):hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: `${ALFLIGHT_COLORS.accentBright} !important`,
+          },
+          '&:has(.MuiSelect-select).Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: `${ALFLIGHT_COLORS.accentBright} !important`,
+          },
         },
         notchedOutline: {
           // Bordure UNIFORME au repos sur tous les inputs MUI (TextField,
@@ -608,7 +624,10 @@ const muiTheme = createTheme({
           },
         },
         icon: {
-          color: ALFLIGHT_COLORS.textTertiary,
+          // Flèche ORANGE = signe distinctif « menu déroulant » (charte).
+          // Avant : textTertiary (gris terne) → le Select ressemblait à un
+          // simple champ texte, le pilote ne voyait pas que c'était un dropdown.
+          color: ALFLIGHT_COLORS.accent,
         },
         nativeInput: {
           // Force l'<input class="MuiSelect-nativeInput"> à rester
@@ -768,7 +787,8 @@ const muiTheme = createTheme({
           },
         },
         popupIndicator: {
-          color: ALFLIGHT_COLORS.textTertiary,
+          // Flèche orange — cohérence avec la flèche des <Select> (charte).
+          color: ALFLIGHT_COLORS.accent,
         },
       },
     },
