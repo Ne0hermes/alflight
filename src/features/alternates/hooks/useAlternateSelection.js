@@ -698,19 +698,28 @@ export const useAlternateSelection = () => {
       isCircuit: waypoints[0].icao === waypoints[waypoints.length - 1].icao
     });
 
-    // Zone normale basée sur la formule pilule
-    // IMPORTANT : Pour un circuit fermé, on passe la distance totale via options
-    const zone = calculateSearchZone(departure, arrival, waypoints, fuelDataForRadius, {
-      totalDistance: totalDistance  // Passer la distance totale du circuit
+    // 🎯 RAYON D'ACTION (demande pilote) : la zone de sélection est un CERCLE
+    // centré sur l'aérodrome de BASE (départ), de rayon = distance de navigation.
+    // Ex : navigation de 28 NM → cercle de 28 NM autour du départ. Tous les
+    // aérodromes compatibles dans ce cercle sont proposés en déroutement.
+    // (Remplace l'ancienne zone « pilule »/cône basée sur le FOB.)
+    const actionRadius = Math.max(10, totalDistance); // plancher 10 NM
+    const zone = {
+      type: 'circle',
+      center: departure,
+      departure,
+      arrival,
+      radius: actionRadius,
+      dynamicRadius: actionRadius,
+      area: Math.PI * actionRadius * actionRadius,
+      navDistance: totalDistance
+    };
+    console.log('🎯 [Alternates] Rayon d\'action circulaire:', {
+      base: `${departure.lat.toFixed(4)}, ${departure.lon.toFixed(4)}`,
+      navDistance: totalDistance.toFixed(1) + ' NM',
+      rayon: actionRadius.toFixed(1) + ' NM'
     });
-    if (zone) {
-      console.log('Search zone calculated:', {
-        radius: zone.dynamicRadius + ' NM',
-        area: zone.area?.toFixed(0) + ' NM²',
-        hasPerpendicular: !!zone.perpendicular
-      });
-    }
-    
+
     return zone;
   }, [waypoints, fuelDataForRadius, isReady]);
 
@@ -718,38 +727,11 @@ export const useAlternateSelection = () => {
   // NOUVEAU: Calcul de la zone CÔNE (utilise FOB pour rayons variables)
   // Le cône remplace la pilule quand le bilan carburant est disponible (étape 7)
   // ========================================================================================
-  const coneZone = useMemo(() => {
-    // La zone cône nécessite les paramètres FOB calculés
-    if (!isReady || !coneZoneParams || !waypoints || waypoints.length < 2) return null;
-
-    const departure = {
-      lat: waypoints[0].lat,
-      lon: waypoints[0].lon
-    };
-    const arrival = {
-      lat: waypoints[waypoints.length - 1].lat,
-      lon: waypoints[waypoints.length - 1].lon
-    };
-
-    // Utiliser calculateConeZone avec les rayons basés sur FOB
-    const cone = calculateConeZone(
-      departure,
-      arrival,
-      coneZoneParams.radiusAtDep,
-      coneZoneParams.radiusAtArr
-    );
-
-    if (cone) {
-      console.log('🔺 [CONE ZONE] Zone cône calculée:', {
-        radiusAtDep: cone.radiusAtDep?.toFixed(1) + ' NM',
-        radiusAtArr: cone.radiusAtArr?.toFixed(1) + ' NM',
-        area: cone.area?.toFixed(0) + ' NM²',
-        fobUsed: coneZoneParams.fobLiters?.toFixed(1) + ' L'
-      });
-    }
-
-    return cone;
-  }, [isReady, coneZoneParams, waypoints]);
+  // 🎯 Zone CÔNE DÉSACTIVÉE : la sélection des déroutements utilise désormais
+  // un RAYON D'ACTION circulaire centré sur l'aérodrome de base (cf. searchZone
+  // ci-dessus). On conserve la variable (null) pour ne pas casser les
+  // consommateurs (findAlternates, Step7Alternates).
+  const coneZone = useMemo(() => null, []);
 
   // Paramètres dynamiques
   // MISE À JOUR: Utilise ldaFilterParams pour le filtrage des pistes
@@ -760,23 +742,14 @@ export const useAlternateSelection = () => {
     // NOUVEAU: Utiliser ldaFilterParams si disponible, sinon fallback
     const minRunwayLength = ldaFilterParams?.minRunwayRequired || 300;
 
-    // 🔧 FIX: Utiliser le rayon du cône (basé sur FOB réel) si disponible
-    // sinon utiliser le rayon de la zone pilule (basé sur capacité max)
-    // Borne de sécurité : même en mode estimé (sans FOB, rayon basé sur la capacité
-    // max), la zone affichée/dessinée ne dépasse pas un rayon de déroutement
-    // raisonnable (~30 min de vol). Évite la « pilule » géante sur la carte.
-    const cruiseKt = getCruiseSpeedKt(selectedAircraft); // null si absent → cap vitesse non appliqué
-    const baseRadius = (coneZoneParams && !coneZoneParams.isEstimate)
-      ? coneZoneParams.radiusAtDep
-      : searchZone.dynamicRadius;
-    const effectiveRadius = cruiseKt ? Math.min(baseRadius, cruiseKt * 0.5) : baseRadius;
+    // 🎯 Rayon = RAYON D'ACTION circulaire = distance de navigation, centré sur
+    // l'aérodrome de base (cf. searchZone). Plus de plafonnement cône/FOB.
+    const effectiveRadius = searchZone.dynamicRadius;
 
     console.log('✅ [dynamicParams] Calculés:', {
       requiredRunwayLength: minRunwayLength,
       maxRadiusNM: effectiveRadius,
       searchZoneRadius: searchZone.dynamicRadius,
-      coneZoneRadius: coneZoneParams?.radiusAtDep,
-      useConeRadius: !!(coneZoneParams && !coneZoneParams.isEstimate),
       hasNavigationResults: !!navigationResults,
       ldaFilterUsed: !!ldaFilterParams
     });
@@ -789,7 +762,7 @@ export const useAlternateSelection = () => {
       // NOUVEAU: Informations LDA pour affichage
       ldaInfo: ldaFilterParams
     };
-  }, [selectedAircraft, navigationResults, searchZone, flightType, ldaFilterParams, coneZoneParams]);
+  }, [selectedAircraft, navigationResults, searchZone, flightType, ldaFilterParams]);
   
   // Fonction de recherche et scoring
   const findAlternates = useCallback(async () => {

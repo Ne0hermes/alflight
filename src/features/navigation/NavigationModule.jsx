@@ -1,6 +1,6 @@
 // src/features/navigation/NavigationModule.jsx
 import React, { useState, useCallback, useEffect, Fragment } from 'react';
-import { Plus, Navigation2, Home, Sun, Moon, Loader, AlertCircle, Plane, Shield } from 'lucide-react';
+import { Plus, Navigation2, Home, Sun, Moon, Loader, AlertCircle, Plane } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
 import { ValueWithUnit } from '@shared/components/ValueWithUnit';
@@ -639,25 +639,6 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
               </div>
             </div>
           </section>
-
-          {/* Tableau récapitulatif des espaces aériens traversés */}
-          {waypoints.length >= 2 && (
-            <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
-              <h3 style={{
-                fontSize: 'var(--fs-title)',
-                fontWeight: '600',
-                color: 'var(--text-primary)',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Shield size={20} color="var(--text-secondary)" />
-                Espaces Aériens et Zones Traversés
-              </h3>
-              {/* Section Espaces Aériens - DÉPLACÉE vers l'étape 7 (Synthèse) */}
-            </section>
-          )}
         </>
       )}
 

@@ -649,10 +649,21 @@ export const isAirportInSearchZone = (airport, searchZone) => {
   };
   
   if (!point.lat || !point.lon) return { isInZone: false, reason: 'Coordonnées invalides' };
-  
+
   // Déterminer le côté par rapport à la médiatrice
   const side = getSideOfPerpendicular(point, searchZone.departure, searchZone.arrival);
-  
+
+  // 🎯 Zone CERCLE = rayon d'action centré sur l'aérodrome de base (départ).
+  // Un aérodrome est retenu si sa distance au centre ≤ rayon d'action
+  // (= distance de navigation). Remplace la logique pilule/cône.
+  if (searchZone.type === 'circle' && searchZone.center && searchZone.radius) {
+    const distToCenter = calculateDistance(point, searchZone.center);
+    if (distToCenter <= searchZone.radius) {
+      return { isInZone: true, location: 'circle', distanceToRoute: distToCenter, side };
+    }
+    return { isInZone: false, reason: "Hors rayon d'action", distanceToRoute: distToCenter };
+  }
+
   // Pour une zone pilule
   if (searchZone.type === 'pill' && searchZone.radius && searchZone.departure && searchZone.arrival) {
     // Calculer les distances importantes

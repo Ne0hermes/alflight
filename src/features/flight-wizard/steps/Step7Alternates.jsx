@@ -1,6 +1,6 @@
 // src/features/flight-wizard/steps/Step7Alternates.jsx
-// Étape 7 : Sélection des aérodromes de déroutement (après bilan carburant)
-// Utilise la zone CÔNE basée sur FOB et le filtrage LDA × 1.43
+// Étape 3 : Sélection des aérodromes de déroutement (AVANT la météo et le bilan carburant)
+// Utilise la zone CÔNE basée sur FOB (repli capacité-max si FOB pas encore saisi) et le filtrage LDA × 1.43
 
 import React, { memo, useMemo, useEffect, useState } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
@@ -10,6 +10,7 @@ import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
 import { useAlternateSelection } from '@features/alternates/hooks/useAlternateSelection';
 import { useFuelStore } from '@core/stores/fuelStore';
+import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 // Styles communs
@@ -130,6 +131,35 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
       flightPlanFuel: flightPlan?.fuel
     });
   }, [fobFuel, flightPlan]);
+
+  // 🔄 Synchroniser les déroutements sélectionnés (store) → flightPlan.alternates.
+  // Indispensable depuis que l'étape Déroutements précède la Météo et le Bilan carburant :
+  // Step3VAC (météo + pistes) et la Synthèse lisent flightPlan.alternates, et le bilan
+  // carburant en a besoin pour le carburant de dégagement. (Auparavant assuré par Step3Route,
+  // désormais en amont de la sélection — abonnement propre avec cleanup.)
+  useEffect(() => {
+    const syncAlternates = () => {
+      const selected = useAlternatesStore.getState().selectedAlternates || [];
+      const current = flightPlan.alternates || [];
+      const changed = selected.length !== current.length ||
+        selected.some((alt, i) => alt.icao !== current[i]?.icao);
+      if (!changed) return;
+
+      flightPlan.alternates = selected.map(alt => ({
+        icao: alt.icao,
+        name: alt.name,
+        coordinates: alt.coordinates || { lat: alt.lat, lon: alt.lon },
+        distance: alt.distance || 0
+      }));
+      console.log('✅ [Step7Alternates] Alternates synchronisés dans flightPlan:', flightPlan.alternates);
+      if (onUpdate) onUpdate();
+    };
+
+    // S'abonner aux changements du store + synchroniser au montage
+    const unsubscribe = useAlternatesStore.subscribe(syncAlternates);
+    syncAlternates();
+    return () => unsubscribe();
+  }, [flightPlan, onUpdate]);
 
   // Utiliser le hook de sélection avec les nouvelles fonctionnalités
   const {
@@ -331,146 +361,6 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <>
-      {/* Alerte si pas de bilan carburant */}
-      {!hasFuelData && (
-        <div style={commonStyles.infoBoxWarning}>
-          <div style={commonStyles.infoRow}>
-            <AlertTriangle size={18} color="var(--accent-primary)" />
-            <span style={{ fontWeight: '600' }}>Bilan carburant non disponible</span>
-          </div>
-          <p style={{ margin: '8px 0 0 26px', color: 'var(--accent-primary)' }}>
-            Le FOB (Fuel On Board) n'est pas défini. La zone de recherche utilise les paramètres par défaut.
-            Pour une sélection optimale, complétez d'abord l'étape "Bilan carburant".
-          </p>
-        </div>
-      )}
-
-      {/* Informations sur la zone cône (si disponible) */}
-      {searchRadius.isCone && (
-        <div style={commonStyles.infoBox}>
-          <div style={commonStyles.infoRow}>
-            <Info size={18} color="#f26921" />
-            <span style={{ fontWeight: '600' }}>Zone de recherche en forme de cône</span>
-          </div>
-          <p style={{ margin: '8px 0 12px 26px', color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
-            La zone de déroutement est calculée en fonction du carburant restant théorique le long de la route.
-            Elle est plus large au départ (plus de carburant) et plus étroite à l'arrivée.
-          </p>
-
-          {/* Grille d'informations sur le cône */}
-          <div style={commonStyles.coneInfoGrid}>
-            <div style={commonStyles.coneInfoCard}>
-              <div style={commonStyles.coneInfoTitle}>Rayon au départ (R1)</div>
-              <div style={commonStyles.coneInfoValueLarge}>
-                {searchRadius.radiusAtDep?.toFixed(0)} NM
-              </div>
-              <div style={commonStyles.coneInfoValueSmall}>
-                Autonomie: {searchRadius.enduranceAtDep?.toFixed(1)}h
-              </div>
-              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                ≈ {getCruiseSpeedKt(selectedAircraft) ?? '—'} kt × 30 min de déroutement (borné par l'autonomie)
-              </div>
-            </div>
-
-            <div style={commonStyles.coneInfoCard}>
-              <div style={commonStyles.coneInfoTitle}>Rayon à l'arrivée (R2)</div>
-              <div style={commonStyles.coneInfoValueLarge}>
-                {searchRadius.radiusAtArr?.toFixed(0)} NM
-              </div>
-              <div style={commonStyles.coneInfoValueSmall}>
-                Autonomie: {searchRadius.enduranceAtArr?.toFixed(1)}h
-              </div>
-              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                ≈ {getCruiseSpeedKt(selectedAircraft) ?? '—'} kt × 30 min (ou l'autonomie restante si inférieure)
-              </div>
-            </div>
-
-            <div style={commonStyles.coneInfoCard}>
-              <div style={commonStyles.coneInfoTitle}>FOB au décollage</div>
-              <div style={commonStyles.coneInfoValueLarge}>
-                {convert(searchRadius.fobLiters || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')}
-              </div>
-              <div style={commonStyles.coneInfoValueSmall}>
-                Trip fuel: {convert(searchRadius.tripFuel || 0, 'fuel', 'ltr').toFixed(0)} {getSymbol('fuel')}
-              </div>
-            </div>
-
-            {performanceBasedLDA && performanceBasedLDA.source === 'performance_both' && (
-              <div style={commonStyles.coneInfoCard}>
-                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
-                <div style={commonStyles.coneInfoValueLarge}>
-                  {performanceBasedLDA.minRunwayRequired} m
-                </div>
-                <div style={commonStyles.coneInfoValueSmall}>
-                  Dép: {performanceBasedLDA.departureLandingDistance} m | Arr: {performanceBasedLDA.arrivalLandingDistance} m
-                </div>
-                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  = ({performanceBasedLDA.departureLandingDistance} + {performanceBasedLDA.arrivalLandingDistance}) / 2 × 1.43
-                </div>
-              </div>
-            )}
-
-            {performanceBasedLDA && performanceBasedLDA.source === 'performance_departure_only' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'var(--bg-overlay)' }}>
-                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
-                <div style={commonStyles.coneInfoValueLarge}>
-                  {performanceBasedLDA.minRunwayRequired} m
-                </div>
-                <div style={commonStyles.coneInfoValueSmall}>
-                  Départ: {performanceBasedLDA.departureLandingDistance} m
-                </div>
-                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  = {performanceBasedLDA.departureLandingDistance} × 1.43 (arrivée N/A)
-                </div>
-              </div>
-            )}
-
-            {performanceBasedLDA && performanceBasedLDA.source === 'performance_arrival_only' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'var(--bg-overlay)' }}>
-                <div style={commonStyles.coneInfoTitle}>Piste minimale × 1.43</div>
-                <div style={commonStyles.coneInfoValueLarge}>
-                  {performanceBasedLDA.minRunwayRequired} m
-                </div>
-                <div style={commonStyles.coneInfoValueSmall}>
-                  Arrivée: {performanceBasedLDA.arrivalLandingDistance} m
-                </div>
-                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
-                  = {performanceBasedLDA.arrivalLandingDistance} × 1.43 (départ N/A)
-                </div>
-              </div>
-            )}
-
-            {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
-              <div style={{ ...commonStyles.coneInfoCard, backgroundColor: 'rgba(242, 105, 33, 0.10)', borderColor: 'var(--accent-primary)' }}>
-                <div style={commonStyles.coneInfoTitle}>Piste minimale</div>
-                <div style={{ ...commonStyles.coneInfoValueLarge, color: 'var(--accent-primary)' }}>
-                  N/A
-                </div>
-                <div style={{ ...commonStyles.coneInfoValueSmall, color: 'var(--accent-primary)' }}>
-                  Données Performance non disponibles
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Avertissement si pas de données performance */}
-          {performanceBasedLDA && performanceBasedLDA.source === 'no_performance_data' && (
-            <div style={{
-              padding: '10px 12px',
-              backgroundColor: 'rgba(242, 105, 33, 0.10)',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 'var(--fs-body)',
-              color: 'var(--accent-primary)',
-              marginTop: '12px'
-            }}>
-              <AlertTriangle size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-              <strong>Filtrage piste minimale désactivé:</strong> Les distances d'atterrissage n'ont pas été calculées à l'étape Performance.
-              Complétez les calculs Performance pour activer le filtrage automatique des pistes.
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Filtres manuels */}
       <div style={{
         backgroundColor: 'var(--bg-overlay)',
