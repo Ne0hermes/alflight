@@ -364,6 +364,19 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                                 </>
                               )}
                             </div>
+                            {/* FIX I : arithmétique finale EXPLICITE — chaque étape recalculable à la main */}
+                            {step.used === 'bracket' && step.bracketResult && !step.bracketResult.error &&
+                             step.bracketResult.lowerCurve && step.bracketResult.upperCurve && step.output !== null && step.output !== undefined && (
+                              <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+                                Y = {Number(step.bracketResult.lowerCurve.y).toFixed(1)} + {Number(step.bracketResult.familyT).toFixed(3)} × ({Number(step.bracketResult.upperCurve.y).toFixed(1)} − {Number(step.bracketResult.lowerCurve.y).toFixed(1)}) = <strong style={{ color: 'var(--text-primary)' }}>{Number(step.output).toFixed(2)}</strong>
+                              </div>
+                            )}
+                            {step.used === 'slope-follow' && step.slopeResult && !step.slopeResult.error &&
+                             step.slopeResult.lowerCurve && step.slopeResult.upperCurve && step.output !== null && step.output !== undefined && (
+                              <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>
+                                Y = {Number(step.slopeResult.lowerCurve.yAtTargetX).toFixed(1)} + {Number(step.slopeResult.t).toFixed(3)} × ({Number(step.slopeResult.upperCurve.yAtTargetX).toFixed(1)} − {Number(step.slopeResult.lowerCurve.yAtTargetX).toFixed(1)}) = <strong style={{ color: 'var(--text-primary)' }}>{Number(step.output).toFixed(2)}</strong>
+                              </div>
+                            )}
                             {/* En mode strict (déclaré) et échec : afficher l'erreur de l'étape */}
                             {step.modeDeclared && step.used === null && step.error && (
                               <div style={{ fontSize: 10, color: 'var(--color-red-critical)', backgroundColor: 'var(--bg-overlay)', padding: '4px 6px', marginTop: 4, borderRadius: 3, fontWeight: 600 }}>
