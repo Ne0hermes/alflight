@@ -1000,9 +1000,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     />
                   ))}
                 </div>
-                <div style={{ marginTop: '10px', fontSize: 'var(--fs-body)', fontWeight: '600', color: mismatch ? 'var(--color-red-critical)' : theme.colors.textSecondary }}>
-                  Total réparti : {distributed.toFixed(0)} L / FOB {fobLtr.toFixed(0)} L {fobLtr > 0 ? (mismatch ? '⚠️ écart avec le FOB' : '✓') : ''}
+                <div style={{ marginTop: '10px', fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
+                  Total réparti : {distributed.toFixed(0)} L / FOB {fobLtr.toFixed(0)} L {fobLtr > 0 && !mismatch ? '✓' : ''}
                 </div>
+                {mismatch && (
+                  <div style={{ marginTop: '8px', padding: '10px 12px', backgroundColor: 'rgba(192, 69, 52, 0.12)', borderLeft: '3px solid var(--color-red-critical)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)', fontWeight: '600' }}>
+                    ⚠️ Écart de {Math.abs(distributed - fobLtr).toFixed(0)} L entre la répartition ({distributed.toFixed(0)} L) et le FOB ({fobLtr.toFixed(0)} L). Ajustez la répartition pour qu'elle corresponde au carburant embarqué.
+                  </div>
+                )}
               </div>
             );
           })()}
