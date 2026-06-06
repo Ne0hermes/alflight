@@ -201,6 +201,15 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
               CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)} ÷ {parseFloat(data.w || 0).toFixed(1)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
             </p>
 
+            {/* FIX H : dérivation du carburant restant à l'atterrissage (carte « atterrissage » uniquement) */}
+            {data.fuelDerivation && (
+              <p style={{ marginTop: '4px', fontSize: 'var(--fs-caption)', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
+                Carburant restant = FOB {parseFloat(data.fuelDerivation.fobL || 0).toFixed(1)} L − brûlé (roulage+trip) {parseFloat(data.fuelDerivation.burnedL || 0).toFixed(1)} L = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingL || 0).toFixed(1)} L</strong> × {parseFloat(data.fuelDerivation.density || 0).toFixed(2)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingKg || 0).toFixed(1)} kg</strong>
+                <br />
+                <span style={{ color: 'var(--text-tertiary)' }}>réserve / dégagement / contingence restent à bord à l'atterrissage</span>
+              </p>
+            )}
+
             {/* Alerte MZFW dépassé */}
             {data.isExceeded && data.maxZfm && (
               <div style={{

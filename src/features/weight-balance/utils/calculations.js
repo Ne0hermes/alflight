@@ -39,10 +39,15 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     console.warn('⚠️ wb.fuelArm is 0 or undefined - using 0 for calculations');
   }
 
-  // Calcul du carburant restant
+  // Calcul du carburant restant À L'ATTERRISSAGE (FIX bug H).
+  // ⚠️ AVANT : remaining = FOB − somme de TOUT fuelData (roulage+trip+contingency+alternate+réserve).
+  // C'était le SURPLUS au-delà des besoins, PAS le carburant réellement à bord à l'atterrissage,
+  // et ça SOUS-ESTIMAIT la masse d'atterrissage (incohérent avec PerformanceModule = trip+roulage).
+  // CORRECT : carburant BRÛLÉ jusqu'à l'atterrissage destination = roulage (taxi) + trip (vol).
+  // Le contingency / alternate / réserve finale restent À BORD à l'atterrissage normal.
   const fobFuelLiters = getFuelLiters(fobFuel);
-  const fuelBalance = fuelData ? Object.values(fuelData).reduce((sum, f) => sum + (f?.ltr || 0), 0) : 0;
-  const remainingFuelL = Math.max(0, fobFuelLiters - fuelBalance);
+  const burnedFuelL = (fuelData?.roulage?.ltr || 0) + (fuelData?.trip?.ltr || 0);
+  const remainingFuelL = Math.max(0, fobFuelLiters - burnedFuelL);
   const remainingFuelKg = remainingFuelL * fuelDensity;
 
   // ✅ NOUVELLE APPROCHE : Calculer TOUS les scénarios depuis buildMassDetails
@@ -208,7 +213,15 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
       w: landingCalc.totalWeight,
       cg: landingCalc.cg,
       fuel: landingFuelKg || 0,
-      items: landingItems
+      items: landingItems,
+      // FIX H : dérivation explicite du carburant restant à l'atterrissage (affichage vérifiable).
+      fuelDerivation: {
+        fobL: fobFuelLiters,
+        burnedL: burnedFuelL,
+        remainingL: remainingFuelL,
+        remainingKg: remainingFuelKg,
+        density: fuelDensity
+      }
     },
     zfw: {
       w: zfwCalc.totalWeight,

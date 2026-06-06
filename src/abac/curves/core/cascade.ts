@@ -561,36 +561,11 @@ function calculateOutputWithParameterCorrect(
 
     if (yLowerAtParam !== null && yUpperAtParam !== null) {
       // Étape 4: Appliquer le ratio pour obtenir la valeur finale
-      // Cas spécial pour le graphique de masse : ajuster le ratio selon MANEX
-      let adjustedRatio = positionRatio;
-
-      if (graph.name.toLowerCase().includes('masse')) {
-        // Pour le graphique de masse, le MANEX utilise une méthode d'interpolation différente
-        // Calcul dynamique du ratio correct basé sur les valeurs attendues du MANEX
-
-        // Si on est proche des valeurs de test du MANEX (entrée ~1115, paramètre 1050)
-        if (Math.abs(inputY - 1115) < 50 && Math.abs(parameterX - 1050) < 50) {
-          // Pour ces valeurs spécifiques, le MANEX indique Y=870
-          // Avec Y_lower = 805 et Y_upper = 910 :
-          const targetOutput = 870;
-          const requiredRatio = (targetOutput - yLowerAtParam) / (yUpperAtParam - yLowerAtParam);
-          adjustedRatio = requiredRatio;
-
-          :`);
-                    }`);
-        } else {
-          // Pour d'autres valeurs, appliquer un facteur de correction général
-          // Basé sur l'observation que le MANEX utilise environ 1.9x le ratio standard
-          const correctionFactor = 1.914;
-          adjustedRatio = Math.min(positionRatio * correctionFactor, 1.0);
-
-          :`);
-          }`);
-        }
-
-        }`);
-        }`);
-      }
+      // 🔧 FIX J : interpolation PRINCIPIELLE — purge du facteur magique 1.914 et de la sortie
+      // forcée 870, qui étaient calés sur UN seul point de test MANEX (inputY≈1115, paramX≈1050)
+      // et faussaient le graphe de masse partout ailleurs. On applique directement le ratio de
+      // position calculé entre les deux courbes encadrantes (méthode bracket), sans rustine masse.
+      const adjustedRatio = positionRatio;
 
       outputY = yLowerAtParam + adjustedRatio * (yUpperAtParam - yLowerAtParam);
 
