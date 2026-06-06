@@ -244,6 +244,45 @@ export const AircraftModule = memo(() => {
   const [showWizard, setShowWizard] = useState(false);
   const [wizardAircraft, setWizardAircraft] = useState(null);
   const [aircraftPhotos, setAircraftPhotos] = useState({});
+
+  // ─── Recherche dans la BASE COMMUNAUTAIRE (fusion visuelle avec le module) ───
+  const [communitySearch, setCommunitySearch] = useState('');
+  const [communityResults, setCommunityResults] = useState([]);
+  const [communitySearching, setCommunitySearching] = useState(false);
+  const [communityError, setCommunityError] = useState(null);
+
+  const handleCommunitySearch = async () => {
+    const term = communitySearch.trim();
+    if (term.length < 2) { setCommunityResults([]); setCommunityError(null); return; }
+    setCommunitySearching(true);
+    setCommunityError(null);
+    try {
+      const results = await communityService.searchPresets(term);
+      setCommunityResults(Array.isArray(results) ? results : []);
+    } catch (e) {
+      console.error('❌ [AircraftModule] Recherche communautaire échouée:', e);
+      setCommunityError(e?.message || 'Erreur de recherche');
+      setCommunityResults([]);
+    } finally {
+      setCommunitySearching(false);
+    }
+  };
+
+  // Importer un preset communautaire → ouvre le wizard PRÉ-REMPLI (comme aujourd'hui).
+  // 🛡️ ID LOCAL NEUF (aircraft-<ts>) au lieu de l'ID Supabase du preset → la
+  // sauvegarde crée un NOUVEL avion sans écraser le preset communautaire
+  // (même pattern que Step0). communityPresetId est conservé pour le lien.
+  const handleImportFromCommunity = async (presetId) => {
+    try {
+      const full = await communityService.getPresetById(presetId);
+      const ts = Date.now();
+      setWizardAircraft({ ...full, id: `aircraft-${ts}`, aircraftId: `aircraft-${ts}` });
+      setShowWizard(true);
+    } catch (e) {
+      console.error('❌ [AircraftModule] Import communautaire échoué:', e);
+      alert(`Impossible d'importer cet avion : ${e?.message || 'erreur inconnue'}`);
+    }
+  };
   // IDs des avions dont la liste "champs manquants" est dépliée sur la carte
   const [expandedMissingIds, setExpandedMissingIds] = useState(new Set());
   // Confirmation de suppression (remplace window.confirm natif)
@@ -1504,6 +1543,77 @@ export const AircraftModule = memo(() => {
           </div>
         </div>
       )}
+
+      {/* ===== BASE COMMUNAUTAIRE — recherche + import sur la page flotte
+            (fusion visuelle : on cherche/choisit un avion partagé puis on entre
+            dans l'assistant pré-rempli, comme avant). ===== */}
+      <div
+        style={{
+          marginBottom: tokens.spacing[6],
+          padding: tokens.spacing[4],
+          backgroundColor: 'var(--bg-overlay)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-sm)'
+        }}
+      >
+        <div style={{ fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: tokens.spacing[2] }}>
+          Base communautaire
+        </div>
+        <p style={{ margin: `0 0 ${tokens.spacing[3]}`, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+          Cherchez un avion partagé (immatriculation, modèle, constructeur) puis importez-le : vous entrez dans l'assistant pré-rempli, comme pour un nouvel avion.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', gap: tokens.spacing[3] }}>
+          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+            <CockpitTextField
+              label="RECHERCHE COMMUNAUTÉ"
+              value={communitySearch}
+              onChange={(e) => setCommunitySearch(e.target.value)}
+              placeholder="Ex: F-GBYU, DR400, Diamond…"
+            />
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <EditorialButton variant="primary" size="md" onClick={handleCommunitySearch}>
+              {communitySearching ? 'Recherche…' : 'Rechercher'}
+            </EditorialButton>
+          </div>
+        </div>
+
+        {communityError && (
+          <div style={{ marginTop: tokens.spacing[3], color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>
+            ⚠️ {communityError}
+          </div>
+        )}
+
+        {communityResults.length > 0 && (
+          <div style={{ marginTop: tokens.spacing[4], display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: tokens.spacing[3] }}>
+            {communityResults.map((p) => (
+              <div key={p.id} style={{ padding: tokens.spacing[3], backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>{p.registration || '—'}</strong>
+                  {p.verified && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 600 }}>✓ vérifié</span>}
+                </div>
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: tokens.spacing[3] }}>
+                  {p.manufacturer ? `${p.manufacturer} ` : ''}{p.model || ''}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
+                    👍 {p.votes?.up ?? 0} · 👎 {p.votes?.down ?? 0}
+                  </span>
+                  <EditorialButton variant="ghost" size="sm" onClick={() => handleImportFromCommunity(p.id)}>
+                    Importer
+                  </EditorialButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!communitySearching && communitySearch.trim().length >= 2 && communityResults.length === 0 && !communityError && (
+          <div style={{ marginTop: tokens.spacing[3], fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
+            Aucun avion partagé trouvé. Vous pouvez en créer un nouveau ci-dessous.
+          </div>
+        )}
+      </div>
 
       {/* ===== TOOLBAR : recherche ===== */}
       <div
