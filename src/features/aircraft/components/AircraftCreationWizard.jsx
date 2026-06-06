@@ -956,6 +956,30 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         dataToSave.baseFactor = (60 / parseFloat(dataToSave.cruiseSpeedKt)).toFixed(3);
       }
 
+      // 🔧 FIX PERSISTANCE MASSES : synchroniser les masses ÉDITÉES (weights.*)
+      // vers les propriétés RACINE (emptyWeight / maxTakeoffWeight / maxLandingWeight)
+      // qui sont celles lues par l'affichage, le normalizer, le stockage et le
+      // preset communautaire. Sans ça, une correction de la masse à vide
+      // (ex. 620 → 900) restait dans weights.emptyWeight mais la racine
+      // emptyWeight gardait l'ancienne valeur (restaurée par le garde
+      // anti-écrasement mergeNonEmpty) → 620 réaffiché après rechargement.
+      // ⚠️ Placé APRÈS mergeNonEmpty pour écraser la valeur restaurée.
+      {
+        const syncRoot = (nestedVal, rootKey) => {
+          if (nestedVal === undefined || nestedVal === null || nestedVal === '') return;
+          const n = parseFloat(nestedVal);
+          if (Number.isFinite(n)) dataToSave[rootKey] = n;
+        };
+        syncRoot(dataToSave.weights?.emptyWeight, 'emptyWeight');
+        syncRoot(dataToSave.weights?.mtow, 'maxTakeoffWeight');
+        syncRoot(dataToSave.weights?.mlw, 'maxLandingWeight');
+        console.log('✅ [Wizard] Masses synchronisées vers racine:', {
+          emptyWeight: dataToSave.emptyWeight,
+          maxTakeoffWeight: dataToSave.maxTakeoffWeight,
+          maxLandingWeight: dataToSave.maxLandingWeight
+        });
+      }
+
       updateStep(0, 'completed');
 
       // ÉTAPE 2: Préparation pour sauvegarde

@@ -132,7 +132,6 @@ export const useAlternatesForFuel = () => {
     console.log('Fuel calculation (alternate):', {
       cruiseSpeed,
       flightTime: flightTime.toFixed(4),
-      currentUnit,
       fuelConsumptionLph,
       fuelRequired: fuelRequired.toFixed(2),
       fuelRequiredCeil: Math.ceil(fuelRequired)

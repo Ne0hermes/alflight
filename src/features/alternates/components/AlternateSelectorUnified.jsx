@@ -219,7 +219,7 @@ export const AlternateSelectorUnified = memo(({
 
             // Déterminer la couleur selon la sélection RÉELLE (pas le côté suggéré)
             const selectionColor = isSelectedDeparture ? 'var(--color-red-critical)' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
-            const selectionBgColor = isSelectedDeparture ? 'var(--bg-overlay)' : (isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff');
+            const selectionBgColor = isSelectedDeparture ? 'var(--bg-overlay)' : (isSelectedArrival ? 'var(--bg-overlay)' : 'var(--bg-surface)');
 
             const distanceFromRef = side === 'departure'
               ? airport.distanceToDeparture
@@ -235,7 +235,7 @@ export const AlternateSelectorUnified = memo(({
                   borderStyle: isFiltered ? 'dashed' : 'solid',
                   borderColor: isFiltered ? 'var(--text-tertiary)' : ((isSelectedDeparture || isSelectedArrival) ? selectionColor : (isHovered ? `${sideColor}60` : 'var(--border-subtle)')),
                   borderRadius: 'var(--radius-sm)',
-                  backgroundColor: isFiltered ? 'var(--bg-overlay)' : ((isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? 'var(--bg-overlay)' : '#ffffff')),
+                  backgroundColor: isFiltered ? 'var(--bg-overlay)' : ((isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? 'var(--bg-overlay)' : 'var(--bg-surface)')),
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   position: 'relative',
@@ -381,8 +381,8 @@ export const AlternateSelectorUnified = memo(({
                         borderStyle: 'solid',
                         borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'var(--text-secondary)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : '#ffffff',
-                        color: (isSelectedDeparture || isSelectedArrival) ? '#ffffff' : 'var(--text-secondary)',
+                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'transparent',
+                        color: isSelectedDeparture ? '#ffffff' : (isSelectedArrival ? 'var(--color-black-deep)' : 'var(--text-secondary)'),
                         cursor: 'pointer',
                         fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
@@ -430,7 +430,7 @@ export const AlternateSelectorUnified = memo(({
                             width: '100%',
                             padding: '10px 16px',
                             border: 'none',
-                            backgroundColor: isSelectedDeparture ? 'var(--bg-overlay)' : '#ffffff',
+                            backgroundColor: isSelectedDeparture ? 'var(--bg-raised)' : 'transparent',
                             color: 'var(--color-red-critical)',
                             cursor: 'pointer',
                             fontSize: 'var(--fs-body)',
@@ -441,8 +441,8 @@ export const AlternateSelectorUnified = memo(({
                             gap: '8px',
                             transition: 'background-color 0.2s'
                           }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-overlay)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedDeparture ? 'var(--bg-overlay)' : '#ffffff'}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-raised)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedDeparture ? 'var(--bg-raised)' : 'transparent'}
                         >
                           {isSelectedDeparture ? '✓' : ''} 🔴 Déroutement départ
                         </button>
@@ -456,7 +456,7 @@ export const AlternateSelectorUnified = memo(({
                             width: '100%',
                             padding: '10px 16px',
                             border: 'none',
-                            backgroundColor: isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff',
+                            backgroundColor: isSelectedArrival ? 'var(--bg-raised)' : 'transparent',
                             color: 'var(--text-primary)',
                             cursor: 'pointer',
                             fontSize: 'var(--fs-body)',
@@ -467,8 +467,8 @@ export const AlternateSelectorUnified = memo(({
                             gap: '8px',
                             transition: 'background-color 0.2s'
                           }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-overlay)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedArrival ? 'var(--bg-overlay)' : '#ffffff'}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-raised)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedArrival ? 'var(--bg-raised)' : 'transparent'}
                         >
                           {isSelectedArrival ? '✓' : ''} 🟢 Déroutement arrivée
                         </button>
