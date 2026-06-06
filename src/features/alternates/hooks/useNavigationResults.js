@@ -1,6 +1,7 @@
 // src/features/shared-hooks/useNavigationResults.js
 import { useMemo } from 'react';
 import { useNavigation, useAircraft } from '@core/contexts';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 /**
  * Hook pour calculer les résultats de navigation
@@ -28,8 +29,15 @@ export const useNavigationResults = () => {
       totalDistance += distance;
     }
     
+    // 🔧 FIX D-moteur : vitesse/conso canoniques (plus de 100 kt / 30 lph fabriqués).
+    // Avion incomplet → pas de résultat (les consommateurs lisent en ?. / || 0).
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+    const fuelConsumption = getFuelConsumptionLph(selectedAircraft);
+    if (!cruiseSpeed || !fuelConsumption) {
+      return null;
+    }
+
     // Calculer le temps de vol
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || 100;
     const totalTime = Math.round((totalDistance / cruiseSpeed) * 60); // en minutes
     
     // Calculer la réserve réglementaire
@@ -47,8 +55,7 @@ export const useNavigationResults = () => {
       // Pas de changement supplémentaire pour vol local
     }
     
-    // Calculer le carburant
-    const fuelConsumption = selectedAircraft.fuelConsumption || 30; // L/h
+    // Calculer le carburant (conso canonique définie plus haut, garantie non nulle)
     const flightFuelLiters = (totalTime / 60) * fuelConsumption;
     const regulationReserveLiters = (regulationReserveMinutes / 60) * fuelConsumption;
     const fuelRequired = Math.ceil(flightFuelLiters + regulationReserveLiters);

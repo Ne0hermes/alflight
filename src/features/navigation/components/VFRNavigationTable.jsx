@@ -6,6 +6,7 @@ import { useVACStore } from '@core/stores/vacStore';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { useAirspaceAnalysis } from '../hooks/useAirspaceAnalysis';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import {
   calculateAeronauticalNight,
   parseTimeString,
@@ -55,7 +56,9 @@ const VFRNavigationTable = ({
 
   // Calculer les données de navigation pour chaque segment
   const navigationData = useMemo(() => {
-    if (!waypoints || waypoints.length < 2 || !selectedAircraft) return [];
+    // 🔧 FIX D-moteur : sans vitesse de croisière canonique, on ne fabrique pas 100 kt —
+    // le tableau (temps/GS/carburant) reste vide plutôt que d'afficher des valeurs inventées.
+    if (!waypoints || waypoints.length < 2 || !selectedAircraft || !getCruiseSpeedKt(selectedAircraft)) return [];
 
     const segments = [];
     let cumulativeETEMinutes = 0; // Cumul des ETE pour heure théorique
@@ -105,7 +108,7 @@ const VFRNavigationTable = ({
       }
       
       // Calculer la dérive et la vitesse sol
-      const tas = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
+      const tas = getCruiseSpeedKt(selectedAircraft); // garanti non-null (useMemo gardé en amont)
       let groundSpeed = tas;
       let windCorrectionAngle = 0;
       let magneticHeading = trueCourse;
@@ -268,7 +271,7 @@ const VFRNavigationTable = ({
       estimatedTime: navigationData.reduce((sum, seg) => sum + seg.estimatedTime, 0),
       fuelRequired: selectedAircraft ? 
         (navigationData.reduce((sum, seg) => sum + seg.estimatedTime, 0) / 60) * 
-        (selectedAircraft.fuelConsumptionLph || selectedAircraft.fuelConsumption || 30) : 0
+        (getFuelConsumptionLph(selectedAircraft) || 0) : 0
     };
   }, [navigationData, selectedAircraft]);
 

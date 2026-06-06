@@ -8,6 +8,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useFuelStore } from '@core/stores/fuelStore'; // Accès direct au store pour fobFuel
 import { isSurfaceCompatible } from '@utils/runwaySurface';
+import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 import {
   calculateSearchZone,
   isAirportInSearchZone,
@@ -416,7 +417,7 @@ export const useAlternateSelection = () => {
     // Récupérer les valeurs brutes
     let fuelCapacity = selectedAircraft.fuelCapacity || selectedAircraft.fuel?.capacity || 0;
     let fuelConsumption = selectedAircraft.fuelConsumption || selectedAircraft.fuel?.consumption || 0;
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 120;
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft); // null si absent → coneZoneParams renverra null
 
     // 🔧 DÉTECTION AUTOMATIQUE: Si les valeurs semblent être en gallons (< 50), convertir
     // Logique:
@@ -488,8 +489,10 @@ export const useAlternateSelection = () => {
     if (!selectedAircraft || !fuelDataForRadius?.aircraft) return null;
 
     const aircraft = fuelDataForRadius.aircraft;
-    const cruiseSpeed = aircraft.cruiseSpeedKt || 120;
-    const consumption = aircraft.fuelConsumption || 40; // L/h (en storage units)
+    // 🔧 FIX D-moteur : plus de 120 kt / 40 lph fabriqués. Avion incomplet → pas de cône (null).
+    const cruiseSpeed = aircraft.cruiseSpeedKt;
+    const consumption = aircraft.fuelConsumption;
+    if (!cruiseSpeed || !consumption) return null;
 
     // FOB = Carburant confirmé au décollage (depuis fobFuel du contexte Fuel)
     // IMPORTANT: Utiliser fobFuelStore EN PRIORITÉ (accès direct au store Zustand)
@@ -762,11 +765,11 @@ export const useAlternateSelection = () => {
     // Borne de sécurité : même en mode estimé (sans FOB, rayon basé sur la capacité
     // max), la zone affichée/dessinée ne dépasse pas un rayon de déroutement
     // raisonnable (~30 min de vol). Évite la « pilule » géante sur la carte.
-    const cruiseKt = selectedAircraft?.cruiseSpeedKt || selectedAircraft?.cruiseSpeed || 120;
+    const cruiseKt = getCruiseSpeedKt(selectedAircraft); // null si absent → cap vitesse non appliqué
     const baseRadius = (coneZoneParams && !coneZoneParams.isEstimate)
       ? coneZoneParams.radiusAtDep
       : searchZone.dynamicRadius;
-    const effectiveRadius = Math.min(baseRadius, cruiseKt * 0.5);
+    const effectiveRadius = cruiseKt ? Math.min(baseRadius, cruiseKt * 0.5) : baseRadius;
 
     console.log('✅ [dynamicParams] Calculés:', {
       requiredRunwayLength: minRunwayLength,

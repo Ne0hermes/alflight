@@ -6,6 +6,7 @@ import { useVACStore } from '@core/stores/vacStore';
 import { useCallback, useMemo } from 'react';
 import { calculateDistanceFromRoute } from '../utils/geometryCalculations';
 import { useUnits } from '@hooks/useUnits';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 /**
  * Hook pour intégration dans le module Navigation
@@ -115,19 +116,14 @@ export const useAlternatesForFuel = () => {
     }
 
     // Calculer le carburant nécessaire pour la distance maximale
-    const GAL_TO_LTR = 3.78541;
-    const currentUnit = getUnit('fuelConsumption');
-    let fuelConsumptionLph;
-
-    if (currentUnit === 'gph') {
-      // Consommation en gal/h, convertir en L/h pour les calculs
-      fuelConsumptionLph = (selectedAircraft.fuelConsumption || 30) * GAL_TO_LTR;
-    } else {
-      // Consommation déjà en L/h
-      fuelConsumptionLph = selectedAircraft.fuelConsumption || 30;
+    // 🔧 FIX D-moteur : conso/vitesse canoniques, plus de 30 lph / 100 kt fabriqués.
+    // fuelConsumption est canoniquement en lph (cf. utils/aircraftPerf) → pas de conversion gph.
+    // Avion incomplet → 0 (cohérent avec le retour 0 quand maxDistance === 0).
+    const fuelConsumptionLph = getFuelConsumptionLph(selectedAircraft);
+    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+    if (!fuelConsumptionLph || !cruiseSpeed) {
+      return 0;
     }
-
-    const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100; // kt par défaut
     const flightTime = maxDistance / cruiseSpeed; // en heures
 
     // Ne pas ajouter de réserve d'approche - la réserve finale (final reserve) est comptée séparément
