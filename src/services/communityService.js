@@ -576,66 +576,105 @@ class CommunityService {
 
     let lastDownloadError = null;
 
-    // Méthode 1 : .download() authentifié — chemin nominal pour les
-    // utilisateurs connectés. Couvre les buckets en RLS strict.
-    try {
-      const { data, error } = await supabase.storage
-        .from('manex-files')
-        .download(filePath);
-
-      if (!error && data) {
-        console.log('✅ [downloadManex] OK via .download() authentifié');
-        return data;
+    // Récupère un objet par un chemin donné : d'abord .download() (authentifié,
+    // marche sur bucket privé + RLS), puis l'URL publique (marche sur bucket
+    // public sans policy SELECT). Renvoie le Blob ou null.
+    const tryFetch = async (path) => {
+      try {
+        const { data, error } = await supabase.storage.from('manex-files').download(path);
+        if (!error && data) return data;
+        if (error) lastDownloadError = error;
+      } catch (e) {
+        lastDownloadError = e;
       }
-      // Cas erreur explicite : on log et on bascule sur le fallback.
-      lastDownloadError = error;
-      if (error) {
-        console.warn('⚠️ [downloadManex] .download() a échoué:', {
-          message: error.message,
-          statusCode: error.statusCode,
-          name: error.name,
-          filePath
-        });
+      try {
+        const { data: u } = supabase.storage.from('manex-files').getPublicUrl(path);
+        if (u?.publicUrl) {
+          const r = await fetch(u.publicUrl);
+          if (r.ok) return await r.blob();
+        }
+      } catch (e) { /* on tente le fallback suivant */ }
+      return null;
+    };
+
+    // Méthode 1 : chemin EXACT enregistré (nominal).
+    let blob = await tryFetch(filePath);
+    if (blob) {
+      console.log('✅ [downloadManex] OK (chemin exact):', filePath);
+      return blob;
+    }
+
+    // Le chemin enregistré en base ne correspond pas toujours à la clé réelle :
+    // DEUX conventions de nommage coexistent dans le bucket —
+    //   • par modèle : "${modèle}/${timestamp}_${nom}.pdf"
+    //   • par immat. : "${immatriculation}/${immatriculation} - manex.pdf"
+    // On extrait l'immatriculation du nom de fichier pour tenter l'autre convention.
+    const fileOnly = filePath.split('/').pop() || '';
+    const folder = filePath.includes('/') ? filePath.slice(0, filePath.lastIndexOf('/')) : '';
+    const regMatch = fileOnly.match(/\b([A-Z]{1,2}-[A-Z0-9]{3,5})\b/); // ex: F-HSTR, F-GOVE, H-HDIM
+    const registration = regMatch ? regMatch[1] : null;
+
+    // Méthode 2 : chemins ALTERNATIFS déduits de l'immatriculation.
+    if (registration) {
+      for (const cand of [`${registration}/${registration} - manex.pdf`,
+                          `${registration}/${registration} - MANEX.pdf`]) {
+        if (cand === filePath) continue;
+        blob = await tryFetch(cand);
+        if (blob) {
+          console.warn(`⚠️ [downloadManex] Récupéré via convention immatriculation: "${cand}" (au lieu de "${filePath}")`);
+          return blob;
+        }
       }
-    } catch (downloadError) {
-      lastDownloadError = downloadError;
-      console.warn('⚠️ [downloadManex] .download() exception:', downloadError?.message);
     }
 
-    // Méthode 2 : URL publique — uniquement si le bucket est en lecture
-    // publique. Si .download() a échoué pour cause d'auth manquante ou
-    // RLS, le fallback peut renvoyer 400 si le bucket n'est pas public.
-    const { data: urlData } = supabase.storage
-      .from('manex-files')
-      .getPublicUrl(filePath);
+    // Méthode 3 : RÉCUPÉRATION par listing des dossiers candidats (celui du
+    // chemin enregistré + celui de l'immatriculation). On retient le PDF dont
+    // le nom correspond le mieux.
+    const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const wantedBase = norm(fileOnly.replace(/^\d+_/, '')); // sans le préfixe timestamp
+    const foldersToScan = [];
+    if (folder) foldersToScan.push(folder);
+    if (registration && registration !== folder) foldersToScan.push(registration);
 
-    if (!urlData?.publicUrl) {
-      throw new Error(
-        `Impossible d'obtenir l'URL publique du MANEX (filePath: ${filePath}). ` +
-        `Erreur .download() précédente : ${lastDownloadError?.message || 'inconnue'}`
-      );
+    for (const f of foldersToScan) {
+      try {
+        const { data: list, error: listErr } = await supabase.storage
+          .from('manex-files')
+          .list(f, { limit: 100 });
+        if (listErr) { console.warn(`⚠️ [downloadManex] list("${f}") échec:`, listErr?.message); continue; }
+        if (!Array.isArray(list) || list.length === 0) continue;
+        const pdfs = list.filter(o => /\.pdf$/i.test(o.name));
+        const match =
+          pdfs.find(o => norm(o.name) === norm(fileOnly)) ||
+          (registration ? pdfs.find(o => norm(o.name).includes(norm(registration))) : null) ||
+          (wantedBase.length > 4 ? pdfs.find(o => norm(o.name).includes(wantedBase)) : null) ||
+          (pdfs.length === 1 ? pdfs[0] : null);
+        if (match) {
+          const recovered = `${f}/${match.name}`;
+          if (recovered !== filePath) {
+            blob = await tryFetch(recovered);
+            if (blob) {
+              console.warn(`⚠️ [downloadManex] Récupéré via listing du dossier "${f}": "${recovered}"`);
+              return blob;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(`⚠️ [downloadManex] listing "${f}" échoué:`, e?.message);
+      }
     }
 
-    console.log('🔁 [downloadManex] Fallback URL publique:', urlData.publicUrl);
-    const response = await fetch(urlData.publicUrl);
-
-    if (!response.ok) {
-      // Message d'erreur enrichi : on inclut l'erreur de la méthode 1 ET
-      // le statut HTTP, pour distinguer auth manquante / bucket privé /
-      // chemin invalide.
-      const errorBody = await response.text().catch(() => '<corps illisible>');
-      throw new Error(
-        `Erreur HTTP ${response.status} lors du téléchargement (filePath: ${filePath}). ` +
-        `Réponse Supabase Storage: ${errorBody.slice(0, 200)}. ` +
-        `Cause possible : bucket "manex-files" non public OU user non authentifié ` +
-        `OU RLS rejette le download. Erreur .download() précédente : ` +
-        `${lastDownloadError?.message || 'inconnue'}`
-      );
-    }
-
-    const blob = await response.blob();
-    console.log('✅ [downloadManex] OK via URL publique fallback, taille:', blob.size, 'octets');
-    return blob;
+    // Échec complet : message explicite et actionnable.
+    throw new Error(
+      `MANEX introuvable (file_path enregistré: "${filePath}"). ` +
+      `Aucun objet correspondant dans le bucket "manex-files" — ni au chemin exact, ` +
+      `ni via la convention immatriculation${registration ? ` ("${registration}/…")` : ''}, ` +
+      `ni par listing des dossiers. ` +
+      `→ Soit le 'file_path' en base est erroné (le fichier existe sous un autre chemin), ` +
+      `soit le MANEX n'a jamais été uploadé → ré-importez-le. ` +
+      (lastDownloadError ? `Détail .download(): ${lastDownloadError.message || lastDownloadError}. ` : '') +
+      `(Vérifiez aussi que le bucket "manex-files" est public ou qu'une policy SELECT autorise l'utilisateur.)`
+    );
   }
 
   /**
