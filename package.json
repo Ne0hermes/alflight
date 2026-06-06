@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite --port 4000\" \"node server/openaip-airspaces-proxy.js\"",
-    "dev:frontend": "vite --host",
+    "dev": "concurrently \"node --max-old-space-size=4096 node_modules/vite/bin/vite.js --port 4000\" \"node server/openaip-airspaces-proxy.js\"",
+    "dev:frontend": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js --host",
     "dev:logger": "node --max-old-space-size=4096 server/googleSheetsServer.js",
     "dev:tracker": "node scripts/autoTracker.cjs",
     "dev:claude-tracker": "node scripts/claude-code-tracker.cjs",

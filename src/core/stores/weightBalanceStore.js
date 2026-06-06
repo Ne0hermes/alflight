@@ -176,22 +176,50 @@ export const useWeightBalanceStore = create(
                         (loads.auxiliary || 0) * (Number.isFinite(aArm) ? aArm : 0);
       }
       
-      const totalWeight = 
+      // ─── Carburant : PAR RÉSERVOIR si l'avion en a (bras distincts), sinon
+      //     bloc unique. Demande pilote : répartir le carburant dans les
+      //     différents réservoirs pour un centrage exact (chaque réservoir a
+      //     son propre bras de levier). Les loads par réservoir sont en LITRES,
+      //     clé `fuel_${tank.id}` ; convertis en kg via la densité.
+      const fuelTanks = Array.isArray(aircraft.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+      const fuelDensityWB = getFuelDensity(aircraft.fuelType) ?? 0.84;
+      let fuelWeight = 0;
+      let fuelMoment = 0;
+      let fuelArmMissing = false;
+      const usePerTankFuel = fuelTanks.length > 0 &&
+        fuelTanks.some((t, i) => Number.isFinite(parseFloat(loads[`fuel_${t.id ?? i}`])));
+      if (usePerTankFuel) {
+        fuelTanks.forEach((t, i) => {
+          const liters = parseFloat(loads[`fuel_${t.id ?? i}`]) || 0; // litres dans ce réservoir
+          const w = liters * fuelDensityWB;
+          const arm = parseFloat(t.arm);
+          if (w > 0 && !Number.isFinite(arm)) fuelArmMissing = true;
+          fuelWeight += w;
+          fuelMoment += w * (Number.isFinite(arm) ? arm : 0);
+        });
+      } else {
+        // Repli : bloc carburant unique (loads.fuel en kg = FOB×densité), bras unique.
+        fuelWeight = loads.fuel || 0;
+        const fArm = parseFloat(wb.fuelArm);
+        if (fuelWeight > 0 && !Number.isFinite(fArm)) fuelArmMissing = true;
+        fuelMoment = fuelWeight * (Number.isFinite(fArm) ? fArm : 0);
+      }
+
+      const totalWeight =
         emptyWeight +
         (loads.frontLeft || 0) +
         (loads.frontRight || 0) +
         (loads.rearLeft || 0) +
         (loads.rearRight || 0) +
         baggageWeight +
-        (loads.fuel || 0);
-      
+        fuelWeight;
+
       // Calcul du moment total
       const emptyMoment = emptyWeight * wb.emptyWeightArm;
       const frontLeftMoment = (loads.frontLeft || 0) * wb.frontLeftSeatArm;
       const frontRightMoment = (loads.frontRight || 0) * wb.frontRightSeatArm;
       const rearLeftMoment = (loads.rearLeft || 0) * wb.rearLeftSeatArm;
       const rearRightMoment = (loads.rearRight || 0) * wb.rearRightSeatArm;
-      const fuelMoment = (loads.fuel || 0) * wb.fuelArm;
 
       const totalMoment =
         emptyMoment +
@@ -213,9 +241,9 @@ export const useWeightBalanceStore = create(
         { w: loads.frontRight, a: wb.frontRightSeatArm, label: 'siège avant droit' },
         { w: loads.rearLeft, a: wb.rearLeftSeatArm, label: 'siège arrière gauche' },
         { w: loads.rearRight, a: wb.rearRightSeatArm, label: 'siège arrière droit' },
-        { w: loads.fuel, a: wb.fuelArm, label: 'carburant' },
       ].filter((x) => (parseFloat(x.w) || 0) > 0 && !Number.isFinite(parseFloat(x.a))).map((x) => x.label);
       if (baggageArmMissing) missingArms.push('bagages');
+      if (fuelArmMissing) missingArms.push('carburant');
       const cgReliable = missingArms.length === 0;
       if (!cgReliable) warnings.push(`Bras de levier manquant(s) : ${missingArms.join(', ')} — centrage non vérifiable`);
 
