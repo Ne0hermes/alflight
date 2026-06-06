@@ -87,15 +87,31 @@ export function normalizeAircraftImport(aircraftData) {
       return isNaN(parsed) ? null : parsed;
     };
 
+    // 🔧 GARDE-FOU m/mm (bug centrage — item K). Un bras de levier d'avion (léger) est < ~10 m.
+    // Une valeur nettement plus grande est en MILLIMÈTRES (ex. fuelMain 805.9 mm = 0.806 m) :
+    // vestige d'un champ passé par toStorage() (mm) alors que les autres bras restent en m.
+    // On ramène TOUT en MÈTRES (pivot unique = mètre, cf. AUDIT_MASSE_CENTRAGE_UNITES.md).
+    // Pas d'overlap possible : bras réels en m = 0.01–10, en mm = 300–10000 → le seuil 10
+    // sépare proprement, zéro faux positif en aviation générale. On loggue chaque correction.
+    const armToMeters = (value, defaultValue = 0) => {
+      const m = parseArm(value, defaultValue);
+      if (Number.isFinite(m) && Math.abs(m) > 10) {
+        const fixed = m / 1000;
+        console.warn(`⚠️ [Normalizer] Bras de levier ${m} interprété comme MILLIMÈTRES → ${fixed} m (garde-fou m/mm)`);
+        return fixed;
+      }
+      return m;
+    };
+
     const armsToWB = {
-      emptyWeightArm: parseArm(aircraftData.arms.empty),
-      fuelArm: parseArm(aircraftData.arms.fuelMain),
-      frontLeftSeatArm: parseArm(aircraftData.arms.frontSeats),
-      frontRightSeatArm: parseArm(aircraftData.arms.frontSeats),
-      rearLeftSeatArm: parseArm(aircraftData.arms.rearSeats),
-      rearRightSeatArm: parseArm(aircraftData.arms.rearSeats),
-      baggageArm: parseArm(aircraftData.arms.baggageFwd),
-      auxiliaryArm: parseArm(aircraftData.arms.baggageAft)
+      emptyWeightArm: armToMeters(aircraftData.arms.empty),
+      fuelArm: armToMeters(aircraftData.arms.fuelMain),
+      frontLeftSeatArm: armToMeters(aircraftData.arms.frontSeats),
+      frontRightSeatArm: armToMeters(aircraftData.arms.frontSeats),
+      rearLeftSeatArm: armToMeters(aircraftData.arms.rearSeats),
+      rearRightSeatArm: armToMeters(aircraftData.arms.rearSeats),
+      baggageArm: armToMeters(aircraftData.arms.baggageFwd),
+      auxiliaryArm: armToMeters(aircraftData.arms.baggageAft)
     };
 
     console.log('  - Mapped from arms:', armsToWB);
