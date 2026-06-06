@@ -4,6 +4,7 @@ import { Wind, AlertTriangle, Compass, Info, Loader } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useUnits } from '@hooks/useUnits';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 
 const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -74,7 +75,9 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
     };
     
     const trueCourse = calculateTrueCourse(departure, arrival);
-    const tas = selectedAircraft.cruiseSpeedKt || 100; // True Air Speed (toujours en kt pour les calculs)
+    // 🔧 FIX D-moteur : TAS canonique (plus de 100 kt fabriqué). Absent → pas d'analyse vent.
+    const tas = getCruiseSpeedKt(selectedAircraft);
+    if (!tas) return null;
     
     // Analyser le vent au départ
     const analyzeWind = (weather, label) => {
@@ -487,7 +490,11 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
               </li>
               <li>
                 <strong>Carburant supplémentaire:</strong> Prévoir {' '}
-                {windAnalysis.timeDifference > 0 ? `${format(Math.ceil(windAnalysis.timeDifference * (selectedAircraft?.fuelConsumptionLph || 30) / 60), 'fuel', 0)} supplémentaires` : 'aucun ajustement nécessaire'}
+                {windAnalysis.timeDifference > 0
+                  ? (getFuelConsumptionLph(selectedAircraft)
+                      ? `${format(Math.ceil(windAnalysis.timeDifference * getFuelConsumptionLph(selectedAircraft) / 60), 'fuel', 0)} supplémentaires`
+                      : 'conso non renseignée')
+                  : 'aucun ajustement nécessaire'}
               </li>
               <li>
                 <strong>Points de décision:</strong> Réévaluer les conditions de vent à mi-parcours pour ajuster la correction de cap
