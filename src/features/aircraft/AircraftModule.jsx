@@ -1505,7 +1505,7 @@ export const AircraftModule = memo(() => {
         </div>
       )}
 
-      {/* ===== TOOLBAR : recherche + CTA NOUVEL AVION ===== */}
+      {/* ===== TOOLBAR : recherche ===== */}
       <div
         style={{
           display: 'flex',
@@ -1523,20 +1523,6 @@ export const AircraftModule = memo(() => {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Immatriculation, modèle, aéroclub…"
           />
-        </div>
-        <div style={{ flexShrink: 0 }}>
-          <EditorialButton
-            variant="primary"
-            size="md"
-            onClick={() => {
-              console.log('➕ AircraftModule - Opening wizard for new aircraft');
-              setWizardAircraft(null);
-              setShowWizard(true);
-            }}
-          >
-            <Plus size={14} aria-hidden="true" />
-            Nouvel avion
-          </EditorialButton>
         </div>
       </div>
 

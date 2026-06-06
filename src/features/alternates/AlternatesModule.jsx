@@ -140,7 +140,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
       {/* Coordonnées */}
       {position && (
         <div style={sx.spacing.mt(3)}>
-          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>📍 Coordonnées complètes</p>
+          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(1))}>Coordonnées complètes</p>
           <div style={sx.combine(sx.text.xs, sx.text.secondary)}>
             <p>{position.lat.toFixed(4)}°, {position.lon.toFixed(4)}°</p>
             {dmsCoords && dmsCoords.lat && dmsCoords.lon && (
@@ -166,7 +166,7 @@ const AerodromeDetailsCard = memo(({ airport, side, sideColor, sideEmoji, sideLa
       {/* Pistes par direction */}
       {runwayDirections.length > 0 && (
         <div style={sx.spacing.mt(4)}>
-          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2))}>✈️ Détails des pistes (par direction)</p>
+          <p style={sx.combine(sx.text.xs, sx.text.bold, sx.spacing.mb(2))}>Détails des pistes (par direction)</p>
           <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
             {runwayDirections.map((runway, idx) => {
               const lengthM = typeof runway.length === 'number' ? runway.length : 0;
@@ -506,8 +506,9 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
       {/* Indicateur de rate limiting météo */}
       <WeatherRateLimitIndicator />
 
-      {/* En-tête avec résumé et statistiques */}
-      <section style={sx.combine(sx.components.section.base, sx.spacing.mb(6))}>
+      {/* Carte + sélection des déroutements — sans bloc encapsulant (gain de
+          place + cohérence charte ; chaque sous-bloc porte déjà son fond). */}
+      <section style={sx.spacing.mb(6)}>
         {/* Conteneur pour la carte et la sélection en dessous */}
         {searchZone && (
           <div style={{
@@ -519,7 +520,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
             {/* Carte en haut */}
             <div style={sx.components.card.base}>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
-                📍 Visualisation de la route et des déroutements
+                Visualisation de la route et des déroutements
               </h4>
               <div style={{
                 fontSize: 'var(--fs-body)',
@@ -532,7 +533,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 border: '1px solid var(--border-subtle)'
               }}>
                 <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-primary)' }}>
-                  🛩️ Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
+                  Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
                 </p>
                 <p style={{ margin: '0', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
                   Le rayon correspond à un temps de déroutement de 20-30 min selon l'autonomie de l'avion.
@@ -552,7 +553,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
             {/* Interface de sélection en dessous */}
             <div>
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(3))}>
-                ✈️ Sélection des aérodromes
+                Sélection des aérodromes
               </h4>
               {scoredAlternates && scoredAlternates.length > 0 ? (
                 <AlternateSelectorUnified
@@ -599,7 +600,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
         {(manualSelection.departure || manualSelection.arrival) && (
           <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
-              ✅ Aérodromes sélectionnés
+              Aérodromes sélectionnés
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {manualSelection.departure && (
