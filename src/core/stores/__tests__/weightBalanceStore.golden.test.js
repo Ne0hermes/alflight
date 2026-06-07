@@ -145,3 +145,45 @@ describe('weightBalanceStore — Phase 4 : zéro fallback fantôme (A6/P0)', () 
     expect(r).toBeNull();
   });
 });
+
+// ── Item L (m/mm) — garde-fou d'unité sur les bras de levier ──
+// Le moteur calcule en MÈTRES. Des données en millimètres (vestige du double pivot
+// mbUnits='mm' vs moteur='m') doivent être ramenées en m, pas produire un moment ×1000.
+describe('weightBalanceStore — Item L : garde-fou m/mm sur les bras', () => {
+  it('bras carburant en mm (cas F-HFGI : 2400 mm) → ramené en 2.40 m, CG identique', () => {
+    const mixed = { ...AIRCRAFT, weightBalance: { ...AIRCRAFT.weightBalance, fuelArm: 2400 } };
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 80, frontRight: 80, rearLeft: 0, rearRight: 0, baggage: 10, auxiliary: 0, fuel: 80,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(mixed);
+    expect(r.totalWeight).toBe(950);
+    expect(r.totalMoment).toBe(2025); // 2400 mm corrigé → 2.40 m → moment identique au golden
+    expect(r.cg).toBe(2.132);
+  });
+
+  it('TOUS les bras en mm → tous ramenés en m, masse/moment/CG identiques au golden', () => {
+    const allMm = {
+      ...AIRCRAFT,
+      weightBalance: {
+        emptyWeightArm: 2100, frontLeftSeatArm: 2050, frontRightSeatArm: 2050,
+        rearLeftSeatArm: 3000, rearRightSeatArm: 3000, baggageArm: 3500,
+        auxiliaryArm: 3700, fuelArm: 2400,
+      },
+    };
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 80, frontRight: 80, rearLeft: 0, rearRight: 0, baggage: 10, auxiliary: 0, fuel: 80,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(allMm);
+    expect(r.totalWeight).toBe(950);
+    expect(r.totalMoment).toBe(2025);
+    expect(r.cg).toBe(2.132);
+  });
+
+  it('bras déjà en mètres (< 10) inchangés — pas de fausse correction', () => {
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 80, frontRight: 80, rearLeft: 0, rearRight: 0, baggage: 10, auxiliary: 0, fuel: 80,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(AIRCRAFT);
+    expect(r.cg).toBe(2.132); // identique : le garde-fou ne touche pas les bras déjà en m
+  });
+});
