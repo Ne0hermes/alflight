@@ -422,7 +422,12 @@ export function requireFinite(value, field, ctx = {}) {
 - `TEST-17` nuance : `window.testExportImport` (`features/pilot/components/PilotProfile.jsx:224-236`) est gardé par `if (typeof window !== 'undefined')` — **ce n'est PAS un garde DEV**, donc bien exposé en production (P0 maintenu, mécanisme précisé).
 - Numéros de ligne fiables à **±2-3 lignes** ; **reconfirmer au moment du fix** (les agents ont parfois décalé de quelques lignes).
 
-**À confirmer en base (nécessite reconnexion MCP Supabase) :** existence/absence réelle des tables `aeroclubs`, `regulations`, `regulation_profiles`, et présence des champs avion (`cruiseSpeedKt`, `fuelConsumption`, `cgEnvelope`, unités). Le « Statut BDD » de l'inventaire est **inféré** de la couche service, non vérifié en base.
+**Confirmé en base** (via `scripts/verify-supabase.sql`) :
+- Tables **présentes** : `community_presets` (5 avions), `flight_plans`, `vfr_points`, `manex_files`, `validated_flight_pdfs` (+ vues `presets_with_stats`, `validated_pdfs_stats`, `vfr_points_stats`).
+- Tables **absentes = à créer** (prédiction audit **validée**) : `aeroclubs`, `regulations`, `regulation_profiles`.
+- `F-HSTR` (DA40NG, Diamond) **est** dans `community_presets` ⇒ `fixFHSTREmptyWeight()` (HC-T1/STORE-032) **écrase un enregistrement cloud réel** : le hardcode contredit la source de vérité.
+
+**Reste à confirmer en base :** présence/nommage des champs avion (`cruiseSpeedKt`, `fuelConsumption`, `cgEnvelope`, masses, unités) dans la colonne JSON de `community_presets`.
 
 ---
 
