@@ -4,6 +4,22 @@
 --  But : voir la VÉRITÉ TERRAIN de ce qui existe en base, vs ce que l'app affiche.
 -- =============================================================================
 
+-- ⚡ SECTION 0 — DIAGNOSTIC EXPRESS (À EXÉCUTER EN PREMIER, SEULE)
+--    Tout l'essentiel en UNE requête = UN seul résultat à copier.
+--    (L'éditeur Supabase n'affiche que le résultat de la DERNIÈRE requête ;
+--     pour les sections détaillées ci-dessous, exécute-les UNE PAR UNE.)
+select 'tables_publiques'                  as info,
+       string_agg(table_name, ', ' order by table_name) as valeur
+from information_schema.tables where table_schema = 'public'
+union all
+select 'nb_avions_cloud (community_presets)', count(*)::text from community_presets
+union all
+select 'table_aeroclubs_existe',            (to_regclass('public.aeroclubs')           is not null)::text
+union all
+select 'table_regulations_existe',          (to_regclass('public.regulations')         is not null)::text
+union all
+select 'table_regulation_profiles_existe',  (to_regclass('public.regulation_profiles') is not null)::text;
+
 -- 1) Quelles tables existent réellement dans le schéma public ?
 --    (ne devine pas les noms : on liste tout)
 select table_name
@@ -15,8 +31,9 @@ order by table_name;
 select count(*) as total_avions_cloud from community_presets;
 
 -- 3) La liste complète de TES avions en base (compare avec ce que l'app montre)
+--    Colonnes sûres (confirmées dans communityService.js). Si une colonne
+--    n'existe pas, retire-la — et colle-moi le message d'erreur.
 select registration, model, manufacturer, submitted_by, submitted_at,
-       (aircraft_data is not null) as a_des_donnees_completes,
        has_manex, verified, admin_verified
 from community_presets
 order by submitted_at desc;
