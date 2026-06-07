@@ -1,5 +1,6 @@
 // src/features/weight-balance/utils/calculations.js
 import { getFuelDensity } from '@utils/fuelDensity';
+import { normalizeAircraftArmsToMeters } from '@utils/armUnits';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
 const getFuelLiters = (fobFuel) => {
@@ -22,6 +23,8 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     return null;
   }
 
+  // 🔧 Item L (m/mm) : bras garantis en MÈTRES avant tout calcul (couvre wizard/import/stocké).
+  aircraft = normalizeAircraftArmsToMeters(aircraft);
   const wb = aircraft.weightBalance;
 
   // Densité depuis la source unique (constants.js), alias normalisés.

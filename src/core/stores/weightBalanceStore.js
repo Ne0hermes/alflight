@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { getFuelDensity } from '@utils/fuelDensity';
 import { cgLimitsAtMass } from '@utils/cgEnvelope';
+import { normalizeAircraftArmsToMeters } from '@utils/armUnits';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
@@ -34,7 +35,10 @@ export const useWeightBalanceStore = create(
     // Méthode de calcul principale (pure function - no side effects)
     calculateWeightBalance: (aircraft, fobFuel) => {
       if (!aircraft) return null;
-      
+
+      // 🔧 Item L (m/mm) : bras garantis en MÈTRES avant tout calcul (wizard/import/stocké).
+      aircraft = normalizeAircraftArmsToMeters(aircraft);
+
       // Utiliser les masses directement depuis aircraft ou depuis masses
       // Prioriser weights.emptyWeight (nouveau format) puis emptyWeight (legacy)
       // 🔧 A6/P0 — Plus de masse FABRIQUÉE. Absente ⇒ NaN ⇒ calcul refusé (return
