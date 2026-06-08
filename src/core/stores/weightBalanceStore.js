@@ -144,14 +144,24 @@ export const useWeightBalanceStore = create(
       let loads = get().loads;
       
       
+      // 🔒 P0 (densité) : getFuelDensity (source unique constants.js) renvoie
+      // null si le type carburant est inconnu/absent. On NE fabrique PLUS 0.84 :
+      // densité absente ⇒ masse carburant non calculable ⇒ bilan fail-closed
+      // (cf. fuelDensityMissing plus bas). Carburant fourni DIRECTEMENT en kg
+      // (loads.fuel, sans fobFuel/réservoirs) ⇒ densité inutile, pas de blocage.
+      const fuelDensity = getFuelDensity(aircraft.fuelType);
+      let fuelDensityMissing = false;
+
       // Si fobFuel est fourni, utiliser ce poids de carburant pour le calcul
       // (sans modifier le state - cela doit être fait séparément)
       if (fobFuel?.ltr) {
-        // Densité depuis la source unique (constants.js), alias normalisés.
-        const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
-        const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
-        // Créer une copie des loads avec le nouveau poids de carburant pour ce calcul
-        loads = { ...loads, fuel: fuelWeight };
+        if (fuelDensity == null) {
+          fuelDensityMissing = true; // type inconnu → aucune masse carburant inventée
+        } else {
+          const fuelWeight = parseFloat((fobFuel.ltr * fuelDensity).toFixed(1));
+          // Créer une copie des loads avec le nouveau poids de carburant pour ce calcul
+          loads = { ...loads, fuel: fuelWeight };
+        }
       }
       
       // Calcul du poids total incluant les compartiments bagages dynamiques
@@ -186,7 +196,6 @@ export const useWeightBalanceStore = create(
       //     son propre bras de levier). Les loads par réservoir sont en LITRES,
       //     clé `fuel_${tank.id}` ; convertis en kg via la densité.
       const fuelTanks = Array.isArray(aircraft.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
-      const fuelDensityWB = getFuelDensity(aircraft.fuelType) ?? 0.84;
       let fuelWeight = 0;
       let fuelMoment = 0;
       let fuelArmMissing = false;
@@ -195,7 +204,8 @@ export const useWeightBalanceStore = create(
       if (usePerTankFuel) {
         fuelTanks.forEach((t, i) => {
           const liters = parseFloat(loads[`fuel_${t.id ?? i}`]) || 0; // litres dans ce réservoir
-          const w = liters * fuelDensityWB;
+          if (liters > 0 && fuelDensity == null) fuelDensityMissing = true;
+          const w = fuelDensity == null ? 0 : liters * fuelDensity;
           const arm = parseFloat(t.arm);
           if (w > 0 && !Number.isFinite(arm)) fuelArmMissing = true;
           fuelWeight += w;
@@ -250,6 +260,10 @@ export const useWeightBalanceStore = create(
       if (fuelArmMissing) missingArms.push('carburant');
       const cgReliable = missingArms.length === 0;
       if (!cgReliable) warnings.push(`Bras de levier manquant(s) : ${missingArms.join(', ')} — centrage non vérifiable`);
+      // 🔒 P0 (densité) : carburant chargé (litres) mais type inconnu ⇒ masse non
+      // calculable ⇒ bilan non fiable (jamais un faux « dans les limites »).
+      if (fuelDensityMissing) warnings.push('Densité carburant inconnue (type non renseigné) — masse carburant non calculable, bilan non fiable');
+      const fuelReliable = !fuelDensityMissing;
 
       // Vérification des limites (borne basse seulement si minTakeoffWeight connu).
       const isWithinWeight = totalWeight <= maxTakeoffWeight &&
@@ -268,7 +282,7 @@ export const useWeightBalanceStore = create(
             : false); // enveloppe incomplète → fail-closed
 
       // Fail-closed : centrage non fiable ou inconnu ⇒ jamais « dans les limites ».
-      const isWithinLimits = cgReliable && isWithinWeight && isWithinCG === true;
+      const isWithinLimits = cgReliable && fuelReliable && isWithinWeight && isWithinCG === true;
 
       const result = {
         totalWeight: parseFloat(totalWeight.toFixed(1)),
@@ -278,6 +292,7 @@ export const useWeightBalanceStore = create(
         isWithinWeight,
         isWithinCG,
         cgReliable,
+        fuelDensityMissing,
         warnings,
         // Limites CG effectivement appliquées À cette masse (interpolées).
         cgLimits: { forward: cgLimitsAtTOW.forward, aft: cgLimitsAtTOW.aft }

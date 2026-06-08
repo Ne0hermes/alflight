@@ -32,6 +32,27 @@ export const validatedPdfService = {
   },
 
   /**
+   * Réserve (prévisualise) le prochain numéro de vol VP-YYYY-NNNN via la fonction DB
+   * `generate_validated_pdf_number()`. Best-effort : retourne null si la RPC est
+   * indisponible (le trigger DB générera alors le numéro à l'insertion). Permet
+   * d'IMPRIMER le numéro sur le PDF AVANT l'upload (audit QA — D1 Document 2).
+   * @returns {Promise<string|null>}
+   */
+  async getNextFlightNumber() {
+    try {
+      const { data, error } = await supabase.rpc('generate_validated_pdf_number');
+      if (error) {
+        console.warn('⚠️ [ValidatedPDF] RPC generate_validated_pdf_number indisponible:', error.message);
+        return null;
+      }
+      return typeof data === 'string' && data.trim() ? data.trim() : null;
+    } catch (e) {
+      console.warn('⚠️ [ValidatedPDF] Exception getNextFlightNumber:', e?.message || e);
+      return null;
+    }
+  },
+
+  /**
    * Upload un PDF dans le bucket Supabase et sauvegarde les métadonnées
    * @param {Blob} pdfBlob - Le blob du PDF à uploader
    * @param {Object} metadata - Métadonnées du vol
@@ -98,6 +119,9 @@ export const validatedPdfService = {
 
       const pdfMetadata = {
         flight_plan_id: metadata.flightPlanId || null,
+        // Numéro réservé côté client et imprimé sur le PDF (audit QA D1). Le trigger DB
+        // `auto_set_validated_pdf_number` ne génère que si la valeur est NULL → rétro-compatible.
+        flight_number: metadata.flightNumber || null,
         pdf_filename: filename,
         pdf_storage_path: storagePath,
         pdf_size_bytes: pdfBlob.size,

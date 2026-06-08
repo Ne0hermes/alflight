@@ -277,8 +277,8 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
   useEffect(() => {
     
 
-    // Tester les variables d'environnement
-    const testResult = testEnvVars();
+    // Tester les variables d'environnement (DEV uniquement, PATTERN-10)
+    if (import.meta.env.DEV) testEnvVars();
     
 
     // Forcer l'initialisation du gestionnaire de clés API

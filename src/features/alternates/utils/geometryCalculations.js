@@ -191,7 +191,7 @@ const calculateConeZone = (departure, arrival, radiusAtDep, radiusAtArr) => {
   const bearing = calculateBearing(departure, arrival);
 
   // Protection contre les rayons invalides
-  const R1 = Math.max(5, radiusAtDep || 30); // Minimum 5 NM au départ
+  const R1 = Math.max(5, radiusAtDep || 30); // fallback-ok : appelants (useAlternateSelection) garantissent radiusAtDep ≥ 10 via Math.max(10,…) → « || 30 » inatteignable, simple borne défensive
   const R2 = Math.max(3, radiusAtArr || 10); // Minimum 3 NM à l'arrivée
 
   console.log('🔺 CONE ZONE CALCULATION:', {

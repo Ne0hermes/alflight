@@ -1,6 +1,5 @@
 import React, { memo, useEffect } from 'react';
 import FuelModule from '@features/fuel/FuelModule';
-import { theme } from '../../../styles/theme';
 import { useFuel } from '@core/contexts';
 import { convertValue } from '@utils/unitConversions';
 
@@ -8,28 +7,7 @@ import { convertValue } from '@utils/unitConversions';
 const commonStyles = {
   container: {
     padding: '0'
-  },
-  label: {
-    fontSize: 'var(--fs-body)',
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '20px'
   }
-};
-
-// Style pour la carte de réserve réglementaire
-const reserveCardStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  padding: '12px 16px',
-  marginBottom: '20px',
-  borderRadius: 'var(--radius-sm)',
-  border: `1px solid ${theme.colors.border}`,
-  backgroundColor: 'var(--bg-overlay)',
 };
 
 // Composant principal de l'étape 5 - Utilise directement le FuelModule complet
@@ -40,48 +18,11 @@ export const Step5Fuel = memo(({ flightPlan, onUpdate }) => {
   // Récupérer le FOB (Fuel On Board) depuis le contexte
   const { fobFuel, calculateTotal, setFobFuel } = useFuel();
 
-  // Calculer la réserve réglementaire selon les règles (depuis Step1)
-  const calculateRegulatoryReserve = () => {
-    let regulationReserveMinutes = 30;
-
-    // Nuit = 45 minutes
-    if (flightPlan.generalInfo.dayNight === 'night') {
-      regulationReserveMinutes = 45;
-    }
-
-    // IFR = +15 minutes
-    if (flightPlan.generalInfo.flightType === 'IFR') {
-      regulationReserveMinutes += 15;
-    }
-
-    // Local + Jour = 20 minutes
-    if (flightPlan.generalInfo.flightNature === 'local' && flightPlan.generalInfo.dayNight === 'day') {
-      regulationReserveMinutes = 20;
-    }
-
-    return regulationReserveMinutes;
-  };
-
-  const reserveMinutes = calculateRegulatoryReserve();
-
-  // Description de la réserve
-  const getReserveDescription = () => {
-    const parts = [];
-
-    if (flightPlan.generalInfo.flightType) {
-      parts.push(flightPlan.generalInfo.flightType);
-    }
-
-    if (flightPlan.generalInfo.flightNature) {
-      parts.push(flightPlan.generalInfo.flightNature === 'local' ? 'LOCAL' : 'NAV');
-    }
-
-    if (flightPlan.generalInfo.dayNight) {
-      parts.push(flightPlan.generalInfo.dayNight === 'night' ? 'NUIT' : 'JOUR');
-    }
-
-    return parts.length > 0 ? parts.join(' - ') : 'Complétez les informations de l\'étape 1';
-  };
+  // ⚠️ La réserve réglementaire N'EST PLUS calculée ici. Elle dérive de la source
+  // unique « type de vol » (navigationStore.flightType, réglée en Step1) via le
+  // calculateur canonique @core/flightType, et s'affiche dans FuelModule
+  // (ligne « Final Reserve »). L'ancien calcul local lisait generalInfo et était
+  // du code mort (jamais rendu) — supprimé pour éviter une 4e source divergente.
 
   // 🔧 FIX: Restaurer fobFuel depuis flightPlan au montage
   const hasRestored = React.useRef(false);

@@ -19,13 +19,15 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
   const fuelInfo = useMemo(() => {
     if (!aircraft) return null;
 
-    const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
+    // 🔒 P0 (densité) : null si type inconnu — on n'affiche pas une densité/masse
+    // inventée, ni un « JET A-1 » par défaut.
+    const fuelDensity = getFuelDensity(aircraft.fuelType);
 
-    const fuelCapacityKg = (aircraft.fuelCapacity || 0) * fuelDensity;
+    const fuelCapacityKg = fuelDensity == null ? null : (aircraft.fuelCapacity || 0) * fuelDensity;
     const fuelArm = aircraft.weightBalance?.fuelArm || 0;
 
     return {
-      fuelType: aircraft.fuelType || 'JET A-1',
+      fuelType: aircraft.fuelType || null,
       density: fuelDensity,
       capacity: aircraft.fuelCapacity || 0,
       capacityKg: fuelCapacityKg,
@@ -141,6 +143,11 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
 
   // Vérification des données avant affichage
   if (!data || typeof data.w !== 'number' || typeof data.cg !== 'number' || typeof data.fuel !== 'number') {
+    // 🔒 P0 (densité) : distinguer « densité carburant inconnue » (scénario
+    // volontairement indisponible, fail-closed) d'un simple « en cours de calcul ».
+    const message = data?.unavailableReason === 'fuelDensity'
+      ? 'Densité carburant inconnue — renseignez le type de carburant'
+      : 'Données en cours de calcul…';
     return (
       <div style={cardStyle}>
         <h5 style={titleStyle}>
@@ -148,7 +155,7 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
           {title}
         </h5>
         <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
-          <p>Données en cours de calcul…</p>
+          <p>{message}</p>
         </div>
       </div>
     );

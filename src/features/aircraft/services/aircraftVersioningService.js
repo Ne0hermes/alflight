@@ -1,8 +1,6 @@
 // Service de gestion des versions d'avions
 // En production, ce service communiquera avec l'API backend
 
-import { COMMUNITY_AIRCRAFT_DATABASE } from '../data/communityAircraftDatabase';
-
 class AircraftVersioningService {
   constructor() {
     // Mock database pour le développement
@@ -11,26 +9,8 @@ class AircraftVersioningService {
   }
 
   initMockData() {
-    // Initialiser le versioning pour tous les avions de la base communautaire
-    COMMUNITY_AIRCRAFT_DATABASE.forEach(aircraft => {
-      this.versions.set(aircraft.registration.toUpperCase(), {
-        current: {
-          id: 'v1',
-          version: 1,
-          ...aircraft
-        },
-        history: [
-          {
-            id: 'v0',
-            version: 0,
-            updatedBy: aircraft.addedBy,
-            updateDate: aircraft.dateAdded,
-            updateReason: 'Configuration initiale',
-            changes: []
-          }
-        ]
-      });
-    });
+    // Base communautaire migrée vers Supabase (community_presets) : plus de seed
+    // local (DATA-18). Le versioning se peuple à l'usage via createUpdate().
   }
 
   // Vérifier si une immatriculation existe

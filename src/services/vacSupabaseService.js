@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabaseClient';
 /**
  * Service Supabase pour la gestion automatisée des cartes VAC
  * Permet l'upload, le téléchargement et la synchronisation des cartes VAC
+ *
+ * ⚠️ NON CÂBLÉ / DÉPENDANCES INEXISTANTES (vérifié 2026-06, sonde Supabase) :
+ * ce service n'a AUCUN consommateur dans src/ et référence des objets Supabase
+ * NON CRÉÉS — table `vac_charts`, vue `vac_charts_active`, table
+ * `vac_download_history`, RPC `archive_expired_vac_charts`, bucket Storage
+ * `vac-charts`. Ses lectures ne s'exécutent donc JAMAIS en runtime : rien
+ * n'échoue silencieusement. À créer + brancher dans le chantier Supabase
+ * (cf. aeroclubs/regulations), ou à supprimer si la fonctionnalité
+ * « VAC communautaire » est abandonnée.
  */
 
 const BUCKET_NAME = 'vac-charts';

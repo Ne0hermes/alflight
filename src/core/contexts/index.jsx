@@ -436,8 +436,13 @@ export const WeightBalanceProvider = memo(({ children }) => {
   // Mise à jour du poids du carburant
   React.useEffect(() => {
     if (selectedAircraft && fobFuel?.ltr) {
-      const fuelDensity = getFuelDensity(selectedAircraft.fuelType) ?? 0.72;
-      updateFuelLoad(fobFuel.ltr, fuelDensity);
+      // 🔒 P0 (densité) : null si type inconnu → on NE fabrique pas 0.72. Densité
+      // absente ⇒ pas de masse carburant fabriquée (le bilan W&B et les scénarios
+      // signalent « densité inconnue »).
+      const fuelDensity = getFuelDensity(selectedAircraft.fuelType);
+      if (fuelDensity != null) {
+        updateFuelLoad(fobFuel.ltr, fuelDensity);
+      }
     }
   }, [selectedAircraft, fobFuel?.ltr, updateFuelLoad]);
 

@@ -125,7 +125,7 @@ export function extractPoints(abaqueData, defaultCond = {}) {
         const pt = {
           temperature:       defaultCond.temperature       ?? 15,
           pressure_altitude: defaultCond.pressure_altitude ?? 0,
-          mass:              defaultCond.mass              ?? 1000,
+          mass:              defaultCond.mass              ?? 1000, // fallback-ok : défaut du paramètre `defaultCond` (référentiel d'extraction de la courbe, PAS la masse avion) ; les appelants passent `conditions`
           wind:              defaultCond.wind              ?? 0,
           distance:          0
         };
