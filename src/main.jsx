@@ -12,11 +12,23 @@ import { useOpenAIPStore } from './core/stores/openAIPStore';
 // page UNE fois pour récupérer le build courant, au lieu de planter dans
 // l'ErrorBoundary. Le garde sessionStorage évite toute boucle de rechargement.
 if (typeof window !== 'undefined') {
-  window.addEventListener('vite:preloadError', () => {
-    if (!sessionStorage.getItem('__vite_preload_reloaded')) {
-      sessionStorage.setItem('__vite_preload_reloaded', '1');
-      window.location.reload();
-    }
+  window.addEventListener('vite:preloadError', async () => {
+    if (sessionStorage.getItem('__vite_preload_reloaded')) return;
+    sessionStorage.setItem('__vite_preload_reloaded', '1');
+    // Un simple reload retombe sur le service worker PWA, qui peut servir un shell
+    // PÉRIMÉ référençant des chunks supprimés par le redéploiement → la 404 revient.
+    // On PURGE donc le SW + les caches AVANT de recharger, pour forcer le build courant.
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      if (window.caches?.keys) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch { /* best-effort */ }
+    window.location.reload();
   });
 }
 
