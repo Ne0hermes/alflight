@@ -248,27 +248,40 @@ export const AircraftModule = memo(() => {
   const [aircraftPhotos, setAircraftPhotos] = useState({});
 
   // ─── Recherche dans la BASE COMMUNAUTAIRE (fusion visuelle avec le module) ───
-  const [communitySearch, setCommunitySearch] = useState('');
-  const [communityResults, setCommunityResults] = useState([]);
-  const [communitySearching, setCommunitySearching] = useState(false);
+  const [communitySearch, setCommunitySearch] = useState('');   // filtre live (pas de bouton)
+  const [allPresets, setAllPresets] = useState([]);             // toute la base communautaire (métadonnées légères)
+  const [presetsLoading, setPresetsLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
 
-  const handleCommunitySearch = async () => {
-    const term = communitySearch.trim();
-    if (term.length < 2) { setCommunityResults([]); setCommunityError(null); return; }
-    setCommunitySearching(true);
+  // 🔁 Charge TOUTE la base communautaire (métadonnées légères, sans aircraft_data)
+  // au montage → filtrage DYNAMIQUE côté client, comme le sélecteur d'avion de la
+  // prépa de vol : liste complète + filtre au fil de la frappe, SANS bouton.
+  const loadAllPresets = async () => {
+    setPresetsLoading(true);
     setCommunityError(null);
     try {
-      const results = await communityService.searchPresets(term);
-      setCommunityResults(Array.isArray(results) ? results : []);
+      const list = await communityService.getAllPresets();
+      setAllPresets(Array.isArray(list) ? list : []);
     } catch (e) {
-      console.error('❌ [AircraftModule] Recherche communautaire échouée:', e);
-      setCommunityError(e?.message || 'Erreur de recherche');
-      setCommunityResults([]);
+      console.error('❌ [AircraftModule] Chargement base communautaire échoué:', e);
+      setCommunityError(e?.message || 'Erreur de chargement');
+      setAllPresets([]);
     } finally {
-      setCommunitySearching(false);
+      setPresetsLoading(false);
     }
   };
+  useEffect(() => { loadAllPresets(); }, []);
+
+  // Filtre live : immatriculation / modèle / constructeur (insensible à la casse).
+  const filteredPresets = useMemo(() => {
+    const q = communitySearch.trim().toLowerCase();
+    if (!q) return allPresets;
+    return allPresets.filter((p) =>
+      [p.registration, p.model, p.manufacturer]
+        .filter(Boolean)
+        .some((s) => String(s).toLowerCase().includes(q))
+    );
+  }, [allPresets, communitySearch]);
 
   // Importer un preset communautaire → ouvre le wizard PRÉ-REMPLI (comme aujourd'hui).
   // 🛡️ ID LOCAL NEUF (aircraft-<ts>) au lieu de l'ID Supabase du preset → la
@@ -1636,20 +1649,14 @@ export const AircraftModule = memo(() => {
         <p style={{ margin: `0 0 ${tokens.spacing[3]}`, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
           Cherchez un avion partagé (immatriculation, modèle, constructeur) puis importez-le : vous entrez dans l'assistant pré-rempli, comme pour un nouvel avion.
         </p>
-        <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', gap: tokens.spacing[3] }}>
-          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-            <CockpitTextField
-              label="RECHERCHE COMMUNAUTÉ"
-              value={communitySearch}
-              onChange={(e) => setCommunitySearch(e.target.value)}
-              placeholder="Ex: F-GBYU, DR400, Diamond…"
-            />
-          </div>
-          <div style={{ flexShrink: 0 }}>
-            <EditorialButton variant="primary" size="md" onClick={handleCommunitySearch}>
-              {communitySearching ? 'Recherche…' : 'Rechercher'}
-            </EditorialButton>
-          </div>
+        {/* Filtre LIVE (sans bouton) : la liste ci-dessous se filtre au fil de la frappe. */}
+        <div style={{ maxWidth: 420 }}>
+          <CockpitTextField
+            label="RECHERCHE COMMUNAUTÉ"
+            value={communitySearch}
+            onChange={(e) => setCommunitySearch(e.target.value)}
+            placeholder="Filtrer : immatriculation, modèle, constructeur…"
+          />
         </div>
 
         {communityError && (
@@ -1658,33 +1665,47 @@ export const AircraftModule = memo(() => {
           </div>
         )}
 
-        {communityResults.length > 0 && (
-          <div style={{ marginTop: tokens.spacing[4], display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: tokens.spacing[3] }}>
-            {communityResults.map((p) => (
-              <div key={p.id} style={{ padding: tokens.spacing[3], backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <strong style={{ color: 'var(--text-primary)' }}>{p.registration || '—'}</strong>
-                  {p.verified && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 600 }}>✓ vérifié</span>}
-                </div>
-                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: tokens.spacing[3] }}>
-                  {p.manufacturer ? `${p.manufacturer} ` : ''}{p.model || ''}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
-                    👍 {p.votes?.up ?? 0} · 👎 {p.votes?.down ?? 0}
-                  </span>
-                  <EditorialButton variant="ghost" size="sm" onClick={() => handleImportFromCommunity(p.id)}>
-                    Importer
-                  </EditorialButton>
-                </div>
-              </div>
-            ))}
+        {presetsLoading && (
+          <div style={{ marginTop: tokens.spacing[3], fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
+            Chargement de la base communautaire…
           </div>
         )}
 
-        {!communitySearching && communitySearch.trim().length >= 2 && communityResults.length === 0 && !communityError && (
-          <div style={{ marginTop: tokens.spacing[3], fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
-            Aucun avion partagé trouvé. Vous pouvez en créer un nouveau ci-dessous.
+        {!presetsLoading && !communityError && (
+          <div style={{ marginTop: tokens.spacing[3] }}>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: tokens.spacing[2] }}>
+              {filteredPresets.length} avion{filteredPresets.length > 1 ? 's' : ''}
+              {communitySearch.trim() ? ` correspondant à « ${communitySearch.trim()} »` : ' dans la base'}
+            </div>
+            {filteredPresets.length > 0 ? (
+              <div style={{ maxHeight: 440, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: tokens.spacing[3], paddingRight: '4px' }}>
+                {filteredPresets.map((p) => (
+                  <div key={p.id} style={{ padding: tokens.spacing[3], backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <strong style={{ color: 'var(--text-primary)' }}>{p.registration || '—'}</strong>
+                      {p.verified && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', fontWeight: 600 }}>✓ vérifié</span>}
+                    </div>
+                    <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: tokens.spacing[3] }}>
+                      {p.manufacturer ? `${p.manufacturer} ` : ''}{p.model || ''}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
+                        👍 {p.votes?.up ?? 0} · 👎 {p.votes?.down ?? 0}
+                      </span>
+                      <EditorialButton variant="ghost" size="sm" onClick={() => handleImportFromCommunity(p.id)}>
+                        Importer
+                      </EditorialButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
+                {allPresets.length === 0
+                  ? 'Base communautaire vide.'
+                  : `Aucun avion ne correspond à « ${communitySearch.trim()} ».`}
+              </div>
+            )}
           </div>
         )}
       </div>
