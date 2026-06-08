@@ -27,8 +27,15 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   aircraft = normalizeAircraftArmsToMeters(aircraft);
   const wb = aircraft.weightBalance;
 
-  // Densité depuis la source unique (constants.js), alias normalisés.
-  const fuelDensity = getFuelDensity(aircraft.fuelType) ?? 0.84;
+  // 🔒 P0 (densité) : getFuelDensity renvoie null si le type carburant est
+  // inconnu/absent. On NE fabrique plus 0.84. Densité absente ⇒ les scénarios
+  // CONTENANT du carburant (fulltank/FOB/atterrissage) sont marqués INDISPONIBLES
+  // dans le retour (jamais une masse carburant inventée) ; seul ZFW (masse sans
+  // carburant) reste calculable. `fuelDensityForCalc` n'est qu'un calcul neutre
+  // intermédiaire — son résultat est écarté quand la densité manque.
+  const fuelDensity = getFuelDensity(aircraft.fuelType);
+  const fuelDensityMissing = fuelDensity == null;
+  const fuelDensityForCalc = fuelDensity ?? 0;
 
   // Valeurs par défaut pour éviter les NaN
   const safeTotalWeight = calculations.totalWeight || 0;
@@ -51,7 +58,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const fobFuelLiters = getFuelLiters(fobFuel);
   const burnedFuelL = (fuelData?.roulage?.ltr || 0) + (fuelData?.trip?.ltr || 0);
   const remainingFuelL = Math.max(0, fobFuelLiters - burnedFuelL);
-  const remainingFuelKg = remainingFuelL * fuelDensity;
+  const remainingFuelKg = remainingFuelL * fuelDensityForCalc;
 
   // ✅ NOUVELLE APPROCHE : Calculer TOUS les scénarios depuis buildMassDetails
   // Fonction helper pour calculer poids/CG depuis items
@@ -66,7 +73,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
   // Pas besoin de conversion selon fuelUnit, c'est déjà en litres !
   const fuelCapacityLtr = aircraft.fuelCapacity || 0;
-  const fulltankFuelKg = fuelCapacityLtr * fuelDensity;
+  const fulltankFuelKg = fuelCapacityLtr * fuelDensityForCalc;
 
   // Scénario 2: T/O FOB (actuel)
   const toCrmFuel = safeFuel;
@@ -199,20 +206,25 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     console.warn(`⚠️ MZFW DÉPASSÉ : ${zfwCalc.totalWeight.toFixed(1)} kg > ${maxZeroFuelMass.toFixed(1)} kg (limite MZFW)`);
   }
 
+  // 🔒 P0 (densité) : scénario carburant non calculable (type inconnu) ⇒
+  // indisponible. Jamais une masse inventée ; seul ZFW reste fiable.
+  const fuelUnavailable = { w: null, cg: null, fuel: null, items: [], unavailableReason: 'fuelDensity' };
+
   return {
-    fulltank: {
+    fuelDensityMissing,
+    fulltank: fuelDensityMissing ? fuelUnavailable : {
       w: fulltankCalc.totalWeight,
       cg: fulltankCalc.cg,
       fuel: fulltankFuelKg || 0,
       items: fulltankItems
     },
-    toCrm: {
+    toCrm: fuelDensityMissing ? fuelUnavailable : {
       w: toCrmCalc.totalWeight,
       cg: toCrmCalc.cg,
       fuel: toCrmFuel || 0,
       items: toCrmItems
     },
-    landing: {
+    landing: fuelDensityMissing ? fuelUnavailable : {
       w: landingCalc.totalWeight,
       cg: landingCalc.cg,
       fuel: landingFuelKg || 0,

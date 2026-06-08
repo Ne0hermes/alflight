@@ -368,6 +368,12 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </strong>
                 <span> | </span>
                 <strong style={{ fontWeight: '600' }}>{pilotName}</strong>
+                {flightPlan.generalInfo.callsign && (
+                  <>
+                    <span> | </span>
+                    <strong style={{ fontWeight: '600' }}>Indicatif : {flightPlan.generalInfo.callsign}</strong>
+                  </>
+                )}
                 <span> | </span>
                 <span>{flightPlan.generalInfo.flightType} {flightPlan.generalInfo.dayNight === 'day' ? 'Jour' : 'Nuit'} - {flightPlan.generalInfo.flightNature === 'local' ? 'Local' : 'Navigation'}</span>
               </div>
@@ -574,7 +580,9 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
             {/* Type de carburant */}
             {selectedAircraft?.fuelType && (() => {
-              const fuelDensity = getFuelDensity(selectedAircraft.fuelType) ?? 0.84;
+              // 🔒 P0 (densité) : null si type inconnu de la table — on n'affiche pas
+              // une densité fabriquée (0.84) mais « densité inconnue ».
+              const fuelDensity = getFuelDensity(selectedAircraft.fuelType);
               return (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -582,7 +590,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                       Type de carburant:
                     </span>
                     <strong style={{ fontSize: 'var(--fs-body)' }}>
-                      {selectedAircraft.fuelType} ({fuelDensity} kg/L)
+                      {selectedAircraft.fuelType}{fuelDensity != null ? ` (${fuelDensity} kg/L)` : ' (densité inconnue)'}
                     </strong>
                   </div>
                 </div>

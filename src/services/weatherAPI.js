@@ -4,10 +4,14 @@
  * Service API Météo - Version simplifiée AVWX uniquement
  */
 
-// Configuration AVWX avec votre clé
+// Configuration AVWX
 const AVWX_CONFIG = {
-  // La clé peut venir du fichier .env.local ou utiliser la clé par défaut
-  apiKey: import.meta.env.VITE_AVWX_API_KEY || 'EZyW9WVdH-sNEKPArsTjs5PIWLQxYkJmGJ1_CRJ0p1A',
+  // 🔒 SEC-001 : clé lue UNIQUEMENT depuis l'environnement (.env.local). Le
+  // littéral en dur a été retiré du code. ⚠️ Limites : le préfixe VITE_ inline
+  // quand même la valeur dans le bundle au build → la vraie correction (proxy
+  // serveur) relève du chantier Zero-Trust. Et cette clé ayant été commitée,
+  // elle DOIT être rotée côté AVWX.
+  apiKey: import.meta.env.VITE_AVWX_API_KEY,
   baseUrl: 'https://avwx.rest/api'
 };
 

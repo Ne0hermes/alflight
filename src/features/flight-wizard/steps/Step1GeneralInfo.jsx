@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { aircraftSelectors } from '../../../core/stores/aircraftStore';
-import { useAircraft } from '@core/contexts';
+import { useAircraft, useNavigation } from '@core/contexts';
+import { flightTypeToGeneralInfo } from '@core/flightType';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -15,6 +16,38 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
   const aircraftList = aircraftSelectors.useAircraftList();
   // Récupérer le contexte Aircraft pour mettre à jour l'avion sélectionné globalement
   const { setSelectedAircraft } = useAircraft();
+
+  // 🔒 SOURCE UNIQUE « type de vol » : period/rules/category vivent dans le
+  // navigationStore (cf. @core/flightType). Le sélecteur de cette étape écrit
+  // DIRECTEMENT dessus — c'est lui qui pilote la réserve réglementaire affichée
+  // au bilan carburant. (Avant : Step1 écrivait generalInfo, que seul du code mort
+  // lisait → choisir jour/nuit/nature n'avait aucun effet sur la réserve.)
+  const { flightType, setFlightType } = useNavigation();
+  const updateFlightType = (patch) => setFlightType({ ...flightType, ...patch });
+
+  // Miroir SSOT → generalInfo : la projection anglaise (dayNight/flightType/
+  // flightNature) sert encore à la persistance Supabase, à la synthèse et aux
+  // tags PDF. On la tient à jour à chaque changement, mais on SAUTE la 1re passe
+  // (montage) pour ne pas écraser le plan restauré avant l'amorçage du store par
+  // le wizard (FlightPlanWizard amorce flightType depuis generalInfo au montage).
+  const mirrorPrimed = useRef(false);
+  useEffect(() => {
+    if (!mirrorPrimed.current) {
+      mirrorPrimed.current = true;
+      return;
+    }
+    const projected = flightTypeToGeneralInfo(flightType);
+    const gi = flightPlan.generalInfo;
+    if (
+      gi.dayNight !== projected.dayNight ||
+      gi.flightType !== projected.flightType ||
+      gi.flightNature !== projected.flightNature
+    ) {
+      flightPlan.updateGeneralInfo(projected);
+      onUpdate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flightType]);
 
   const handleChange = (field, value) => {
     flightPlan.updateGeneralInfo({ [field]: value });
@@ -199,8 +232,8 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               type="radio"
               name="flightType"
               value="VFR"
-              checked={flightPlan.generalInfo.flightType === 'VFR'}
-              onChange={(e) => handleChange('flightType', e.target.value)}
+              checked={flightType.rules === 'VFR'}
+              onChange={() => updateFlightType({ rules: 'VFR' })}
               style={styles.radio}
             />
             <span style={styles.radioText}>VFR</span>
@@ -211,8 +244,8 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               type="radio"
               name="flightType"
               value="IFR"
-              checked={flightPlan.generalInfo.flightType === 'IFR'}
-              onChange={(e) => handleChange('flightType', e.target.value)}
+              checked={flightType.rules === 'IFR'}
+              onChange={() => updateFlightType({ rules: 'IFR' })}
               style={styles.radio}
               disabled
             />
@@ -234,27 +267,26 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <input
               type="radio"
               name="dayNight"
-              value="day"
-              checked={flightPlan.generalInfo.dayNight === 'day'}
-              onChange={(e) => handleChange('dayNight', e.target.value)}
+              value="jour"
+              checked={flightType.period === 'jour'}
+              onChange={() => updateFlightType({ period: 'jour' })}
               style={styles.radio}
             />
             <Sun size={18} style={{ color: theme.colors.primary }} />
             <span style={styles.radioText}>Jour</span>
           </label>
-          <label style={styles.radioLabelDisabled} title="Fonctionnalité en développement">
+          <label style={styles.radioLabel}>
             <input
               type="radio"
               name="dayNight"
-              value="night"
-              checked={flightPlan.generalInfo.dayNight === 'night'}
-              onChange={(e) => handleChange('dayNight', e.target.value)}
+              value="nuit"
+              checked={flightType.period === 'nuit'}
+              onChange={() => updateFlightType({ period: 'nuit' })}
               style={styles.radio}
-              disabled
             />
-            <Moon size={18} style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
-            <span style={styles.radioTextDisabled}>Nuit</span>
-            <span style={styles.badge}>À venir</span>
+            <Moon size={18} style={{ color: theme.colors.primary }} />
+            <span style={styles.radioText}>Nuit</span>
+            <span style={styles.radioDescription}>Réserve finale 45 min</span>
           </label>
         </div>
       </div>
@@ -271,8 +303,8 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               type="radio"
               name="flightNature"
               value="local"
-              checked={flightPlan.generalInfo.flightNature === 'local'}
-              onChange={(e) => handleChange('flightNature', e.target.value)}
+              checked={flightType.category === 'local'}
+              onChange={() => updateFlightType({ category: 'local' })}
               style={styles.radio}
             />
             <MapPin size={18} style={{ color: theme.colors.primary }} />
@@ -284,8 +316,8 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
               type="radio"
               name="flightNature"
               value="navigation"
-              checked={flightPlan.generalInfo.flightNature === 'navigation'}
-              onChange={(e) => handleChange('flightNature', e.target.value)}
+              checked={flightType.category === 'navigation'}
+              onChange={() => updateFlightType({ category: 'navigation' })}
               style={styles.radio}
             />
             <Navigation size={18} style={{ color: theme.colors.primary }} />

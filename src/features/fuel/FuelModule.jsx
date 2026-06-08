@@ -271,7 +271,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     // On la convertit pour affichage selon les préférences utilisateur.
     // ⚠ getSymbol() du hook useUnits attend une CATÉGORIE, pas une unité.
     const consumptionUserUnit = getUnit('fuelConsumption');
-    const consumptionCanonical = parseFloat(selectedAircraft?.fuelConsumption) || 30;
+    // 🔒 P0 : conso via helper canonique (null si non renseignée) — plus de 30 L/h fabriqué.
+    const consumptionCanonical = getFuelConsumptionLph(selectedAircraft);
+    if (consumptionCanonical == null) {
+      return `${reserveMinutes} min — consommation carburant non renseignée`;
+    }
     const consumptionDisplay = toUserUnit(consumptionCanonical, 'fuelConsumption', consumptionUserUnit) || consumptionCanonical;
     const consumptionSymbol = getSymbol('fuelConsumption');
 

@@ -3,7 +3,6 @@ import { Wind, CheckCircle, AlertTriangle, Info, Navigation } from 'lucide-react
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useVACStore } from '@core/stores/vacStore';
-import { getFallbackRunways, getFallbackAirport } from '@data/fallbackRunways';
 import { isSurfaceCompatible } from '@utils/runwaySurface';
 
 // Calcul de la différence d'angle entre deux directions
@@ -141,25 +140,11 @@ export const RunwaySuggestionEnhanced = memo(({ icao, wind, aircraft, showCompac
           return;
         }
 
-        console.log('⚠️ [RunwaySuggestionEnhanced] Pas de données aeroDataProvider - Essai fallback');
-
-        // En dernier recours, utiliser les données de secours
-        const fallbackRunways = getFallbackRunways(icao);
-        const fallbackAirport = getFallbackAirport(icao);
-
-        console.log('🔍 [RunwaySuggestionEnhanced] Fallback résultat:', {
-          icao,
-          hasFallbackRunways: !!fallbackRunways,
-          fallbackRunwaysLength: fallbackRunways?.length
-        });
-
-        if (fallbackRunways) {
-          console.log('✅ [RunwaySuggestionEnhanced] Utilisation données fallback');
-          setRunways(fallbackRunways);
-          setAirport(fallbackAirport || { icao, name: icao, dataSource: 'fallback' });
-        } else if (airportData) {
+        // 🔒 PATTERN-5 / DATA-01 : plus de pistes de secours fabriquées
+        // (6 aérodromes hardcodés). Si ni la VAC ni aeroDataProvider (SIA) n'ont
+        // la donnée, on n'invente RIEN → l'UI affiche « pas de données ».
+        if (airportData) {
           console.log('❌ [RunwaySuggestionEnhanced] Aérodrome trouvé mais SANS PISTES:', icao);
-          // Si on a l'aérodrome mais pas les pistes
           setAirport(airportData);
           setRunways([]);
         } else {

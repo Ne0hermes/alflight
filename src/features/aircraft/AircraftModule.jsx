@@ -29,6 +29,8 @@ import { evaluateAircraft } from './utils/aircraftCompleteness';
 // (optim mémoire de getAllPresets). On hydrate depuis Supabase au moment de l'édition
 // pour récupérer arms, weightBalance, cgEnvelope, armLengths, etc.
 import communityService from '@services/communityService';
+import { getFuelDensity } from '@utils/fuelDensity';
+import { getCurrentAiracCycle } from '@/config/airacConfig';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -604,13 +606,18 @@ export const AircraftModule = memo(() => {
       addText(`Fiche Technique - ${fullAircraft.registration}`, 50, yPosition, { bold: true, size: 20 });
       yPosition -= 40;
 
-      // Avertissement "À DÉVELOPPER" en gros et en rouge
-      const warningText = 'À DÉVELOPPER';
-      const warningSize = 18;
-      const warningWidth = helveticaBold.widthOfTextAtSize(warningText, warningSize);
-      const warningX = (width - warningWidth) / 2; // Centrer le texte
-      addText(warningText, warningX, yPosition, { bold: true, size: warningSize, color: rgb(1, 0, 0) });
-      yPosition -= 40;
+      // Sous-titre : constructeur/modèle + cycle de données de navigation (AIRAC)
+      const subtitle = `${fullAircraft.manufacturer || ''} ${fullAircraft.model || ''}`.trim();
+      if (subtitle) {
+        addText(subtitle, 50, yPosition, { size: 11, color: rgb(0.3, 0.3, 0.3) });
+        yPosition -= 18;
+      }
+      const airacCycle = getCurrentAiracCycle();
+      addText(
+        `Cycle de données nav (AIRAC) : ${airacCycle?.date || 'N/A'}${airacCycle?.folder ? ` (${airacCycle.folder})` : ''}`,
+        50, yPosition, { size: 9, color: rgb(0.45, 0.45, 0.45) }
+      );
+      yPosition -= 28;
 
       // Ajouter la photo de l'avion si disponible
       if (fullAircraft.photo) {
@@ -656,22 +663,26 @@ export const AircraftModule = memo(() => {
       addText('INFORMATIONS GÉNÉRALES', 50, yPosition, { bold: true, size: 14 });
       yPosition -= 25;
 
+      // 3e élément optionnel { required: true } => la ligne est imprimée même vide ("N/A"),
+      // pour distinguer "non renseigné" de "non applicable" sur un identifiant clé (audit QA).
       const generalInfo = [
-        ['Immatriculation', fullAircraft.registration],
-        ['Modèle', fullAircraft.model],
+        ['Immatriculation', fullAircraft.registration, { required: true }],
+        ['Type / Modèle', fullAircraft.model],
         ['Constructeur', fullAircraft.manufacturer],
+        ['Numéro de série (MSN)', fullAircraft.serialNumber || fullAircraft.msn || fullAircraft.serial, { required: true }],
         ['Aéroclub d\'attache', fullAircraft.homeAeroclub],
         ['Terrain de base', fullAircraft.homeBase],
-        ['Type', fullAircraft.category],
+        ['Catégorie', fullAircraft.category],
         ['Année', fullAircraft.year],
         ['Propriétaire', fullAircraft.owner],
       ];
 
-      generalInfo.forEach(([label, value]) => {
-        if (value) {
+      generalInfo.forEach(([label, value, opts]) => {
+        const hasValue = value !== undefined && value !== null && value !== '';
+        if (hasValue || opts?.required) {
           checkNewPage();
           addText(`${label}:`, 50, yPosition, { bold: true });
-          addText(String(value), 200, yPosition);
+          addText(hasValue ? String(value) : 'N/A', 220, yPosition);
           yPosition -= 20;
         }
       });
@@ -679,24 +690,58 @@ export const AircraftModule = memo(() => {
       yPosition -= 10;
       checkNewPage(50);
 
-      // Masses et dimensions
-      addText('MASSES ET DIMENSIONS', 50, yPosition, { bold: true, size: 14 });
+      // 🔧 FIX audit QA (D9 — source unique) : valeurs canoniques calculées UNE fois,
+      // réutilisées ici ET par "MASSE ET CENTRAGE" → plus de divergence possible.
+      const cEmptyWeight = fullAircraft.weights?.emptyWeight ?? fullAircraft.emptyWeight ?? null;
+      const cMtow = fullAircraft.weights?.mtow ?? fullAircraft.maxTakeoffWeight ?? null;
+      const cMlw = fullAircraft.weights?.mlw ?? null;
+      const cMzfw = fullAircraft.weights?.mzfw ?? fullAircraft.weights?.zfm ?? fullAircraft.maxZeroFuelWeight ?? null;
+      const cMtw = fullAircraft.weights?.mtw ?? fullAircraft.weights?.maxTaxiWeight ?? fullAircraft.maxTaxiWeight ?? fullAircraft.maxRampWeight ?? null;
+      const cFuelCapacity = fullAircraft.fuel?.maxCapacity ?? fullAircraft.fuelCapacity ?? null;
+      const cFuelDensity = getFuelDensity(fullAircraft.fuelType);
+
+      // Masses structurales (limites) — N/A explicite si absente (audit QA D3/D4/D10)
+      addText('MASSES STRUCTURALES (LIMITES)', 50, yPosition, { bold: true, size: 14 });
       yPosition -= 25;
 
-      const massInfo = [
-        ['Masse à vide', fullAircraft.emptyWeight ? `${fullAircraft.emptyWeight} kg` : null],
-        ['Masse max au décollage', fullAircraft.maxTakeoffWeight ? `${fullAircraft.maxTakeoffWeight} kg` : null],
-        ['Charge utile', fullAircraft.usefulLoad ? `${fullAircraft.usefulLoad} kg` : null],
-        ['Capacité carburant', fullAircraft.fuelCapacity ? `${fullAircraft.fuelCapacity} L` : null],
+      const massLimits = [
+        ['Masse max roulage (MTW)', cMtw, true],
+        ['Masse max décollage (MTOW)', cMtow, true],
+        ['Masse max atterrissage (MLW)', cMlw, true],
+        ['Masse max sans carburant (MZFW)', cMzfw, true],
+        ['Masse à vide équipée (OEW)', cEmptyWeight, true],
+        ['Charge utile', fullAircraft.usefulLoad, false],
+      ];
+
+      massLimits.forEach(([label, value, required]) => {
+        const hasValue = value !== undefined && value !== null && value !== '';
+        if (hasValue || required) {
+          checkNewPage();
+          addText(`${label}:`, 50, yPosition, { bold: true, size: 10 });
+          addText(hasValue ? `${value} kg` : 'N/A', 260, yPosition, { size: 10 });
+          yPosition -= 18;
+        }
+      });
+
+      yPosition -= 8;
+      checkNewPage(50);
+
+      // Dimensions & carburant (densité de référence — audit QA D5)
+      addText('DIMENSIONS & CARBURANT', 50, yPosition, { bold: true, size: 14 });
+      yPosition -= 25;
+
+      const dimsInfo = [
+        ['Capacité carburant totale', cFuelCapacity != null ? `${cFuelCapacity} L` : null],
+        ['Densité de référence', cFuelDensity != null ? `${cFuelDensity} kg/L${fullAircraft.fuelType ? ` (${fullAircraft.fuelType})` : ''}` : null],
         ['Envergure', fullAircraft.wingspan ? `${fullAircraft.wingspan} m` : null],
         ['Longueur', fullAircraft.length ? `${fullAircraft.length} m` : null],
       ];
 
-      massInfo.forEach(([label, value]) => {
+      dimsInfo.forEach(([label, value]) => {
         if (value) {
           checkNewPage();
           addText(`${label}:`, 50, yPosition, { bold: true });
-          addText(value, 200, yPosition);
+          addText(value, 260, yPosition);
           yPosition -= 20;
         }
       });
@@ -741,17 +786,13 @@ export const AircraftModule = memo(() => {
         addText('MASSE ET CENTRAGE', 50, yPosition, { bold: true, size: 14 });
         yPosition -= 25;
 
+        // 🔧 FIX audit QA (D9) : masses limites et capacité carburant RETIRÉES d'ici
+        // (déjà affichées une seule fois en sections "MASSES STRUCTURALES" / "DIMENSIONS").
+        // Cette section ne conserve que les données propres au CENTRAGE.
         const massBalanceInfo = [
-          // Masse à vide (trio masse / bras / moment)
-          ['Masse à vide', fullAircraft.weights?.emptyWeight, 'kg'],
           ['Bras à vide', fullAircraft.arms?.empty, 'mm'],
           ['Moment à vide', fullAircraft.moments?.empty, 'kg·mm'],
-          // Masses limites
-          ['MTOW', fullAircraft.weights?.mtow || fullAircraft.maxTakeoffWeight, 'kg'],
-          ['MLW', fullAircraft.weights?.mlw, 'kg'],
           ['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],
-          // Carburant total (somme des réservoirs ci-dessous)
-          ['Capacité totale carburant', fullAircraft.fuel?.maxCapacity || fullAircraft.fuelCapacity, 'L'],
           // Sièges (bras seul — moment dépend du passager au chargement)
           ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
           ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm']
@@ -815,10 +856,30 @@ export const AircraftModule = memo(() => {
           yPosition -= 5;
           checkNewPage(50);
           addText('Limites de centrage:', 50, yPosition, { bold: true, size: 11 });
-          yPosition -= 20;
+          yPosition -= 15;
+
+          // 🔧 FIX audit QA (D6) : conversion en %MAC si la corde MAC est renseignée (mm).
+          // %MAC = (bras − LEMAC) / corde MAC × 100. Tout en mm (repère des bras).
+          const macLength = Number(fullAircraft.cgEnvelope.macLength ?? fullAircraft.macLength) || null;
+          const lemac = Number(fullAircraft.cgEnvelope.lemac ?? fullAircraft.lemac);
+          const hasMac = macLength != null && macLength > 0 && Number.isFinite(lemac);
+          const pctMac = (cgMm) => {
+            const n = Number(cgMm);
+            if (!hasMac || !Number.isFinite(n)) return '';
+            return ` (${((n - lemac) / macLength * 100).toFixed(1)} %MAC)`;
+          };
+
+          addText(
+            hasMac
+              ? `(bras / station en mm — %MAC : corde ${macLength} mm, LEMAC ${lemac} mm)`
+              : '(bras / station en mm — %MAC indisponible : corde MAC non renseignee)',
+            70, yPosition, { size: 8, color: rgb(0.45, 0.45, 0.45) }
+          );
+          yPosition -= 18;
 
           if (fullAircraft.cgEnvelope.forwardPoints && fullAircraft.cgEnvelope.forwardPoints.length > 0) {
-            addText(`CG avant (min): ${fullAircraft.cgEnvelope.forwardPoints[0].cg} mm`, 70, yPosition, { size: 10 });
+            const fwd = fullAircraft.cgEnvelope.forwardPoints[0].cg;
+            addText(`CG avant (min): ${fwd} mm${pctMac(fwd)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
           // Arrière : 2 points indépendants (rétro-compat aftCG)
@@ -826,11 +887,11 @@ export const AircraftModule = memo(() => {
           const aftMinCG = fullAircraft.cgEnvelope.aftMinCG || legacyAftCG;
           const aftMaxCG = fullAircraft.cgEnvelope.aftMaxCG || legacyAftCG;
           if (aftMinCG) {
-            addText(`CG arrière à masse min (${fullAircraft.cgEnvelope.aftMinWeight || '?'} kg): ${aftMinCG} mm`, 70, yPosition, { size: 10 });
+            addText(`CG arrière à masse min (${fullAircraft.cgEnvelope.aftMinWeight || '?'} kg): ${aftMinCG} mm${pctMac(aftMinCG)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
           if (aftMaxCG && aftMaxCG !== aftMinCG) {
-            addText(`CG arrière à masse max (${fullAircraft.cgEnvelope.aftMaxWeight || '?'} kg): ${aftMaxCG} mm`, 70, yPosition, { size: 10 });
+            addText(`CG arrière à masse max (${fullAircraft.cgEnvelope.aftMaxWeight || '?'} kg): ${aftMaxCG} mm${pctMac(aftMaxCG)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
 
@@ -1113,6 +1174,18 @@ export const AircraftModule = memo(() => {
           yPosition -= 18;
         }
 
+        // Approbations spéciales RVSM / PBN / ETOPS (audit QA D7) — N/A explicite si absentes
+        checkNewPage(40);
+        const specialApprovals = [];
+        if (ops.rvsm) specialApprovals.push('RVSM');
+        if (ops.pbn) specialApprovals.push(typeof ops.pbn === 'string' ? `PBN (${ops.pbn})` : 'PBN');
+        if (ops.etops) specialApprovals.push(typeof ops.etops === 'string' ? `ETOPS (${ops.etops})` : 'ETOPS');
+        yPosition -= 4;
+        addText('Approbations spéciales (RVSM / PBN / ETOPS):', 50, yPosition, { bold: true, size: 11 });
+        yPosition -= 18;
+        addText(specialApprovals.length ? specialApprovals.join('  •  ') : 'Non renseignées', 70, yPosition, { size: 10 });
+        yPosition -= 18;
+
         yPosition -= 10;
       }
 
@@ -1176,22 +1249,23 @@ export const AircraftModule = memo(() => {
         });
       }
 
-      // Pied de page sur toutes les pages
+      // Pied de page sur toutes les pages (audit QA L3 : + horodatage UTC + immat.)
       const pages = pdfDoc.getPages();
+      const genUtcStamp = `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+      const genLocalStamp = `Généré le ${new Date().toLocaleString('fr-FR')}`;
       pages.forEach((p, index) => {
-        p.drawText(`Page ${index + 1}/${pages.length}`, {
-          x: width / 2 - 30,
-          y: 30,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0.5, 0.5, 0.5)
+        // Gauche : immatriculation + horodatage UTC
+        p.drawText(`${fullAircraft.registration || ''} — ${genUtcStamp}`, {
+          x: 50, y: 30, size: 8, font: helveticaFont, color: rgb(0.5, 0.5, 0.5)
         });
-        p.drawText(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, {
-          x: 50,
-          y: 30,
-          size: 8,
-          font: helveticaFont,
-          color: rgb(0.5, 0.5, 0.5)
+        // Centre : pagination
+        p.drawText(`Page ${index + 1}/${pages.length}`, {
+          x: width / 2 - 30, y: 30, size: 10, font: helveticaFont, color: rgb(0.5, 0.5, 0.5)
+        });
+        // Droite : horodatage local (aligné à droite via mesure de largeur)
+        const lw = helveticaFont.widthOfTextAtSize(genLocalStamp, 8);
+        p.drawText(genLocalStamp, {
+          x: width - 50 - lw, y: 30, size: 8, font: helveticaFont, color: rgb(0.5, 0.5, 0.5)
         });
       });
 
@@ -3420,7 +3494,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
     }
     
     // Valider que l'immatriculation n'a pas de caractères spéciaux problématiques
-    if (!/^[A-Za-z0-9\-]+$/.test(formData.registration)) {
+    if (!/^[A-Za-z0-9-]+$/.test(formData.registration)) {
       alert('L\'immatriculation ne peut contenir que des lettres, chiffres et tirets');
       return;
     }
