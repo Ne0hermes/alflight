@@ -1689,26 +1689,8 @@ export const AircraftModule = memo(() => {
         )}
       </div>
 
-      {/* ===== TOOLBAR : recherche ===== */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
-          gap: tokens.spacing[4],
-          marginBottom: tokens.spacing[7]
-        }}
-      >
-        <div style={{ flex: '1 1 320px', minWidth: 0 }}>
-          <CockpitTextField
-            label="RECHERCHE"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Immatriculation, modèle, aéroclub…"
-          />
-        </div>
-      </div>
+      {/* Barre « RECHERCHE » flotte retirée (demande pilote) — le filtre
+          searchQuery reste neutre (toujours vide ⇒ toute la flotte affichée). */}
 
       {/* ===== GRID DES AVIONS ===== */}
       <div
