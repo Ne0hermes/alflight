@@ -5,6 +5,21 @@ import { AuthProvider } from './core/contexts/AuthContext';
 import apiKeyManager from './utils/apiKeyManager';
 import { useOpenAIPStore } from './core/stores/openAIPStore';
 
+// 🔁 Auto-récupération après (re)déploiement : si un chunk lazy (import
+// dynamique) n'existe plus côté serveur — typiquement après un nouveau déploiement
+// alors que l'onglet tourne encore sur l'ancienne version (404 « Failed to fetch
+// dynamically imported module ») — Vite émet `vite:preloadError`. On recharge la
+// page UNE fois pour récupérer le build courant, au lieu de planter dans
+// l'ErrorBoundary. Le garde sessionStorage évite toute boucle de rechargement.
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', () => {
+    if (!sessionStorage.getItem('__vite_preload_reloaded')) {
+      sessionStorage.setItem('__vite_preload_reloaded', '1');
+      window.location.reload();
+    }
+  });
+}
+
 // Initialiser le gestionnaire de clés API au démarrage
 apiKeyManager.initialize();
 
