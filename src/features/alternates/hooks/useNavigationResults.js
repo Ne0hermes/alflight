@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { computeRegulatoryReserveMinutes } from '@core/flightType';
 
 /**
  * Hook pour calculer les résultats de navigation
@@ -40,21 +41,10 @@ export const useNavigationResults = () => {
     // Calculer le temps de vol
     const totalTime = Math.round((totalDistance / cruiseSpeed) * 60); // en minutes
     
-    // Calculer la réserve réglementaire
-    let regulationReserveMinutes = 30; // Base VFR jour
-    
-    if (flightType.period === 'nuit') {
-      regulationReserveMinutes = 45; // VFR nuit
-    }
-    
-    if (flightType.rules === 'IFR') {
-      regulationReserveMinutes += 15; // +15 min pour IFR
-    }
-    
-    if (flightType.category === 'local') {
-      // Pas de changement supplémentaire pour vol local
-    }
-    
+    // 🔒 SSOT : réserve réglementaire via le calculateur canonique unique
+    // (@core/flightType). Plus de règle 30/45/+15 dupliquée (conformité NCO.OP.125).
+    const regulationReserveMinutes = computeRegulatoryReserveMinutes(flightType);
+
     // Calculer le carburant (conso canonique définie plus haut, garantie non nulle)
     const flightFuelLiters = (totalTime / 60) * fuelConsumption;
     const regulationReserveLiters = (regulationReserveMinutes / 60) * fuelConsumption;

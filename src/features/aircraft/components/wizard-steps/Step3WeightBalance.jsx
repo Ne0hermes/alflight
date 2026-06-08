@@ -153,6 +153,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
   // État pour les points intermédiaires de l'enveloppe CG
   const [intermediatePoints, setIntermediatePoints] = useState(data.cgEnvelope?.intermediatePoints || []);
+  // 🔧 audit QA (D6) : corde MAC + LEMAC (mm) — optionnels, pour afficher le centrage en %MAC.
+  const [macLength, setMacLength] = useState(data.cgEnvelope?.macLength ?? '');
+  const [lemac, setLemac] = useState(data.cgEnvelope?.lemac ?? '');
   const [additionalSeats, setAdditionalSeats] = useState(data.additionalSeats || []);
   const [baggageCompartments, setBaggageCompartments] = useState(data.baggageCompartments && data.baggageCompartments.length > 0
       ? data.baggageCompartments
@@ -1746,6 +1749,46 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ width: '100%' }}>
+            {/* 🔧 audit QA (D6) : Corde MAC (optionnelle) — active l'affichage du centrage
+                en %MAC sur la fiche avion. Saisie en mm, même repère que les bras. */}
+            <Box sx={{ mb: 3, p: 2, border: '1px dashed', borderColor: 'divider', borderRadius: 'var(--radius-sm)' }}>
+              <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>
+                Corde MAC (optionnel — affiche le centrage en %MAC)
+              </Typography>
+              <Grid container spacing={1.5}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Longueur corde MAC (mm)"
+                    value={macLength}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setMacLength(v);
+                      updateData('cgEnvelope.macLength', v === '' ? null : parseFloat(v));
+                    }}
+                    helperText="Mean Aerodynamic Chord (MANEX)"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="LEMAC — bord d'attaque MAC (mm)"
+                    value={lemac}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setLemac(v);
+                      updateData('cgEnvelope.lemac', v === '' ? null : parseFloat(v));
+                    }}
+                    helperText="Station du bord d'attaque (même repère que les bras)"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
             {/* CG Avant (Most forward) - Liste de points */}
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', fontSize: 'var(--fs-body)' }}>

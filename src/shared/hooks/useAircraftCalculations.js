@@ -45,9 +45,10 @@ export const useAircraftCalculations = () => {
     lToGal: (liters) => liters * 0.264172,
     galToL: (gallons) => gallons * 3.78541,
     fuelToWeight: (liters) => {
-      if (!selectedAircraft) return 0;
-      const density = getFuelDensity(selectedAircraft.fuelType) ?? 0.72;
-      return liters * density;
+      // 🔒 P0 (densité) : null si type inconnu/absent — pas de masse inventée.
+      if (!selectedAircraft) return null;
+      const density = getFuelDensity(selectedAircraft.fuelType);
+      return density == null ? null : liters * density;
     }
   }), [selectedAircraft]);
   

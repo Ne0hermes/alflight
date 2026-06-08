@@ -433,7 +433,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // la cohérence des résultats produits par le résolveur en cascade.
 
   // Mass : calculations.totalWeight → emptyWeight → 1000 (PAS le MTOW comme avant)
-  const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000;
+  const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000; // fallback-ok : matrice de couverture (outil de DIAGNOSTIC, pas le bilan signé) ; cascade les vraies valeurs d'abord, 1000 seulement si AUCUNE masse
 
   // Mass atterrissage : SOURCE UNIQUE = module de centrage (scenarios.landing,
   // écrit dans flightPlan.weightBalance.landingWeight par Step6WeightBalance).
@@ -998,8 +998,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         </div>
       )}
 
-      {/* 🔧 DEBUG: Afficher les données brutes pour vérification */}
-      <PerformanceDataDebugger tables={loadedPerformanceTables} />
+      {/* 🔧 DEBUG (DEV uniquement — tree-shaké du bundle de production, PATTERN-10) */}
+      {import.meta.env.DEV && <PerformanceDataDebugger tables={loadedPerformanceTables} />}
     </div>
   );
 };

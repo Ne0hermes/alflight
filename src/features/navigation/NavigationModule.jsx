@@ -445,7 +445,9 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 <div style={sx.components.card.base}>
                   <h4 style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>Temps de vol</h4>
                   <p style={sx.combine(sx.text['2xl'], sx.text.bold, sx.text.primary)}>
-                    {Math.floor(navigationResults.totalTime / 60)}h{String(navigationResults.totalTime % 60).padStart(2, '0')}
+                    {navigationResults.totalTime != null
+                      ? `${Math.floor(navigationResults.totalTime / 60)}h${String(navigationResults.totalTime % 60).padStart(2, '0')}`
+                      : '—'}
                   </p>
                   <ValueWithUnit
                     value={selectedAircraft.cruiseSpeedKt}

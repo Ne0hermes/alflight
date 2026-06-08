@@ -188,9 +188,10 @@ export async function autoFixIndexedDB() {
   return true;
 }
 
-// Exposer globalement pour debug dans la console
-if (typeof window !== 'undefined') {
-  window.diagnoseIndexedDB = diagnoseIndexedDB;
+// 🔒 PATTERN-10 : outils de debug (dont deleteAndRecreateDB qui EFFACE la base)
+// exposés UNIQUEMENT en développement → tree-shakés du bundle de production.
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  window.diagnoseIndexedDB = diagnoseIndexedDB; // fallback-ok (DEV-only, retiré en prod)
   window.deleteAndRecreateDB = deleteAndRecreateDB;
   window.autoFixIndexedDB = autoFixIndexedDB;
 }

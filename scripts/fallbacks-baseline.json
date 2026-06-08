@@ -1,0 +1,12 @@
+[
+  "src/abac/curves/ui/PointEditor.tsx::P0-num-fallback::onChange={(e) => setFitOptions({ ...fitOptions, numPoints: parseInt(e.target.value) || 100 })}",
+  "src/abac/v2/AbacEditorDemoPage.jsx::P0-num-fallback::<Field label=\"X max\" value={xMax} onChange={(v) => setXMax(Number(v) || 100)} type=\"number\" />",
+  "src/abac/v2/AbacEditorDemoPage.jsx::P0-num-fallback::<Field label=\"Y max\" value={yMax} onChange={(v) => setYMax(Number(v) || 100)} type=\"number\" />",
+  "src/features/aircraft/AircraftModule.jsx::P0-num-fallback::const aftMaxWeight = fullAircraft.cgEnvelope.aftMaxWeight || fullAircraft.weights?.mtow || 1000;",
+  "src/features/alternates/hooks/useAlternateSelection.js::P0-phantom-data::loadedAirports = getMinimalAirports();",
+  "src/features/alternates/hooks/useAlternateSelection.js::P0-phantom-data::setAirports(getMinimalAirports());",
+  "src/features/fuel/FuelModule.jsx::P0-num-fallback::const reserveMinutes = navigationResults.regulationReserveMinutes || 30;",
+  "src/features/performance/services/unifiedPerformanceService.js::P0-num-fallback::mass_kg: data.conditions?.weight || 1000,",
+  "src/services/aixmAirspacesParser.js::P0-phantom-data::getDefaultAirspaces() {",
+  "src/services/aixmAirspacesParser.js::P0-phantom-data::return this.getDefaultAirspaces();"
+]
