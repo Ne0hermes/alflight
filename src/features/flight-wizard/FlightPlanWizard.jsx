@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Check, AlertTriangle } from 'lucide-react';
-import { theme } from '../../styles/theme';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
 // 🎨 Charte éditoriale ALFlight
 import { EditorialHeading, ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts';
+import { generalInfoToFlightType } from '@core/flightType';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
@@ -49,7 +49,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   const { setSelectedAircraft } = useAircraft();
   const aircraftList = aircraftSelectors.useAircraftList();
   const selectedAircraft = aircraftSelectors.useSelectedAircraft(); // Hook pour récupérer l'avion sélectionné
-  const { setWaypoints, waypoints, segmentAltitudes } = useNavigation();
+  const { setWaypoints, waypoints, segmentAltitudes, setFlightType } = useNavigation();
   const { setFobFuel, calculateTotal } = useFuel();
   const { setWeatherData } = useWeather();
   const navigationResults = useNavigationResults();
@@ -153,6 +153,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   // 🔧 NOUVEAU : Restaurer TOUS les contextes au montage depuis flightPlan
   useEffect(() => {
     console.log('🔄 [Wizard] Restauration complète des contextes depuis flightPlan...');
+
+    // 0️⃣ Amorcer la SOURCE UNIQUE « type de vol » (navigationStore.flightType,
+    // period/rules/category) depuis le plan de vol restauré. À partir d'ici, le
+    // store fait foi : Step1 le pilote et reflète la projection dans generalInfo,
+    // et la réserve réglementaire (bilan carburant) en dérive — quel que soit
+    // l'étape d'entrée dans le wizard.
+    setFlightType(generalInfoToFlightType(flightPlan.generalInfo));
 
     // 1️⃣ Restaurer Navigation (waypoints complets : départ + intermédiaires + arrivée)
     if (flightPlan.route?.departure?.icao || flightPlan.route?.arrival?.icao || flightPlan.route?.waypoints?.length > 0) {
@@ -457,6 +464,15 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       if (shouldGeneratePdf) {
         console.log('📄 [Wizard] Génération et sauvegarde PDF...');
 
+        // 🎨 FIX CONTRASTE (audit QA) : le PDF est une capture html2canvas du DOM écran,
+        // qui ignore @media print. Le thème par défaut est sombre → texte clair sur fond
+        // noir, illisible/vorace en encre en cockpit. On force le mode jour le temps de la
+        // capture, puis on restaure dans le finally.
+        const prevTheme = document.documentElement.getAttribute('data-theme');
+        document.documentElement.setAttribute('data-theme', 'day-cockpit');
+        // Laisser le navigateur recalculer les variables CSS avant la capture.
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
         try {
           // Trouver l'élément contenant le Step7Summary (tout le contenu à imprimer)
           const element = document.getElementById('flight-plan-summary');
@@ -467,28 +483,87 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             return;
           }
 
+          // 🔢 Réserver le numéro de vol (VP-YYYY-NNNN) AVANT la génération du PDF afin de
+          // pouvoir l'imprimer sur le document (audit QA D1). Best-effort : null si indispo.
+          const reservedFlightNumber = await validatedPdfService.getNextFlightNumber();
+          console.log('🔢 [Wizard] Numéro de vol réservé:', reservedFlightNumber || '(auto à l\'insertion)');
+
+          // Identifiant de vol pour l'en-tête/pied de page (audit QA P1/D1/D2)
+          const gi = flightPlan.generalInfo || {};
+          const flightIdLabel = [
+            reservedFlightNumber,
+            gi.callsign,
+            flightPlan.aircraft?.registration,
+            gi.date ? new Date(gi.date).toLocaleDateString('fr-FR') : null
+          ].filter(Boolean).join(' · ') || 'Plan de vol';
+
           // Options de génération PDF
           const opt = {
-            margin: [10, 10, 10, 10],
+            margin: [12, 10, 14, 10], // marge basse augmentée pour le pied de page
             filename: `plan-de-vol-${flightPlan.aircraft.registration || 'unknown'}-${new Date().toISOString().split('T')[0]}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
               scale: 2,
               useCORS: true,
-              logging: false
+              logging: false,
+              // 🖊️ FIX (audit QA D3/P6) : html2canvas ne capture pas la valeur des
+              // <input>/<textarea> (EOBT, taux de descente, notes pilote). On les remplace
+              // par du texte statique dans le clone. On retire aussi les éléments écran-seul.
+              onclone: (clonedDoc) => {
+                try {
+                  clonedDoc.querySelectorAll('.weight-balance-alert').forEach((el) => el.remove());
+                  clonedDoc.querySelectorAll('input, textarea').forEach((el) => {
+                    const span = clonedDoc.createElement('span');
+                    const isTime = el.getAttribute('type') === 'time';
+                    span.textContent = el.value || (isTime ? '—:—' : (el.getAttribute('placeholder') || '—'));
+                    // Styles inline déjà présents sur ces champs (recap) ; fallback sûr sinon.
+                    const fs = el.style.fontSize || '9px';
+                    const fw = el.style.fontWeight || '600';
+                    span.style.cssText = `display:inline-block;font-size:${fs};font-weight:${fw};color:#111827;white-space:pre-wrap;`;
+                    if (el.parentNode) el.parentNode.replaceChild(span, el);
+                  });
+                } catch (e) {
+                  console.warn('⚠️ [Wizard] onclone (champs→texte) échoué:', e);
+                }
+              }
             },
             jsPDF: {
               unit: 'mm',
               format: 'a4',
               orientation: 'portrait'
-            }
+            },
+            pagebreak: { mode: ['css', 'legacy'] }
           };
 
-          // Générer le PDF et obtenir le blob
-          const rawBlob = await html2pdf()
-            .from(element)
-            .set(opt)
-            .outputPdf('blob');
+          // Worker html2pdf : on rend le PDF, puis on ajoute l'en-tête/pied sur chaque page
+          // (Page X/Y + horodatage UTC + identifiant de vol) — exigence audit QA P1.
+          const worker = html2pdf().set(opt).from(element).toPdf();
+          const pdf = await worker.get('pdf');
+
+          const totalPages = pdf.internal.getNumberOfPages();
+          const pw = pdf.internal.pageSize.getWidth();
+          const ph = pdf.internal.pageSize.getHeight();
+          const genUtc = `${new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+
+          for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(7);
+            pdf.setTextColor(110);
+            pdf.text(flightIdLabel, 10, ph - 5);                              // pied gauche : ID vol
+            pdf.text(`Page ${i} / ${totalPages}`, pw / 2, ph - 5, { align: 'center' }); // centre : pagination
+            pdf.text(genUtc, pw - 10, ph - 5, { align: 'right' });           // droite : génération UTC
+          }
+
+          // En-tête page 1 : numéro de vol bien visible (audit QA D1 — hiérarchie)
+          if (reservedFlightNumber) {
+            pdf.setPage(1);
+            pdf.setFontSize(9);
+            pdf.setTextColor(40);
+            pdf.text(`N° de vol : ${reservedFlightNumber}`, pw - 10, 8, { align: 'right' });
+          }
+
+          // Obtenir le blob du PDF annoté
+          const rawBlob = await worker.output('blob');
 
           // Convertir le Blob en File avec un nom valide
           const pdfBlob = new File([rawBlob], opt.filename, { type: 'application/pdf' });
@@ -526,6 +601,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
           const pdfMetadata = {
             flightPlanId: supabaseResult.data?.id || null,
+            // Numéro réservé et imprimé sur le PDF → stocké tel quel (audit QA D1)
+            flightNumber: reservedFlightNumber,
             pilotName: flightPlan.generalInfo.pilotName || flightPlan.generalInfo.callsign || 'Pilote inconnu',
             flightDate: flightPlan.generalInfo.date || new Date().toISOString().split('T')[0],
             callsign: flightPlan.generalInfo.callsign,
@@ -564,6 +641,13 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         } catch (error) {
           console.error('❌ [Wizard] Erreur génération/sauvegarde PDF:', error);
           alert('❌ Erreur lors de la génération du PDF: ' + error.message);
+        } finally {
+          // 🎨 Restaurer le thème initial après la capture (audit QA P2)
+          if (prevTheme) {
+            document.documentElement.setAttribute('data-theme', prevTheme);
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
         }
       }
 

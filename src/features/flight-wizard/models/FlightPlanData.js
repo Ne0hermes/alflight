@@ -1,3 +1,5 @@
+import { computeRegulatoryReserveMinutes, generalInfoToFlightType } from '@core/flightType';
+
 /**
  * Modèle de données pour le plan de vol
  * Contient toutes les informations collectées pendant le wizard
@@ -195,9 +197,10 @@ export class FlightPlanData {
         this.fuel.alternate = Math.ceil(alternateTime * fuelConsumption * 1.1);
       }
 
-      // Réserve réglementaire (30 min VFR, 45 min IFR)
-      const reserveTime = this.generalInfo.flightType === 'VFR' ? 0.5 : 0.75;
-      this.fuel.reserve = Math.ceil(reserveTime * fuelConsumption);
+      // Réserve réglementaire via le calculateur canonique unique (@core/flightType) —
+      // tient compte du jour/nuit/IFR (l'ancien « VFR?0.5:0.75 » ignorait la nuit).
+      const reserveMinutes = computeRegulatoryReserveMinutes(generalInfoToFlightType(this.generalInfo));
+      this.fuel.reserve = Math.ceil((reserveMinutes / 60) * fuelConsumption);
 
       // Contingence (5% du trajet)
       this.fuel.contingency = Math.ceil(this.fuel.cruise * 0.05);

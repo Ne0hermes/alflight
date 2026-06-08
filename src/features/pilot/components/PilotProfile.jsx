@@ -10,6 +10,7 @@ import { exportPilotData, importData, loadFullPilotProfile, savePilotProfile } f
 import ImageEditor from '../../../components/ImageEditor';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
+import AeroclubAutocomplete from '../../aircraft/components/AeroclubAutocomplete';
 import {
   addCompleteTestData,
   verifyCompleteProfile,
@@ -221,8 +222,10 @@ const PilotProfile = () => {
     detectMostUsedAircraft();
 
     // Ajouter les fonctions de test au window pour faciliter les tests
-    if (typeof window !== 'undefined') {
-      window.testExportImport = {
+    // 🔒 PATTERN-10 : outils de test (données PII « Jean Dupont ») exposés
+    // UNIQUEMENT en développement → tree-shakés du bundle de production.
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      window.testExportImport = { // fallback-ok (DEV-only, retiré en prod)
         addCompleteTestData,
         verifyCompleteProfile,
         clearAllProfileData,
@@ -1051,14 +1054,23 @@ const PilotProfile = () => {
             />
           </div>
 
+          {/* Aéroclub / École — même liste déroulante que la création avion
+              (catalogue FFA statique + ajouts perso partagés via localStorage).
+              Sélectionner un club dont l'OACI est connu pré-remplit la base
+              d'attache si elle est encore vide. Un club ajouté ici devient
+              aussi disponible dans la fiche avion, et inversement. */}
           <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Club / École</label>
-            <input
-              type="text"
+            <label style={labelStyle}>Aéroclub / École</label>
+            <AeroclubAutocomplete
               value={profile.clubSchool || ''}
-              onChange={(e) => handleChange('clubSchool', e.target.value)}
-              placeholder="Nom du club ou de l'école"
-              style={inputStyle}
+              onChange={(newName) => handleChange('clubSchool', newName || '')}
+              onSelectIcao={(icao) => {
+                if (icao && !profile.homeBase) {
+                  handleChange('homeBase', icao.toUpperCase());
+                }
+              }}
+              label=""
+              helperText=""
             />
           </div>
         </div>

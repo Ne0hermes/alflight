@@ -187,3 +187,31 @@ describe('weightBalanceStore — Item L : garde-fou m/mm sur les bras', () => {
     expect(r.cg).toBe(2.132); // identique : le garde-fou ne touche pas les bras déjà en m
   });
 });
+
+// ── P0 (densité) — type carburant inconnu ⇒ masse carburant non calculable ──
+// getFuelDensity renvoie null si le type est inconnu/absent. Le « ?? 0.84 »
+// (recours conservateur temporaire) est retiré : densité absente + carburant
+// chargé en LITRES ⇒ bilan fail-closed, jamais un faux « dans les limites ».
+describe('weightBalanceStore — P0 densité : type carburant inconnu (fail-closed)', () => {
+  it('fuelType inconnu + FOB en litres → fuelDensityMissing + isWithinLimits=false + warning', () => {
+    const unknownFuel = { ...AIRCRAFT, fuelType: 'CARBURANT_BIDON_XYZ' };
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 80, frontRight: 80, rearLeft: 0, rearRight: 0, baggage: 10, auxiliary: 0, fuel: 0,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(unknownFuel, { ltr: 80 });
+    expect(r).not.toBeNull();
+    expect(r.fuelDensityMissing).toBe(true);
+    expect(r.isWithinLimits).toBe(false); // fail-closed : jamais un faux « OK »
+    expect(r.warnings.join(' ')).toMatch(/[Dd]ensité/);
+  });
+
+  it('fuelType connu (AVGAS 100LL) + FOB en litres → densité réelle, pas de flag', () => {
+    useWeightBalanceStore.getState().setLoads({
+      frontLeft: 80, frontRight: 80, rearLeft: 0, rearRight: 0, baggage: 10, auxiliary: 0, fuel: 0,
+    });
+    const r = useWeightBalanceStore.getState().calculateWeightBalance(AIRCRAFT, { ltr: 80 });
+    expect(r).not.toBeNull();
+    expect(r.fuelDensityMissing).toBe(false);
+    expect(r.totalWeight).toBeGreaterThan(870); // 700+80+80+10 + 80 L × densité AVGAS
+  });
+});

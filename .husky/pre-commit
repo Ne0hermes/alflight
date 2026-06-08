@@ -3,3 +3,8 @@
 # fontFamily) sur les fichiers en cours de commit. Legacy non vérifié (boy-scout).
 # Exception ponctuelle : // eslint-disable-next-line no-restricted-syntax
 npm run lint:tokens:staged
+
+# Garde-fou fallbacks/hard-coding — bloque les NOUVELLES occurrences (secrets en
+# clair, fallbacks numériques métier, données aéro fictives, hooks debug) hors
+# baseline figée (scripts/fallbacks-baseline.json). Exception : // fallback-ok
+npm run lint:fallbacks:staged

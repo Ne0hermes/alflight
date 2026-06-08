@@ -3,6 +3,8 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { computeRegulatoryReserveMinutes, DEFAULT_FLIGHT_TYPE } from '@core/flightType';
 
 // Fonction de calcul des résultats de navigation
 const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => {
@@ -47,24 +49,29 @@ const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => 
     });
   }
 
-  const cruiseSpeed = selectedAircraft.cruiseSpeedKt || selectedAircraft.cruiseSpeed || 100;
-  const totalTime = totalDistance > 0 ? Math.round((totalDistance / cruiseSpeed) * 60) : 0;
-  const fuelConsumption = selectedAircraft.fuelConsumption || 30;
-  const fuelRequired = totalTime > 0 ? (totalTime / 60) * fuelConsumption : 0;
+  // 🔒 P0 : vitesse/conso via les helpers canoniques (null si absentes du profil
+  // avion). On NE fabrique plus 100 kt / 30 L/h. Donnée manquante ⇒ temps /
+  // carburant = null (consommateurs fail-closed : useFuelSync n'écrit pas de trip
+  // fuel ; l'UI affiche « — »). cf. utils/aircraftPerf (testé).
+  const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
+  const totalTime = (cruiseSpeed && totalDistance > 0) ? Math.round((totalDistance / cruiseSpeed) * 60) : null;
+  const fuelConsumption = getFuelConsumptionLph(selectedAircraft);
+  const fuelRequired = (fuelConsumption != null && totalTime != null) ? (totalTime / 60) * fuelConsumption : null;
 
-  let regulationReserveMinutes = 30;
-  if (flightType.period === 'nuit') regulationReserveMinutes = 45;
-  if (flightType.rules === 'IFR') regulationReserveMinutes += 15;
-  if (flightType.category === 'local' && flightType.period === 'jour') regulationReserveMinutes = 20;
+  // 🔒 SSOT : réserve réglementaire via le calculateur canonique unique
+  // (@core/flightType). Plus de règle 30/45/+15 dupliquée ici. Conformité
+  // EASA NCO.OP.125 (le vol local ne réduit pas le minimum VFR jour).
+  const regulationReserveMinutes = computeRegulatoryReserveMinutes(flightType);
 
-  const regulationReserveLiters = (regulationReserveMinutes / 60) * fuelConsumption;
+  const regulationReserveLiters = fuelConsumption != null ? (regulationReserveMinutes / 60) * fuelConsumption : null;
 
   return {
     totalDistance: Math.round(totalDistance * 10) / 10,
     totalTime,
-    fuelRequired: Math.round(fuelRequired * 10) / 10,
+    // null préservé (pas de Math.round(null)→0 qui maquillerait l'absence).
+    fuelRequired: fuelRequired != null ? Math.round(fuelRequired * 10) / 10 : null,
     regulationReserveMinutes,
-    regulationReserveLiters: Math.round(regulationReserveLiters * 10) / 10,
+    regulationReserveLiters: regulationReserveLiters != null ? Math.round(regulationReserveLiters * 10) / 10 : null,
     cruiseSpeed,
     fuelConsumption,
     legs
@@ -81,11 +88,9 @@ export const useNavigationStore = create(
         { id: 2, name: '', lat: null, lon: null, type: 'arrival' }
       ],
       
-      flightType: {
-        period: 'jour',
-        rules: 'VFR',
-        category: 'navigation'
-      },
+      // Source unique « type de vol » (cf. @core/flightType). Le sélecteur du
+      // wizard (Step1) et celui de NavigationModule écrivent tous deux ici.
+      flightType: { ...DEFAULT_FLIGHT_TYPE },
       
       flightParams: {
         altitude: 3000,
