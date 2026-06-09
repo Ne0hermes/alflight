@@ -625,8 +625,15 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
 
     } catch (error) {
-      console.error('❌ Erreur lors de la mise à jour Supabase:', error);
-      setUpdateError(error.message || 'Erreur lors de la mise à jour');
+      // Avion non possédé : la RLS refuse l'UPDATE direct. Ce n'est PAS une vraie
+      // erreur — le store (updateAircraft/addAircraft) crée une copie possédée et
+      // y rattache le MANEX (upload + manex_file_id). On évite donc l'alerte.
+      if (error?.code === 'UPDATE_NO_ROWS') {
+        console.warn('ℹ️ [Step5Review] UPDATE non possédé — le MANEX sera rattaché à la copie possédée par le store.');
+      } else {
+        console.error('❌ Erreur lors de la mise à jour Supabase:', error);
+        setUpdateError(error.message || 'Erreur lors de la mise à jour');
+      }
       setIsUpdatingSupabase(false);
     }
   };
