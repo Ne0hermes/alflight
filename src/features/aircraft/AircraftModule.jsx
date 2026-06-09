@@ -1659,16 +1659,14 @@ export const AircraftModule = memo(() => {
           forcePopupIcon={false}
           sx={{
             mb: 2,
-            maxWidth: 420,
+            width: '100%',
             '& .MuiAutocomplete-endAdornment': { right: '8px', top: '50%', transform: 'translateY(-50%)' },
             '& .MuiAutocomplete-popupIndicator': {
               padding: '4px', width: '28px', height: '28px',
               '& .MuiSvgIcon-root': { fontSize: 'var(--fs-title)' },
               '& .MuiTouchRipple-root': { width: '28px', height: '28px' },
             },
-            '& .MuiAutocomplete-listbox': { maxWidth: '400px' },
           }}
-          ListboxProps={{ style: { maxWidth: '400px' } }}
           renderInput={(params) => (
             <TextField
               {...params}
