@@ -4,31 +4,21 @@ import MobileApp from './MobileApp.jsx';
 import { AuthProvider } from './core/contexts/AuthContext';
 import apiKeyManager from './utils/apiKeyManager';
 import { useOpenAIPStore } from './core/stores/openAIPStore';
+import { recoverFromStaleChunks } from './utils/staleChunkReload';
 
 // 🔁 Auto-récupération après (re)déploiement : si un chunk lazy (import
 // dynamique) n'existe plus côté serveur — typiquement après un nouveau déploiement
 // alors que l'onglet tourne encore sur l'ancienne version (404 « Failed to fetch
-// dynamically imported module ») — Vite émet `vite:preloadError`. On recharge la
-// page UNE fois pour récupérer le build courant, au lieu de planter dans
-// l'ErrorBoundary. Le garde sessionStorage évite toute boucle de rechargement.
+// dynamically imported module ») — Vite émet `vite:preloadError`. On PURGE le
+// service worker + les caches puis on recharge pour récupérer le build courant
+// (cf. staleChunkReload : garde anti-boucle fenêtrée, partagée avec l'ErrorBoundary).
+//
+// `preventDefault()` empêche Vite de relancer l'erreur → elle n'atteint plus
+// l'ErrorBoundary (qui reste néanmoins un filet de secours si ce handler manque).
 if (typeof window !== 'undefined') {
-  window.addEventListener('vite:preloadError', async () => {
-    if (sessionStorage.getItem('__vite_preload_reloaded')) return;
-    sessionStorage.setItem('__vite_preload_reloaded', '1');
-    // Un simple reload retombe sur le service worker PWA, qui peut servir un shell
-    // PÉRIMÉ référençant des chunks supprimés par le redéploiement → la 404 revient.
-    // On PURGE donc le SW + les caches AVANT de recharger, pour forcer le build courant.
-    try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
-      }
-      if (window.caches?.keys) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-    } catch { /* best-effort */ }
-    window.location.reload();
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault?.();
+    recoverFromStaleChunks();
   });
 }
 
