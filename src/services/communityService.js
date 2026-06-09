@@ -426,14 +426,18 @@ class CommunityService {
       
       let manexFileId = null;
 
-      // 3. Uploader le MANEX si fourni
+      // 3. Uploader le MANEX si fourni — chemin STABLE par immatriculation.
+      // UN seul fichier par avion, écrasé via upsert → plus de dossiers en double
+      // (modèle vs immat) ni d'accumulation horodatée.
       if (manexFile) {
-        const filePath = `${presetData.model}/${Date.now()}_${manexFile.name}`;
+        const reg = presetData.registration || 'aircraft';
+        const fileName = `${reg} - manex.pdf`;
+        const filePath = `${reg}/${fileName}`;
 
-        // Upload vers Supabase Storage
+        // Upload vers Supabase Storage (upsert → écrase le fichier existant)
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('manex-files')
-          .upload(filePath, manexFile);
+          .upload(filePath, manexFile, { cacheControl: '3600', upsert: true });
 
         if (uploadError) throw uploadError;
 
@@ -441,7 +445,7 @@ class CommunityService {
         const { data: fileData, error: fileError } = await supabase
           .from('manex_files')
           .insert({
-            filename: manexFile.name,
+            filename: fileName,
             file_path: filePath,
             file_size: manexFile.size,
             uploaded_by: userId,
@@ -692,13 +696,14 @@ class CommunityService {
       
       let manexFileId = null;
 
-      // 1. Uploader le nouveau MANEX si fourni
+      // 1. Uploader le nouveau MANEX si fourni — chemin STABLE par immatriculation
+      // (UN seul fichier par avion, écrasé via upsert).
       if (manexFile) {
-        // Utiliser le nom fourni ou un nom par défaut
-        const fileName = manexFileName || `${updatedData.registration || 'aircraft'} - manex.pdf`;
-        const filePath = `${updatedData.model}/${Date.now()}_${fileName}`;
+        const reg = updatedData.registration || 'aircraft';
+        const fileName = manexFileName || `${reg} - manex.pdf`;
+        const filePath = `${reg}/${reg} - manex.pdf`;
 
-        // Upload vers Supabase Storage
+        // Upload vers Supabase Storage (upsert → écrase le fichier existant)
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('manex-files')
           .upload(filePath, manexFile, {
@@ -864,8 +869,9 @@ class CommunityService {
     //    réutilise son lien manex_file_id pour ne pas le perdre au clonage.
     let manexFileId = null;
     if (manexFile) {
-      const fileName = manexFileName || `${updatedData.registration || 'aircraft'} - manex.pdf`;
-      const filePath = `${updatedData.model || updatedData.registration || 'aircraft'}/${Date.now()}_${fileName}`;
+      const reg = updatedData.registration || 'aircraft';
+      const fileName = manexFileName || `${reg} - manex.pdf`;
+      const filePath = `${reg}/${reg} - manex.pdf`; // chemin STABLE par immatriculation
       const { error: uploadError } = await supabase.storage
         .from('manex-files')
         .upload(filePath, manexFile, { cacheControl: '3600', upsert: true });
@@ -1003,7 +1009,10 @@ class CommunityService {
       keep: keep.map(r => ({ id: r.id, registration: r.registration }))
     };
 
-    if (dryRun || toDelete.length === 0) return summary;
+    if (dryRun || toDelete.length === 0) {
+      if (!dryRun) summary.deleted = 0;
+      return summary;
+    }
 
     const ids = toDelete.map(r => r.id);
     const { data: deleted, error: delErr } = await supabase

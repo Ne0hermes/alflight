@@ -692,24 +692,12 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Fonction fusionnée : Sauvegarder localement ET uploader sur Supabase
   const handleSaveAndUpload = async () => {
-    // Tentative d'upload du MANEX vers la base communautaire si présent.
-    // Ces opérations sont FAIL-SOFT : leur échec n'empêche pas la sauvegarde locale.
-    if (data.manex && (data.manex.file || data.manex.pdfData)) {
-      try {
-        if (data.isImportedFromCommunity && data.communityPresetId) {
-          await handleUpdateSupabase();
-        } else {
-          await handleUploadManexToSupabase();
-        }
-      } catch (uploadErr) {
-        // Filet de sécurité supplémentaire : même si handleXxx ne fail-soft pas
-        // proprement, on ne casse pas la sauvegarde locale.
-        console.warn('⚠️ Upload Supabase global échoué (non bloquant) :', uploadErr?.message || uploadErr);
-      }
-    }
-
-    // TOUJOURS sauvegarder localement et naviguer vers le module aircraft,
-    // quel que soit le résultat de l'upload Supabase.
+    // 🔧 MANEX : l'upload est désormais géré UNE SEULE FOIS par le store
+    // (addAircraft/updateAircraft → submitPreset/updateCommunityPreset) vers un
+    // chemin STABLE par immatriculation (un seul dossier `<immat>/`, un seul
+    // fichier `<immat> - manex.pdf`, écrasé via upsert). On NE fait plus d'upload
+    // séparé ici — c'était la cause des 2 dossiers (modèle vs immat) + du fichier
+    // horodaté en double.
     handleLocalSave();
   };
 

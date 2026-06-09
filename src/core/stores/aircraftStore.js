@@ -156,22 +156,8 @@ export const useAircraftStore = create(
             hasWeighingReport: false
           };
 
-          console.log('🔍 [AircraftStore] Preset:', {
-            registration: preset.registration,
-            'preset.hasManex': preset.hasManex,
-            'aircraft.hasManex': aircraft.hasManex
-          });
-
           // 🔧 FIX: Mapper weights.emptyWeight → emptyWeight pour les anciens avions
           // Les avions créés avant la correction ont weights.emptyWeight mais pas emptyWeight
-          console.log(`🔍 [AircraftStore] Checking ${aircraft.registration}:`, {
-            hasEmptyWeight: !!aircraft.emptyWeight,
-            emptyWeight: aircraft.emptyWeight,
-            hasWeights: !!aircraft.weights,
-            weightsEmptyWeight: aircraft.weights?.emptyWeight,
-            weightsKeys: aircraft.weights ? Object.keys(aircraft.weights) : 'NO WEIGHTS'
-          });
-
           if (!aircraft.emptyWeight && aircraft.weights?.emptyWeight) {
             aircraft.emptyWeight = parseFloat(aircraft.weights.emptyWeight);
             console.log(`✅ [AircraftStore] Mapped weights.emptyWeight → emptyWeight for ${aircraft.registration}: ${aircraft.emptyWeight} kg`);
@@ -215,13 +201,10 @@ export const useAircraftStore = create(
             processedAircraft._metadata = { ...aircraft._metadata, units: canonicalUnits };
           }
 
-          // Valider et réparer
-          const validated = validateAndRepairAircraft(processedAircraft);
-
-          console.log('✅ [AircraftStore] Validated:', {
-            registration: validated.registration,
-            'validated.hasManex': validated.hasManex
-          });
+          // Valider et réparer. quiet:true → ce sont des SQUELETTES de liste (sans
+          // aircraft_data) ; on évite le mur d'avertissements « M&C indisponibles »
+          // (normaux ici : les vraies données arrivent à l'ouverture de l'avion).
+          const validated = validateAndRepairAircraft(processedAircraft, { quiet: true });
 
           return validated;
         });
@@ -690,20 +673,15 @@ export const useAircraftStore = create(
         });
 
         
-        // 2. Supprimer de Supabase (RLS "Owner delete" : seules TES lignes partent).
-        // Sans ça, un avion supprimé localement réapparaissait au prochain reload
-        // (la ligne cloud subsistait). Une ligne NON possédée (communautaire) n'est
-        // pas supprimable → elle reste, c'est attendu (tu ne supprimes que TA copie).
-        try {
-          const deleted = await communityService.deletePreset(id);
-          if (!deleted || deleted.length === 0) {
-            console.warn('[AircraftStore] deleteAircraft — aucune ligne Supabase supprimée (non possédée / déjà absente) pour', id);
-          } else {
-            console.log('🗑️ [AircraftStore] Ligne Supabase supprimée:', id);
-          }
-        } catch (error) {
-          console.warn('[AircraftStore] deleteAircraft — suppression Supabase ignorée (non bloquante):', error?.message);
-        }
+        // 2. ❌ NE PAS supprimer de Supabase — SUPPRESSION LOCALE UNIQUEMENT.
+        // Choix prototype (demande explicite) : le bouton « Supprimer » retire
+        // l'avion de la liste locale (+ cache IndexedDB ci-dessous) mais CONSERVE
+        // la fiche dans Supabase. Donc un avion retiré revient au prochain
+        // rechargement / réimport → IMPOSSIBLE de perdre des données cloud par ce
+        // bouton (c'était la cause de la perte des 4 avions).
+        // → Pour supprimer DÉFINITIVEMENT du cloud : le faire depuis le dashboard
+        //   Supabase (ou via une action dédiée explicite si on en ajoute une plus tard).
+        console.log('🗑️ [AircraftStore] Suppression LOCALE uniquement — fiche Supabase conservée:', id);
 
         // 3. Supprimer les données volumineuses d'IndexedDB (photo, manex)
         try {
@@ -879,6 +857,93 @@ export const cleanupOwnedAircraftDuplicates = async ({ execute = false } = {}) =
 if (typeof window !== 'undefined') {
   window.alflightCleanupDuplicates = cleanupOwnedAircraftDuplicates;
   console.log('🧹 [AircraftStore] window.alflightCleanupDuplicates() prêt — aperçu par défaut, {execute:true} pour supprimer');
+}
+
+// 🔎 DIAGNOSTIC : que reste-t-il dans Supabase vs IndexedDB vs backups ?
+// Usage : await window.alflightDiagnose()
+export const alflightDiagnose = async () => {
+  const dbm = await import('@utils/dataBackupManager').then(m => m.default);
+  let supa = [];
+  try { supa = await communityService.getAllPresets(); } catch (e) { console.warn('[Diagnose] getAllPresets:', e?.message); }
+  let idb = [];
+  try { idb = (await dbm.getAllFromStore('aircraftData')) || []; } catch (e) { console.warn('[Diagnose] IndexedDB:', e?.message); }
+  let backups = [];
+  try { backups = (await dbm.getAllBackups()) || []; } catch (_) { /* pas de backups */ }
+
+  const supaRegs = supa.map(p => p.registration);
+  const supaUpper = supaRegs.map(x => (x || '').toUpperCase());
+  const idbRows = idb.map(a => ({
+    reg: a.registration, id: a.id,
+    hasArms: !!(a.arms || a.weightBalance),
+    hasWeights: !!(a.emptyWeight || a.weights?.emptyWeight),
+    hasManex: !!a.manex,
+    lastModified: a.lastModified
+  }));
+  const missing = [...new Set(idbRows
+    .filter(r => r.reg && !supaUpper.includes((r.reg || '').toUpperCase()))
+    .map(r => r.reg))];
+
+  console.log(`🔎 [Diagnose] SUPABASE (${supa.length}) :`, supaRegs);
+  console.log(`🔎 [Diagnose] INDEXEDDB (${idb.length}) :`);
+  console.table(idbRows);
+  console.log(`🔎 [Diagnose] BACKUPS (auto/manuels) : ${backups.length}`);
+  console.log('🔎 [Diagnose] En IndexedDB mais ABSENTS de Supabase (récupérables) :', missing);
+  return { supabase: supaRegs, supabaseCount: supa.length, indexedDB: idbRows, indexedDBCount: idb.length, backupsCount: backups.length, missingFromSupabase: missing };
+};
+
+// 🛟 RÉCUPÉRATION : ré-uploade vers Supabase les avions présents en IndexedDB
+// mais ABSENTS de Supabase (1 par immat, le plus complet/récent). Aperçu par défaut.
+// Usage : await window.alflightRestoreAircraft()  puis  ({ execute: true })
+export const alflightRestoreAircraft = async ({ execute = false } = {}) => {
+  const dbm = await import('@utils/dataBackupManager').then(m => m.default);
+  const userId = await getCurrentUserId();
+  let supa = [];
+  try { supa = await communityService.getAllPresets(); } catch (_) { /* vide */ }
+  const supaRegs = new Set(supa.map(p => (p.registration || '').toUpperCase()));
+  let idb = [];
+  try { idb = (await dbm.getAllFromStore('aircraftData')) || []; } catch (_) { /* vide */ }
+
+  const cand = idb.filter(a => a.registration && !supaRegs.has(a.registration.toUpperCase()));
+  // 1 par immat : le plus complet (arms/weights) puis le plus récent
+  const score = (a) => (a.arms || a.weightBalance ? 2 : 0) + (a.emptyWeight || a.weights?.emptyWeight ? 1 : 0);
+  const byReg = new Map();
+  for (const a of cand) {
+    const k = a.registration.toUpperCase();
+    const cur = byReg.get(k);
+    if (!cur) { byReg.set(k, a); continue; }
+    const better = score(a) > score(cur) ||
+      (score(a) === score(cur) && new Date(a.lastModified || 0) > new Date(cur.lastModified || 0));
+    if (better) byReg.set(k, a);
+  }
+  const toRestore = [...byReg.values()];
+  const summary = { execute, toRestore: toRestore.map(a => a.registration), count: toRestore.length };
+  if (!execute || toRestore.length === 0) {
+    console.log('🛟 [Restore] APERÇU (relance avec { execute: true } pour ré-uploader) :', summary);
+    return summary;
+  }
+
+  const restored = [];
+  for (const a of toRestore) {
+    try {
+      const manex = (a.manex && (a.manex.pdfData || a.manex.file)) ? await resolveManexFile(a) : null;
+      const r = await communityService.submitPreset(
+        { ...a, aircraft_data: a, aircraftType: a.aircraftType || a.type },
+        manex?.blob || null,
+        userId
+      );
+      restored.push({ reg: a.registration, id: r?.id });
+    } catch (e) { console.warn('🛟 [Restore] échec', a.registration, e?.message); }
+  }
+  summary.restored = restored;
+  try { await useAircraftStore.getState().loadFromSupabase(); } catch (_) { /* ignore */ }
+  console.log('🛟 [Restore] terminé :', summary);
+  return summary;
+};
+
+if (typeof window !== 'undefined') {
+  window.alflightDiagnose = alflightDiagnose;
+  window.alflightRestoreAircraft = alflightRestoreAircraft;
+  console.log('🔎 [AircraftStore] window.alflightDiagnose() / window.alflightRestoreAircraft() prêts');
 }
 
 // Sélecteurs optimisés

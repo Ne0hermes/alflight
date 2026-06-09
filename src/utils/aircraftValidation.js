@@ -29,7 +29,7 @@ const DEFAULT_AIRCRAFT_VALUES = {
  * @param {Object} aircraft - L'objet avion à valider
  * @returns {Object} L'avion avec les données corrigées si nécessaire
  */
-export function validateAndRepairAircraft(aircraft) {
+export function validateAndRepairAircraft(aircraft, opts = {}) {
   if (!aircraft) return null;
 
   //   //   //   // );
@@ -195,8 +195,8 @@ export function validateAndRepairAircraft(aircraft) {
         fuelArm:           parseOrNull(armsSrc.fuelMain) ?? parseOrNull(armsSrc.fuel),
         cgLimits: null  // sera reconstruit ci-dessous depuis cgEnvelope si dispo
       };
-      console.log('🔄 [Validation] weightBalance dérivé depuis arms (transposition, pas de défaut)');
-    } else {
+      if (!opts.quiet) console.log('🔄 [Validation] weightBalance dérivé depuis arms (transposition, pas de défaut)');
+    } else if (!opts.quiet) {
       console.warn('⚠️ [Validation] weightBalance ET arms manquants — données M&C indisponibles. L\'avion devra être édité avant prep de vol.');
     }
     // Continue (peut être null ; le bloc cgLimits ci-dessous gère le cas)
