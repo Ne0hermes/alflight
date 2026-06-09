@@ -961,12 +961,12 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                     color="primary"
                     size="small"
                     startIcon={<CloudIcon />}
-                    onClick={() => {
+                    onClick={async () => {
                       // Télécharger le MANEX
                       const fileData = manexFile.file || manexFile.data || manexFile.pdfData;
 
                       if (fileData) {
-                        // Créer un lien de téléchargement
+                        // PDF déjà en local (base64) → téléchargement direct
                         const link = document.createElement('a');
                         link.href = fileData;
                         link.download = manexFile.fileName || 'MANEX.pdf';
@@ -974,8 +974,19 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         link.click();
                         document.body.removeChild(link);
                       } else if (manexFile.remoteUrl) {
-                        // Ouvrir l'URL Supabase dans un nouvel onglet
+                        // URL publique Supabase → nouvel onglet
                         window.open(manexFile.remoteUrl, '_blank');
+                      } else if (manexFile.filePath) {
+                        // MANEX présent sur Supabase mais pas encore téléchargé (lazy) :
+                        // on va chercher le PDF dans le Storage via son chemin.
+                        try {
+                          const blob = await communityService.downloadManex(manexFile.filePath);
+                          const objUrl = URL.createObjectURL(blob);
+                          window.open(objUrl, '_blank');
+                          setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
+                        } catch (err) {
+                          alert(`Impossible de télécharger le MANEX depuis Supabase : ${err.message}`);
+                        }
                       } else {
                         alert('Impossible de télécharger le MANEX');
                       }
