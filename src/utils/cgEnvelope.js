@@ -85,21 +85,55 @@ export function envelopeWeightRange(cgEnvelope) {
 }
 
 /**
+ * Sélectionne l'enveloppe EFFECTIVE pour une catégorie de certification donnée
+ * (Cat « N » Normale / Cat « U » Utilitaire). Si `cgEnvelope.categories[category]`
+ * existe (correspondance insensible à la casse + synonymes « normal… » / « util… »), on
+ * renvoie une enveloppe bâtie sur SES points ; sinon on retombe sur l'enveloppe
+ * telle quelle (rétro-compat — aucun avion existant n'a `categories`).
+ * @param {object} cgEnvelope
+ * @param {string} [category]
+ * @returns {object} l'enveloppe à utiliser (champs forwardPoints/aftPoints).
+ */
+export function resolveCategoryEnvelope(cgEnvelope, category) {
+  if (!cgEnvelope || !category || !cgEnvelope.categories) return cgEnvelope;
+  const want = String(category).trim().toLowerCase();
+  if (!want) return cgEnvelope;
+  const keys = Object.keys(cgEnvelope.categories);
+  const syn = want.startsWith('u') ? 'util' : want.startsWith('n') ? 'normal' : want;
+  const key = keys.find((k) => {
+    const kl = k.toLowerCase();
+    return kl === want || kl.includes(syn) || syn.includes(kl);
+  });
+  if (!key) return cgEnvelope; // catégorie inconnue → enveloppe principale
+  const c = cgEnvelope.categories[key] || {};
+  return {
+    forwardPoints: c.forwardPoints || [],
+    aftPoints: c.aftPoints || [],
+    macLength: cgEnvelope.macLength,
+    lemac: cgEnvelope.lemac,
+    _category: key,
+  };
+}
+
+/**
  * Limites CG (avant/arrière) interpolées à une masse donnée.
  * @param {object} cgEnvelope  Enveloppe avion (forwardPoints + aftMin/aftMax/aftCG),
  *                             ou objet scalaire {forward, aft} en dernier recours.
  * @param {number} mass        Masse (même unité que les masses de l'enveloppe).
+ * @param {{category?:string}} [opts] catégorie de certification (Cat N / Cat U) :
+ *                             utilise cgEnvelope.categories[category] si présent.
  * @returns {{forward:number|null, aft:number|null, source:'envelope'|'legacy'|'missing', warnings:string[]}}
  */
-export function cgLimitsAtMass(cgEnvelope, mass) {
+export function cgLimitsAtMass(cgEnvelope, mass, opts = {}) {
+  const env = opts.category ? resolveCategoryEnvelope(cgEnvelope, opts.category) : cgEnvelope;
   const warnings = [];
-  const fwdPts = forwardLimitPoints(cgEnvelope);
-  const aftPts = aftLimitPoints(cgEnvelope);
+  const fwdPts = forwardLimitPoints(env);
+  const aftPts = aftLimitPoints(env);
 
   if (fwdPts.length === 0 && aftPts.length === 0) {
     // Pas de courbe : tenter les limites scalaires (cgLimits) en dernier recours.
-    const f = Number.isFinite(num(cgEnvelope?.forward)) ? num(cgEnvelope?.forward) : num(cgEnvelope?.cgLimits?.forward);
-    const a = Number.isFinite(num(cgEnvelope?.aft)) ? num(cgEnvelope?.aft) : num(cgEnvelope?.cgLimits?.aft);
+    const f = Number.isFinite(num(env?.forward)) ? num(env?.forward) : num(env?.cgLimits?.forward);
+    const a = Number.isFinite(num(env?.aft)) ? num(env?.aft) : num(env?.cgLimits?.aft);
     if (Number.isFinite(f) || Number.isFinite(a)) {
       return { forward: Number.isFinite(f) ? f : null, aft: Number.isFinite(a) ? a : null, source: 'legacy', warnings };
     }
@@ -110,7 +144,7 @@ export function cgLimitsAtMass(cgEnvelope, mass) {
   const forward = fwdPts.length ? interpAt(fwdPts, m) : NaN;
   const aft = aftPts.length ? interpAt(aftPts, m) : NaN;
 
-  const range = envelopeWeightRange(cgEnvelope);
+  const range = envelopeWeightRange(env);
   if (range && Number.isFinite(m) && (m < range.min || m > range.max)) {
     warnings.push(`Masse ${m} hors plage enveloppe [${range.min}–${range.max}] — limite CG bornée`);
   }
@@ -125,17 +159,19 @@ export function cgLimitsAtMass(cgEnvelope, mass) {
 
 /**
  * (mass, cg) appartient-il à l'enveloppe ? Masse dans la plage ET cg ∈ [avant, arrière].
+ * @param {{category?:string}} [opts] catégorie de certification (Cat N / Cat U).
  * @returns {boolean|null}  null si l'enveloppe est absente (verdict indéterminé — P0,
  *                          jamais « OK » par défaut ; l'appelant traite null en fail-closed).
  */
-export function isWithinEnvelope(cgEnvelope, mass, cg) {
-  const limits = cgLimitsAtMass(cgEnvelope, mass);
+export function isWithinEnvelope(cgEnvelope, mass, cg, opts = {}) {
+  const limits = cgLimitsAtMass(cgEnvelope, mass, opts);
   if (limits.source === 'missing') return null;
   const c = num(cg);
   if (!Number.isFinite(c)) return null;
   if (limits.forward !== null && c < limits.forward) return false;
   if (limits.aft !== null && c > limits.aft) return false;
-  const range = envelopeWeightRange(cgEnvelope);
+  const env = opts.category ? resolveCategoryEnvelope(cgEnvelope, opts.category) : cgEnvelope;
+  const range = envelopeWeightRange(env);
   const m = num(mass);
   if (range && Number.isFinite(m) && (m < range.min || m > range.max)) return false;
   return true;
