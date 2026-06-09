@@ -276,6 +276,16 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // Sièges supplémentaires
     additionalSeats: existingAircraft?.additionalSeats || [],
 
+    // 🔧 FIX PERSISTANCE RÉSERVOIRS (2026-06) : additionalFuelTanks était ABSENT
+    // de cette whitelist d'init. Comme l'état du wizard est construit champ par
+    // champ (et NON par spread de existingAircraft), la répartition des
+    // réservoirs — avec leurs capacités, bras de levier et moments — revenait
+    // toujours VIDE dans le formulaire en mode édition. Résultat : impression que
+    // la persistance ne fonctionne pas, et risque d'écrasement de la liste au
+    // save. On recharge donc explicitement les réservoirs de l'avion existant,
+    // exactement comme baggageCompartments / additionalSeats ci-dessus.
+    additionalFuelTanks: existingAircraft?.additionalFuelTanks || [],
+
     // Performances
     advancedPerformance: existingAircraft?.advancedPerformance || null,
     performanceTables: existingAircraft?.performanceTables || null,
