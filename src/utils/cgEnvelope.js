@@ -45,10 +45,23 @@ export function forwardLimitPoints(cgEnvelope) {
     .sort((a, b) => a.x - b.x);
 }
 
-// Points de la limite ARRIÈRE (CG le plus arrière = maximum autorisé). Modèle
-// 2-points (aftMin/aftMax) avec rétro-compat aftCG constant si absents (A3).
+// Points de la limite ARRIÈRE (CG le plus arrière = maximum autorisé).
+//
+// Priorité 1 — COURBE COMPLÈTE multi-points `aftPoints: [{weight, cg}]`
+// (saisie graphique / centrogramme tracé, où la limite arrière n'est pas une
+// simple droite). Triée par masse, mêmes filtres que la limite avant.
+// Priorité 2 — modèle 2-points (aftMin/aftMax) avec rétro-compat aftCG constant
+// si absents (A3). Ajout rétro-compatible : aucun avion existant n'a `aftPoints`,
+// donc le comportement legacy est strictement inchangé tant que ce champ est absent.
 export function aftLimitPoints(cgEnvelope) {
   if (!cgEnvelope) return [];
+  if (Array.isArray(cgEnvelope.aftPoints) && cgEnvelope.aftPoints.length > 0) {
+    const pts = cgEnvelope.aftPoints
+      .map((p) => ({ x: num(p.weight), y: num(p.cg) }))
+      .filter((p) => p.x > 0 && p.y > 0)
+      .sort((a, b) => a.x - b.x);
+    if (pts.length > 0) return pts;
+  }
   const legacy = num(cgEnvelope.aftCG);
   const minCG = num(cgEnvelope.aftMinCG) > 0 ? num(cgEnvelope.aftMinCG) : legacy;
   const maxCG = num(cgEnvelope.aftMaxCG) > 0 ? num(cgEnvelope.aftMaxCG) : legacy;
