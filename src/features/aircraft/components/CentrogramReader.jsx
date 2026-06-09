@@ -54,7 +54,7 @@ import {
   convertArmUnit,
   buildStageList
 } from '../utils/centrogramMath';
-import { buildCgEnvelope } from '../utils/centrogramAdapter';
+import { buildCgEnvelope, aircraftToCentrogramScaffold } from '../utils/centrogramAdapter';
 import { unitsSelectors } from '@core/stores/unitsStore';
 
 const STEPS = [
@@ -258,6 +258,58 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
     categories: { Normale: { forward: [], aft: [] } },
   });
   const [envelopeBuilt, setEnvelopeBuilt] = useState(null); // résumé après construction
+  const [envelopePreloaded, setEnvelopePreloaded] = useState(false); // enveloppe avion pré-chargée
+
+  // ── PONT INVERSE (Phase 4) : pré-charge l'enveloppe DÉJÀ enregistrée sur
+  // l'avion (saisie manuelle OU build graphique précédent) dans le traceur, pour
+  // la VOIR et l'ajuster. Convention : masse en X, moment = masse × CG en Y.
+  // On pré-cale aussi les axes du panneau enveloppe (contextByStage) pour que les
+  // points soient visibles dès qu'on ouvre l'onglet « Enveloppe ».
+  useEffect(() => {
+    const env = aircraftData?.cgEnvelope;
+    if (!env) return;
+    let cats = [];
+    if (env.categories && Object.keys(env.categories).length) {
+      cats = Object.entries(env.categories).map(([name, c]) => ({
+        name, forwardPoints: c.forwardPoints || [], aftPoints: c.aftPoints || [],
+      }));
+    } else {
+      cats = aircraftToCentrogramScaffold(aircraftData)?.envelope?.categories || [];
+    }
+    const hasAny = cats.some((c) => (c.forwardPoints?.length || c.aftPoints?.length));
+    if (!hasAny) return;
+
+    const toXY = (pts) => (pts || [])
+      .filter((p) => Number.isFinite(p.weight) && p.weight > 0 && Number.isFinite(p.cg))
+      .map((p) => ({ id: uuidv4(), x: p.weight, y: p.weight * p.cg })); // X=masse, Y=moment
+    const categories = {};
+    let maxW = 0, maxM = 0;
+    for (const c of cats) {
+      const fwd = toXY(c.forwardPoints);
+      const aft = toXY(c.aftPoints);
+      categories[c.name] = { forward: fwd, aft };
+      for (const p of [...fwd, ...aft]) { maxW = Math.max(maxW, p.x); maxM = Math.max(maxM, p.y); }
+    }
+    setEnvelope((prev) => ({ ...prev, activeCategory: cats[0].name, categories }));
+    setEnvelopePreloaded(true);
+
+    // Axes ajustés (round-up léger) pour rendre les points visibles à l'ouverture.
+    const niceCeil = (v) => { if (!(v > 0)) return 100; const mag = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / mag) * mag; };
+    const xMax = niceCeil(maxW * 1.1), yMax = niceCeil(maxM * 1.1);
+    setContextByStage((prev) => ({
+      ...prev,
+      [ENVELOPE_STAGE_KEY]: {
+        axesConfig: {
+          xAxis: { min: 0, max: xMax, step: Math.max(1, Math.round(xMax / 5)), unit: 'kg', title: 'Masse totale' },
+          yAxis: { min: 0, max: yMax, step: Math.max(1, Math.round(yMax / 5)), unit: 'm·kg', title: 'Moment total' },
+        },
+        massAxis: 'x',
+        customXTicks: [],
+        customYTicks: [],
+        curvePoints: [],
+      },
+    }));
+  }, []); // une seule fois au montage
 
   // ════════════════════════════════════════════════════════════════════════
   // UPLOAD IMAGE
@@ -1090,6 +1142,14 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
           {currentStageKey && !calibrationState && (customXTicks.length < 2 || customYTicks.length < 2) && (
             <Alert severity="info" sx={{ mb: 2 }}>
               Calibre les axes X et Y de ce panneau (boutons ci-dessus) avant de cliquer les points de la courbe.
+            </Alert>
+          )}
+
+          {/* Pré-chargement (Phase 4) : enveloppe déjà enregistrée, montrée sur le graphe. */}
+          {isEnvelopeStage && envelopePreloaded && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Enveloppe existante <strong>pré-chargée</strong> (tracée sur le graphe : masse en X, moment en Y).
+              Pour la modifier : calibre les axes puis re-trace les limites — sinon elle reste inchangée.
             </Alert>
           )}
 
