@@ -45,6 +45,32 @@ describe('cgLimitsAtMass — modèle arrière 2-points (A3)', () => {
   });
 });
 
+describe('cgLimitsAtMass — courbe arrière COMPLÈTE multi-points (aftPoints)', () => {
+  // Limite arrière non droite : 3 points (saisie graphique / centrogramme tracé).
+  const env = {
+    forwardPoints: [{ weight: 600, cg: 1.90 }, { weight: 1100, cg: 1.95 }],
+    aftPoints: [
+      { weight: 600, cg: 2.30 },
+      { weight: 900, cg: 2.55 },
+      { weight: 1100, cg: 2.50 }, // léger retour avant en haut de plage
+    ],
+  };
+  it('interpole sur la courbe arrière complète (pas seulement 2 points)', () => {
+    expect(cgLimitsAtMass(env, 600).aft).toBeCloseTo(2.30, 6);
+    expect(cgLimitsAtMass(env, 750).aft).toBeCloseTo(2.425, 6); // milieu 600→900
+    expect(cgLimitsAtMass(env, 900).aft).toBeCloseTo(2.55, 6);  // sommet
+    expect(cgLimitsAtMass(env, 1100).aft).toBeCloseTo(2.50, 6);
+  });
+  it('aftPoints prioritaire sur le modèle 2-points si les deux sont présents', () => {
+    const mixed = { ...env, aftMinWeight: 600, aftMinCG: 9.99, aftMaxWeight: 1100, aftMaxCG: 9.99 };
+    expect(cgLimitsAtMass(mixed, 900).aft).toBeCloseTo(2.55, 6); // ignore les 9.99
+  });
+  it('aftPoints vide → repli sur le modèle 2-points (rétro-compat)', () => {
+    const fallback = { forwardPoints: [{ weight: 600, cg: 1.9 }], aftPoints: [], aftCG: 2.5 };
+    expect(cgLimitsAtMass(fallback, 600).aft).toBeCloseTo(2.5, 6);
+  });
+});
+
 describe('cgLimitsAtMass — rétro-compat & absence', () => {
   it('aftCG legacy seul → limite arrière constante', () => {
     const env = { forwardPoints: [{ weight: 600, cg: 1.9 }, { weight: 1100, cg: 2.0 }], aftCG: 2.5 };
