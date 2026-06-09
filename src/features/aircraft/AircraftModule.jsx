@@ -1,5 +1,5 @@
 // src/features/aircraft/AircraftModule.jsx
-import React, { memo, useState, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useState, useEffect, useMemo } from 'react';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
@@ -11,9 +11,9 @@ import {
   EditorialButton,
   DataReadout,
   TechLabel,
-  CockpitTextField,
   NightModeAlert,
 } from '@shared/components/editorial';
+import { Autocomplete, TextField, CircularProgress } from '@mui/material';
 import AccordionButton from '@shared/components/AccordionButton';
 import { ManexImporter } from './components/ManexImporter';
 import ManexViewer from './components/ManexViewer';
@@ -252,8 +252,6 @@ export const AircraftModule = memo(() => {
   const [allPresets, setAllPresets] = useState([]);             // toute la base communautaire (métadonnées légères)
   const [presetsLoading, setPresetsLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
-  const [communityOpen, setCommunityOpen] = useState(false);    // menu déroulant ouvert ?
-  const communityBoxRef = useRef(null);                          // pour fermer au clic dehors
 
   // 🔁 Charge TOUTE la base communautaire (métadonnées légères, sans aircraft_data)
   // au montage → filtrage DYNAMIQUE côté client, comme le sélecteur d'avion de la
@@ -273,29 +271,6 @@ export const AircraftModule = memo(() => {
     }
   };
   useEffect(() => { loadAllPresets(); }, []);
-
-  // Filtre live : immatriculation / modèle / constructeur (insensible à la casse).
-  const filteredPresets = useMemo(() => {
-    const q = communitySearch.trim().toLowerCase();
-    if (!q) return allPresets;
-    return allPresets.filter((p) =>
-      [p.registration, p.model, p.manufacturer]
-        .filter(Boolean)
-        .some((s) => String(s).toLowerCase().includes(q))
-    );
-  }, [allPresets, communitySearch]);
-
-  // Ferme le menu déroulant communautaire au clic en dehors de la zone.
-  useEffect(() => {
-    if (!communityOpen) return undefined;
-    const onDocMouseDown = (e) => {
-      if (communityBoxRef.current && !communityBoxRef.current.contains(e.target)) {
-        setCommunityOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onDocMouseDown);
-    return () => document.removeEventListener('mousedown', onDocMouseDown);
-  }, [communityOpen]);
 
   // Importer un preset communautaire → ouvre le wizard PRÉ-REMPLI (comme aujourd'hui).
   // 🛡️ ID LOCAL NEUF (aircraft-<ts>) au lieu de l'ID Supabase du preset → la
@@ -1663,84 +1638,61 @@ export const AircraftModule = memo(() => {
         <p style={{ margin: `0 0 ${tokens.spacing[3]}`, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
           Cherchez un avion partagé (immatriculation, modèle, constructeur) puis importez-le : vous entrez dans l'assistant pré-rempli, comme pour un nouvel avion.
         </p>
-        {/* Combobox : clic sur le champ → menu déroulant de TOUTE la base ;
-            filtre au fil de la frappe ; clic sur une ligne → import (wizard pré-rempli). */}
-        <div ref={communityBoxRef} style={{ position: 'relative', maxWidth: 420 }}>
-          <div onClick={() => setCommunityOpen(true)}>
-            <CockpitTextField
-              label="RECHERCHE COMMUNAUTÉ"
-              value={communitySearch}
-              onChange={(e) => { setCommunitySearch(e.target.value); setCommunityOpen(true); }}
-              placeholder="Cliquez pour voir la liste, ou filtrez…"
-            />
-          </div>
-
-          {communityOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 60,
-                marginTop: '4px',
-                maxHeight: '320px',
-                overflowY: 'auto',
-                backgroundColor: 'var(--bg-overlay)',
-                border: '1px solid var(--border-regular)',
-                borderRadius: '8px',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)'
+        {/* Recherche communautaire = MUI Autocomplete (MÊME composant/UX que
+            Step0CommunityCheck « Rechercher par immatriculation ») : menu déroulant
+            de toute la base, filtré au fil de la frappe ; sélection → import. */}
+        <Autocomplete
+          fullWidth
+          value={null}
+          inputValue={communitySearch}
+          onInputChange={(e, v) => setCommunitySearch(v)}
+          onChange={(e, newValue) => {
+            if (!newValue) return;
+            const found = allPresets.find((p) => p.registration === newValue);
+            if (found) handleImportFromCommunity(found.id);
+          }}
+          options={allPresets.map((p) => p.registration)}
+          loading={presetsLoading}
+          size="small"
+          disableClearable
+          disablePortal
+          forcePopupIcon={false}
+          sx={{
+            mb: 2,
+            maxWidth: 420,
+            '& .MuiAutocomplete-endAdornment': { right: '8px', top: '50%', transform: 'translateY(-50%)' },
+            '& .MuiAutocomplete-popupIndicator': {
+              padding: '4px', width: '28px', height: '28px',
+              '& .MuiSvgIcon-root': { fontSize: 'var(--fs-title)' },
+              '& .MuiTouchRipple-root': { width: '28px', height: '28px' },
+            },
+            '& .MuiAutocomplete-listbox': { maxWidth: '400px' },
+          }}
+          ListboxProps={{ style: { maxWidth: '400px' } }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Rechercher par immatriculation"
+              placeholder="Ex: F-GBYU"
+              size="small"
+              sx={{ '& .MuiOutlinedInput-root': { paddingRight: '40px' } }}
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {presetsLoading ? <CircularProgress color="inherit" size={16} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
               }}
-            >
-              {presetsLoading && (
-                <div style={{ padding: '10px 14px', fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
-                  Chargement de la base communautaire…
-                </div>
-              )}
-              {communityError && (
-                <div style={{ padding: '10px 14px', fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)' }}>
-                  ⚠️ {communityError}
-                </div>
-              )}
-              {!presetsLoading && !communityError && filteredPresets.length === 0 && (
-                <div style={{ padding: '10px 14px', fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)' }}>
-                  {allPresets.length === 0 ? 'Base communautaire vide.' : `Aucun avion pour « ${communitySearch.trim()} ».`}
-                </div>
-              )}
-              {!presetsLoading && !communityError && filteredPresets.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => { handleImportFromCommunity(p.id); setCommunityOpen(false); }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-surface)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    padding: '10px 14px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: '1px solid var(--border-subtle)',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                >
-                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 'var(--fs-body)' }}>
-                    <strong style={{ color: 'var(--text-primary)' }}>{p.registration || '—'}</strong>
-                    <span style={{ color: 'var(--text-secondary)' }}>{' · '}{p.manufacturer ? `${p.manufacturer} ` : ''}{p.model || ''}</span>
-                    {p.verified && <span style={{ color: 'var(--accent-primary)', marginLeft: '6px' }}>✓</span>}
-                  </span>
-                  <span style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
-                    👍 {p.votes?.up ?? 0}
-                  </span>
-                </button>
-              ))}
-            </div>
+            />
           )}
-        </div>
+        />
+        {communityError && (
+          <div style={{ marginTop: tokens.spacing[2], color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>
+            ⚠️ {communityError}
+          </div>
+        )}
       </div>
 
       {/* Barre « RECHERCHE » flotte retirée (demande pilote) — le filtre
