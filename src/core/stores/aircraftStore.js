@@ -21,6 +21,67 @@ async function getCurrentUserId() {
   }
 }
 
+// Convertit le MANEX d'un avion en { blob, fileName } uploadable vers Supabase Storage.
+// Source : aircraft.manex.pdfData|file (data URL base64 OU Blob/File), sinon la copie
+// IndexedDB de l'avion. Retourne null si aucun PDF exploitable n'est trouvé.
+// Centralise la persistance MANEX : add/update passent ce blob au service pour que
+// la ligne POSSÉDÉE reçoive le fichier + manex_file_id (sinon : has_manex sans fichier
+// → MANEX « fantôme » perdu au reload/suppression).
+async function resolveManexFile(aircraft) {
+  if (!aircraft) return null;
+  let manex = aircraft.manex;
+  if (!manex || (!manex.pdfData && !manex.file)) {
+    try {
+      const dbm = await import('@utils/dataBackupManager').then(m => m.default);
+      const full = aircraft.id ? await dbm.getAircraftData(aircraft.id) : null;
+      if (full?.manex) manex = full.manex;
+    } catch (_) { /* pas de copie locale */ }
+  }
+  if (!manex) return null;
+  const raw = manex.pdfData || manex.file;
+  if (!raw) return null;
+  const fileName = manex.fileName || `${aircraft.registration || 'aircraft'} - manex.pdf`;
+  // Déjà un Blob/File
+  if (typeof Blob !== 'undefined' && raw instanceof Blob) {
+    return { blob: raw, fileName };
+  }
+  // Data URL base64 → Blob
+  if (typeof raw === 'string' && raw.includes('base64,')) {
+    try {
+      const base64 = raw.split('base64,')[1];
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return { blob: new Blob([bytes], { type: 'application/pdf' }), fileName };
+    } catch (e) {
+      console.warn('[AircraftStore] resolveManexFile: conversion base64 échouée:', e?.message);
+      return null;
+    }
+  }
+  return null;
+}
+
+// Dédoublonne une liste d'avions par immatriculation (modèle « clone possédé » :
+// la ligne communautaire d'origine et ta copie possédée coexistent en base).
+// TOUJOURS effondre une immatriculation à une seule entrée (même sans utilisateur
+// connu) → empêche d'afficher/éditer par erreur la mauvaise ligne et de créer des
+// clones en cascade. Gagnant : la copie possédée si l'utilisateur est connu,
+// sinon la première rencontrée (déterministe).
+function dedupeAircraftByRegistration(list, myUid) {
+  const byReg = new Map();
+  for (const ac of (list || [])) {
+    const reg = (ac?.registration || '').toString().trim().toUpperCase();
+    if (!reg) { byReg.set(`__noreg__${ac?.id}`, ac); continue; } // sans immat → jamais fusionné
+    const existing = byReg.get(reg);
+    if (!existing) { byReg.set(reg, ac); continue; }
+    const acMine = !!myUid && ac.submitted_by === myUid;
+    const exMine = !!myUid && existing.submitted_by === myUid;
+    if (acMine && !exMine) byReg.set(reg, ac); // la copie possédée éclipse la communautaire
+    // sinon on garde l'existant (premier vu) — effondrement déterministe
+  }
+  return Array.from(byReg.values());
+}
+
 const logger = createModuleLogger('AircraftStore');
 
 
@@ -175,31 +236,21 @@ export const useAircraftStore = create(
           console.log('💡 [AircraftStore] Les MANEX seront téléchargés à la demande (clic sur bouton MANEX)');
         }
 
-        // 🧹 Dédup « clone possédé » (modèle B) : si une immatriculation existe en
-        // double (preset communautaire d'origine + ta copie possédée issue d'une
-        // édition), n'afficher QUE la tienne dans ta liste. Sans cela, chaque
-        // édition d'un avion importé ferait apparaître un doublon.
+        // 🧹 Dédup par immatriculation (modèle « clone possédé ») : la ligne
+        // communautaire d'origine et ta copie possédée coexistent en base. On
+        // n'affiche qu'UNE entrée par immat — TOUJOURS (même si la session n'est
+        // pas encore prête), pour éviter d'éditer la mauvaise ligne → clones en
+        // cascade. La copie possédée gagne quand l'utilisateur est connu.
         let finalList = aircraftList;
         try {
           const myUid = await getCurrentUserId();
-          if (myUid) {
-            const byReg = new Map();
-            for (const ac of aircraftList) {
-              const key = (ac.registration || ac.id || '').toString().trim().toUpperCase();
-              const existing = byReg.get(key);
-              if (!existing) { byReg.set(key, ac); continue; }
-              // Ta version possédée éclipse la version communautaire.
-              if (ac.submitted_by === myUid && existing.submitted_by !== myUid) {
-                byReg.set(key, ac);
-              }
-            }
-            finalList = Array.from(byReg.values());
-            if (finalList.length !== aircraftList.length) {
-              console.log(`🧹 [AircraftStore] Dédup clone possédé : ${aircraftList.length} → ${finalList.length}`);
-            }
+          finalList = dedupeAircraftByRegistration(aircraftList, myUid);
+          if (finalList.length !== aircraftList.length) {
+            console.log(`🧹 [AircraftStore] Dédup immatriculation : ${aircraftList.length} → ${finalList.length} (uid ${myUid ? 'connu' : 'inconnu'})`);
           }
         } catch (dedupErr) {
-          console.warn('[AircraftStore] Dédup possédé ignorée:', dedupErr?.message);
+          console.warn('[AircraftStore] Dédup ignorée:', dedupErr?.message);
+          finalList = aircraftList;
         }
 
         set({
@@ -309,10 +360,18 @@ export const useAircraftStore = create(
           isVariant: aircraftData.isVariant || false  // 🔧 FIX: Flag variant
         };
 
-        // Soumettre à Supabase
+        // Résoudre le MANEX (fichier uploadable) pour le persister dans Supabase Storage
+        // + lier manex_file_id sur la ligne. Sans ça : has_manex sans fichier → MANEX perdu.
+        const manexResolved = (normalizedAircraft.hasManex || normalizedAircraft.manex)
+          ? await resolveManexFile({ ...normalizedAircraft, id: aircraftData.id || aircraftData.aircraftId })
+          : null;
+
+        // Soumettre à Supabase — modèle « fiche unique partagée » : submitPreset
+        // met à jour la fiche existante EN PLACE (par immatriculation) ou la crée
+        // si elle n'existe pas. PLUS de clone (plus de doublon).
         const result = await communityService.submitPreset(
           presetData,
-          null, // manexFile
+          manexResolved?.blob || null,
           currentUserId
         );
 
@@ -339,6 +398,8 @@ export const useAircraftStore = create(
             ...lightAircraft,
             id: result.id,
             aircraftId: result.id,
+            // Owner (pour dédup + remplacement silencieux de la version communautaire)
+            submitted_by: result.submitted_by || currentUserId,
             // 🔧 FIX: Ajouter les flags pour le chargement des données volumineuses depuis IndexedDB
             hasPhoto: !!(photo || profilePhoto),
             hasManex: !!manex,
@@ -373,37 +434,40 @@ export const useAircraftStore = create(
           // Cas 2: Même registration mais ID différent → DOUBLON détecté !
           else if (existingByRegIndex >= 0) {
             const existing = state.aircraftList[existingByRegIndex];
-            console.warn('⚠️ [AircraftStore] DOUBLON détecté - Avion avec cette immatriculation existe déjà:', {
-              newId: newAircraft.id,
-              newRegistration: newAircraft.registration,
-              existingId: existing.id,
-              existingRegistration: existing.registration
-            });
+            const existingIsMine = !!currentUserId && existing.submitted_by === currentUserId;
 
-            // Demander à l'utilisateur : remplacer ou annuler ?
-            const shouldReplace = confirm(
-              `Un avion avec l'immatriculation "${newAircraft.registration}" existe déjà dans votre liste.\n\n` +
-              `Voulez-vous le remplacer par cette nouvelle version ?\n\n` +
-              `✓ OUI : Remplacer l'avion existant\n` +
-              `✗ NON : Annuler l'ajout (garder l'ancien)`
-            );
+            // Modèle « clone possédé » : si l'existant est la version COMMUNAUTAIRE
+            // (pas à moi), ma copie possédée la remplace SILENCIEUSEMENT — c'est le
+            // comportement attendu, pas un doublon initié par l'utilisateur. On ne
+            // demande confirmation QUE pour un vrai conflit entre DEUX copies à moi.
+            const shouldReplace = existingIsMine
+              ? confirm(
+                  `Un avion avec l'immatriculation "${newAircraft.registration}" existe déjà dans votre liste.\n\n` +
+                  `Voulez-vous le remplacer par cette nouvelle version ?\n\n` +
+                  `✓ OUI : Remplacer l'avion existant\n` +
+                  `✗ NON : Annuler l'ajout (garder l'ancien)`
+                )
+              : true;
 
             if (shouldReplace) {
               // Remplacer l'ancien par le nouveau
               newList = [...state.aircraftList];
               newList[existingByRegIndex] = newAircraft;
-              console.log('🔄 [AircraftStore] Avion remplacé (même registration, ID différent):', {
+              console.log('🔄 [AircraftStore] Avion remplacé (même registration):', {
                 oldId: existing.id,
                 newId: newAircraft.id,
                 registration: newAircraft.registration,
+                silencieux: !existingIsMine,
                 listLength: newList.length
               });
 
-              // Supprimer l'ancien de IndexedDB (ID différent)
+              // Supprimer l'ancien de IndexedDB si l'ID a changé
               try {
-                const dataBackupManager = await import('@utils/dataBackupManager').then(m => m.default);
-                await dataBackupManager.deleteAircraftData(existing.id);
-                console.log('🗑️ [AircraftStore] Ancien avion supprimé de IndexedDB:', existing.id);
+                if (existing.id && existing.id !== newAircraft.id) {
+                  const dataBackupManager = await import('@utils/dataBackupManager').then(m => m.default);
+                  await dataBackupManager.deleteAircraftData(existing.id);
+                  console.log('🗑️ [AircraftStore] Ancien avion supprimé de IndexedDB:', existing.id);
+                }
               } catch (error) {
                 console.error('❌ [AircraftStore] Erreur suppression ancien avion:', error);
               }
@@ -530,106 +594,42 @@ export const useAircraftStore = create(
           console.error('❌ [AircraftStore] Erreur sauvegarde IndexedDB (update):', idbError);
         }
 
-        // 3. Persister dans Supabase — modèle « clone possédé ».
-        // La RLS de community_presets n'autorise l'UPDATE qu'au propriétaire
-        // (submitted_by = auth.uid()). Donc :
-        //   • avion possédé        → UPDATE en place
-        //   • avion importé (autre) → UPDATE touche 0 ligne (code UPDATE_NO_ROWS)
-        //                             → on CLONE dans une ligne possédée par l'utilisateur
-        //   • aucune session        → impossible de posséder une ligne → erreur claire
-        const currentUserId = await getCurrentUserId();
-        if (!currentUserId) {
-          const noSession = new Error(
-            'Connexion requise pour sauvegarder dans le cloud. Tes modifications restent locales (IndexedDB) pour l\'instant — reconnecte-toi puis réenregistre.'
-          );
-          noSession.code = 'NO_SESSION';
-          recordSupabaseError('updateAircraft', noSession, {
-            aircraftId: validatedAircraft.id,
-            registration: validatedAircraft.registration
-          });
-          set({ error: `⚠ ${noSession.message}` });
-          throw noSession;
-        }
+        // 3. Persister dans Supabase — modèle « FICHE UNIQUE PARTAGÉE » (prototype).
+        // On ÉCRASE la fiche existante EN PLACE (UPDATE), quel que soit le
+        // propriétaire — PLUS de clone (donc plus de doublon : une seule fiche
+        // par avion). ⚠️ Suppose que la policy RLS UPDATE de community_presets a été
+        // OUVERTE (voir supabase-prototype-open-write.sql). Sinon l'UPDATE touche
+        // 0 ligne → erreur explicite (les modifs restent locales en attendant).
+        const currentUserId = await getCurrentUserId(); // peut être null (RLS ouverte → OK)
+
+        // Résoudre le MANEX (fichier uploadable) pour le réattacher à la fiche.
+        const manexResolved = (validatedAircraft.hasManex || validatedAircraft.manex)
+          ? await resolveManexFile(validatedAircraft)
+          : null;
 
         try {
-          console.log('📤 [updateAircraft] Tentative UPDATE en place (avion possédé ?):', validatedAircraft.registration);
+          console.log('📤 [updateAircraft] UPDATE en place (fiche partagée):', validatedAircraft.registration);
           await communityService.updateCommunityPreset(
             validatedAircraft.id,
             validatedAircraft,
-            null, // pas de MANEX ici
-            null,
+            manexResolved?.blob || null,
+            manexResolved?.fileName || null,
             currentUserId
           );
-          console.log('✅ [updateAircraft] UPDATE Supabase réussi (avion possédé)');
+          console.log('✅ [updateAircraft] Fiche Supabase écrasée en place avec succès');
           return validatedAircraft;
         } catch (supabaseError) {
-          // Avion non possédé (importé) → CLONE possédé (modèle B choisi).
-          if (supabaseError?.code === 'UPDATE_NO_ROWS') {
-            console.warn('🔀 [updateAircraft] Avion non possédé par cet utilisateur → création d\'un clone possédé…');
-            try {
-              const owned = await communityService.cloneAsOwnedPreset(validatedAircraft, currentUserId);
-
-              // Repointer l'entrée locale : l'id squelette/communautaire devient
-              // l'id du clone possédé, pour que les éditions suivantes fassent un
-              // UPDATE en place (et non un nouveau clone).
-              const repointed = {
-                ...validatedAircraft,
-                id: owned.id,
-                aircraftId: owned.id,
-                communityPresetId: owned.id,
-                submitted_by: currentUserId
-              };
-              const list2 = get().aircraftList.map(a => a.id === validatedAircraft.id ? repointed : a);
-              set({ aircraftList: list2, selectedAircraftId: owned.id, error: null });
-
-              // Déplacer la copie IndexedDB vers le nouvel id possédé (puis purger l'ancien).
-              // On FUSIONNE l'enregistrement existant pour ne pas perdre les données
-              // lourdes (photo/MANEX/rapport de pesée) attachées à l'ancien id.
-              try {
-                const dbm = await import('@utils/dataBackupManager').then(m => m.default);
-                let prev = {};
-                try { prev = (await dbm.getAircraftData(validatedAircraft.id)) || {}; } catch (_) { /* pas d'ancien enregistrement */ }
-                await dbm.saveAircraftData({
-                  ...prev,        // conserve photo/manex/weighingReport éventuels
-                  ...repointed,   // valeurs métier fraîches
-                  id: owned.id,
-                  aircraftId: owned.id,
-                  _metadata: {
-                    ...repointed._metadata,
-                    supabaseId: owned.id,
-                    savedAt: new Date().toISOString(),
-                    storageFormat: 'STORAGE_UNITS (ltr/lph/kg/kt)'
-                  }
-                });
-                if (validatedAircraft.id && validatedAircraft.id !== owned.id) {
-                  await dbm.deleteAircraftData(validatedAircraft.id);
-                }
-              } catch (idbErr) {
-                console.error('❌ [updateAircraft] Repointage IndexedDB échoué (non bloquant):', idbErr);
-              }
-
-              console.log('✅ [updateAircraft] Clone possédé créé et persistant:', owned.id);
-              return repointed;
-            } catch (cloneError) {
-              console.error('🚨 [updateAircraft] Échec du clone possédé:', cloneError);
-              recordSupabaseError('updateAircraft.clone', cloneError, {
-                aircraftId: validatedAircraft.id,
-                registration: validatedAircraft.registration
-              });
-              set({ error: `⚠ Sauvegarde cloud échouée (clone) : ${cloneError.message || 'erreur inconnue'}. Tes modifications restent locales.` });
-              throw cloneError;
-            }
-          }
-
-          // Autre erreur (réseau, JWT expiré, contrainte…) — état local conservé, on remonte au UI.
-          console.error('🚨 [updateAircraft] ÉCHEC SAUVEGARDE SUPABASE — modifications LOCALES uniquement:', supabaseError);
+          const blockedByRls = supabaseError?.code === 'UPDATE_NO_ROWS';
+          console.error('🚨 [updateAircraft] ÉCHEC UPDATE Supabase — modifications LOCALES uniquement:', supabaseError);
           recordSupabaseError('updateAircraft', supabaseError, {
             aircraftId: validatedAircraft.id,
             registration: validatedAircraft.registration,
             model: validatedAircraft.model
           });
           set({
-            error: `⚠ Sauvegarde Supabase échouée : ${supabaseError.message || 'erreur inconnue'}. Tes modifications sont uniquement locales pour l'instant.`
+            error: blockedByRls
+              ? '⚠ La base refuse l\'écrasement de cette fiche (RLS). Applique supabase-prototype-open-write.sql dans Supabase pour autoriser la mise à jour en place. Tes modifications restent locales pour l\'instant.'
+              : `⚠ Sauvegarde Supabase échouée : ${supabaseError.message || 'erreur inconnue'}. Tes modifications sont uniquement locales pour l'instant.`
           });
           throw supabaseError;
         }
@@ -639,6 +639,29 @@ export const useAircraftStore = create(
         set({ isLoading: false, error: errorMessage });
         return null;
       }
+    },
+
+    // Mettre à jour / supprimer le MANEX d'un avion (utilisé par ManexImporter).
+    // Persiste la copie locale (IndexedDB) puis délègue à updateAircraft pour
+    // l'upload Supabase Storage + le lien manex_file_id sur la ligne possédée.
+    updateAircraftManex: async (aircraftId, manexData) => {
+      const state = get();
+      const aircraft = state.aircraftList.find(a => a.id === aircraftId);
+      if (!aircraft) {
+        console.warn('[AircraftStore] updateAircraftManex: avion introuvable', aircraftId);
+        return null;
+      }
+      try {
+        const dbm = await import('@utils/dataBackupManager').then(m => m.default);
+        const full = (await dbm.getAircraftData(aircraftId)) || { ...aircraft };
+        const updated = { ...full, hasManex: !!manexData };
+        if (manexData) updated.manex = manexData; else delete updated.manex;
+        await dbm.saveAircraftData(updated);
+      } catch (e) {
+        console.error('[AircraftStore] updateAircraftManex: IndexedDB échoué', e?.message);
+      }
+      // Persister vers Supabase (upload + lien manex_file_id) via le chemin unique updateAircraft.
+      return get().updateAircraft({ ...aircraft, manex: manexData || null, hasManex: !!manexData });
     },
 
     // Supprimer un avion
@@ -667,11 +690,17 @@ export const useAircraftStore = create(
         });
 
         
-        // 2. Supprimer de Supabase en arrière-plan (si applicable)
+        // 2. Supprimer de Supabase (RLS "Owner delete" : seules TES lignes partent).
+        // Sans ça, un avion supprimé localement réapparaissait au prochain reload
+        // (la ligne cloud subsistait). Une ligne NON possédée (communautaire) n'est
+        // pas supprimable → elle reste, c'est attendu (tu ne supprimes que TA copie).
         try {
-          // TODO: Implémenter deletePreset dans communityService si nécessaire
-          // await communityService.deletePreset(id);
-
+          const deleted = await communityService.deletePreset(id);
+          if (!deleted || deleted.length === 0) {
+            console.warn('[AircraftStore] deleteAircraft — aucune ligne Supabase supprimée (non possédée / déjà absente) pour', id);
+          } else {
+            console.log('🗑️ [AircraftStore] Ligne Supabase supprimée:', id);
+          }
         } catch (error) {
           console.warn('[AircraftStore] deleteAircraft — suppression Supabase ignorée (non bloquante):', error?.message);
         }
@@ -822,6 +851,35 @@ export const fixFHSTREmptyWeight = async () => {
     return false;
   }
 };
+
+// 🧹 Nettoyage one-shot des DOUBLONS POSSÉDÉS (modèle « clone possédé »).
+// Pour chaque immatriculation, garde la copie la plus récente et supprime les
+// autres copies POSSÉDÉES (jamais les lignes d'autrui). Aperçu d'abord, puis exec.
+// Usage console :
+//   await window.alflightCleanupDuplicates()                  → APERÇU (ne supprime rien)
+//   await window.alflightCleanupDuplicates({ execute: true }) → SUPPRIME réellement
+export const cleanupOwnedAircraftDuplicates = async ({ execute = false } = {}) => {
+  const uid = await getCurrentUserId();
+  if (!uid) {
+    console.error('❌ [Cleanup] Connexion requise (les doublons sont identifiés par propriétaire).');
+    return null;
+  }
+  const res = await communityService.cleanupOwnedDuplicates(uid, { dryRun: !execute });
+  if (!execute) {
+    console.log(`ℹ️ [Cleanup] APERÇU : ${res.toDeleteCount} doublon(s) possédé(s) à supprimer (sur ${res.totalOwned} lignes, ${res.registrations} immat).`);
+    if (res.toDelete?.length) console.table(res.toDelete);
+    console.log('➡️ Pour supprimer réellement : await window.alflightCleanupDuplicates({ execute: true })');
+  } else {
+    console.log(`✅ [Cleanup] ${res.deleted} doublon(s) supprimé(s). Rechargement de la liste…`);
+    try { await useAircraftStore.getState().loadFromSupabase(); } catch (e) { console.warn(e?.message); }
+  }
+  return res;
+};
+
+if (typeof window !== 'undefined') {
+  window.alflightCleanupDuplicates = cleanupOwnedAircraftDuplicates;
+  console.log('🧹 [AircraftStore] window.alflightCleanupDuplicates() prêt — aperçu par défaut, {execute:true} pour supprimer');
+}
 
 // Sélecteurs optimisés
 export const aircraftSelectors = {

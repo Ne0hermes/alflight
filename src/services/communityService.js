@@ -362,51 +362,52 @@ class CommunityService {
   async submitPreset(presetData, manexFile, userId) {
     try {
       
-      // 1. Vérifier si un preset existe déjà pour cette immatriculation
+      // 1. Chercher les lignes existantes pour cette immatriculation.
+      //    On récupère TOUTES les lignes actives + leur propriétaire afin de
+      //    PRÉFÉRER la copie possédée par l'utilisateur courant (modèle « clone
+      //    possédé »). Sans ça, l'ancienne heuristique « id fourni ≠ id trouvé →
+      //    variant » prenait l'avion importé pour un variant et créait un NOUVEAU
+      //    preset à CHAQUE envoi → doublons à l'infini.
       const { data: existingPresets, error: searchError } = await supabase
         .from('community_presets')
-        .select('id, version, has_manex')  // 🔧 FIX: Récupérer has_manex pour éviter re-upload
+        .select('id, version, has_manex, submitted_by')
         .eq('registration', presetData.registration)
-        .eq('status', 'active')
-        .limit(1);
+        .eq('status', 'active');
 
       if (searchError) {
         console.error('❌ Erreur lors de la recherche de presets existants:', searchError);
         throw searchError;
       }
 
-      // 2. Si le preset existe déjà, décider UPDATE vs CREATE
+      // 2. Si une ligne existe déjà, décider UPDATE (copie possédée d'abord) vs CREATE.
       if (existingPresets && existingPresets.length > 0) {
-        const existingPreset = existingPresets[0];
+        // Modèle « fiche unique partagée » : viser la fiche correspondant à l'id
+        // importé (mise à jour EN PLACE exacte) ; à défaut ma copie ; sinon la 1re.
+        const existingPreset =
+          existingPresets.find(p => presetData.id && p.id === presetData.id) ||
+          existingPresets.find(p => userId && p.submitted_by === userId) ||
+          existingPresets[0];
 
-        // 🔧 FIX: Si l'ID fourni est différent du preset existant OU si isVariant=true,
-        // c'est un variant → créer un NOUVEAU preset au lieu de mettre à jour
-        const isVariant = presetData.isVariant || (presetData.id && presetData.id !== existingPreset.id);
+        // Variant = choix EXPLICITE de l'utilisateur (vraie copie, gérée en amont
+        // avec une immatriculation DIFFÉRENTE — donc absente de cette recherche).
+        // On ne déduit PLUS « variant » d'un écart d'id : l'id importé diffère
+        // toujours de la copie possédée → c'était la source des doublons.
+        const isVariant = presetData.isVariant === true;
 
         console.log('🔍 [CommunityService] Analyse preset existant:', {
-          existingId: existingPreset.id,
+          chosenId: existingPreset.id,
+          chosenOwner: existingPreset.submitted_by,
           providedId: presetData.id,
-          isVariantFlag: presetData.isVariant,
-          idsDifferent: presetData.id && presetData.id !== existingPreset.id,
+          matchesActCount: existingPresets.length,
+          ownedMatch: !!(userId && existingPreset.submitted_by === userId),
           finalIsVariant: isVariant
         });
 
         if (isVariant) {
-          console.log('🔀 Variant détecté - Création d\'un nouveau preset au lieu de mise à jour');
-          console.log(`   ID fourni: ${presetData.id}`);
-          console.log(`   ID existant: ${existingPreset.id}`);
-          // Ne pas faire UPDATE, continuer vers CREATE (ligne 364+)
+          console.log('🔀 Variant explicite - Création d\'un nouveau preset');
+          // Ne pas faire UPDATE, continuer vers CREATE
         } else {
-          console.log('✅ Preset existant trouvé - Mise à jour au lieu de création');
-          console.log(`   Preset a déjà un MANEX: ${existingPreset.has_manex}`);
-
-          // 🔧 FIX 2026-05 : on uploade TOUJOURS le MANEX si le pilote en a
-          // fourni un. L'ancien comportement « skip si has_manex déjà true »
-          // créait des orphelins quand l'upload précédent avait échoué (RLS,
-          // network…) : le flag restait true mais le fichier était absent
-          // de Storage → MANEX invisible au re-téléchargement.
-          // Le coût d'un re-upload identique (~quelques secondes) est
-          // négligeable comparé au bug silencieux qu'il évite.
+          console.log('✅ Ligne existante - Mise à jour (copie possédée prioritaire)');
           if (manexFile) {
             console.log('📤 MANEX fourni — upload vers Supabase Storage (garantit présence du fichier)');
           }
@@ -831,12 +832,72 @@ class CommunityService {
    * @param {string} userId - UUID Supabase du propriétaire (obligatoire)
    * @returns {Promise<Object>} la nouvelle ligne community_presets (avec son id)
    */
-  async cloneAsOwnedPreset(updatedData, userId) {
+  async cloneAsOwnedPreset(updatedData, userId, manexFile = null, manexFileName = null) {
     if (!userId) {
       throw new Error('Clone impossible : aucune session Supabase active (connexion requise).');
     }
 
-    // Nettoyage symétrique à submitPreset/updateCommunityPreset
+    // 0. IDEMPOTENCE : si l'utilisateur POSSÈDE déjà une copie de cette
+    //    immatriculation, on la met à jour au lieu d'en créer une nouvelle.
+    //    Sans ce garde-fou, chaque édition d'un avion importé (ou chaque dédup
+    //    ratée → édition de la mauvaise ligne) crée un clone de plus → doublons.
+    if (updatedData.registration) {
+      try {
+        const { data: owned, error: ownedErr } = await supabase
+          .from('community_presets')
+          .select('id')
+          .eq('registration', updatedData.registration)
+          .eq('submitted_by', userId)
+          .eq('status', 'active')
+          .limit(1);
+        if (!ownedErr && owned && owned.length > 0) {
+          console.log('♻️ [cloneAsOwnedPreset] Copie possédée existante → UPDATE au lieu de nouveau clone:', owned[0].id);
+          return await this.updateCommunityPreset(owned[0].id, updatedData, manexFile, manexFileName, userId);
+        }
+      } catch (e) {
+        console.warn('⚠️ [cloneAsOwnedPreset] Vérification copie possédée échouée, on clone:', e?.message);
+      }
+    }
+
+    // 1. MANEX : uploader le fichier fourni (Storage + table manex_files). Sinon,
+    //    si l'avion source AVAIT un MANEX (PDF non téléchargé localement), on
+    //    réutilise son lien manex_file_id pour ne pas le perdre au clonage.
+    let manexFileId = null;
+    if (manexFile) {
+      const fileName = manexFileName || `${updatedData.registration || 'aircraft'} - manex.pdf`;
+      const filePath = `${updatedData.model || updatedData.registration || 'aircraft'}/${Date.now()}_${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('manex-files')
+        .upload(filePath, manexFile, { cacheControl: '3600', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: fileData, error: fileError } = await supabase
+        .from('manex_files')
+        .insert({
+          filename: fileName,
+          file_path: filePath,
+          file_size: manexFile.size,
+          uploaded_by: userId,
+          aircraft_model: updatedData.model
+        })
+        .select()
+        .single();
+      if (fileError) throw fileError;
+      manexFileId = fileData.id;
+    } else if (updatedData.hasManex && (updatedData.communityPresetId || updatedData.id)) {
+      try {
+        const srcId = updatedData.communityPresetId || updatedData.id;
+        const { data: src } = await supabase
+          .from('community_presets')
+          .select('manex_file_id')
+          .eq('id', srcId)
+          .single();
+        if (src?.manex_file_id) manexFileId = src.manex_file_id;
+      } catch (e) {
+        console.warn('⚠️ [cloneAsOwnedPreset] Lien MANEX source non récupéré:', e?.message);
+      }
+    }
+
+    // 2. Nettoyage symétrique à submitPreset/updateCommunityPreset
     const cleanedData = { ...updatedData };
     delete cleanedData.manex;
     if (cleanedData.photo && typeof cleanedData.photo === 'string' && cleanedData.photo.length > 5000000) {
@@ -864,7 +925,8 @@ class CommunityService {
         aircraft_data: cleanedData,
         submitted_by: userId,
         description: updatedData.description || `Configuration ${updatedData.model} - ${updatedData.registration}`,
-        has_manex: !!(updatedData.hasManex || updatedData.manex),
+        manex_file_id: manexFileId,
+        has_manex: !!manexFileId || !!(updatedData.hasManex || updatedData.manex),
         status: 'active'
       })
       .select()
@@ -875,10 +937,84 @@ class CommunityService {
     console.log('✅ [CommunityService] Clone possédé créé:', {
       id: data?.id,
       registration: data?.registration,
-      owner: userId
+      owner: userId,
+      manexLinked: !!manexFileId
     });
 
     return data;
+  }
+
+  /**
+   * Supprimer un preset POSSÉDÉ par l'utilisateur (RLS "Owner delete presets" :
+   * seules les lignes dont submitted_by = auth.uid() sont réellement supprimées).
+   * @param {string} presetId
+   * @returns {Promise<Array>} lignes supprimées ([] si aucune : non possédée / déjà absente)
+   */
+  async deletePreset(presetId) {
+    const { data, error } = await supabase
+      .from('community_presets')
+      .delete()
+      .eq('id', presetId)
+      .select();
+    if (error) throw error;
+    return data || [];
+  }
+
+  /**
+   * Nettoyage one-shot des DOUBLONS POSSÉDÉS : pour chaque immatriculation, garde
+   * la copie la plus récente et supprime les autres copies POSSÉDÉES.
+   * Ne touche QUE tes lignes (submitted_by = userId) — jamais celles d'autrui.
+   * @param {string} userId
+   * @param {{dryRun?: boolean}} opts - dryRun (défaut true) = aperçu SANS suppression
+   * @returns {Promise<Object>} récap { toDelete, keep, toDeleteCount, deleted? }
+   */
+  async cleanupOwnedDuplicates(userId, { dryRun = true } = {}) {
+    if (!userId) throw new Error('Connexion requise pour le nettoyage des doublons.');
+
+    const { data, error } = await supabase
+      .from('community_presets')
+      .select('id, registration, submitted_by, created_at, updated_at')
+      .eq('submitted_by', userId)
+      .eq('status', 'active');
+    if (error) throw error;
+
+    const byReg = new Map();
+    for (const row of (data || [])) {
+      const reg = (row.registration || '').toString().trim().toUpperCase() || `__noreg__${row.id}`;
+      if (!byReg.has(reg)) byReg.set(reg, []);
+      byReg.get(reg).push(row);
+    }
+
+    const tsOf = (r) => new Date(r.updated_at || r.created_at || 0).getTime();
+    const keep = [];
+    const toDelete = [];
+    for (const rows of byReg.values()) {
+      rows.sort((a, b) => tsOf(b) - tsOf(a)); // plus récent d'abord
+      keep.push(rows[0]);
+      toDelete.push(...rows.slice(1));
+    }
+
+    const summary = {
+      dryRun,
+      totalOwned: data?.length || 0,
+      registrations: byReg.size,
+      toDeleteCount: toDelete.length,
+      toDelete: toDelete.map(r => ({ id: r.id, registration: r.registration, created_at: r.created_at })),
+      keep: keep.map(r => ({ id: r.id, registration: r.registration }))
+    };
+
+    if (dryRun || toDelete.length === 0) return summary;
+
+    const ids = toDelete.map(r => r.id);
+    const { data: deleted, error: delErr } = await supabase
+      .from('community_presets')
+      .delete()
+      .in('id', ids)
+      .select();
+    if (delErr) throw delErr;
+
+    summary.deleted = deleted?.length || 0;
+    return summary;
   }
 }
 
