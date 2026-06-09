@@ -273,7 +273,11 @@ export const useWeightBalanceStore = create(
       // constant [forwardPoints[0].cg, aftCG]).
       const cgLimitsAtTOW = cgLimitsAtMass(
         aircraft.cgEnvelope || aircraft.cgLimits || wb.cgLimits,
-        totalWeight
+        totalWeight,
+        // Catégorie de certification (Cat N / Cat U) si l'enveloppe en porte
+        // plusieurs ET qu'un choix est défini sur l'avion. Sinon undefined →
+        // enveloppe principale (comportement historique inchangé).
+        { category: aircraft.cgCategory }
       );
       // CG non fiable (bras manquant) ⇒ isWithinCG = null (pas un faux « OK »).
       const isWithinCG = !cgReliable ? null
