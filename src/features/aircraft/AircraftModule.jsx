@@ -252,6 +252,14 @@ export const AircraftModule = memo(() => {
   const [allPresets, setAllPresets] = useState([]);             // toute la base communautaire (métadonnées légères)
   const [presetsLoading, setPresetsLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
+  // Avion communautaire SÉLECTIONNÉ (métadonnées légères) → on affiche sa fiche
+  // + un bouton « Vérifier les données » AVANT de télécharger la config complète,
+  // comme dans Step0CommunityCheck. La sélection ≠ import : elle ne déclenche plus
+  // l'entrée immédiate dans l'assistant.
+  const [selectedPreset, setSelectedPreset] = useState(null);
+  // Téléchargement de la config complète (aircraft_data) depuis Supabase en cours
+  // → feedback visuel sur le bouton (l'utilisateur voit qu'on va chercher en ligne).
+  const [importing, setImporting] = useState(false);
 
   // 🔁 Charge TOUTE la base communautaire (métadonnées légères, sans aircraft_data)
   // au montage → filtrage DYNAMIQUE côté client, comme le sélecteur d'avion de la
@@ -277,7 +285,12 @@ export const AircraftModule = memo(() => {
   // sauvegarde crée un NOUVEL avion sans écraser le preset communautaire
   // (même pattern que Step0). communityPresetId est conservé pour le lien.
   const handleImportFromCommunity = async (presetId) => {
+    setImporting(true);
     try {
+      // ⬇️ TÉLÉCHARGEMENT RÉEL en ligne : getPresetById() va chercher la config
+      // COMPLÈTE (aircraft_data : bras, centrage, perfs, photo…) sur Supabase.
+      // La liste affichée n'avait que les métadonnées (immat/modèle) → c'est ICI
+      // que les vraies données de l'avion descendent de la base.
       const full = await communityService.getPresetById(presetId);
       const ts = Date.now();
       setWizardAircraft({ ...full, id: `aircraft-${ts}`, aircraftId: `aircraft-${ts}` });
@@ -285,6 +298,8 @@ export const AircraftModule = memo(() => {
     } catch (e) {
       console.error('❌ [AircraftModule] Import communautaire échoué:', e);
       alert(`Impossible d'importer cet avion : ${e?.message || 'erreur inconnue'}`);
+    } finally {
+      setImporting(false);
     }
   };
   // IDs des avions dont la liste "champs manquants" est dépliée sur la carte
@@ -1647,9 +1662,12 @@ export const AircraftModule = memo(() => {
           inputValue={communitySearch}
           onInputChange={(e, v) => setCommunitySearch(v)}
           onChange={(e, newValue) => {
-            if (!newValue) return;
+            // Sélection ≠ import : on affiche d'abord la fiche de l'avion
+            // (métadonnées chargées depuis Supabase) + le bouton « Vérifier les
+            // données ». Le téléchargement de la config complète n'a lieu qu'au clic.
+            if (!newValue) { setSelectedPreset(null); return; }
             const found = allPresets.find((p) => p.registration === newValue);
-            if (found) handleImportFromCommunity(found.id);
+            setSelectedPreset(found || null);
           }}
           options={allPresets.map((p) => p.registration)}
           loading={presetsLoading}
@@ -1686,6 +1704,83 @@ export const AircraftModule = memo(() => {
             />
           )}
         />
+
+        {/* ── FICHE de l'avion sélectionné + bouton « Vérifier les données » ──
+            MÊME logique que Step0CommunityCheck : la liste ne contient que des
+            métadonnées (immat/modèle, déjà chargées) ; on les affiche ici puis,
+            au clic, on TÉLÉCHARGE la config complète (aircraft_data) depuis
+            Supabase et on entre dans l'assistant pré-rempli. */}
+        {selectedPreset && (
+          <div
+            style={{
+              marginTop: tokens.spacing[3],
+              padding: tokens.spacing[4],
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--accent-primary)',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing[2], marginBottom: tokens.spacing[3], flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {selectedPreset.registration}
+              </span>
+              {(selectedPreset.adminVerified || selectedPreset.verified) && (
+                <span style={{
+                  fontSize: 'var(--fs-caption)', fontWeight: 600, color: 'var(--status-success)',
+                  border: '1px solid var(--status-success)', borderRadius: 'var(--radius-sm)', padding: '1px 8px'
+                }}>
+                  ✓ {selectedPreset.adminVerified ? 'Vérifié admin' : 'Vérifié'}
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: tokens.spacing[2], marginBottom: tokens.spacing[4] }}>
+              {selectedPreset.model && (
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Modèle :</strong> {selectedPreset.model}
+                </div>
+              )}
+              {selectedPreset.manufacturer && (
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Constructeur :</strong> {selectedPreset.manufacturer}
+                </div>
+              )}
+              {selectedPreset.type && (
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Type :</strong> {selectedPreset.type}
+                </div>
+              )}
+              {selectedPreset.category && (
+                <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Catégorie :</strong> {selectedPreset.category}
+                </div>
+              )}
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Version :</strong> {selectedPreset.version}
+              </div>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Téléchargements :</strong> {selectedPreset.downloads}
+              </div>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>Votes :</strong>{' '}
+                <span style={{ whiteSpace: 'nowrap' }}>{selectedPreset.votes?.up ?? 0} ✓ / {selectedPreset.votes?.down ?? 0} ✗</span>
+              </div>
+              <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                <strong style={{ color: 'var(--text-primary)' }}>MANEX :</strong> {selectedPreset.hasManex ? 'Oui' : 'Non'}
+              </div>
+            </div>
+
+            <EditorialButton
+              variant="primary"
+              size="sm"
+              loading={importing}
+              onClick={() => handleImportFromCommunity(selectedPreset.id)}
+            >
+              {importing ? 'Téléchargement…' : 'Vérifier les données'}
+            </EditorialButton>
+          </div>
+        )}
+
         {communityError && (
           <div style={{ marginTop: tokens.spacing[2], color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>
             ⚠️ {communityError}
