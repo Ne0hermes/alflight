@@ -5,6 +5,7 @@ import {
   isWithinEnvelope,
   envelopeWeightRange,
   buildEnvelopePolygon,
+  resolveCategoryEnvelope,
 } from '@utils/cgEnvelope';
 
 describe('cgLimitsAtMass — courbe avant variable (A2)', () => {
@@ -68,6 +69,51 @@ describe('cgLimitsAtMass — courbe arrière COMPLÈTE multi-points (aftPoints)'
   it('aftPoints vide → repli sur le modèle 2-points (rétro-compat)', () => {
     const fallback = { forwardPoints: [{ weight: 600, cg: 1.9 }], aftPoints: [], aftCG: 2.5 };
     expect(cgLimitsAtMass(fallback, 600).aft).toBeCloseTo(2.5, 6);
+  });
+});
+
+describe('catégories Cat N / Cat U (Phase 4)', () => {
+  const env = {
+    // Champs principaux = catégorie Normale (rétro-compat moteur historique).
+    forwardPoints: [{ weight: 600, cg: 2.00 }, { weight: 1100, cg: 1.95 }],
+    aftPoints: [{ weight: 600, cg: 2.50 }, { weight: 1100, cg: 2.55 }],
+    categories: {
+      Normale: {
+        forwardPoints: [{ weight: 600, cg: 2.00 }, { weight: 1100, cg: 1.95 }],
+        aftPoints: [{ weight: 600, cg: 2.50 }, { weight: 1100, cg: 2.55 }],
+      },
+      Utilitaire: {
+        forwardPoints: [{ weight: 600, cg: 2.10 }, { weight: 900, cg: 2.05 }],
+        aftPoints: [{ weight: 600, cg: 2.30 }, { weight: 900, cg: 2.35 }],
+      },
+    },
+  };
+
+  it('sans catégorie → enveloppe principale (rétro-compat)', () => {
+    expect(cgLimitsAtMass(env, 800).aft).toBeCloseTo(2.52, 6); // 2.50→2.55 @800
+  });
+  it('Cat U : interpole sur les points de la catégorie utilitaire', () => {
+    expect(cgLimitsAtMass(env, 750, { category: 'Utilitaire' }).aft).toBeCloseTo(2.325, 6);
+    expect(cgLimitsAtMass(env, 750, { category: 'U' }).aft).toBeCloseTo(2.325, 6); // synonyme
+  });
+  it('Cat N explicite = principale', () => {
+    expect(cgLimitsAtMass(env, 800, { category: 'Normale' }).aft).toBeCloseTo(2.52, 6);
+  });
+  it('catégorie inconnue → repli sur principale', () => {
+    expect(cgLimitsAtMass(env, 800, { category: 'Acro' }).aft).toBeCloseTo(2.52, 6);
+  });
+  it('isWithinEnvelope respecte la catégorie (Utilitaire plus restrictive arrière)', () => {
+    expect(isWithinEnvelope(env, 750, 2.40)).toBe(true); // dans Normale (aft 2.515)
+    expect(isWithinEnvelope(env, 750, 2.40, { category: 'Utilitaire' })).toBe(false); // > 2.325
+  });
+  it('resolveCategoryEnvelope renvoie les points de la catégorie', () => {
+    const r = resolveCategoryEnvelope(env, 'Utilitaire');
+    expect(r._category).toBe('Utilitaire');
+    expect(r.forwardPoints[0].cg).toBeCloseTo(2.10, 6);
+  });
+  it('resolveCategoryEnvelope sans categories → enveloppe inchangée', () => {
+    const plain = { forwardPoints: [{ weight: 600, cg: 2 }] };
+    expect(resolveCategoryEnvelope(plain, 'Utilitaire')).toBe(plain);
   });
 });
 
