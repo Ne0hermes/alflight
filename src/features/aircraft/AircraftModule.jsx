@@ -454,7 +454,24 @@ export const AircraftModule = memo(() => {
           console.log('🔄 Avion hydraté depuis Supabase (arms/weightBalance/cgEnvelope OK)');
         }
       } catch (err) {
-        console.warn('⚠️ Hydratation Supabase échouée (avion local uniquement ?):', err?.message || err);
+        console.warn('⚠️ Hydratation Supabase échouée:', err?.message || err);
+        // 🛡️ Anti-écrasement squelette : getAllPresets() n'embarque pas aircraft_data,
+        // donc l'entrée de liste est un SQUELETTE (sans masses/bras/CG). Si
+        // l'hydratation échoue ET qu'on n'a aucune donnée métier locale, ouvrir le
+        // formulaire puis enregistrer écraserait aircraft_data par un squelette
+        // → destruction des données de masse & centrage. On bloque l'édition.
+        const looksSkeleton = !currentAircraft.weightBalance &&
+          !currentAircraft.arms &&
+          (currentAircraft.emptyWeight === undefined || currentAircraft.emptyWeight === null) &&
+          !currentAircraft.cgEnvelope;
+        if (looksSkeleton) {
+          setOpError({
+            severity: 'critical',
+            title: 'Fiche avion non chargée',
+            description: "Impossible de charger la fiche complète depuis le cloud (réseau ou session expirée). Édition bloquée pour éviter d'écraser les données de masse & centrage. Reconnecte-toi puis réessaie."
+          });
+          return;
+        }
       }
     }
 
@@ -2668,8 +2685,11 @@ export const AircraftModule = memo(() => {
                       console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
                     }
                     
-                    // Mettre à jour avec les données légères
-                    updateAircraft(updatedAircraft);
+                    // Mettre à jour avec les données légères.
+                    // ⚠️ await OBLIGATOIRE : updateAircraft rejette si la persistance
+                    // cloud échoue (RLS/session). Sans await, le rejet était avalé et
+                    // le formulaire se fermait en affichant un faux « succès ».
+                    await updateAircraft(updatedAircraft);
                     console.log('✅ AircraftModule - Aircraft updated with speeds');
                   } else {
                     console.log('💾 AircraftModule - Adding new aircraft');
@@ -2697,14 +2717,12 @@ export const AircraftModule = memo(() => {
                       console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
                     }
                     
-                    try {
-                      const result = addAircraft(lightData);
-                      console.log('✅ AircraftModule - addAircraft result:', result);
-                      console.log('✅ AircraftModule - New aircraft added');
-                    } catch (error) {
-                      console.error('❌ AircraftModule - Erreur lors de l\'ajout:', error);
-                      console.error('❌ Stack trace:', error.stack);
-                    }
+                    // ⚠️ await OBLIGATOIRE : laisser le rejet remonter au catch
+                    // englobant pour afficher l'erreur réelle (au lieu de l'avaler
+                    // ici et de fermer le formulaire sur un faux succès).
+                    const result = await addAircraft(lightData);
+                    console.log('✅ AircraftModule - addAircraft result:', result);
+                    console.log('✅ AircraftModule - New aircraft added');
                   }
                   setShowForm(false);
                   setEditingAircraft(null);
