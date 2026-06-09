@@ -796,10 +796,16 @@ class CommunityService {
         const hint = session
           ? `Vérifie que la ligne ${presetId} t'appartient (submitted_by = ${session.user.id}) ou que la politique RLS autorise ton compte à la modifier.`
           : 'Connecte-toi avant de sauvegarder, la RLS interdit les écritures anonymes.';
-        throw new Error(
+        // Code machine-lisible : permet au store de basculer en CLONE possédé
+        // (modèle « clone possédé sur community_presets ») quand l'avion édité
+        // appartient à un autre compte — la RLS owner-only refuse alors l'UPDATE
+        // (0 ligne, sans error SQL). On distingue ce cas d'une vraie erreur réseau.
+        const noRowsError = new Error(
           `Supabase UPDATE community_presets/${presetId} a affecté 0 ligne. ` +
           `Session : ${sessionInfo}. ${hint}`
         );
+        noRowsError.code = 'UPDATE_NO_ROWS';
+        throw noRowsError;
       }
 
       if (data.length > 1) {
@@ -811,6 +817,68 @@ class CommunityService {
       console.error('❌ Erreur lors de la mise à jour du preset:', error);
       throw error;
     }
+  }
+
+  /**
+   * Cloner un avion comme preset POSSÉDÉ par l'utilisateur courant.
+   *
+   * Modèle « clone possédé sur community_presets » : quand on édite un avion
+   * importé (donc non possédé), la RLS interdit l'UPDATE (submitted_by != auth.uid()).
+   * On crée alors une NOUVELLE ligne dont submitted_by = userId → toutes les
+   * éditions futures de CETTE copie passent la policy "Owner update presets".
+   *
+   * @param {Object} updatedData - Données complètes de l'avion (en unités de stockage)
+   * @param {string} userId - UUID Supabase du propriétaire (obligatoire)
+   * @returns {Promise<Object>} la nouvelle ligne community_presets (avec son id)
+   */
+  async cloneAsOwnedPreset(updatedData, userId) {
+    if (!userId) {
+      throw new Error('Clone impossible : aucune session Supabase active (connexion requise).');
+    }
+
+    // Nettoyage symétrique à submitPreset/updateCommunityPreset
+    const cleanedData = { ...updatedData };
+    delete cleanedData.manex;
+    if (cleanedData.photo && typeof cleanedData.photo === 'string' && cleanedData.photo.length > 5000000) {
+      console.warn('⚠️ [cloneAsOwnedPreset] Photo > 5 MB strippée avant clone.');
+      delete cleanedData.photo;
+    }
+    delete cleanedData.baseAircraft;
+    delete cleanedData.isImportedFromCommunity;
+    delete cleanedData.originalCommunityData;
+    delete cleanedData.importDate;
+    delete cleanedData.id;
+    delete cleanedData.aircraftId;
+    delete cleanedData.isVariant;
+    delete cleanedData.communityPresetId;
+    delete cleanedData.submitted_by; // l'owner vit dans la COLONNE, pas dans le JSON
+
+    const { data, error } = await supabase
+      .from('community_presets')
+      .insert({
+        registration: updatedData.registration,
+        model: updatedData.model,
+        manufacturer: updatedData.manufacturer || 'Inconnu',
+        aircraft_type: updatedData.aircraftType || 'Avion',
+        category: updatedData.category || 'SEP',
+        aircraft_data: cleanedData,
+        submitted_by: userId,
+        description: updatedData.description || `Configuration ${updatedData.model} - ${updatedData.registration}`,
+        has_manex: !!(updatedData.hasManex || updatedData.manex),
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    console.log('✅ [CommunityService] Clone possédé créé:', {
+      id: data?.id,
+      registration: data?.registration,
+      owner: userId
+    });
+
+    return data;
   }
 }
 
