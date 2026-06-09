@@ -185,6 +185,54 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // Résultats validés par stage : {a, b, r2, n, armCm, ...}
   const [resultsByStage, setResultsByStage] = useState({});
 
+  // ─── MÉMOIRE PAR ÉLÉMENT (Phase 2 — une seule interface) ──────────────────
+  // Chaque élément (siège avant, réservoir d'aile, bagages…) garde SON propre
+  // contexte de tracé : axes + calibration + points cliqués. On le sauvegarde en
+  // quittant un élément et on le restaure en y revenant → l'image reste chargée
+  // UNE seule fois et on passe d'un élément à l'autre SANS tout recalibrer ni
+  // faire d'aller-retour entre les étapes.
+  const [contextByStage, setContextByStage] = useState({});
+  // Formulaire d'axes repliable dans l'atelier (réglage fin par panneau).
+  const [showAxesForm, setShowAxesForm] = useState(false);
+
+  const snapshotContext = () => ({ axesConfig, massAxis, customXTicks, customYTicks, curvePoints });
+
+  // Sélectionne un élément à mesurer : mémorise le contexte courant puis restaure
+  // celui de la cible (ou, si nouvel élément, garde la calibration courante comme
+  // point de départ — l'échelle des moments est souvent partagée entre panneaux —
+  // et repart de points vides).
+  const selectStage = (key) => {
+    if (!key || key === currentStageKey) return;
+    setContextByStage((prev) => {
+      const next = { ...prev };
+      if (currentStageKey) next[currentStageKey] = snapshotContext();
+      return next;
+    });
+    const saved = contextByStage[key];
+    if (saved) {
+      setAxesConfig(saved.axesConfig);
+      setMassAxis(saved.massAxis);
+      setCustomXTicks(saved.customXTicks || []);
+      setCustomYTicks(saved.customYTicks || []);
+      setCurvePoints(saved.curvePoints || []);
+    } else {
+      setCurvePoints([]); // garder axes + calibration courants comme base
+    }
+    setCalibrationState(null);
+    setTestMass('');
+    setStageRequiredHint(false);
+    setCurrentStageKey(key);
+  };
+
+  // Passe à l'élément SUIVANT non encore validé (sinon le suivant dans la liste).
+  const goToNextStage = () => {
+    if (!stageList.length) return;
+    const idx = stageList.findIndex((s) => s.key === currentStageKey);
+    const ordered = idx < 0 ? stageList : [...stageList.slice(idx + 1), ...stageList.slice(0, idx + 1)];
+    const target = ordered.find((s) => !resultsByStage[s.key] && s.key !== currentStageKey) || ordered[0];
+    if (target) selectStage(target.key);
+  };
+
   // ─── Test prédictif ─────────────────────────────────────────────────────
   const [testMass, setTestMass] = useState('');
 
@@ -636,9 +684,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
         axesConfig={axesConfig}
         curves={curves}
         selectedCurveId={selectedCurveIdForChart}
-        onPointClick={activeStep === 3 && !imageAdjustMode ? handlePointClick : undefined}
-        onPointDrag={activeStep === 3 && !imageAdjustMode ? handlePointDrag : undefined}
-        onPointDelete={activeStep === 3 && !imageAdjustMode ? handlePointDelete : undefined}
+        onPointClick={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointClick : undefined}
+        onPointDrag={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointDrag : undefined}
+        onPointDelete={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointDelete : undefined}
         responsive={false}
         width={chartSize.width}
         height={chartSize.height}
@@ -741,9 +789,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
               Image du mini-graphique
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-              Charge un export JPG/PNG du mini-graphique à mesurer (PLACES AVANT, CARBURANT, …).
-              Chaque mini-graphique a sa propre échelle — tu pourras recharger une nouvelle image
-              pour chaque bras de levier.
+              Charge un export JPG/PNG du centrogramme (idéalement la figure ENTIÈRE, avec tous les
+              panneaux). Tu calibreras ensuite les axes de chaque élément à la volée dans l'atelier,
+              sans recharger d'image. (Tu peux toujours charger une image séparée par élément si besoin.)
             </Typography>
             <Button
               variant="contained"
@@ -862,35 +910,86 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
             </Alert>
           )}
 
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }} flexWrap="wrap">
-            <FormControl
-              size="small"
-              sx={{ minWidth: 300 }}
-              color={!currentStageKey ? 'warning' : 'primary'}
-              error={stageRequiredHint}
-            >
-              <InputLabel>Stage à mesurer *</InputLabel>
-              <Select
-                value={currentStageKey}
-                label="Stage à mesurer *"
-                onChange={(e) => {
-                  setCurrentStageKey(e.target.value);
-                  setCurvePoints([]); // reset points si on change de stage
-                  setTestMass('');
-                  setStageRequiredHint(false);
-                }}
-              >
-                {stageList.map(s => (
-                  <MenuItem key={s.key} value={s.key}>
-                    {s.label}
-                    {resultsByStage[s.key] && (
-                      <CheckCircleIcon sx={{ ml: 1, color: 'success.main', fontSize: 16 }} />
-                    )}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
+          {/* ── NAVIGATEUR D'ÉLÉMENTS (Phase 2) — image chargée UNE fois ; on
+              passe d'un élément à l'autre, chacun gardant sa calibration + ses
+              points. Plus d'aller-retour entre les étapes. ── */}
+          <Paper variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
+            <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mb: 1 }}>
+              Élément à mesurer {currentStage ? `: ${currentStage.label}` : '— choisis-en un ci-dessous'}
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: currentStageKey ? 1.5 : 0 }}>
+              {stageList.map((s) => {
+                const done = !!resultsByStage[s.key];
+                const active = s.key === currentStageKey;
+                return (
+                  <Chip
+                    key={s.key}
+                    label={s.label}
+                    size="small"
+                    color={active ? 'primary' : done ? 'success' : 'default'}
+                    variant={active || done ? 'filled' : 'outlined'}
+                    icon={done ? <CheckCircleIcon /> : undefined}
+                    onClick={() => selectStage(s.key)}
+                    sx={{ borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                  />
+                );
+              })}
+            </Stack>
+
+            {/* Calibration INLINE de l'élément courant — chaque panneau a sa
+                propre échelle ; on (re)calibre ici sans revenir en arrière. */}
+            {currentStageKey && (
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                <Button
+                  size="small"
+                  variant={customXTicks.length >= 2 ? 'outlined' : 'contained'}
+                  color="success"
+                  startIcon={<CalibrateIcon />}
+                  onClick={() => startCalibration('x')}
+                >
+                  {customXTicks.length >= 2 ? 'Recalibrer X ✓' : 'Calibrer X'}
+                </Button>
+                <Button
+                  size="small"
+                  variant={customYTicks.length >= 2 ? 'outlined' : 'contained'}
+                  color="primary"
+                  startIcon={<CalibrateIcon />}
+                  onClick={() => startCalibration('y')}
+                >
+                  {customYTicks.length >= 2 ? 'Recalibrer Y ✓' : 'Calibrer Y'}
+                </Button>
+                <Button size="small" variant="text" onClick={() => setShowAxesForm((v) => !v)}>
+                  {showAxesForm ? 'Masquer les axes' : 'Régler les axes…'}
+                </Button>
+              </Stack>
+            )}
+          </Paper>
+
+          {/* Bannière de calibration guidée — active AUSSI dans l'atelier. */}
+          {calibrationState && (
+            <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'rgba(249,115,22,0.08)', borderColor: '#f26921', borderWidth: 2 }}>
+              <Typography variant="h6" sx={{ color: 'var(--accent-primary)' }}>
+                🎯 Clique sur la graduation <strong>{calibrationState.axis.toUpperCase()} = {calibrationState.valuesToCalibrate[calibrationState.currentIndex]}</strong>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Reste {calibrationState.valuesToCalibrate.length - calibrationState.currentIndex} clic(s) :{' '}
+                {calibrationState.valuesToCalibrate.slice(calibrationState.currentIndex).join(', ')}
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Button size="small" color="error" onClick={cancelCalibration}>Annuler la calibration</Button>
+              </Box>
+            </Paper>
+          )}
+
+          {/* Formulaire d'axes repliable (unités / échelle de l'élément courant). */}
+          {showAxesForm && renderAxesForm()}
+
+          {/* Garde-fou : calibrer les deux axes du panneau avant de cliquer la courbe. */}
+          {currentStageKey && !calibrationState && (customXTicks.length < 2 || customYTicks.length < 2) && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Calibre les axes X et Y de ce panneau (boutons ci-dessus) avant de cliquer les points de la courbe.
+            </Alert>
+          )}
 
           {regression && (() => {
             const armInfo = computeArmFromRegression(regression);
@@ -940,16 +1039,12 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
                 >
                   Réinitialiser les points
                 </Button>
-                {resultsByStage[currentStageKey] && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<UploadIcon />}
-                    onClick={handleStartNewArm}
-                  >
-                    Charger l'image du bras suivant
-                  </Button>
-                )}
+                <Button variant="contained" color="primary" onClick={goToNextStage}>
+                  Élément suivant →
+                </Button>
+                <Button variant="text" size="small" startIcon={<UploadIcon />} onClick={handleStartNewArm}>
+                  Nouvelle image
+                </Button>
               </Box>
 
               {resultsByStage[currentStageKey] && (
@@ -1012,8 +1107,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
         Lecture graphique du centrogramme
       </Typography>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-        Mesure les bras de levier des étapes (sièges, carburant, bagages…) par clic sur le centrogramme MANEX.
-        Chaque mini-graphique se mesure indépendamment.
+        Charge le centrogramme UNE seule fois, puis mesure les bras de levier de chaque élément
+        (sièges, carburant, bagages…) par clic. Navigue d'un élément à l'autre avec les pastilles :
+        chacun garde sa propre calibration et ses points — plus besoin de revenir en arrière.
       </Typography>
 
       <Stepper activeStep={activeStep} sx={{ mb: 2 }}>
