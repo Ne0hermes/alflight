@@ -54,6 +54,7 @@ import {
   convertArmUnit,
   buildStageList
 } from '../utils/centrogramMath';
+import { buildCgEnvelope } from '../utils/centrogramAdapter';
 import { unitsSelectors } from '@core/stores/unitsStore';
 
 const STEPS = [
@@ -62,6 +63,13 @@ const STEPS = [
   'Calibrer Y',
   'Lecture du bras'
 ];
+
+// Élément SPÉCIAL du navigateur (Phase 3) : le panneau « MASSE TOTALE » du
+// centrogramme où l'on trace l'enveloppe de centrage (Cat N / Cat U) au lieu
+// d'un simple bras de levier. Clé hors buildStageList (qui ne liste que les bras).
+const ENVELOPE_STAGE_KEY = '__envelope__';
+const ENV_FWD_ID = 'env-forward';
+const ENV_AFT_ID = 'env-aft';
 
 // Dimensions par défaut du chart
 const DEFAULT_CHART_WIDTH = 900;
@@ -239,6 +247,18 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // ─── Conversion d'unités ────────────────────────────────────────────────
   const [armOutputUnit, setArmOutputUnit] = useState('cm');
 
+  // ─── ENVELOPPE DE CENTRAGE (Phase 3) ─────────────────────────────────────
+  // On trace, sur le panneau « MASSE TOTALE », les limites AVANT et ARRIÈRE par
+  // catégorie (Normale, Utilitaire). Chaque point cliqué est en coordonnées data
+  // (masse, moment) → CG = moment / masse. À la construction, l'adaptateur de
+  // Phase 1 (buildCgEnvelope) produit le cgEnvelope canonique (CG en mètres).
+  const [envelope, setEnvelope] = useState({
+    activeCategory: 'Normale',
+    activeLimit: 'forward', // 'forward' | 'aft'
+    categories: { Normale: { forward: [], aft: [] } },
+  });
+  const [envelopeBuilt, setEnvelopeBuilt] = useState(null); // résumé après construction
+
   // ════════════════════════════════════════════════════════════════════════
   // UPLOAD IMAGE
   // ════════════════════════════════════════════════════════════════════════
@@ -348,13 +368,26 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // ════════════════════════════════════════════════════════════════════════
   const [stageRequiredHint, setStageRequiredHint] = useState(false);
   const handlePointClick = useCallback((x, y) => {
+    // Mode ENVELOPPE : le clic alimente la limite avant/arrière de la catégorie
+    // active (trié par MASSE), pas la régression d'un bras.
+    if (currentStageKey === ENVELOPE_STAGE_KEY) {
+      setEnvelope(prev => {
+        const cat = prev.activeCategory;
+        const lim = prev.activeLimit;
+        const cur = prev.categories[cat] || { forward: [], aft: [] };
+        const pts = [...(cur[lim] || []), { id: uuidv4(), x, y }]
+          .sort((a, b) => (massAxis === 'x' ? a.x - b.x : a.y - b.y));
+        return { ...prev, categories: { ...prev.categories, [cat]: { ...cur, [lim]: pts } } };
+      });
+      return;
+    }
     if (!currentStageKey) {
       setStageRequiredHint(true);
       setTimeout(() => setStageRequiredHint(false), 4000);
       return;
     }
     setCurvePoints(prev => [...prev, { id: uuidv4(), x, y }].sort((a, b) => a.x - b.x));
-  }, [currentStageKey]);
+  }, [currentStageKey, massAxis]);
 
   const handlePointDrag = useCallback((curveId, pointId, x, y) => {
     setCurvePoints(prev => prev.map(p => p.id === pointId ? { ...p, x, y } : p)
@@ -374,6 +407,50 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   }, [curvePoints]);
 
   const currentStage = stageList.find(s => s.key === currentStageKey);
+  const isEnvelopeStage = currentStageKey === ENVELOPE_STAGE_KEY;
+
+  // ── ENVELOPPE : unité de longueur lue sur l'axe MOMENT (pour le CG) ──
+  const detectMomentLengthUnit = () => {
+    const momentUnit = massAxis === 'x' ? axesConfig.yAxis.unit : axesConfig.xAxis.unit;
+    const m = (momentUnit || '').match(/(mm|cm|m|in)/i);
+    return m ? m[1].toLowerCase() : 'm';
+  };
+
+  // Point cliqué (data) → {weight, cg} : masse selon massAxis, CG = moment / masse.
+  const envPointToWeightCg = (p) => {
+    const mass = massAxis === 'x' ? p.x : p.y;
+    const moment = massAxis === 'x' ? p.y : p.x;
+    if (!Number.isFinite(mass) || mass === 0 || !Number.isFinite(moment)) return null;
+    return { weight: mass, cg: moment / mass }; // cg dans l'unité de longueur du moment
+  };
+
+  // Construit le cgEnvelope canonique via l'adaptateur Phase 1 et l'écrit sur l'avion.
+  const buildEnvelopeFromTrace = () => {
+    const lengthUnit = detectMomentLengthUnit();
+    const cats = Object.entries(envelope.categories)
+      .map(([name, b]) => ({
+        name,
+        cgUnit: lengthUnit,
+        forwardPoints: (b.forward || []).map(envPointToWeightCg).filter(Boolean),
+        aftPoints: (b.aft || []).map(envPointToWeightCg).filter(Boolean),
+      }))
+      .filter((c) => c.forwardPoints.length || c.aftPoints.length);
+
+    const { cgEnvelope, warnings } = buildCgEnvelope({ categories: cats, cgUnit: lengthUnit });
+    if (!cgEnvelope) {
+      alert('Enveloppe incomplète : trace au moins la limite avant ET la limite arrière.');
+      return;
+    }
+    // Écriture canonique — MÊME donnée que la saisie manuelle (Step3 / moteur W&B).
+    updateData('cgEnvelope', cgEnvelope);
+    setEnvelopeBuilt({
+      fwd: cgEnvelope.forwardPoints?.length || 0,
+      aft: cgEnvelope.aftPoints?.length || 0,
+      cats: Object.keys(cgEnvelope.categories || {}),
+      unit: lengthUnit,
+      warnings: warnings || [],
+    });
+  };
 
   // ════════════════════════════════════════════════════════════════════════
   // VALIDATION DU BRAS COURANT
@@ -464,14 +541,29 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // id stable, même quand elle est vide. Sans ça, le premier clic est ignoré
   // silencieusement et l'utilisateur ne peut jamais poser le premier point.
   const CURVE_ID = 'centrogram-curve';
-  const curves = useMemo(() => [{
-    id: CURVE_ID,
-    name: currentStage?.label || 'Courbe en cours',
-    color: 'var(--color-red-critical)',
-    points: curvePoints
-  }], [curvePoints, currentStage]);
+  const curves = useMemo(() => {
+    if (isEnvelopeStage) {
+      // Deux courbes : limite avant (bleu) + limite arrière (rouge) de la
+      // catégorie active. Le clic alimente celle sélectionnée (activeLimit).
+      const cat = envelope.categories[envelope.activeCategory] || { forward: [], aft: [] };
+      return [
+        { id: ENV_FWD_ID, name: `${envelope.activeCategory} — avant`, color: '#3b82f6', points: cat.forward || [] },
+        { id: ENV_AFT_ID, name: `${envelope.activeCategory} — arrière`, color: 'var(--color-red-critical)', points: cat.aft || [] },
+      ];
+    }
+    return [{
+      id: CURVE_ID,
+      name: currentStage?.label || 'Courbe en cours',
+      color: 'var(--color-red-critical)',
+      points: curvePoints
+    }];
+  }, [isEnvelopeStage, envelope, curvePoints, currentStage]);
 
-  const selectedCurveIdForChart = CURVE_ID;
+  // Chart exige un selectedCurveId NON-NULL pour accepter les clics. En mode
+  // enveloppe, on sélectionne la courbe de la limite en cours (avant/arrière).
+  const selectedCurveIdForChart = isEnvelopeStage
+    ? (envelope.activeLimit === 'aft' ? ENV_AFT_ID : ENV_FWD_ID)
+    : CURVE_ID;
 
   // ════════════════════════════════════════════════════════════════════════
   // RENDU AXES FORM (compact)
@@ -685,8 +777,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
         curves={curves}
         selectedCurveId={selectedCurveIdForChart}
         onPointClick={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointClick : undefined}
-        onPointDrag={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointDrag : undefined}
-        onPointDelete={activeStep === 3 && !imageAdjustMode && !calibrationState ? handlePointDelete : undefined}
+        onPointDrag={activeStep === 3 && !imageAdjustMode && !calibrationState && !isEnvelopeStage ? handlePointDrag : undefined}
+        onPointDelete={activeStep === 3 && !imageAdjustMode && !calibrationState && !isEnvelopeStage ? handlePointDelete : undefined}
         responsive={false}
         width={chartSize.width}
         height={chartSize.height}
@@ -915,7 +1007,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
               points. Plus d'aller-retour entre les étapes. ── */}
           <Paper variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
             <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mb: 1 }}>
-              Élément à mesurer {currentStage ? `: ${currentStage.label}` : '— choisis-en un ci-dessous'}
+              Élément à mesurer {isEnvelopeStage ? ': Enveloppe de centrage' : (currentStage ? `: ${currentStage.label}` : '— choisis-en un ci-dessous')}
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: currentStageKey ? 1.5 : 0 }}>
               {stageList.map((s) => {
@@ -934,6 +1026,16 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
                   />
                 );
               })}
+              {/* Pastille spéciale ENVELOPPE (Phase 3) — panneau « MASSE TOTALE ». */}
+              <Chip
+                label="◆ Enveloppe de centrage"
+                size="small"
+                color={isEnvelopeStage ? 'primary' : envelopeBuilt ? 'success' : 'default'}
+                variant={isEnvelopeStage || envelopeBuilt ? 'filled' : 'outlined'}
+                icon={envelopeBuilt ? <CheckCircleIcon /> : undefined}
+                onClick={() => selectStage(ENVELOPE_STAGE_KEY)}
+                sx={{ borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 700 }}
+              />
             </Stack>
 
             {/* Calibration INLINE de l'élément courant — chaque panneau a sa
@@ -990,6 +1092,112 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
               Calibre les axes X et Y de ce panneau (boutons ci-dessus) avant de cliquer les points de la courbe.
             </Alert>
           )}
+
+          {/* ── PANNEAU ENVELOPPE (Phase 3) — tracé Cat N / Cat U, limites
+              avant + arrière, puis construction du cgEnvelope canonique. ── */}
+          {isEnvelopeStage && !calibrationState && customXTicks.length >= 2 && customYTicks.length >= 2 && (() => {
+            const cat = envelope.categories[envelope.activeCategory] || { forward: [], aft: [] };
+            const fwdN = (cat.forward || []).length;
+            const aftN = (cat.aft || []).length;
+            return (
+              <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 'var(--radius-sm)', bgcolor: 'transparent' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Enveloppe de centrage — tracé des limites (CG = moment ÷ masse)
+                </Typography>
+
+                {/* Catégories */}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ mr: 0.5 }}>Catégorie :</Typography>
+                  {Object.keys(envelope.categories).map((name) => (
+                    <Chip
+                      key={name}
+                      label={name}
+                      size="small"
+                      color={envelope.activeCategory === name ? 'primary' : 'default'}
+                      variant={envelope.activeCategory === name ? 'filled' : 'outlined'}
+                      onClick={() => setEnvelope((p) => ({ ...p, activeCategory: name }))}
+                      sx={{ borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+                    />
+                  ))}
+                  {!envelope.categories['Utilitaire'] && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => setEnvelope((p) => ({
+                        ...p,
+                        categories: { ...p.categories, Utilitaire: { forward: [], aft: [] } },
+                        activeCategory: 'Utilitaire',
+                      }))}
+                    >
+                      + Catégorie Utilitaire
+                    </Button>
+                  )}
+                </Stack>
+
+                {/* Limite avant / arrière */}
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center" sx={{ mb: 1 }}>
+                  <Typography variant="caption" sx={{ mr: 0.5 }}>Limite à tracer :</Typography>
+                  <Button
+                    size="small"
+                    variant={envelope.activeLimit === 'forward' ? 'contained' : 'outlined'}
+                    color="info"
+                    onClick={() => setEnvelope((p) => ({ ...p, activeLimit: 'forward' }))}
+                  >
+                    Avant ({fwdN} pts)
+                  </Button>
+                  <Button
+                    size="small"
+                    variant={envelope.activeLimit === 'aft' ? 'contained' : 'outlined'}
+                    color="error"
+                    onClick={() => setEnvelope((p) => ({ ...p, activeLimit: 'aft' }))}
+                  >
+                    Arrière ({aftN} pts)
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color="error"
+                    disabled={(envelope.activeLimit === 'forward' ? fwdN : aftN) === 0}
+                    onClick={() => setEnvelope((p) => {
+                      const c = p.activeCategory; const l = p.activeLimit;
+                      const cur = p.categories[c] || { forward: [], aft: [] };
+                      return { ...p, categories: { ...p.categories, [c]: { ...cur, [l]: [] } } };
+                    })}
+                  >
+                    Effacer cette limite
+                  </Button>
+                </Stack>
+
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+                  Clique les points de la limite <strong>{envelope.activeLimit === 'forward' ? 'avant' : 'arrière'}</strong> de
+                  la catégorie <strong>{envelope.activeCategory}</strong> sur le polygone d'enveloppe (panneau « masse totale »).
+                </Typography>
+
+                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap alignItems="center">
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={buildEnvelopeFromTrace}
+                    disabled={fwdN < 1 || aftN < 1}
+                  >
+                    Construire l'enveloppe de centrage
+                  </Button>
+                  <Typography variant="caption" color="text.secondary">
+                    Min. recommandé : 2 points avant + 2 points arrière par catégorie.
+                  </Typography>
+                </Stack>
+
+                {envelopeBuilt && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    ✅ Enveloppe construite et enregistrée : <strong>{envelopeBuilt.fwd}</strong> pts avant /{' '}
+                    <strong>{envelopeBuilt.aft}</strong> pts arrière · catégorie(s) {envelopeBuilt.cats.join(', ')} · CG en {envelopeBuilt.unit}.
+                    {envelopeBuilt.warnings?.length ? ` ⚠ ${envelopeBuilt.warnings.join(' ')}` : ''}
+                    {' '}Elle est désormais utilisée par le moteur de centrage, comme une saisie manuelle.
+                  </Alert>
+                )}
+              </Paper>
+            );
+          })()}
 
           {regression && (() => {
             const armInfo = computeArmFromRegression(regression);
