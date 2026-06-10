@@ -105,7 +105,12 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         };
         setManexFile(manexData);
         updateData('manex', manexData);
-        
+        // Nouveau PDF importé → il remplace toute référence Supabase périmée et
+        // annule une éventuelle suppression en attente (la sauvegarde ré-uploadera
+        // le fichier et reliera manex_file_id sur la fiche).
+        updateData('hasManex', true);
+        updateData('manexDeleted', false);
+        updateData('manexAvailableInSupabase', null);
       };
       reader.readAsDataURL(file);
     } else {
@@ -116,7 +121,14 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
   const handleManexDelete = () => {
     setManexFile(null);
     updateData('manex', null);
-    
+    // Purge AUSSI la référence Supabase locale (sinon l'UI repropose « Télécharger
+    // depuis Supabase » sur un pointeur potentiellement mort) et marque la
+    // suppression : à la sauvegarde, updateCommunityPreset retire has_manex +
+    // manex_file_id de la fiche. Sans ça, le lien ressuscitait à chaque édition
+    // → erreur « MANEX introuvable » au téléchargement.
+    updateData('manexAvailableInSupabase', null);
+    updateData('hasManex', false);
+    updateData('manexDeleted', true);
   };
 
   // Upload vers Supabase Storage
@@ -990,7 +1002,12 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                           window.open(objUrl, '_blank');
                           setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
                         } catch (err) {
-                          alert(`Impossible de télécharger le MANEX depuis Supabase : ${err.message}`);
+                          if (String(err?.message || '').includes('MANEX introuvable')) {
+                            // Pointeur mort : le PDF n'existe plus dans le bucket.
+                            alert('❌ Ce MANEX n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Cliquez sur « Supprimer », ré-importez le PDF, puis enregistrez l\'avion : le lien sera réparé automatiquement.');
+                          } else {
+                            alert(`Impossible de télécharger le MANEX depuis Supabase : ${err.message}`);
+                          }
                         }
                       } else {
                         alert('Impossible de télécharger le MANEX');
@@ -1078,7 +1095,15 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       reader.readAsDataURL(blob);
                     } catch (error) {
                       console.error('❌ Erreur téléchargement MANEX:', error);
-                      alert(`❌ Erreur: ${error.message}`);
+                      if (String(error?.message || '').includes('MANEX introuvable')) {
+                        // Pointeur mort (fichier absent du bucket) : on retire la référence
+                        // locale pour débloquer le bouton « Importer le MANEX (PDF) » —
+                        // le ré-import + enregistrement répareront le lien en base.
+                        updateData('manexAvailableInSupabase', null);
+                        alert('❌ Ce MANEX n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Ré-importez le PDF via « Importer le MANEX (PDF) » puis enregistrez l\'avion : le lien sera réparé automatiquement.');
+                      } else {
+                        alert(`❌ Erreur: ${error.message}`);
+                      }
                       setUploadingToSupabase(false);
                     }
                   }}
