@@ -692,10 +692,15 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   updateData('fuelCapacity', valueInStorageUnit);
                 }}
                 placeholder="Ex: 200"
+                disabled={data.additionalFuelTanks?.length > 0}
                 error={!!errors.fuelCapacity}
-                helperText={errors.fuelCapacity || (data.fuelCapacity
-                  ? `≈ ${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}`
-                  : 'Volume physique total de tous les réservoirs (capacity)')}
+                helperText={
+                  data.additionalFuelTanks?.length > 0
+                    ? `Capacité totale = somme des réservoirs (${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & centrage.`
+                    : (errors.fuelCapacity || (data.fuelCapacity
+                      ? `≈ ${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}`
+                      : 'Volume physique total de tous les réservoirs (capacity)'))
+                }
                 required
                 InputProps={{
                   endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
