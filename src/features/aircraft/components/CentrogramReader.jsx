@@ -193,6 +193,12 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // Résultats validés par stage : {a, b, r2, n, armCm, ...}
   const [resultsByStage, setResultsByStage] = useState({});
 
+  // ─── Création d'éléments à mesurer sur place (bagages / carburant / siège) ──
+  // Permet d'ajouter un élément manquant DIRECTEMENT ici (il est créé dans le
+  // modèle de l'avion → apparaît dans la liste → son bras mesuré est reconnecté).
+  const [newElType, setNewElType] = useState('baggage');
+  const [newElName, setNewElName] = useState('');
+
   // ─── MÉMOIRE PAR ÉLÉMENT (Phase 2 — une seule interface) ──────────────────
   // Chaque élément (siège avant, réservoir d'aile, bagages…) garde SON propre
   // contexte de tracé : axes + calibration + points cliqués. On le sauvegarde en
@@ -230,6 +236,29 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
     setTestMass('');
     setStageRequiredHint(false);
     setCurrentStageKey(key);
+  };
+
+  // Crée un nouvel élément à mesurer DANS le modèle de l'avion (bagages / réservoir
+  // carburant / siège) → il apparaît aussitôt dans la liste ci-dessous, et le bras
+  // qu'on mesure est enregistré dans cette entrée — donc RECONNECTÉ au M&C : Step3
+  // lit les mêmes tableaux (baggageCompartments / additionalFuelTanks / additionalSeats).
+  const addMeasurableElement = () => {
+    const id = uuidv4();
+    const name = (newElName || '').trim();
+    if (newElType === 'baggage') {
+      const list = Array.isArray(aircraftData?.baggageCompartments) ? aircraftData.baggageCompartments : [];
+      updateData('baggageCompartments', [...list, { id, name: name || `Compartiment ${list.length + 1}`, arm: '', maxWeight: 0 }]);
+      selectStage(`baggage_${id}`);
+    } else if (newElType === 'fuel') {
+      const list = Array.isArray(aircraftData?.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
+      updateData('additionalFuelTanks', [...list, { id, name: name || `Réservoir ${list.length + 1}`, type: 'optional', capacity: 0, arm: '' }]);
+      selectStage(`fuelTank_${id}`);
+    } else if (newElType === 'seat') {
+      const list = Array.isArray(aircraftData?.additionalSeats) ? aircraftData.additionalSeats : [];
+      updateData('additionalSeats', [...list, { id, name: name || `Siège ${list.length + 1}`, arm: '' }]);
+      selectStage(`seat_${id}`);
+    }
+    setNewElName('');
   };
 
   // Passe à l'élément SUIVANT non encore validé (sinon le suivant dans la liste).
@@ -1089,6 +1118,39 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
                 sx={{ borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 700 }}
               />
             </Stack>
+
+            {/* ── + Ajouter un élément à mesurer (bagages / carburant / siège) ──
+                Crée l'entrée dans le modèle de l'avion → elle apparaît dans la liste
+                ci-dessus et son bras mesuré est reconnecté au M&C (Step3). */}
+            {!isEnvelopeStage && (
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1.5 }}>
+                <Typography variant="caption" color="text.secondary">Élément manquant ?</Typography>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <InputLabel id="cgr-new-el-type">Ajouter</InputLabel>
+                  <Select
+                    labelId="cgr-new-el-type"
+                    label="Ajouter"
+                    value={newElType}
+                    onChange={(e) => setNewElType(e.target.value)}
+                  >
+                    <MenuItem value="baggage">🧳 Compartiment bagages</MenuItem>
+                    <MenuItem value="fuel">⛽ Réservoir carburant</MenuItem>
+                    <MenuItem value="seat">💺 Siège additionnel</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small"
+                  label="Nom (optionnel)"
+                  value={newElName}
+                  onChange={(e) => setNewElName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addMeasurableElement(); } }}
+                  sx={{ minWidth: 170 }}
+                />
+                <Button size="small" variant="outlined" onClick={addMeasurableElement}>
+                  + Ajouter
+                </Button>
+              </Stack>
+            )}
 
             {/* Calibration INLINE de l'élément courant — chaque panneau a sa
                 propre échelle ; on (re)calibre ici sans revenir en arrière. */}
