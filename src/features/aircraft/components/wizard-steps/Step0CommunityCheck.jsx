@@ -91,6 +91,12 @@ async function findLocalManex({ registration, communityPresetId, expectedPath })
   return null;
 }
 
+// Entrée d'ACTION épinglée en BAS du menu déroulant de recherche : si l'avion
+// n'existe pas dans la base partagée, le pilote bascule directement vers
+// l'import MANEX (PDF) — même flux que le bouton « Importer depuis un MANEX »
+// de la section « Votre avion n'est pas dans la liste ? » plus bas dans la page.
+const CREATE_FROM_MANEX_OPTION = '__create_from_manex__';
+
 const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel, manexReviewTrigger }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -771,15 +777,66 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
         <Autocomplete
           value={searchValue}
           onChange={(event, newValue) => {
+            // Entrée d'action en bas du menu : ouvre le sélecteur de PDF
+            // (import MANEX) sans toucher au contenu du champ de recherche.
+            if (newValue === CREATE_FROM_MANEX_OPTION) {
+              manexFileInputRef.current?.click();
+              return;
+            }
             setSearchValue(newValue);
             const found = communityAircraft.find(ac => ac.registration === newValue);
             if (found) setSelectedAircraft(found);
           }}
           inputValue={searchValue}
           onInputChange={(event, newInputValue) => {
+            if (newInputValue === CREATE_FROM_MANEX_OPTION) return; // action, pas une valeur
             setSearchValue(newInputValue);
           }}
-          options={communityAircraft.map(ac => ac.registration)}
+          options={[...communityAircraft.map(ac => ac.registration), CREATE_FROM_MANEX_OPTION]}
+          filterOptions={(options, state) => {
+            const input = (state.inputValue || '').trim().toUpperCase();
+            const matches = options.filter(
+              (o) => o !== CREATE_FROM_MANEX_OPTION && (!input || o.toUpperCase().includes(input))
+            );
+            // L'action reste TOUJOURS visible en bas — y compris quand AUCUNE
+            // immatriculation ne correspond (avion absent de la base).
+            return [...matches, CREATE_FROM_MANEX_OPTION];
+          }}
+          renderOption={(props, option) => {
+            // eslint-disable-next-line no-unused-vars
+            const { key, ...optionProps } = props; // évite un key dupliqué via le spread
+            if (option === CREATE_FROM_MANEX_OPTION) {
+              return (
+                <Box
+                  component="li"
+                  key={option}
+                  {...optionProps}
+                  sx={{
+                    borderTop: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    py: 1
+                  }}
+                >
+                  <AddIcon fontSize="small" color="primary" />
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      Mon avion n'est pas dans la liste
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Créer la fiche en important le MANEX (PDF)
+                    </Typography>
+                  </Box>
+                </Box>
+              );
+            }
+            return (
+              <li key={option} {...optionProps}>
+                {option}
+              </li>
+            );
+          }}
           loading={isLoading}
           sx={{
             mb: 2,
