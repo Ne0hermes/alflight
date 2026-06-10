@@ -69,8 +69,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         }
         setInputMethod(null);
       },
-      canGoNext: () => (inputMethod === 'graphical' && !!readerNavRef.current?.canNext),
-      goNext: () => { readerNavRef.current?.next?.(); },
+      canGoNext: () => (
+        inputMethod === 'graphical' &&
+        (!!readerNavRef.current?.canNext || !!readerNavRef.current?.isLastStep)
+      ),
+      goNext: () => {
+        const nav = readerNavRef.current;
+        if (nav?.canNext) { nav.next(); return; }   // sous-étape suivante du centrogramme
+        // Fin de la lecture du centrogramme (dernière sous-étape) → on bascule vers
+        // l'ÉCRITURE MANUELLE pour CONSTATER les éléments extraits, AVANT les Vitesses.
+        if (nav?.isLastStep) { setInputMethod('manual'); }
+      },
     });
     return () => registerStepNav(null);
   }, [registerStepNav, inputMethod]);
