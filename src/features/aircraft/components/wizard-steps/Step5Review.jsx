@@ -64,7 +64,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   // - sans argument  → comparaison "variante" (vs data.baseAircraft)
   // - (baseArg, currentArg) → compare n'importe quelle base (ex. la version LIVE
   //   sur Supabase) contre les données courantes.
-  const calculateVariantDifferences = (baseArg = null, currentArg = null) => {
+  const calculateVariantDifferences = (baseArg = null, currentArg = null, opts = {}) => {
     const base = baseArg || data.baseAircraft;
     const current = currentArg || data;
     if (!base) {
@@ -264,6 +264,14 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           const isAddition = normalizedBase === null && normalizedCurrent !== null;
           const isDeletion = normalizedBase !== null && normalizedCurrent === null;
 
+          // 🛡️ Aligné sur l'anti-écrasement : un champ vidé / mis à 0 alors que la base
+          // a une vraie valeur NE sera PAS appliqué (l'existant est conservé) → pas un changement.
+          if (opts.skipEmptyOverwrites && normalizedBase !== null &&
+              (normalizedCurrent === null ||
+               ((normalizedCurrent === 0 || normalizedCurrent === '0') && Number(normalizedBase) !== 0 && !Number.isNaN(Number(normalizedBase))))) {
+            return;
+          }
+
           if (isModification || isAddition || isDeletion) {
             const label = fieldLabels[fullPath] || fieldLabels[key] || fullPath;
             diffs.push({
@@ -311,6 +319,13 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         const isModification = normalizedBase !== null && normalizedCurrent !== null;
         const isAddition = normalizedBase === null && normalizedCurrent !== null;
         const isDeletion = normalizedBase !== null && normalizedCurrent === null;
+
+        // 🛡️ Aligné sur l'anti-écrasement (idem ci-dessus) : pas d'affichage des vidages/0.
+        if (opts.skipEmptyOverwrites && normalizedBase !== null &&
+            (normalizedCurrent === null ||
+             ((normalizedCurrent === 0 || normalizedCurrent === '0') && Number(normalizedBase) !== 0 && !Number.isNaN(Number(normalizedBase))))) {
+          return;
+        }
 
         if (isModification || isAddition || isDeletion) {
           const label = fieldLabels[fieldName] || fieldName;
@@ -709,7 +724,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       try {
         setIsUpdatingSupabase(true);
         const supabaseAircraft = await communityService.getPresetById(supaId);
-        const diffs = supabaseAircraft ? calculateVariantDifferences(supabaseAircraft, data) : [];
+        const diffs = supabaseAircraft ? calculateVariantDifferences(supabaseAircraft, data, { skipEmptyOverwrites: true }) : [];
         setIsUpdatingSupabase(false);
         if (diffs && diffs.length > 0) {
           setDifferences(diffs);

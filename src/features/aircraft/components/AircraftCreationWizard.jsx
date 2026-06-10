@@ -177,6 +177,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
     // Vitesses caractéristiques
     speeds: {
+      ...existingAircraft?.speeds, // 🆕 préserve les sous-champs non listés (ex. vsTO)
       vso: existingAircraft?.speeds?.vso || '',
       vs1: existingAircraft?.speeds?.vs1 || '',
       vfe: existingAircraft?.speeds?.vfe || '',
@@ -197,6 +198,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     
     // Masses et centrage
     weights: {
+      ...existingAircraft?.weights, // 🆕 préserve les sous-champs non listés
       emptyWeight: existingAircraft?.weights?.emptyWeight || '',
       mtow: existingAircraft?.weights?.mtow || '',
       mlw: existingAircraft?.weights?.mlw || '',
@@ -226,6 +228,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       const wb = existingAircraft?.weightBalance || {};
       const al = existingAircraft?.armLengths || {};
       return {
+        ...a, // 🆕 préserve les bras non listés éventuellement présents sur l'avion
         empty:      pick(a.empty,      wb.emptyWeightArm,    al.emptyMassArm),
         frontSeats: pick(a.frontSeats, wb.frontLeftSeatArm,  al.frontSeatArm),
         rearSeats:  pick(a.rearSeats,  wb.rearLeftSeatArm,   al.rearSeatArm),
@@ -256,6 +259,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
     // Enveloppe de centrage (CG Envelope)
     cgEnvelope: {
+      ...existingAircraft?.cgEnvelope, // 🆕 préserve les sous-champs non listés (aftMaxCG/aftMinCG/aftMaxMoment/aftMinMoment, etc.)
       // Points Forward CG (nouveau format)
       forwardPoints: (() => {
         // Si le nouveau format existe déjà, l'utiliser
@@ -395,6 +399,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     minimumRunwayLength: existingAircraft?.minimumRunwayLength || '',
     serviceCeiling: existingAircraft?.serviceCeiling || '',
     approvedOperations: {
+      ...existingAircraft?.approvedOperations, // 🆕 préserve les sous-champs non listés
       // Règles de vol
       vfrDay: existingAircraft?.approvedOperations?.vfrDay || false,
       vfrNight: existingAircraft?.approvedOperations?.vfrNight || false,
