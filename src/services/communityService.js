@@ -10,6 +10,33 @@
 import { supabase } from '../lib/supabaseClient';
 import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
 
+// 🛡️ ANTI-ÉCRASEMENT (data-safety). Une valeur "vide" = null / undefined / '' / [].
+const isEmptyish = (v) => v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
+
+// Fusionne `incoming` (données du formulaire) PAR-DESSUS `base` (fiche Supabase
+// ACTUELLE), SANS jamais remplacer une valeur existante par une valeur vide — ni
+// par un 0 quand l'existant est un nombre non nul. Objectif : ne JAMAIS vider une
+// donnée en base parce qu'un champ n'a pas été (re)chargé/saisi dans le wizard.
+// Les VRAIES valeurs du formulaire gagnent ; les champs présents en base mais
+// absents du formulaire sont conservés.
+function deepMergeKeepExisting(base, incoming) {
+  if (incoming === undefined) return base;
+  if (incoming && typeof incoming === 'object' && !Array.isArray(incoming) &&
+      base && typeof base === 'object' && !Array.isArray(base)) {
+    const out = { ...base };
+    for (const k of Object.keys(incoming)) {
+      out[k] = deepMergeKeepExisting(base[k], incoming[k]);
+    }
+    return out;
+  }
+  // vide entrant alors que l'existant est renseigné → garder l'existant
+  if (isEmptyish(incoming) && !isEmptyish(base)) return base;
+  // 0 entrant alors que l'existant est un nombre non nul → garder l'existant
+  if ((incoming === 0 || incoming === '0') && !isEmptyish(base) &&
+      Number(base) !== 0 && !Number.isNaN(Number(base))) return base;
+  return incoming;
+}
+
 /**
  * Service pour gérer les presets communautaires
  */
@@ -769,6 +796,23 @@ class CommunityService {
       delete cleanedData.hasPhoto;
       delete cleanedData.hasWeighingReport;
 
+      // 🛡️ ANTI-ÉCRASEMENT : relire la fiche ACTUELLE et fusionner PAR-DESSUS, pour
+      // ne JAMAIS vider une valeur existante avec un champ vide/0 du formulaire (ex.
+      // sous-champ non rechargé par le wizard). Les vraies valeurs du formulaire gagnent.
+      let mergedAircraftData = cleanedData;
+      try {
+        const { data: cur } = await supabase
+          .from('community_presets')
+          .select('aircraft_data')
+          .eq('id', presetId)
+          .single();
+        if (cur?.aircraft_data && typeof cur.aircraft_data === 'object') {
+          mergedAircraftData = deepMergeKeepExisting(cur.aircraft_data, cleanedData);
+        }
+      } catch (mergeErr) {
+        console.warn('[updateCommunityPreset] Lecture aircraft_data actuelle impossible — écriture directe:', mergeErr?.message);
+      }
+
       // 3. Mettre à jour le preset dans Supabase
       const updatePayload = {
         registration: updatedData.registration,
@@ -776,7 +820,7 @@ class CommunityService {
         manufacturer: updatedData.manufacturer || 'Inconnu',
         aircraft_type: updatedData.aircraftType || 'Avion',
         category: updatedData.category || 'SEP',
-        aircraft_data: cleanedData, // Données SANS MANEX ni fichiers volumineux
+        aircraft_data: mergedAircraftData, // 🛡️ fusion anti-écrasement (vides → conservent l'existant)
         description: updatedData.description || `Configuration ${updatedData.model} - ${updatedData.registration}`,
         version: (updatedData.version || 1) + 1, // Incrémenter la version
         updated_at: new Date().toISOString()
