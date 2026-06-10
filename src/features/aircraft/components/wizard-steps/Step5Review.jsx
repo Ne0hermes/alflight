@@ -59,13 +59,18 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   const [votes, setVotes] = useState(data.votes || { up: 0, down: 0 });
 
   // Calculer les différences avec l'avion de base (pour les variantes)
-  const calculateVariantDifferences = () => {
-    if (!data.baseAircraft) {
+  // Diff soigné réutilisable (libellés lisibles, comparaison en profondeur,
+  // formatage des unités, UNIQUEMENT les champs qui diffèrent).
+  // - sans argument  → comparaison "variante" (vs data.baseAircraft)
+  // - (baseArg, currentArg) → compare n'importe quelle base (ex. la version LIVE
+  //   sur Supabase) contre les données courantes.
+  const calculateVariantDifferences = (baseArg = null, currentArg = null) => {
+    const base = baseArg || data.baseAircraft;
+    const current = currentArg || data;
+    if (!base) {
       return [];
     }
 
-    const base = data.baseAircraft;
-    const current = data;
     const diffs = [];
 
     
@@ -692,12 +697,32 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
   // Fonction fusionnée : Sauvegarder localement ET uploader sur Supabase
   const handleSaveAndUpload = async () => {
-    // 🔧 MANEX : l'upload est désormais géré UNE SEULE FOIS par le store
-    // (addAircraft/updateAircraft → submitPreset/updateCommunityPreset) vers un
-    // chemin STABLE par immatriculation (un seul dossier `<immat>/`, un seul
-    // fichier `<immat> - manex.pdf`, écrasé via upsert). On NE fait plus d'upload
-    // séparé ici — c'était la cause des 2 dossiers (modèle vs immat) + du fichier
-    // horodaté en double.
+    // MANEX : l'upload est géré UNE SEULE FOIS par le store (chemin stable + upsert).
+    //
+    // 🆕 REVUE DES MODIFICATIONS (avant écriture) : si l'avion existe DÉJÀ sur
+    // Supabase, on récupère sa version LIVE et on liste UNIQUEMENT les champs qui
+    // diffèrent (valeur Supabase actuelle → ta nouvelle valeur). Rien n'est écrit
+    // tant que tu n'as pas confirmé dans le dialogue. Si l'avion est tout neuf
+    // (absent de Supabase) ou si aucun champ ne change → enregistrement direct.
+    const supaId = data.communityPresetId || data.id || data.aircraftId;
+    if (supaId) {
+      try {
+        setIsUpdatingSupabase(true);
+        const supabaseAircraft = await communityService.getPresetById(supaId);
+        const diffs = supabaseAircraft ? calculateVariantDifferences(supabaseAircraft, data) : [];
+        setIsUpdatingSupabase(false);
+        if (diffs && diffs.length > 0) {
+          setDifferences(diffs);
+          setShowDifferencesDialog(true);
+          return; // on attend la confirmation (bouton "Enregistrer" du dialogue → handleLocalSave)
+        }
+        // aucune différence réelle → on enregistre directement
+      } catch (err) {
+        setIsUpdatingSupabase(false);
+        console.warn('⚠️ [Step5Review] Comparaison Supabase impossible — enregistrement direct:', err?.message);
+        // ne pas bloquer l'enregistrement si la récupération échoue
+      }
+    }
     handleLocalSave();
   };
 
@@ -1812,23 +1837,23 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              Vous avez modifié {differences.length} champ(s) par rapport à la version communautaire.
-              Choisissez comment procéder :
+              {differences.length} champ(s) diffèrent de la version actuelle sur Supabase.
+              Vérifie les changements ci-dessous, puis confirme pour enregistrer.
             </Typography>
           </Alert>
 
           {differences.length > 0 && (
-            <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
-              <Table size="small">
+            <TableContainer component={Paper} variant="outlined" sx={{ mb: 3, maxHeight: 380, overflow: 'auto' }}>
+              <Table size="small" stickyHeader>
                 <TableHead>
                   <TableRow>
                     <TableCell><strong>Champ</strong></TableCell>
-                    <TableCell><strong>Valeur originale</strong></TableCell>
-                    <TableCell><strong>Nouvelle valeur</strong></TableCell>
+                    <TableCell><strong>Valeur Supabase (actuelle)</strong></TableCell>
+                    <TableCell><strong>Ta nouvelle valeur</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {differences.slice(0, 10).map((diff, index) => {
+                  {differences.map((diff, index) => {
                     // Fonction pour afficher la valeur (texte ou image)
                     const renderValue = (value, isOriginal = false) => {
                       // Si c'est un objet photo
@@ -1873,15 +1898,6 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                       </TableRow>
                     );
 })}
-                  {differences.length > 10 && (
-                    <TableRow>
-                      <TableCell colSpan={3} align="center">
-                        <Typography variant="body2" color="text.secondary">
-                          ... et {differences.length - 10} autre(s) modification(s)
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
                 </TableBody>
               </Table>
             </TableContainer>
