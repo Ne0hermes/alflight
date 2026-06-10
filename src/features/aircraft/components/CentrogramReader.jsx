@@ -1423,6 +1423,9 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
       canBack: activeStep > 0,
       back: () => setActiveStep(s => Math.max(0, s - 1)),
       canNext: canGoNext() && activeStep < STEPS.length - 1,
+      // Dernière sous-étape (« Lecture du bras ») atteinte → permet à Step3 de router
+      // le « Suivant » vers l'écriture manuelle (constat des éléments extraits).
+      isLastStep: activeStep === STEPS.length - 1,
       next: handleNext,
     });
     return () => registerNav(null);
