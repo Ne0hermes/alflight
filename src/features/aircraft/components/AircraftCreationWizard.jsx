@@ -146,7 +146,24 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     engineType: existingAircraft?.engineType || 'singleEngine',
     compatibleRunwaySurfaces: existingAircraft?.compatibleRunwaySurfaces || [],
     photo: existingAircraft?.photo || null,
-    manex: existingAircraft?.manex || null,
+    // MANEX : le PDF local (manex) s'il a été téléchargé, SINON une référence
+    // synthétisée à partir de manexAvailableInSupabase (présent en base mais pas
+    // encore téléchargé = chargement paresseux). Sans ça, ré-importer un avion qui
+    // a déjà un MANEX sur Supabase faisait croire au wizard qu'il manquait → il
+    // redemandait l'import. Ici on le marque "présent (Supabase)" ; à la sauvegarde
+    // sans PDF, resolveManexFile renvoie null → updateCommunityPreset PRÉSERVE
+    // has_manex + manex_file_id (le lien n'est pas écrasé).
+    manex: existingAircraft?.manex
+      || (existingAircraft?.manexAvailableInSupabase ? {
+          fileName: existingAircraft.manexAvailableInSupabase.fileName || `${existingAircraft?.registration || 'MANEX'}.pdf`,
+          fileSize: existingAircraft.manexAvailableInSupabase.fileSize
+            ? (existingAircraft.manexAvailableInSupabase.fileSize / 1024 / 1024).toFixed(1) + ' MB'
+            : '—',
+          filePath: existingAircraft.manexAvailableInSupabase.filePath,
+          uploadDate: existingAircraft?.updatedAt || existingAircraft?.updated_at || new Date().toISOString(),
+          uploadedToSupabase: true,
+          hasData: false
+        } : null),
     // Rapport de pesée — fichier PDF base64 attaché à l'avion. DOIT être
     // rechargé en édition pour éviter de perdre le document quand le pilote
     // ouvre la fiche de l'avion existant.
