@@ -521,6 +521,7 @@ class CommunityService {
       delete cleanedData.manexAvailableInSupabase;
       delete cleanedData.hasPhoto;
       delete cleanedData.hasWeighingReport;
+      delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
       // 5. Créer le preset
       const { data, error } = await supabase
@@ -795,6 +796,7 @@ class CommunityService {
       delete cleanedData.manexAvailableInSupabase;
       delete cleanedData.hasPhoto;
       delete cleanedData.hasWeighingReport;
+      delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
       // 🛡️ ANTI-ÉCRASEMENT : relire la fiche ACTUELLE et fusionner PAR-DESSUS, pour
       // ne JAMAIS vider une valeur existante avec un champ vide/0 du formulaire (ex.
@@ -826,10 +828,19 @@ class CommunityService {
         updated_at: new Date().toISOString()
       };
 
-      // 4. Ajouter le manex_file_id seulement si un nouveau MANEX a été uploadé
+      // 4. Lien MANEX sur la fiche :
+      //    - nouveau fichier uploadé → nouveau lien ;
+      //    - suppression EXPLICITE par le pilote (manexDeleted) → RETRAIT du lien.
+      //      Sans ce retrait, un pointeur (souvent mort : fichier disparu du bucket)
+      //      ressuscitait à chaque édition → « MANEX introuvable » au téléchargement ;
+      //    - sinon → préservation du lien existant (MANEX non re-téléchargé localement).
       if (manexFileId) {
         updatePayload.manex_file_id = manexFileId;
         updatePayload.has_manex = true;
+      } else if (updatedData.manexDeleted === true) {
+        updatePayload.has_manex = false;
+        updatePayload.manex_file_id = null;
+        console.log('🗑️ Suppression MANEX propagée à la fiche (has_manex=false, manex_file_id=null)');
       } else if (updatedData.hasManex || updatedData.manex) {
         // 🔧 FIX: Préserver le flag has_manex si l'avion avait déjà un MANEX
         // même si on n'en uploade pas un nouveau
@@ -975,6 +986,7 @@ class CommunityService {
     delete cleanedData.isVariant;
     delete cleanedData.communityPresetId;
     delete cleanedData.submitted_by; // l'owner vit dans la COLONNE, pas dans le JSON
+    delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
     const { data, error } = await supabase
       .from('community_presets')

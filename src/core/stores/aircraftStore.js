@@ -644,7 +644,16 @@ export const useAircraftStore = create(
         console.error('[AircraftStore] updateAircraftManex: IndexedDB échoué', e?.message);
       }
       // Persister vers Supabase (upload + lien manex_file_id) via le chemin unique updateAircraft.
-      return get().updateAircraft({ ...aircraft, manex: manexData || null, hasManex: !!manexData });
+      // manexDeleted : marqueur lu par updateCommunityPreset pour RETIRER has_manex +
+      // manex_file_id de la fiche quand le pilote supprime le MANEX (sinon le lien
+      // — souvent un pointeur mort — ressuscite à chaque édition).
+      return get().updateAircraft({
+        ...aircraft,
+        manex: manexData || null,
+        hasManex: !!manexData,
+        manexDeleted: !manexData,
+        manexAvailableInSupabase: manexData ? aircraft.manexAvailableInSupabase : null
+      });
     },
 
     // Supprimer un avion
