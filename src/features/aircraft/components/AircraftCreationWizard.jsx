@@ -123,6 +123,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
   // État principal - utilisant EXACTEMENT la même structure que AircraftModule
   const [aircraftData, setAircraftData] = useState(draft?.aircraftData || {
+    // 🆕 SYSTÉMIQUE : on part de l'avion COMPLET importé → AUCUN champ scalaire
+    // n'est perdu au rechargement (fini la whitelist qui oubliait des champs comme
+    // fuelUsableCapacity). Les champs STRUCTURÉS ci-dessous (speeds/weights/arms/…)
+    // SURCHARGENT ce spread (logique multi-source/défauts conservée), et les champs
+    // de tracking (id, baseAircraft, …) sont gérés explicitement + nettoyés au save.
+    ...(existingAircraft || {}),
     id: existingAircraft?.id || existingAircraft?.aircraftId || undefined,
     aircraftId: existingAircraft?.aircraftId || existingAircraft?.id || undefined,
     // Conserver une copie de l'avion original pour détecter les modifications
