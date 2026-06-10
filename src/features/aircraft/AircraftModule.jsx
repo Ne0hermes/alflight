@@ -260,6 +260,10 @@ export const AircraftModule = memo(() => {
   // Téléchargement de la config complète (aircraft_data) depuis Supabase en cours
   // → feedback visuel sur le bouton (l'utilisateur voit qu'on va chercher en ligne).
   const [importing, setImporting] = useState(false);
+  // Entrée d'ACTION épinglée en BAS du menu déroulant de la base communautaire :
+  // si l'avion n'existe pas dans la base, ouvre l'assistant de création — son
+  // Étape 0 propose directement l'import du MANEX (PDF).
+  const CREATE_FROM_MANEX_OPTION = '__create_from_manex__';
 
   // 🔁 Charge TOUTE la base communautaire (métadonnées légères, sans aircraft_data)
   // au montage → filtrage DYNAMIQUE côté client, comme le sélecteur d'avion de la
@@ -1677,8 +1681,19 @@ export const AircraftModule = memo(() => {
           fullWidth
           value={null}
           inputValue={communitySearch}
-          onInputChange={(e, v) => setCommunitySearch(v)}
+          onInputChange={(e, v) => {
+            if (v === CREATE_FROM_MANEX_OPTION) return; // action, pas une valeur
+            setCommunitySearch(v);
+          }}
           onChange={(e, newValue) => {
+            // Entrée d'action en bas du menu : avion absent de la base →
+            // ouvre l'assistant de création (Étape 0 = import MANEX PDF).
+            if (newValue === CREATE_FROM_MANEX_OPTION) {
+              setSelectedPreset(null);
+              setWizardAircraft(null);
+              setShowWizard(true);
+              return;
+            }
             // Sélection ≠ import : on affiche d'abord la fiche de l'avion
             // (métadonnées chargées depuis Supabase) + le bouton « Vérifier les
             // données ». Le téléchargement de la config complète n'a lieu qu'au clic.
@@ -1686,7 +1701,52 @@ export const AircraftModule = memo(() => {
             const found = allPresets.find((p) => p.registration === newValue);
             setSelectedPreset(found || null);
           }}
-          options={allPresets.map((p) => p.registration)}
+          options={[...allPresets.map((p) => p.registration), CREATE_FROM_MANEX_OPTION]}
+          filterOptions={(options, state) => {
+            const input = (state.inputValue || '').trim().toUpperCase();
+            const matches = options.filter(
+              (o) => o !== CREATE_FROM_MANEX_OPTION && (!input || o.toUpperCase().includes(input))
+            );
+            // L'action reste TOUJOURS visible en bas — y compris quand AUCUNE
+            // immatriculation ne correspond (avion absent de la base).
+            return [...matches, CREATE_FROM_MANEX_OPTION];
+          }}
+          renderOption={(props, option) => {
+            // eslint-disable-next-line no-unused-vars
+            const { key, ...optionProps } = props; // évite un key dupliqué via le spread
+            if (option === CREATE_FROM_MANEX_OPTION) {
+              return (
+                <li
+                  key={option}
+                  {...optionProps}
+                  style={{
+                    ...optionProps.style,
+                    borderTop: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: tokens.spacing[2],
+                    paddingTop: tokens.spacing[2],
+                    paddingBottom: tokens.spacing[2]
+                  }}
+                >
+                  <Plus size={16} style={{ color: 'var(--accent-primary)', flexShrink: 0 }} aria-hidden="true" />
+                  <span>
+                    <span style={{ display: 'block', fontWeight: 600, color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
+                      Mon avion n'est pas dans la liste
+                    </span>
+                    <span style={{ display: 'block', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+                      Créer la fiche en important le MANEX (PDF)
+                    </span>
+                  </span>
+                </li>
+              );
+            }
+            return (
+              <li key={option} {...optionProps}>
+                {option}
+              </li>
+            );
+          }}
           loading={presetsLoading}
           size="small"
           disableClearable
