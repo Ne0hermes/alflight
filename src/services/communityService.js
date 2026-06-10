@@ -488,6 +488,12 @@ class CommunityService {
       delete cleanedData.id;  // 🔧 FIX: L'ID local n'est pas une colonne de aircraft_data
       delete cleanedData.aircraftId;  // 🔧 FIX: Idem
       delete cleanedData.isVariant;  // 🔧 FIX: Flag temporaire, pas à stocker
+      // 🆕 Tracking ajouté par getPresetById / le spread d'init du wizard — PAS une donnée avion
+      delete cleanedData.communityPresetId;
+      delete cleanedData.importedFromCommunity;
+      delete cleanedData.manexAvailableInSupabase;
+      delete cleanedData.hasPhoto;
+      delete cleanedData.hasWeighingReport;
 
       // 5. Créer le preset
       const { data, error } = await supabase
@@ -756,6 +762,12 @@ class CommunityService {
       delete cleanedData.id;  // 🔧 FIX: L'ID local n'est pas une colonne de aircraft_data
       delete cleanedData.aircraftId;  // 🔧 FIX: Idem
       delete cleanedData.isVariant;  // 🔧 FIX: Flag temporaire, pas à stocker
+      // 🆕 Tracking ajouté par getPresetById / le spread d'init du wizard — PAS une donnée avion
+      delete cleanedData.communityPresetId;
+      delete cleanedData.importedFromCommunity;
+      delete cleanedData.manexAvailableInSupabase;
+      delete cleanedData.hasPhoto;
+      delete cleanedData.hasWeighingReport;
 
       // 3. Mettre à jour le preset dans Supabase
       const updatePayload = {
