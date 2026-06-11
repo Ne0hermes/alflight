@@ -104,6 +104,31 @@ function AbacBuilderComponent(
     });
   }, [workshop.frames]);
 
+  // R2b — Le Y COMMUN se propage en continu aux graphes CADRÉS : cohérence
+  // immédiate du wizard (champs Y en lecture seule), du test de cascade et de
+  // l'export (qui le duplique déjà). Réécrit seulement si différent.
+  React.useEffect(() => {
+    if (workshop.frames.length === 0) return;
+    const framed = new Set(workshop.frames.map(f => f.graphId));
+    setGraphs(prev => {
+      let changed = false;
+      const next = prev.map(g => {
+        if (!framed.has(g.id)) return g;
+        const cur = g.axes?.yAxis;
+        if (cur && JSON.stringify(cur) === JSON.stringify(workshop.sharedY)) return g;
+        changed = true;
+        return {
+          ...g,
+          axes: {
+            ...(g.axes || { xAxis: { min: 0, max: 100, unit: '', title: '' }, yAxis: { ...workshop.sharedY } }),
+            yAxis: { ...workshop.sharedY }
+          }
+        };
+      });
+      return changed ? next : prev;
+    });
+  }, [workshop.frames, workshop.sharedY]);
+
   // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
   const [currentStep, setCurrentStep] = useState<Step>('points');
@@ -1350,6 +1375,19 @@ const renderStepContent = () => {
                 setSelectedCurveId(null);
                 setSubStepGraphIndex(graphs.length);
                 return newGraph.id;
+              }}
+              onUpdateGraphXAxis={(graphId, xAxis) => {
+                // R2b — l'axe X reste porté par le GRAPHE (pas de nouveau lieu
+                // de vérité) : le panneau Axes du canevas écrit ici.
+                setGraphs(prev => prev.map(g => g.id === graphId
+                  ? {
+                      ...g,
+                      axes: {
+                        ...(g.axes || { xAxis: { min: 0, max: 100, unit: '', title: '' }, yAxis: { min: 0, max: 100, unit: '', title: '' } }),
+                        xAxis
+                      }
+                    }
+                  : g));
               }}
             />
 
