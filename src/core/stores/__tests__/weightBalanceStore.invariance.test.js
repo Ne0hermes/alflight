@@ -80,12 +80,14 @@ describe('C0.1 — invariance du CG par préréglage d’unités', () => {
     expect(r.cg).toBeCloseTo(CG_REF, 3); // armUnits.js : 2100 > 10 ⇒ ÷1000 ✔
   });
 
-  // PREUVE ANO-13 : l'enveloppe est EXCLUE de la normalisation (armUnits.js:48).
-  // cg ≈ 2.13 m comparé à forward = 1900 (mm bruts) ⇒ verdict faux « hors limites ».
-  // ⤷ Rebasculer en it() quand C3.3 (enveloppe dans le pivot) sera livré.
-  it.fails('EUROPE mm : verdict enveloppe correct [ROUGE = ANO-13, enveloppe non normalisée]', () => {
+  // ✅ VERROU (ex-tripwire ANO-13, basculé le 2026-06-11) : depuis C3.3, le
+  // moteur normalise AUSSI l'enveloppe CG en mètres à l'entrée
+  // (normalizeAircraftCgEnvelopeToMeters) ⇒ verdict homogène même sur un avion
+  // legacy entièrement en mm. Ce test garantit que ça ne régresse jamais.
+  it('EUROPE mm : verdict enveloppe correct (C3.3 — enveloppe normalisée à l’entrée moteur)', () => {
     const r = calc(aircraftAsStoredUnder({ armFactor: 1000, weightFactor: 1 }));
     expect(r.isWithinCG).toBe(true);
+    expect(r.isWithinLimits).toBe(true);
   });
 
   // PREUVE ANO-12 : préréglage metric ⇒ bras en cm (210, 205…) ; l'heuristique

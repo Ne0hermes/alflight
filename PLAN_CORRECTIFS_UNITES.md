@@ -41,6 +41,12 @@
 - ✅ **Correctif ciblé post-migration validé pilote** : F-GOVE `weightBalance.fuelArm` « 10 » aberrant → interprété 0,254 m (in) par la règle → **corrigé à 1,1027 m** sur décision pilote explicite (3 champs concordants du même avion), via `scripts/fix-fgove-fuelarm.js` (garde anti-double-exécution + trace `_metadata.fixFgoveFuelArm`).
 - ⬜ Restes : bascule des tripwires (après C3.3 moteur — l'enveloppe des avions NON réédités est désormais en m en base, mais les copies IndexedDB locales des utilisateurs restent legacy → l'heuristique moteur reste nécessaire, **C3.4 toujours en dernier**) ; recette navigateur du wizard.
 
+**2026-06-11 — C3.3 moteur + verrou ANO-13 (suite 139 verts + 3 tripwires, mergé main) :**
+- ✅ **C3.3** `normalizeAircraftCgEnvelopeToMeters` (armUnits.js) branché à l'entrée du moteur, juste après la normalisation des bras : CG d'enveloppe + cgLimits (forward/aft/forwardVariable) ramenés en mètres par magnitude — **CG uniquement**, jamais les masses des points ni les moments. Couvre les copies IndexedDB locales legacy et les imports.
+- ✅ **Verrou ANO-13** : le tripwire « EUROPE mm : verdict enveloppe » a CASSÉ dès C3.3 livré (mécanique `it.fails` voulue) → rebasculé en `it()` définitif. Restent 3 tripwires documentant les données legacy cm/in et lbs (IndexedDB locales — attendus jusqu'à réconciliation locale + C3.4).
+- ✅ **Recette navigateur (partielle)** : app démarrée (Vite :4000), **zéro erreur console au boot** — le convertisseur strict (throw en dev) n'a rien intercepté. Recette complète du wizard bloquée au mur « Beta Privée » (identifiants pilote en attente) — check-list manuelle remise au pilote.
+- ✅ **Panne logs Sheets RÉSOLUE** : la cause était le **relais local** `http://localhost:3001/api/log` (`server/googleSheetsServer.js`) non démarré — pas Google. Relais lancé, **7/7 logs en attente rejoués**, script de rattrapage supprimé.
+
 ---
 
 ## Phase 0 — Filet de sécurité (AVANT toute correction)
