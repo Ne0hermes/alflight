@@ -47,6 +47,14 @@
 - ✅ **Recette navigateur (partielle)** : app démarrée (Vite :4000), **zéro erreur console au boot** — le convertisseur strict (throw en dev) n'a rien intercepté. Recette complète du wizard bloquée au mur « Beta Privée » (identifiants pilote en attente) — check-list manuelle remise au pilote.
 - ✅ **Panne logs Sheets RÉSOLUE** : la cause était le **relais local** `http://localhost:3001/api/log` (`server/googleSheetsServer.js`) non démarré — pas Google. Relais lancé, **7/7 logs en attente rejoués**, script de rattrapage supprimé.
 
+**2026-06-11 (suite) — RECETTE NAVIGATEUR COMPLÈTE ✅ (pilote connecté, session pilotée par l'agent) :**
+- ✅ **Préférences USA (lbs/in)** appliquées via l'UI → import F-GOFP (F152 migré) dans le wizard → Step 3 : graphe « CG (in) / Masse (lbs) », bras réservoir **42.5197 in** (= 1,08 m), **sièges 37.0709 in = 0,9416 m du journal de migration à la 4ᵉ décimale**, moments en lbs·in.
+- ✅ **Saisie testée** : « 40 » in tapé → affichage stable, moment recalculé 5904.74 lbs·in = chaîne canonique 40 in → 1,016 m → 68,03 kg·m (écart 0,002 % = arrondis d'affichage).
+- ✅ **Test M3 (le tueur)** : préférence rebasculée **kg/mm pendant que le wizard était démonté** (l'ancien vecteur de corruption silencieuse) → réouverture : **1080 mm / 700 mm / 941.6 mm / 72 000 kg·mm** — mêmes canoniques, zéro resaisie, zéro corruption. Capture d'écran : enveloppe « CG (mm) », polygone 783→937 mm.
+- ✅ **Zéro erreur console sur toute la session** — le convertisseur strict (throw en dev) n'a jamais été déclenché.
+- ✅ **F-GNAM (PA-28-181)** : 7ᵉ avion créé la veille AVANT le déploiement de C3.2 → données déjà 100 % en mètres mais métadonnée 2.0.0 ; **estampillé v3 sur validation pilote explicite** (re-run idempotent du script apply, 12 « conversions » = typage string→number uniquement, nouvelle sauvegarde). **État final base : 7/7 MIGRABLE, 0 quarantaine, unitsVerified 7/7.**
+- 📌 Reste (non urgent) : C3.4 (heuristique→détecteur) après réconciliation des copies IndexedDB locales ; 3 tripwires legacy (cm/in, lbs) conservés à dessein.
+
 ---
 
 ## Phase 0 — Filet de sécurité (AVANT toute correction)
