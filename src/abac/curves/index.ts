@@ -13,4 +13,4 @@ export { AbacBuilder } from './ui/AbacBuilder';
 
 // Main exports for easy usage
 export { abacCurvesAPI } from './core/api';
-export { AbacCurveManager, abacManager } from './core/manager';
+export { AbacCurveManager } from './core/manager';

@@ -49,7 +49,21 @@ function AbacBuilderComponent(
   { onSave, initialData, modelName, aircraftModel, onBack }: AbacBuilderProps,
   ref: React.Ref<AbacBuilderRef>
 ) {
-  const managerRef = useRef(new AbacCurveManager());
+  // P1 (AUDIT_ABAC_CONSTRUCTION.md) : UN AbacCurveManager PAR GRAPHE.
+  // L'ancien managerRef unique était vidé/rechargé à chaque bascule de graphe —
+  // incompatible avec l'atelier multi-colonnes (P2) où plusieurs graphes
+  // s'éditent sans bascule. Création paresseuse par id ; purge à la
+  // suppression du graphe (handleRemoveGraph).
+  const managersRef = useRef(new Map<string, AbacCurveManager>());
+  const getManager = useCallback((graphId: string | null | undefined): AbacCurveManager | null => {
+    if (!graphId) return null;
+    let m = managersRef.current.get(graphId);
+    if (!m) {
+      m = new AbacCurveManager();
+      managersRef.current.set(graphId, m);
+    }
+    return m;
+  }, []);
   // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
   const [currentStep, setCurrentStep] = useState<Step>('points');
@@ -469,35 +483,39 @@ function AbacBuilderComponent(
     }
   }, [systemType, modelName]);
 
-  // Synchroniser le manager avec le graphique sélectionné
+  // Synchroniser le manager DU GRAPHE SÉLECTIONNÉ avec l'état React.
+  // (P1 : même cadence qu'avant — la resynchronisation reste pilotée par la
+  // sélection — mais chaque graphe possède désormais SON instance, donc une
+  // future édition multi-graphes (P2) ne détruira plus le travail des autres.)
   React.useEffect(() => {
-    if (!selectedGraphId || !managerRef.current) return;
+    const manager = getManager(selectedGraphId);
+    if (!manager) return;
 
     const currentGraph = graphs.find(g => g.id === selectedGraphId);
     if (!currentGraph) return;
 
-    // Réinitialiser le manager
-    managerRef.current.clear();
+    // Réinitialiser le manager de CE graphe
+    manager.clear();
 
     // Configurer les axes si disponibles
     if (currentGraph.axes) {
-      managerRef.current.setAxesConfig(currentGraph.axes);
+      manager.setAxesConfig(currentGraph.axes);
     }
 
     // Ajouter toutes les courbes non-interpolées au manager
     const nonInterpolatedCurves = currentGraph.curves.filter(c => !c.name.includes('(interpolé)'));
     nonInterpolatedCurves.forEach(curve => {
-      const curveId = managerRef.current!.addCurve(curve);
+      const curveId = manager.addCurve(curve);
       // Si la courbe a déjà été ajustée, appliquer l'ajustement
       if (curve.fitted) {
-        managerRef.current!.fitCurve(curveId, {
+        manager.fitCurve(curveId, {
           method: interpolationMethod,
           numPoints: interpolationPoints
         });
       }
     });
 
-      }, [selectedGraphId, graphs, interpolationMethod, interpolationPoints]);
+      }, [selectedGraphId, graphs, interpolationMethod, interpolationPoints, getManager]);
 
   // Gestionnaires pour les graphiques
   const handleAddGraph = useCallback((graph: GraphConfig) => {
@@ -518,6 +536,8 @@ function AbacBuilderComponent(
 
   const handleRemoveGraph = useCallback((graphId: string) => {
     setGraphs(prev => prev.filter(g => g.id !== graphId));
+    // P1 : purger le manager du graphe supprimé (sinon fuite dans la map)
+    managersRef.current.delete(graphId);
     if (selectedGraphId === graphId) {
       setSelectedGraphId(graphs[0]?.id || null);
     }
@@ -851,15 +871,16 @@ function AbacBuilderComponent(
   }, [selectedGraphId, graphs]);
 
   const handleGenerateIntermediateCurves = useCallback(() => {
-    if (!selectedGraphId || !managerRef.current) return;
+    const manager = getManager(selectedGraphId);
+    if (!manager) return;
 
-    
+
     // Générer les courbes intermédiaires
-    const newCurveIds = managerRef.current.generateIntermediateCurves(numIntermediateCurves);
+    const newCurveIds = manager.generateIntermediateCurves(numIntermediateCurves);
 
     if (newCurveIds.length > 0) {
       // Mettre à jour l'état avec les nouvelles courbes
-      const allCurves = managerRef.current.getAllCurves();
+      const allCurves = manager.getAllCurves();
 
       setGraphs(prev => prev.map(graph => {
         if (graph.id === selectedGraphId) {
@@ -872,7 +893,7 @@ function AbacBuilderComponent(
       }));
 
           }
-  }, [selectedGraphId, numIntermediateCurves]);
+  }, [selectedGraphId, numIntermediateCurves, getManager]);
 
   const handleFitAll = useCallback((options: FitOptions = {}) => {
     console.log('Starting fit all curves');
@@ -960,12 +981,13 @@ function AbacBuilderComponent(
   }, [graphs, interpolationMethod, interpolationPoints]);
 
   const handleClearPoints = useCallback((curveId: string) => {
-    if (!selectedGraphId) return;
+    const manager = getManager(selectedGraphId);
+    if (!manager) return;
 
-    const curve = managerRef.current.getCurve(curveId);
+    const curve = manager.getCurve(curveId);
     if (curve) {
       curve.points.forEach(p => {
-        if (p.id) managerRef.current.removePoint(curveId, p.id);
+        if (p.id) manager.removePoint(curveId, p.id);
       });
     }
 
@@ -986,7 +1008,7 @@ function AbacBuilderComponent(
       delete newWarnings[curveId];
       return newWarnings;
     });
-  }, [selectedGraphId]);
+  }, [selectedGraphId, getManager]);
 
   // Effect pour l'interpolation automatique à l'étape 3
   // Utiliser un flag pour éviter les boucles infinies
@@ -1031,10 +1053,11 @@ function AbacBuilderComponent(
   }, [currentStep]);
 
   const handleImportPoints = useCallback((curveId: string, points: XYPoint[]) => {
-    if (!selectedGraphId) return;
+    const manager = getManager(selectedGraphId);
+    if (!manager) return;
 
     points.forEach(p => {
-      managerRef.current.addPoint(curveId, { ...p, id: uuidv4() });
+      manager.addPoint(curveId, { ...p, id: uuidv4() });
     });
 
     setGraphs(prev => prev.map(graph => {
@@ -1050,7 +1073,7 @@ function AbacBuilderComponent(
       }
       return graph;
     }));
-  }, [selectedGraphId]);
+  }, [selectedGraphId, getManager]);
 
   // Fonction d'export d'itération (étape 2)
   // Fonction d'import d'itération (étape 2)
@@ -2405,14 +2428,15 @@ const renderStepContent = () => {
                               ? { ...g, curves: nonInterpolatedCurves }
                               : g
                           ));
-                          // Reconstruire le manager
-                          if (managerRef.current && currentGraph.axes) {
-                            managerRef.current.clear();
-                            managerRef.current.setAxesConfig(currentGraph.axes);
+                          // Reconstruire le manager DE CE graphe (P1 : map par graphe)
+                          const manager = getManager(selectedGraphId);
+                          if (manager && currentGraph.axes) {
+                            manager.clear();
+                            manager.setAxesConfig(currentGraph.axes);
                             nonInterpolatedCurves.forEach(curve => {
-                              const curveId = managerRef.current!.addCurve(curve);
+                              const curveId = manager.addCurve(curve);
                               if (curve.fitted) {
-                                managerRef.current!.fitCurve(curveId, {
+                                manager.fitCurve(curveId, {
                                   method: interpolationMethod,
                                   numPoints: interpolationPoints
                                 });

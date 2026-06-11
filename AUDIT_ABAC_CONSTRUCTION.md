@@ -165,3 +165,19 @@ d'AbacGraphWizard (factory `btnStyle('#hex')`, ternaires d'état) :
   **AbacGraphWizard.tsx** + 7 points du CSS module — AbacBuilder/PointEditor étaient
   déjà propres (CSS module conforme). L'estimation 8-12 h venait du rapport d'agent
   surdimensionné ; l'exécution outillée a pris une fraction de ça.
+
+## 9. P1 — EXÉCUTÉE (2026-06-11)
+
+Un **AbacCurveManager PAR graphe** (prérequis de l'atelier multi-colonnes P2) :
+
+- `AbacBuilder` : `managerRef` unique (vidé/rechargé à chaque bascule de graphe)
+  remplacé par `managersRef: Map<graphId, AbacCurveManager>` + accesseur paresseux
+  `getManager(graphId)`. Les 16 points d'usage convertis ; l'effet de
+  resynchronisation garde la MÊME cadence (piloté par la sélection) mais cible
+  l'instance du graphe — comportement identique aujourd'hui, plus de destruction
+  croisée demain (P2).
+- Purge du manager à la suppression d'un graphe (`handleRemoveGraph`).
+- Singleton mort `abacManager` supprimé (manager.ts + export index.ts — aucun
+  consommateur dans le repo).
+- Les `tempManager` éphémères de `handleFitAll`/exports restent inchangés (calculs
+  jetables, hors sujet).

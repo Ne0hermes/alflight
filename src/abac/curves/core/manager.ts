@@ -520,4 +520,6 @@ export class AbacCurveManager {
   }
 }
 
-export const abacManager = new AbacCurveManager();
+// (P1 — AUDIT_ABAC_CONSTRUCTION.md : le singleton global `abacManager` a été
+// supprimé. AbacBuilder instancie désormais UN manager PAR graphe via une map
+// id → AbacCurveManager ; un singleton partagé contredirait ce modèle.)
