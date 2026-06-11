@@ -1,0 +1,137 @@
+# AUDIT — Refonte de l'atelier ABAC en « image unique » + désindigestion de l'UI
+
+> **Date** : 2026-06-11 · **Suite de** : AUDIT_ABAC_CONSTRUCTION.md (P0→P5 livrées).
+> **Déclencheur** : retour pilote après test en réel de l'atelier P2a/P3 — « les 3
+> graphiques ne sont pas mis ensemble », « la photo en filigrane n'est pas à l'échelle,
+> tu peux l'enlever », « ce que je voulais : sur LA MÊME IMAGE, positionner les 3
+> graphiques », « énormément de tableaux et de sous-tableaux, les étapes et sous-étapes
+> ne sont pas claires, ça devient indigeste ».
+> **Référence mentale** : l'abaque papier PA-28-181 (décollage 0° volets) — UNE image,
+> UN axe Y commun (distance 15 m), TROIS zones X (température / masse / vent).
+
+---
+
+## 1. Constat — l'écart entre l'atelier livré et le modèle mental
+
+L'atelier P2a a mis les graphes « côte à côte » sous forme de **cartes séparées,
+chacune avec SA copie d'image** — c'est un alignement de 3 graphiques indépendants.
+Or un abaque n'est PAS 3 graphiques indépendants : c'est **UN document** où les 3
+zones partagent le même filigrane et le même axe Y. Le pilote recopie un document,
+pas trois.
+
+## 2. L'indigestion, chiffrée (inventaire exhaustif, 2026-06-11)
+
+| Métrique (abaque 1 graphe / 4 courbes) | Constat |
+|---|---|
+| Écrans AVANT le builder | **5** (Step4 récap → PerformanceWizard : type → upload → analyse → pages) |
+| Panneaux simultanés dans l'étape « points » | **6+** (bandeau cartes, test cascade, wizard 5 onglets, nav) |
+| Sous-étapes par graphe | **5** (image, position, axes, calibration, courbes) — ×N graphes |
+| Boutons/actions distincts sur le parcours | **~50**, dont **~15 visibles en même temps** |
+| États/modes parallèles | **8+** (editorMode×6, windFilter, expandedGraphs, imageAdjust…) |
+| Façons d'éditer un point | **3** (drag Chart, PointsTable, PointEditor†) |
+| Façons de sélectionner une courbe | **2** (CurveManager, Chart) |
+
+**Code mort encore présent** (jamais atteignable, mais pèse mentalement et en
+maintenance) : case `'axes'` (AbacBuilder ~l.1229), case `'points_legacy_unused'`
+(~l.1789), restes d'étape `'fit'`, **GraphManager** (importé jamais monté — remplacé
+par les chips P3), **PointEditor** (importé jamais monté). †PointEditor n'est pas
+dans le flux mais son code suggère une 3e voie d'édition.
+
+## 3. Cible — l'« Atelier image unique » (modèle PA-28-181)
+
+```
+┌─ 1·Image ─ 2·Cadres & axes ─ 3·Courbes ─ 4·Valider ─┐   ← 4 étapes PLATES
+│                                                      │
+│   Y COMMUN (paramétré 1 fois : min/max/pas/titre)    │
+│   ┃ ┌─G1·Température─┐ ┌─G2·Masse─┐ ┌─G3·Vent─┐      │
+│   ┃ │   (cadre tiré  │ │  (cadre) │ │ (cadre) │      │
+│   ┃ │  sur l'image)  │ │          │ │         │      │
+│   ┃ └─X1: -40→30°C───┘ └─X2 (inv)─┘ └─X3: kt──┘      │
+│            UNE image MANEX, posée/recadrée 1 fois    │
+└──────────────────────────────────────────────────────┘
+```
+
+1. **Image** : import + position/recadrage du filigrane — UNE fois, pour tout le set.
+   (La photo DISPARAÎT des cartes d'aperçu — demande pilote, elle n'était pas à
+   l'échelle.)
+2. **Cadres & axes** : on TIRE les cadres des graphes directement sur l'image
+   (bandes verticales à poignées). **Y commun saisi une fois** (c'est la définition
+   d'un abaque) ; puis X de chaque cadre (min/max/pas, inversion possible —
+   ex. masse décroissante). La calibration fine (clics graduations) reste disponible
+   par axe, dans la même étape.
+3. **Courbes** : tracé cadre par cadre SUR l'image (cadre actif surligné, les autres
+   visibles) — clic-points + façonnage Bézier conservés tels quels.
+4. **Valider le modèle** : interpolation de tout + test de cascade intégré + save —
+   en un geste.
+
+**Liaison implicite** : l'ordre gauche→droite des cadres SUR l'image définit la
+chaîne G1→G2→G3 (linkedTo générés automatiquement) — les chips de liaison manuelle
+ne servent plus que pour les cas exotiques (multi-feuilles).
+
+## 4. Modèle de données (compatibilité totale en lecture)
+
+- `AbacCurvesJSON.graphs[]` **INCHANGÉ** : chaque graphe garde ses axes complets —
+  le Y commun y est DUPLIQUÉ à la sauvegarde. Le moteur cascade, le
+  CascadeCalculator et la prépa vol ne voient aucune différence.
+- NOUVEAU bloc de ré-édition : `metadata.workshop = { image: {url,x,y,w,h},
+  sharedY: AxisConfig(+calibration), frames: [{graphId, xLeftPx, xRightPx,
+  xAxis(+calibration)}] }`.
+- Anciens modèles (sans `workshop`) : ouverture en mode compat — cadres recréés sans
+  image partagée, ré-attachable à la main (cf. décision D4).
+
+## 5. Purge associée (désindigestion)
+
+| Élément | Sort proposé |
+|---|---|
+| Cases mortes `'axes'`, `'points_legacy_unused'`, restes `'fit'` | SUPPRIMER (~700 lignes) |
+| GraphManager, PointEditor (orphelins) | SUPPRIMER |
+| PointsTable | À TRANCHER (D2) : utile pour saisir des valeurs EXACTES lues sur le MANEX — proposé : panneau repliable « Points (saisie précise) » du cadre actif, seul tableau restant |
+| Photo dans les cartes d'aperçu | SUPPRIMER (demande pilote) — les cartes deviennent de simples pastilles de navigation, voire disparaissent (les cadres sur l'image les remplacent) |
+| Sous-étapes Image/Position/Calibration séparées | FUSIONNÉES (étapes 1 et 2 du nouveau flux) |
+| Tunnel amont (5 écrans PerformanceWizard) | À TRANCHER (D3) |
+
+## 6. Plan de refonte proposé
+
+| Phase | Contenu | Effort |
+|---|---|---|
+| **R0 — Purge** | code mort + orphelins + photo des cartes ; zéro changement de comportement | ~2-3 h |
+| **R1 — Modèle workshop** | types + état AbacBuilder : image de SET, sharedY, frames[] ; écriture/lecture metadata.workshop ; duplication Y à l'export | ~4-6 h |
+| **R2 — Canevas cadres & axes** | rendu de l'image unique + cadres à poignées + règle Y commune + règles X par cadre + calibration intégrée | ~10-14 h |
+| **R3 — Courbes sur l'image** | tracé par cadre actif sur le canevas commun (réutilise Chart/clic-points/Bézier reprojetés dans les cadres) | ~8-12 h |
+| **R4 — Validation unifiée + compat** | étape 4 (interpoler tout + test cascade + save), ouverture compat des anciens modèles | ~4-6 h |
+| **R5 — Tunnel amont** (si D3 = oui) | « Mes modèles + Nouveau » → atelier direct | ~4-6 h |
+
+## 7. Décisions pilote — ACTÉES (2026-06-11)
+
+1. **D1 — Remplacement** : ✅ l'atelier image unique REMPLACE directement l'actuel
+   (pas de cohabitation ; les modèles sauvegardés restent lisibles, format inchangé).
+2. **D2 — PointsTable** : ✅ UN SEUL tableau survit — panneau repliable « Points
+   (saisie précise) » du cadre actif, replié par défaut. PointEditor et tous les
+   doublons d'édition sont purgés.
+3. **D3 — Tunnel amont** : ✅ INCLUS (R5) — un seul écran « Mes modèles de
+   performance » + « Nouvel abaque » qui ouvre directement l'atelier.
+4. **D4 — Anciens modèles** : ✅ mode COMPAT ré-attachable — cadres recréés sans
+   image partagée, courbes/axes intacts, image ré-attachable à la main.
+
+**Ordre d'exécution acté : R0 (purge) → R1 (modèle workshop) → R2 (canevas cadres
+& axes) → R3 (courbes sur l'image) → R4 (validation unifiée + compat) → R5 (tunnel
+amont).** Exécution au « lance » du pilote, phase par phase, avec build + commit
+sélectif + merge main à chaque phase (pattern de session établi).
+
+## 8. R0 — EXÉCUTÉE (2026-06-11)
+
+- **Cases mortes supprimées** d'AbacBuilder (~1 180 lignes) : `'axes'` (1229-1450),
+  `'points_legacy_unused'` + `'fit'` + `'fit_old'` (1789-2745) — gardes-fous de
+  frontières vérifiés avant splice.
+- **Effet mort retiré** : auto-interpolation `currentStep === 'fit'` (+ état
+  `hasAutoInterpolated`) — l'interpolation passe par onFinish → handleFitAll.
+- **Type `Step` rétréci** à `'points' | 'final'` ; `steps[]` et `canProceed()`
+  alignés ; import d'itération LEGACY remappé (`axes→points`, `fit→final`) au lieu
+  de pousser une étape qui n'existe plus.
+- **3 composants orphelins SUPPRIMÉS** : GraphManager.tsx, PointEditor.tsx et
+  **AxesForm.tsx** (découvert orphelin pendant la purge : seuls les cases mortes le
+  montaient ; le wizard a ses propres champs d'axes). Exports index.ts nettoyés.
+  CurveManager et PointsTable restent VIVANTS (montés par AbacGraphWizard).
+- **Photo retirée des cartes d'aperçu** (demande pilote) : les vignettes du bandeau
+  n'affichent plus le filigrane hors-échelle — courbes + axes seuls.
+- Bilan net : **−1 670 lignes**, zéro changement de comportement, build vert.
