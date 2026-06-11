@@ -215,3 +215,29 @@ fois + X par cadre), retrait des chips manuelles de liaison devenues inutiles.
 
 **Reste pour R3** : tracé des courbes SUR le canevas (clic-points + Bézier
 reprojetés dans le cadre actif, via les mappings value↔pixel de R2b).
+
+## 12. R3 — EXÉCUTÉE (2026-06-11) · les courbes vivent sur le canevas
+
+- **Toutes les courbes de tous les cadres** sont reprojetées sur le canevas
+  (mappings value↔pixel R2b, calibration comprise) : trait `fitted` si interpolé,
+  polyligne des points sinon, couleurs réelles — cadre actif net, inactifs
+  estompés. La vue d'ensemble de l'abaque est désormais L'IMAGE AVEC SES COURBES.
+- **Tracé au clic sur le cadre actif** : quand le wizard est en mode
+  « placement » (verrou anti-clics-fantômes remonté via `onEditorModeChange`),
+  le clic dans le cadre AJOUTE un point (mappings inverses pixel→valeur,
+  calibration comprise) — le déplacement du cadre est gelé pendant le tracé.
+- **Édition des points sur le canevas** : points de la courbe sélectionnée en
+  cercles pleins — GLISSER pour déplacer (drag absolu → valeurs), CLIC DROIT
+  pour supprimer ; tooltips avec coordonnées.
+- **Réticule de tracé** : lignes pointillées + coordonnées data au survol du
+  cadre actif en mode placement.
+- Choix assumé : le **façonnage Bézier reste sur le Chart du wizard** (l'éditeur
+  fin, avec la table de points) — dupliquer l'état des poignées sur deux surfaces
+  créerait deux vérités ; le canevas REFLÈTE le résultat appliqué instantanément
+  (même state). Si l'usage réclame les poignées sur le canevas : R3b dédiée.
+- Builder : `handlePointClick/Drag/Delete` existants réutilisés tels quels (ils
+  écrivent déjà sur graphe focus + courbe sélectionnée) — zéro nouveau lieu de
+  vérité.
+
+**Reste** : R4 — validation unifiée (« Valider le modèle » : interpoler tout +
+test cascade + save en un geste) + finitions compat ; R5 — tunnel amont.

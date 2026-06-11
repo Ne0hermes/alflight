@@ -80,6 +80,11 @@ function AbacBuilderComponent(
   });
   const workshopActive = workshop.image !== null || workshop.frames.length > 0;
 
+  // R3 — mode d'édition du wizard, remonté pour le canevas : le clic-points
+  // sur le canevas n'est armé qu'en mode « placement » (même verrou que le
+  // Chart du wizard contre les clics fantômes).
+  const [wizardEditorMode, setWizardEditorMode] = useState<string>('idle');
+
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
   // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
   // Ne réécrit linkedTo/linkedFrom QUE pour les graphes CADRÉS, et seulement
@@ -1389,6 +1394,11 @@ const renderStepContent = () => {
                     }
                   : g));
               }}
+              selectedCurveId={selectedCurveId}
+              tracingMode={wizardEditorMode === 'placing-points'}
+              onPointClick={handlePointClick}
+              onPointDrag={handlePointDrag}
+              onPointDelete={handlePointDelete}
             />
 
 
@@ -1420,6 +1430,7 @@ const renderStepContent = () => {
             <AbacGraphWizard
               hideGraphNav
               hideImageSubSteps={workshopActive}
+              onEditorModeChange={setWizardEditorMode}
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}
               totalGraphs={graphs.length}

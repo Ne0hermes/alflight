@@ -34,6 +34,14 @@ interface WorkshopCanvasProps {
   /** R2b — écrit l'axe X d'un graphe (les X restent portés par les graphes,
    *  comme avant : le canevas n'introduit AUCUN nouveau lieu de vérité). */
   onUpdateGraphXAxis: (graphId: string, xAxis: AxisSpec) => void;
+  /** R3 — tracé sur le canevas : handlers du builder (mêmes que le Chart du
+   *  wizard — ils écrivent sur le graphe FOCUS + la courbe sélectionnée). */
+  selectedCurveId?: string | null;
+  /** true quand le wizard est en mode « placement » (clic = ajouter un point). */
+  tracingMode?: boolean;
+  onPointClick?: (x: number, y: number) => void;
+  onPointDrag?: (curveId: string, pointId: string, x: number, y: number) => void;
+  onPointDelete?: (curveId: string, pointId: string) => void;
   width?: number;
   height?: number;
 }
@@ -75,6 +83,44 @@ const yValueToPixel = (v: number, axis: AxisSpec, innerH: number, ticks?: Worksh
   }
   const t = (v - axis.min) / (axis.max - axis.min || 1);
   return axis.reversed ? t * innerH : (1 - t) * innerH;
+};
+
+/** R3 — Inverse : pixel Y (inner) → valeur, calibration prioritaire. */
+const yPixelToValue = (py: number, axis: AxisSpec, innerH: number, ticks?: WorkshopTickCalibration[]): number => {
+  if (ticks && ticks.length >= 2) {
+    const sorted = [...ticks].sort((a, b) => a.pixel - b.pixel);
+    if (py <= sorted[0].pixel) return sorted[0].value;
+    if (py >= sorted[sorted.length - 1].pixel) return sorted[sorted.length - 1].value;
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const a = sorted[i], b = sorted[i + 1];
+      if (py >= a.pixel && py <= b.pixel) {
+        const t = (py - a.pixel) / (b.pixel - a.pixel || 1);
+        return a.value + t * (b.value - a.value);
+      }
+    }
+  }
+  const t = axis.reversed ? py / innerH : 1 - py / innerH;
+  return axis.min + t * (axis.max - axis.min);
+};
+
+/** R3 — Inverse : pixel X (inner) → valeur dans le repère d'un CADRE. */
+const xPixelToValue = (px: number, axis: AxisSpec, frame: WorkshopFrame): number => {
+  if (frame.xTicks && frame.xTicks.length >= 2) {
+    const sorted = [...frame.xTicks].sort((a, b) => a.pixel - b.pixel);
+    if (px <= sorted[0].pixel) return sorted[0].value;
+    if (px >= sorted[sorted.length - 1].pixel) return sorted[sorted.length - 1].value;
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const a = sorted[i], b = sorted[i + 1];
+      if (px >= a.pixel && px <= b.pixel) {
+        const t = (px - a.pixel) / (b.pixel - a.pixel || 1);
+        return a.value + t * (b.value - a.value);
+      }
+    }
+  }
+  const w = frame.xRightPx - frame.xLeftPx || 1;
+  const t = (px - frame.xLeftPx) / w;
+  const tt = axis.reversed ? 1 - t : t;
+  return axis.min + tt * (axis.max - axis.min);
 };
 
 /** Position pixel d'une valeur sur la règle X d'un CADRE. Calibration prioritaire. */
@@ -137,6 +183,11 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   onFocusGraph,
   onRequestGraphForFrame,
   onUpdateGraphXAxis,
+  selectedCurveId = null,
+  tracingMode = false,
+  onPointClick,
+  onPointDrag,
+  onPointDelete,
   width = 960,
   height = 560
 }) => {
@@ -157,10 +208,11 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     collected: WorkshopTickCalibration[];
   }>(null);
 
-  // ─── Drag unifié (image OU cadre), pattern pointer-events fenêtre ───
+  // ─── Drag unifié (image, cadre OU point de courbe), pattern pointer fenêtre ───
   type DragState =
     | { kind: 'img-move' | 'img-tl' | 'img-tr' | 'img-bl' | 'img-br'; startX: number; startY: number; origin: WorkshopImage }
-    | { kind: 'frame-move' | 'frame-left' | 'frame-right'; graphId: string; startX: number; origin: WorkshopFrame };
+    | { kind: 'frame-move' | 'frame-left' | 'frame-right'; graphId: string; startX: number; origin: WorkshopFrame }
+    | { kind: 'point'; graphId: string; curveId: string; pointId: string };
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const clientDeltaToInner = useCallback((dxClient: number, dyClient: number) => {
@@ -169,9 +221,36 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     return { dx: (dxClient / rect.width) * width, dy: (dyClient / rect.height) * height };
   }, [width, height]);
 
+  // R3 — coordonnées INNER (post-marges) d'un événement pointeur.
+  const eventToInner = useCallback((e: { clientX: number; clientY: number }) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * width - MARGIN.left,
+      y: ((e.clientY - rect.top) / rect.height) * height - MARGIN.top
+    };
+  }, [width, height]);
+
+  // R3 — position du curseur (inner) pour le réticule de tracé.
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+
   useEffect(() => {
     if (!drag) return;
     const onMove = (e: PointerEvent) => {
+      // R3 — déplacement d'un POINT de courbe : position ABSOLUE → valeurs data
+      // via les mappings inverses du cadre (calibration comprise).
+      if (drag.kind === 'point') {
+        if (!onPointDrag) return;
+        const pos = eventToInner(e);
+        const frame = workshop.frames.find(f => f.graphId === drag.graphId);
+        const g = graphs.find(x => x.id === drag.graphId);
+        if (!pos || !frame || !g?.axes) return;
+        const dataX = xPixelToValue(pos.x, g.axes.xAxis, frame);
+        const dataY = yPixelToValue(pos.y, workshop.sharedY, inner.h, workshop.yTicks);
+        onPointDrag(drag.curveId, drag.pointId, dataX, dataY);
+        return;
+      }
+
       const { dx, dy } = clientDeltaToInner(e.clientX - drag.startX, 'startY' in drag ? e.clientY - drag.startY : 0);
 
       if (drag.kind.startsWith('img')) {
@@ -214,7 +293,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
-  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, inner.w]);
+  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, eventToInner, graphs, onPointDrag, inner.w, inner.h]);
 
   // ─── Import de l'image du set ───
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -402,6 +481,11 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         style={{ width: '100%', display: 'block', backgroundColor: 'var(--bg-overlay)', borderRadius: 4, touchAction: 'none' }}
+        onPointerMove={(e) => {
+          if (!tracingMode) return;
+          setCursorPos(eventToInner(e));
+        }}
+        onPointerLeave={() => setCursorPos(null)}
       >
         <g transform={`translate(${MARGIN.left}, ${MARGIN.top})`}>
           {/* Zone inner */}
@@ -453,6 +537,37 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             </text>
           )}
 
+          {/* ─── R3 : COURBES de tous les cadres (la vraie vue d'ensemble) ───
+              Chaque courbe est reprojetée dans SON cadre via les mappings
+              value↔pixel (calibration comprise). Cadre actif net, inactifs
+              estompés. Traits non interactifs (les points le sont, plus bas). */}
+          {framesSorted.map(f => {
+            const g = graphs.find(x => x.id === f.graphId);
+            if (!g?.axes) return null;
+            const isFocus = f.graphId === selectedGraphId;
+            return (
+              <g key={`curves-${f.graphId}`} pointerEvents="none" opacity={isFocus ? 1 : 0.45}>
+                {g.curves.map(curve => {
+                  const pts = (curve.fitted?.points?.length ? curve.fitted.points : curve.points);
+                  if (!pts || pts.length < 2) return null;
+                  const d = pts
+                    .map((p, pi) => `${pi === 0 ? 'M' : 'L'} ${xValueToPixel(p.x, g.axes!.xAxis, f).toFixed(1)} ${yValueToPixel(p.y, workshop.sharedY, inner.h, workshop.yTicks).toFixed(1)}`)
+                    .join(' ');
+                  return (
+                    <path
+                      key={curve.id}
+                      d={d}
+                      fill="none"
+                      stroke={curve.color}
+                      strokeWidth={isFocus ? 2 : 1.2}
+                      opacity={curve.id === selectedCurveId ? 1 : 0.85}
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
+
           {/* ─── R2b : règle Y COMMUNE graduée (gauche) ─── */}
           <line x1={-6} y1={0} x2={-6} y2={inner.h} stroke="var(--accent-primary)" strokeWidth={2.5} opacity={0.85} />
           {(workshop.yTicks && workshop.yTicks.length >= 2
@@ -487,11 +602,22 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                   stroke={color} strokeWidth={isFocus ? 2.5 : 1.5}
                   strokeDasharray={isFocus ? 'none' : '7 4'}
                   rx={3}
-                  style={{ cursor: calib ? 'crosshair' : 'move' }}
+                  style={{ cursor: calib ? 'crosshair' : (isFocus && tracingMode && selectedCurveId ? 'crosshair' : 'move') }}
                   onPointerDown={(e) => {
                     if (calib) return; // la calibration capture les clics via l'overlay
                     e.stopPropagation();
                     onFocusGraph(f.graphId);
+                    // R3 — mode TRACÉ sur le cadre actif : le clic AJOUTE un point
+                    // (le déplacement du cadre est gelé tant qu'on trace).
+                    if (isFocus && tracingMode && selectedCurveId && onPointClick && g?.axes) {
+                      const pos = eventToInner(e);
+                      if (pos) {
+                        const dataX = xPixelToValue(pos.x, g.axes.xAxis, f);
+                        const dataY = yPixelToValue(pos.y, workshop.sharedY, inner.h, workshop.yTicks);
+                        onPointClick(dataX, dataY);
+                      }
+                      return;
+                    }
                     setDrag({ kind: 'frame-move', graphId: f.graphId, startX: e.clientX, origin: f });
                   }}
                 />
@@ -563,6 +689,53 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               </g>
             );
           })}
+
+          {/* ─── R3 : POINTS du cadre ACTIF — la courbe sélectionnée s'édite ici :
+              glisser un point pour le déplacer, clic droit pour le supprimer. ─── */}
+          {focusedFrame && focusedGraph?.axes && !calib && focusedGraph.curves.map(curve => {
+            const isSel = curve.id === selectedCurveId;
+            return curve.points.map(p => {
+              if (p.id === undefined) return null;
+              const px = xValueToPixel(p.x, focusedGraph.axes!.xAxis, focusedFrame);
+              const py = yValueToPixel(p.y, workshop.sharedY, inner.h, workshop.yTicks);
+              return (
+                <circle
+                  key={`pt-${curve.id}-${p.id}`}
+                  cx={px} cy={py} r={isSel ? 5 : 3}
+                  fill={curve.color}
+                  stroke="var(--bg-surface)"
+                  strokeWidth={isSel ? 2 : 1}
+                  style={{ cursor: isSel ? 'grab' : 'default' }}
+                  onPointerDown={isSel ? (e) => {
+                    e.stopPropagation();
+                    setDrag({ kind: 'point', graphId: focusedGraph.id, curveId: curve.id, pointId: p.id! });
+                  } : undefined}
+                  onContextMenu={isSel && onPointDelete ? (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onPointDelete(curve.id, p.id!);
+                  } : undefined}
+                >
+                  <title>{`${curve.name} · (${p.x.toFixed(1)}, ${p.y.toFixed(1)})${isSel ? ' — glisser / clic droit pour supprimer' : ''}`}</title>
+                </circle>
+              );
+            });
+          })}
+
+          {/* ─── R3 : réticule de tracé (cadre actif, mode placement) ─── */}
+          {tracingMode && selectedCurveId && focusedFrame && focusedGraph?.axes && cursorPos &&
+            cursorPos.x >= focusedFrame.xLeftPx && cursorPos.x <= focusedFrame.xRightPx &&
+            cursorPos.y >= 0 && cursorPos.y <= inner.h && !drag && !calib && (
+            <g pointerEvents="none">
+              <line x1={focusedFrame.xLeftPx} y1={cursorPos.y} x2={focusedFrame.xRightPx} y2={cursorPos.y}
+                stroke="var(--accent-primary)" strokeDasharray="3 3" strokeWidth={1} opacity={0.6} />
+              <line x1={cursorPos.x} y1={0} x2={cursorPos.x} y2={inner.h}
+                stroke="var(--accent-primary)" strokeDasharray="3 3" strokeWidth={1} opacity={0.6} />
+              <text x={cursorPos.x + 7} y={cursorPos.y - 7} fontSize={10} fill="var(--accent-primary)">
+                ({xPixelToValue(cursorPos.x, focusedGraph.axes.xAxis, focusedFrame).toFixed(1)}, {yPixelToValue(cursorPos.y, workshop.sharedY, inner.h, workshop.yTicks).toFixed(1)})
+              </text>
+            </g>
+          )}
 
           {/* ─── R2b : overlay de capture des clics de calibration (au-dessus de tout) ─── */}
           {calib && (
