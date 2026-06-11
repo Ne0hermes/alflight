@@ -10,7 +10,14 @@
 // Navigation libre Précédent / Suivant. State machine pour les modes (un seul actif).
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Chart, AxisTickCalibration, BackgroundImage } from './Chart';
+import {
+  BezierOverrides,
+  applyBezierOverrides,
+  fitBezierThroughPoints,
+  sampleBezierSegments
+} from '../core/bezier';
 import { CurveManager } from './CurveManager';
 import { PointsTable } from './PointsTable';
 import { AxesConfig, Curve, GraphConfig, XYPoint, WindDirection } from '../core/types';
@@ -24,7 +31,7 @@ import {
 } from '../core/operationCatalog';
 
 export type WizardSubStep = 'image' | 'position' | 'axes' | 'calibration' | 'curves';
-export type EditorMode = 'idle' | 'adjusting-image' | 'calibrating-x' | 'calibrating-y' | 'placing-points';
+export type EditorMode = 'idle' | 'adjusting-image' | 'calibrating-x' | 'calibrating-y' | 'placing-points' | 'bezier-handles';
 
 const SUB_STEPS: { id: WizardSubStep; label: string; icon: string }[] = [
   { id: 'image',       label: '1. Image',         icon: '📷' },
@@ -191,6 +198,40 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
   const selectedCurve = selectedCurveId ? graph.curves.find(c => c.id === selectedCurveId) : null;
 
+  // === P2b — Mode Bézier (recyclé du prototype v2) ===
+  // Les segments de base passent EXACTEMENT par les points cliqués de la courbe ;
+  // le pilote tire les poignées cp1/cp2 (overrides par index de segment) pour
+  // affiner le tracé localement. « Appliquer » échantillonne en points ordinaires
+  // → le pipeline (interpolation, cascade, sauvegarde) reste inchangé.
+  const [bezierOverrides, setBezierOverrides] = useState<BezierOverrides>({});
+
+  const bezierSegments = useMemo(() => {
+    if (editorMode !== 'bezier-handles' || !selectedCurve || selectedCurve.points.length < 2) return null;
+    return applyBezierOverrides(fitBezierThroughPoints(selectedCurve.points), bezierOverrides);
+  }, [editorMode, selectedCurve, bezierOverrides]);
+
+  const handleStartBezier = () => {
+    setBezierOverrides({});
+    setEditorMode('bezier-handles');
+  };
+
+  const handleCancelBezier = () => {
+    setBezierOverrides({});
+    setEditorMode('idle');
+  };
+
+  const handleApplyBezier = () => {
+    if (!selectedCurve || !bezierSegments || bezierSegments.length === 0) return;
+    // 6 échantillons par segment → fidèle au tracé, assez sobre pour le tableau
+    // de points. fitted est invalidé : l'interpolation se refera sur ces points.
+    const sampled = sampleBezierSegments(bezierSegments, 6).map(p => ({ ...p, id: uuidv4() }));
+    if (sampled.length >= 2) {
+      onUpdateCurve(selectedCurve.id, { points: sampled, fitted: undefined });
+    }
+    setBezierOverrides({});
+    setEditorMode('idle');
+  };
+
   // === Rendu de la barre de sous-étapes ===
   const renderSubStepBar = () => (
     <div style={{ marginBottom: 12 }}>
@@ -333,6 +374,10 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         customYTicks={customAxisTicks?.y}
         calibrationMode={editorMode === 'calibrating-x' ? 'x' : editorMode === 'calibrating-y' ? 'y' : null}
         onCalibrationClick={handleCalibrationClick}
+        bezierOverlay={interactive ? bezierSegments : null}
+        onBezierHandleDrag={interactive && editorMode === 'bezier-handles' ? (segIdx, which, x, y) => {
+          setBezierOverrides(prev => ({ ...prev, [segIdx]: { ...(prev[segIdx] || {}), [which]: { x, y } } }));
+        } : undefined}
       />
     </div>
   );
@@ -924,6 +969,29 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   ✓ Terminer cette courbe
                 </button>
               </div>
+            ) : editorMode === 'bezier-handles' && selectedCurve ? (
+              /* P2b — Mode Bézier : façonnage par poignées de contrôle */
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <strong>〰 Façonnage Bézier de "{selectedCurve.name}"</strong>
+                <span style={{ fontSize: 13 }}>
+                  Tire les <strong>poignées rondes</strong> pour façonner la courbe entre les points
+                  (les points restent déplaçables). La courbe doit rester une fonction de X.
+                </span>
+                <span style={{ marginLeft: 'auto' }} />
+                <button
+                  onClick={handleApplyBezier}
+                  style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
+                  title="Remplace les points de la courbe par un échantillonnage fidèle du tracé"
+                >
+                  ✓ Appliquer le tracé
+                </button>
+                <button
+                  onClick={handleCancelBezier}
+                  style={btnStyle('var(--text-secondary)', true)}
+                >
+                  ✕ Annuler
+                </button>
+              </div>
             ) : selectedCurve ? (
               /* Courbe sélectionnée mais hors mode placement : édition libre */
               <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '2px solid var(--status-success)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -941,6 +1009,16 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   title="Reprendre le placement de points par clic sur l'image"
                 >
                   📍 Ajouter des points
+                </button>
+                <button
+                  onClick={handleStartBezier}
+                  disabled={selectedCurve.points.length < 2}
+                  style={{ ...btnStyle('var(--accent-primary)', true), opacity: selectedCurve.points.length < 2 ? 0.4 : 1 }}
+                  title={selectedCurve.points.length < 2
+                    ? 'Place au moins 2 points avant de façonner en Bézier'
+                    : 'Façonner la courbe en tirant des poignées de contrôle (Bézier)'}
+                >
+                  〰 Affiner en Bézier
                 </button>
                 <button
                   onClick={() => onSelectCurve(null)}
