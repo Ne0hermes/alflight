@@ -157,3 +157,35 @@ Le modèle de données de l'atelier est posé (fondation silencieuse) :
   gardent leur Y propre) et `metadata.workshop` est persisté. Quand l'atelier
   n'est pas utilisé : **exports byte-identiques à avant** — zéro changement de
   comportement tant que R2 n'existe pas.
+
+## 10. R2a — EXÉCUTÉE (2026-06-11) · le canevas est à l'écran
+
+**Nouveau composant `WorkshopCanvas.tsx`** (~340 l.) — le geste de l'abaque papier :
+
+- **UNE image pour le set** : import (bouton 📷), pose et recadrage par drag +
+  4 poignées d'angle (mode « ✥ Ajuster »), opacité filigrane. Marges réservées
+  aux règles d'axes (R2b).
+- **Les cadres se TIRENT sur l'image** : bandes verticales pleine hauteur, bord
+  orange = cadre ACTIF (focus au clic, pilote les outils du wizard en dessous),
+  poignées gauche/droite (redimension), corps draggable (déplacement), ✕ pour
+  retirer un cadre (graphe et courbes conservés), bouton « ＋ Ajouter un cadre »
+  (cadre le prochain graphe non cadré, sinon crée un graphe).
+- **Chaîne G1→G2→G3 AUTOMATIQUE** : flèches dessinées entre cadres ; un effet
+  du builder synchronise linkedTo/linkedFrom sur l'ordre gauche→droite des
+  cadres (réécrit uniquement les graphes cadrés, et uniquement si changement).
+- **Compat D4 opérationnelle** : un modèle d'avant la refonte (graphes sans
+  cadres) affiche le bandeau « Créer un cadre par graphe » → cadres équirépartis,
+  à recaler sur l'image ré-importée.
+
+**Intégration AbacBuilder/Wizard** :
+- Le canevas REMPLACE le bandeau de cartes P2a (vignettes Chart supprimées —
+  l'image + les cadres SONT la vue d'ensemble ; R3 y ramènera les courbes).
+- Quand l'atelier est actif, les sous-étapes « Image » et « Position » du wizard
+  sont MASQUÉES (`hideImageSubSteps`) : l'image vit sur le canevas — le wizard
+  démarre sur « Axes » et sa navigation parcourt les sous-étapes visibles.
+- Tant que l'atelier n'est pas engagé (pas d'image, pas de cadre), l'ancien flux
+  par graphe reste intégralement fonctionnel (filet de sécurité).
+
+**Reste pour R2b** : règle Y commune ÉDITABLE (valeurs/pas/titre/unité) sur le
+canevas, règles X par cadre, calibration par clics sur le canevas (Y commun une
+fois + X par cadre), retrait des chips manuelles de liaison devenues inutiles.
