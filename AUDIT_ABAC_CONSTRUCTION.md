@@ -222,3 +222,42 @@ persistée :
   ces points ; « ✕ Annuler » restaure l'état.
 - Donnée/format : AUCUN changement — interpolation, cascade et sauvegarde voient
   des points ordinaires. P5 (retrait de v2/) peut suivre.
+
+## 12. P3 + P4 + P5 — EXÉCUTÉES (2026-06-11) · le programme est COMPLET
+
+**P3 — Connecteurs de cascade sur les cartes du bandeau** : les liaisons s'éditent
+directement sur les cartes — chips « sortie → N · nom » / « entrée ← N · nom »
+avec ✕ pour délier, sélecteur « ＋ lier la sortie → » pour chaîner vers un autre
+graphe (handleLinkGraphs/handleUnlinkGraphs existants). Choix assumé : des chips
+cliquables plutôt que des flèches SVG positionnées — la grille responsive
+(auto-fit, multi-rangées) rend les flèches absolues fragiles.
+
+**P4 — Test de cascade EN ÉDITION** : panneau repliable « 🧪 Tester la cascade sur
+les graphes en l'état » dans l'étape Construction, montant le CascadeCalculator
+(saisie d'entrée + paramètres par graphe + résultat détaillé étape par étape) sur
+l'état COURANT des graphes — un chaînage incohérent se voit pendant la
+construction, plus en préparation de vol.
+
+**🔥 DÉCOUVERTE MAJEURE pendant P4** : tout le GRAPHE CASCADE était du code mort
+CASSÉ depuis octobre 2025 — `cascade.ts` (264 erreurs !), `CascadeCalculator.tsx`
+et `ChainCalculator.tsx` avaient été MUTILÉS par une passe de suppression de
+console.log (têtes d'appels supprimées, queues de template literals laissées,
+autour du commit « Backup before syntax fixes - 2025-10-19 »). Personne ne l'a vu
+car ces composants étaient importés SANS être utilisés comme valeurs → esbuild
+élidait les imports → les fichiers n'étaient JAMAIS transformés. Le montage P4 a
+rendu l'import réel et tout a éclaté. Réparation :
+- `cascade.ts` : RESTAURÉ depuis a3a3ed6 (dernière version syntaxiquement saine)
+  + ré-application du fix J de la remédiation W&B (purge du facteur magique 1.914
+  / sortie forcée 870 → ratio bracket principiel) ;
+- `CascadeCalculator.tsx` : 6 réparations de syntaxe manuelles (interface,
+  warningsList.push, fermetures d'IIFE/return/renderStep, blocs debug orphelins purgés) ;
+- `ChainCalculator.tsx` : restauré depuis a3a3ed6 ; son import mort retiré
+  d'AbacBuilder (c'est ce pattern import-élidé qui a masqué la casse des mois).
+→ L'audit §1 disait « moteur cascade PRÊT ✅ » : vrai sur l'algorithme, faux sur
+la compilabilité. C'est désormais vrai tout court (build vert).
+
+**P5 — v2/ réduit au vivant** : BezierAbacEditor.jsx, AbacEditorDemoPage.jsx,
+calibration.js, types.js SUPPRIMÉS (l'idée Bézier vit dans core/bezier.ts +
+Chart/wizard). `aiChartAnalysisService.js` CONSERVÉ : contrairement au constat
+initial de l'audit, il est VIVANT (importé par AbacBuilder pour l'analyse IA
+d'image) — seul occupant restant du dossier v2/.

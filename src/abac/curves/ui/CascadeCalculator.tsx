@@ -19,7 +19,7 @@ interface CascadeCalculatorProps {
     name: string;
   }[];
   onClose?: () => void;
-);}
+}
 
 const styles = {
   container: {
@@ -365,6 +365,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             const unit = graph.axes.xAxis.unit ? ` ${graph.axes.xAxis.unit}` : '';
             warningsList.push(
               `⚠️ ${graph.axes.xAxis.title}: ${paramValue}${unit} est hors plage réglementaire [${xMin}${unit} - ${xMax}${unit}]. Résultat extrapolé.`
+            );
           }
         }
 
@@ -462,66 +463,21 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 const innerWidth = 270;
                 const innerHeight = 190;
 
-                // Debug: Vérifier les axes du graphique
-                const isMassGraph = graph.name.toLowerCase().includes('masse');
-                
                 // Fonction de scaling X
+                // (les blocs « Debug … masse » mutilés par une ancienne passe de
+                //  suppression de console.log — têtes d'appels retirées, queues de
+                //  template literals laissées — ont été purgés ici : le fichier ne
+                //  compilait plus dès qu'on l'importait réellement.)
                 const xScale = (value: number) => {
                   const ratio = (value - graph.axes.xAxis.min) / (graph.axes.xAxis.max - graph.axes.xAxis.min);
-                  const scaled = graph.axes.xAxis.reversed ? innerWidth * (1 - ratio) : innerWidth * ratio;
-
-                  // Debug pour le graphique de masse
-                  if (graph.name.toLowerCase().includes('masse') && step.parameter) {
-                    : ratio=${ratio.toFixed(3)}, reversed=${graph.axes.xAxis.reversed}, result=${scaled.toFixed(1)}`);
-                  }
-
-                  return scaled;
+                  return graph.axes.xAxis.reversed ? innerWidth * (1 - ratio) : innerWidth * ratio;
                 };
 
                 // Fonction de scaling Y (inversé pour SVG)
                 const yScale = (value: number) => {
                   const ratio = (value - graph.axes.yAxis.min) / (graph.axes.yAxis.max - graph.axes.yAxis.min);
-                  const scaled = graph.axes.yAxis.reversed ? innerHeight * ratio : innerHeight * (1 - ratio);
-
-                  // Debug pour le graphique de masse
-                  if (graph.name.toLowerCase().includes('masse')) {
-                    : ratio=${ratio.toFixed(3)}, reversed=${graph.axes.yAxis.reversed}, result=${scaled.toFixed(1)}`);
-                  }
-
-                  return scaled;
+                  return graph.axes.yAxis.reversed ? innerHeight * ratio : innerHeight * (1 - ratio);
                 };
-
-                // Debug: afficher les positions calculées pour le graphique de masse
-                if (graph.name.toLowerCase().includes('masse') && step.parameter) {
-                  ,
-                      ligneVerticaleX: xScale(step.parameter),
-                      pointSortie: { x: xScale(step.parameter), y: yScale(step.outputValue) }
-                    }
-                  });
-
-                  if (step.valuesAtCrossing) {
-                    , y: yScale(step.valuesAtCrossing.lowerValue) } : null,
-                        upperPoint: step.valuesAtCrossing.upperValue ?
-                          { x: xScale(step.parameter), y: yScale(step.valuesAtCrossing.upperValue) } : null
-                      }
-                    });
-                  }
-
-                  // Vérifier si les points sont dans la zone visible
-                  const checkVisible = (y: number) => {
-                    if (y < 0) return "⚠️ Au-dessus du graphique";
-                    if (y > innerHeight) return "⚠️ En dessous du graphique";
-                    return "✓ Visible";
-                  };
-
-                  ),
-                    pointSortie: checkVisible(yScale(step.outputValue)),
-                    lowerPoint: step.valuesAtCrossing?.lowerValue ?
-                      checkVisible(yScale(step.valuesAtCrossing.lowerValue)) : null,
-                    upperPoint: step.valuesAtCrossing?.upperValue ?
-                      checkVisible(yScale(step.valuesAtCrossing.upperValue)) : null
-                  });
-                }
 
                 return (
                   <>
@@ -717,6 +673,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 </>
               )}
                   </>
+                );
               })()}
             </g>
           </svg>
@@ -807,6 +764,8 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         )}
       </div>
     </div>
+    );
+  };
 
   return (
     <div style={styles.container}>
@@ -1069,4 +1028,5 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         </div>
       )}
     </div>
+  );
 };
