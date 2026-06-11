@@ -135,3 +135,25 @@ sélectif + merge main à chaque phase (pattern de session établi).
 - **Photo retirée des cartes d'aperçu** (demande pilote) : les vignettes du bandeau
   n'affichent plus le filigrane hors-échelle — courbes + axes seuls.
 - Bilan net : **−1 670 lignes**, zéro changement de comportement, build vert.
+
+## 9. R1 — EXÉCUTÉE (2026-06-11)
+
+Le modèle de données de l'atelier est posé (fondation silencieuse) :
+
+- **Types** (`core/types.ts`) : `WorkshopImage` (position/taille en pixels inner,
+  même convention que BackgroundImage du Chart), `WorkshopFrame` (bande
+  `xLeftPx→xRightPx` par graphe + calibration X optionnelle — l'ordre
+  gauche→droite définit la chaîne G1→G2→G3), `WorkshopConfig` (image, `sharedY`
+  = axe Y COMMUN type `AxisSpec`, calibration Y commune, frames),
+  `WorkshopTickCalibration` (équivalent core du tick du Chart).
+  `AbacCurvesJSON.metadata.workshop?` ajouté.
+- **État AbacBuilder** : `workshop` (défaut : image null, sharedY 0-100, frames
+  vides) + dérivé `workshopActive` (image présente OU ≥1 cadre).
+- **Chargement** : `initialData.metadata.workshop` restauré s'il existe ; les
+  modèles antérieurs n'en ont pas → état par défaut (mode compat D4, les cadres
+  seront recréés à l'ouverture du canevas R2).
+- **Export** (`handleExportJSON`) : quand `workshopActive`, le **Y commun est
+  dupliqué** dans chaque graphe CADRÉ (les graphes hors cadre — multi-feuilles —
+  gardent leur Y propre) et `metadata.workshop` est persisté. Quand l'atelier
+  n'est pas utilisé : **exports byte-identiques à avant** — zéro changement de
+  comportement tant que R2 n'existe pas.

@@ -156,6 +156,52 @@ export interface AbacSystemConfig {
   }[];
 }
 
+// ─── R1 (AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md) — Atelier « image unique » ─────
+// Un abaque papier = UNE image, UN axe Y commun, des cadres (un par graphe).
+// Ce bloc décrit l'état de l'ATELIER, persisté dans metadata.workshop pour la
+// ré-édition. Il ne REMPLACE PAS les axes par graphe : à l'export, le Y commun
+// est DUPLIQUÉ dans chaque GraphConfig.axes.yAxis des graphes cadrés → le
+// format de LECTURE (cascade, prépa vol, CascadeCalculator) reste inchangé.
+
+/** Spécification d'un axe (réutilise la forme de AxesConfig.yAxis). */
+export type AxisSpec = AxesConfig['yAxis'];
+
+/** Calibration multi-points value↔pixel (équivalent core de AxisTickCalibration du Chart). */
+export interface WorkshopTickCalibration {
+  value: number;
+  pixel: number; // coords INNER du canevas (post-marges)
+}
+
+export interface WorkshopImage {
+  url: string;
+  /** Position/taille en pixels INNER du canevas (post-marges) — même convention
+   *  que BackgroundImage du Chart : posée/recadrée UNE fois pour tout le set. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface WorkshopFrame {
+  graphId: string;
+  /** Bande horizontale du cadre sur le canevas (pixels inner) — l'ordre
+   *  gauche→droite des cadres définit la chaîne de lecture G1→G2→G3. */
+  xLeftPx: number;
+  xRightPx: number;
+  /** Calibration X propre au cadre (clics graduations) — optionnelle. */
+  xTicks?: WorkshopTickCalibration[];
+}
+
+export interface WorkshopConfig {
+  /** L'image MANEX du set — null tant que rien n'est importé. */
+  image: WorkshopImage | null;
+  /** Axe Y COMMUN — paramétré UNE fois (nature même d'un abaque). */
+  sharedY: AxisSpec;
+  /** Calibration Y commune — optionnelle. */
+  yTicks?: WorkshopTickCalibration[];
+  frames: WorkshopFrame[];
+}
+
 export interface AbacCurvesJSON {
   version: string;
   axes?: AxesConfig; // Pour compatibilité
@@ -170,6 +216,9 @@ export interface AbacCurvesJSON {
     systemName?: string; // Nom affiché du système
     modelName?: string; // Nom du modèle d'avion
     aircraftModel?: string; // Modèle d'avion depuis le wizard
+    /** R1 — état de l'atelier « image unique » (ré-édition). Absent sur les
+     *  modèles construits avant la refonte → ouverture en mode compat (D4). */
+    workshop?: WorkshopConfig;
   };
 }
 

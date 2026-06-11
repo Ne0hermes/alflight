@@ -23,7 +23,8 @@ import {
   AbacCurvesJSON,
   GraphConfig,
   WindDirection,
-  InterpolationMethod
+  InterpolationMethod,
+  WorkshopConfig
 } from '../core/types';
 import styles from './styles.module.css';
 
@@ -65,6 +66,19 @@ function AbacBuilderComponent(
     }
     return m;
   }, []);
+  // ─── R1 — Atelier « image unique » (AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md) ───
+  // État du workshop : UNE image pour le SET, un axe Y COMMUN, des cadres (un
+  // par graphe). Posé en R1 (persistance metadata.workshop + duplication du Y
+  // à l'export) ; le canevas visuel arrive en R2/R3. Tant que l'atelier n'est
+  // pas utilisé (image null + aucun cadre), les exports restent STRICTEMENT
+  // identiques à avant — zéro changement de comportement.
+  const [workshop, setWorkshop] = useState<WorkshopConfig>({
+    image: null,
+    sharedY: { min: 0, max: 100, unit: '', title: '' },
+    frames: []
+  });
+  const workshopActive = workshop.image !== null || workshop.frames.length > 0;
+
   // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
   const [currentStep, setCurrentStep] = useState<Step>('points');
@@ -443,6 +457,13 @@ function AbacBuilderComponent(
       // Restaurer le nom du modèle depuis les métadonnées
       if (initialData.metadata?.modelName && !aircraftModel) {
         setModelNameInput(initialData.metadata.modelName);
+      }
+
+      // R1 — Restaurer l'état de l'atelier « image unique » s'il a été persisté.
+      // Modèles antérieurs à la refonte : pas de bloc workshop → état par défaut
+      // (mode compat D4 : les cadres seront recréés à l'ouverture du canevas R2).
+      if (initialData.metadata?.workshop) {
+        setWorkshop(initialData.metadata.workshop);
       }
 
       if (initialData.graphs) {
@@ -1109,10 +1130,22 @@ function AbacBuilderComponent(
       if (!proceed) return;
     }
 
+    // R1 — Atelier « image unique » : quand le workshop est UTILISÉ, l'axe Y
+    // COMMUN est DUPLIQUÉ dans chaque graphe CADRÉ (c'est la définition d'un
+    // abaque : même filigrane ⇒ même ordonnée). Les graphes hors cadre (cas
+    // multi-feuilles) gardent leur Y propre. Le format de LECTURE (cascade,
+    // prépa vol) ne change pas : chaque graphe reste autoporteur.
+    const framedIds = new Set(workshop.frames.map(f => f.graphId));
+    const exportedGraphs = workshopActive
+      ? graphs.map(g => framedIds.has(g.id)
+          ? { ...g, axes: { ...(g.axes || { xAxis: { min: 0, max: 100, unit: '', title: '' }, yAxis: { min: 0, max: 100, unit: '', title: '' } }), yAxis: { ...workshop.sharedY } } }
+          : g)
+      : graphs;
+
     // Préparer les données au nouveau format multi-graphiques
     const json: AbacCurvesJSON = {
       version: '2.0',
-      graphs: graphs,
+      graphs: exportedGraphs,
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -1120,7 +1153,10 @@ function AbacBuilderComponent(
         systemName: getOperation(systemType)?.labelFr || 'Système d\'abaques',
         modelName: aircraftModel || modelNameInput,
         aircraftModel: aircraftModel, // Sauvegarder explicitement le modèle d'avion
-        description: `${getOperation(systemType)?.labelFr || 'Set'} pour ${aircraftModel || modelNameInput || 'modèle non spécifié'}`
+        description: `${getOperation(systemType)?.labelFr || 'Set'} pour ${aircraftModel || modelNameInput || 'modèle non spécifié'}`,
+        // R1 — état de l'atelier pour la ré-édition (absent si non utilisé →
+        // exports strictement identiques à avant la refonte).
+        ...(workshopActive ? { workshop } : {})
       }
     };
 
@@ -1128,7 +1164,7 @@ function AbacBuilderComponent(
     if (onSave) {
       onSave(json, aircraftModel || modelNameInput);
     }
-  }, [onSave, graphs, modelNameInput, aircraftModel, systemType]);
+  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive]);
 
   const handleImportJSON = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
