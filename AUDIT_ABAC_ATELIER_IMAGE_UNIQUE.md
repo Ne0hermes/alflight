@@ -241,3 +241,36 @@ reprojetés dans le cadre actif, via les mappings value↔pixel de R2b).
 
 **Reste** : R4 — validation unifiée (« Valider le modèle » : interpoler tout +
 test cascade + save en un geste) + finitions compat ; R5 — tunnel amont.
+
+## 13. R4 + R5 — EXÉCUTÉES (2026-06-11) · LE PROGRAMME EST COMPLET
+
+**R4 — Validation en un geste** (étape finale du builder) :
+- Le **test de cascade est intégré à l'écran de validation** (panneau ouvert par
+  défaut, même CascadeCalculator) : on vérifie le modèle complet (entrée → G1 →
+  G2 → G3 → résultat) AVANT d'enregistrer, sans changer d'écran. L'interpolation
+  de toutes les courbes se fait déjà à l'entrée de l'étape (onFinish → fitAll).
+- Le bouton final dit ce qu'il fait : « **✓ Valider et enregistrer le modèle** »
+  (ex-« Suivant »).
+
+**R5 — Tunnel amont court-circuité** :
+- L'écran récapitulatif « Mes modèles » (Step4Performance) a un bouton dédié
+  « **➕ Nouvel abaque — atelier image unique** » → ouverture DIRECTE de
+  l'atelier (PerformanceWizard saute à l'étape builder via
+  `initialData.directToBuilder`) : l'image s'importe sur le canevas — fini le
+  tunnel type → upload → analyse → pages pour les abaques.
+- « Ajouter des données de performance » reste pour les TABLEAUX MANEX
+  (extraction IA) et les flux mixtes — ce chemin n'est pas touché.
+- Le chemin « Modifier » un abaque existant sautait déjà au builder (inchangé).
+
+### Bilan du programme R0→R5
+| Phase | Commit | Livré |
+|---|---|---|
+| R0 | 2d83127 | purge code mort (−2 511 lignes brutes), orphelins, photo des aperçus |
+| R1 | d2683e3 | modèle workshop (image de set, Y commun, cadres) + persistance |
+| R2a | 787ebee | canevas : image unique + cadres à poignées + chaîne auto |
+| R2b | 903238b | axes sur canevas : Y commun, X par cadre, calibration aux clics |
+| R3 | a5abed2 | courbes sur le canevas : tracé au clic, drag, suppression, réticule |
+| R4+R5 | (ce commit) | validation+test en un geste, tunnel amont direct |
+
+La vision pilote (PA-28-181) est en place de bout en bout : **une image, un Y
+commun, des cadres, des courbes — et un modèle validé sans quitter le canevas.**
