@@ -200,3 +200,25 @@ Un **AbacCurveManager PAR graphe** (prérequis de l'atelier multi-colonnes P2) :
   (auto-fit minmax 320px).
 - **P2b (suite)** : recycler le drag Bézier de v2 (poignées de contrôle) dans le
   Chart d'édition, puis P5 (suppression de v2/).
+
+## 11. P2b — EXÉCUTÉE (2026-06-11) · drag Bézier recyclé
+
+Le façonnage Bézier du prototype v2 est intégré au flux réel (sous-étape
+« Courbes ») — la Bézier est un **outil de saisie**, pas une représentation
+persistée :
+
+- **`core/bezier.ts`** (porté de v2/calibration.js, typé) : `fitBezierThroughPoints`
+  (segments cubiques passant EXACTEMENT par les points cliqués, schéma Catmull-Rom),
+  `applyBezierOverrides` (poignées tirées par segment), `sampleBezierSegments`
+  (échantillonnage en polyligne, jointures dédupliquées, tri par X — le pipeline
+  aval suppose une fonction de X).
+- **Chart.tsx** : overlay Bézier (tracé orange vivant + guides pointillés
+  ancre↔poignée + poignées cp1/cp2 draggables, même mécanique pointer que le drag
+  de points ; pas de clamp aux axes pour les poignées).
+- **AbacGraphWizard** : mode `bezier-handles` — bouton « 〰 Affiner en Bézier »
+  (courbe sélectionnée, ≥ 2 points) → poignées sur le Chart, points d'ancrage
+  toujours déplaçables ; « ✓ Appliquer le tracé » échantillonne (6 pts/segment)
+  → `onUpdateCurve(points, fitted: undefined)` → l'interpolation se refait sur
+  ces points ; « ✕ Annuler » restaure l'état.
+- Donnée/format : AUCUN changement — interpolation, cascade et sauvegarde voient
+  des points ordinaires. P5 (retrait de v2/) peut suivre.

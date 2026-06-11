@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useMemo, useEffect } from 'react'
 import { line, curveLinear } from 'd3-shape';
 import { scaleLinear } from 'd3-scale';
 import { AxesConfig, Curve, XYPoint } from '../core/types';
+import { BezierSegment } from '../core/bezier';
 import { getAxisVariableLabel } from '../core/axisVariables';
 import styles from './styles.module.css';
 
@@ -53,6 +54,11 @@ interface ChartProps {
   calibrationMode?: 'x' | 'y' | null;
   /** Callback de calibration : appelé avec le pixel inner cliqué (post-margin) */
   onCalibrationClick?: (pixelInner: { x: number; y: number }) => void;
+  /** P2b — Mode Bézier : segments (coords DATA) dessinés en overlay avec
+   *  poignées cp1/cp2 draggables. Le tracé Bézier est un OUTIL de saisie ;
+   *  la persistance reste en points ordinaires (échantillonnage côté wizard). */
+  bezierOverlay?: BezierSegment[] | null;
+  onBezierHandleDrag?: (segIdx: number, which: 'cp1' | 'cp2', x: number, y: number) => void;
 }
 
 export const Chart: React.FC<ChartProps> = ({
@@ -74,7 +80,9 @@ export const Chart: React.FC<ChartProps> = ({
   customXTicks,
   customYTicks,
   calibrationMode = null,
-  onCalibrationClick
+  onCalibrationClick,
+  bezierOverlay = null,
+  onBezierHandleDrag
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: propWidth, height: propHeight });
@@ -336,6 +344,13 @@ export const Chart: React.FC<ChartProps> = ({
     setDraggingPoint({ curveId, pointId });
   }, []);
 
+  // P2b — drag des poignées Bézier (même mécanique pointer que les points)
+  const [draggingBezier, setDraggingBezier] = useState<null | { segIdx: number; which: 'cp1' | 'cp2' }>(null);
+  const handleBezierHandleDown = useCallback((e: React.PointerEvent, segIdx: number, which: 'cp1' | 'cp2') => {
+    e.stopPropagation();
+    setDraggingBezier({ segIdx, which });
+  }, []);
+
   const handleMouseMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -359,10 +374,19 @@ export const Chart: React.FC<ChartProps> = ({
         onPointDrag(draggingPoint.curveId, draggingPoint.pointId, dataX, dataY);
       }
     }
-  }, [draggingPoint, onPointDrag, xScale, yScale, axesConfig, margin, width, height]);
+
+    // P2b — drag d'une poignée Bézier. Pas de clamp aux axes : une poignée
+    // peut légitimement sortir du cadre pour tendre la courbe (le tracé,
+    // lui, reste accroché à ses points d'ancrage).
+    if (draggingBezier && onBezierHandleDrag) {
+      wasDraggingRef.current = true;
+      onBezierHandleDrag(draggingBezier.segIdx, draggingBezier.which, xScale.invert(x), yScale.invert(y));
+    }
+  }, [draggingPoint, onPointDrag, draggingBezier, onBezierHandleDrag, xScale, yScale, axesConfig, margin, width, height]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingPoint(null);
+    setDraggingBezier(null);
   }, []);
 
   const handlePointContextMenu = useCallback((e: React.MouseEvent, curveId: string, pointId: string) => {
@@ -710,6 +734,47 @@ export const Chart: React.FC<ChartProps> = ({
           {showGrid && generateGridLines()}
           {generateAxes()}
           {curves.map(renderCurve)}
+
+          {/* P2b — Overlay Bézier : tracé vivant + guides pointillés ancre↔poignée
+              + poignées cp1/cp2 draggables. Rendu APRÈS les courbes pour que les
+              poignées restent attrapables au-dessus de tout. */}
+          {bezierOverlay && bezierOverlay.length > 0 && (() => {
+            const px = bezierOverlay.map(s => ({
+              p0: { x: xScale(s.p0.x), y: yScale(s.p0.y) },
+              cp1: { x: xScale(s.cp1.x), y: yScale(s.cp1.y) },
+              cp2: { x: xScale(s.cp2.x), y: yScale(s.cp2.y) },
+              p1: { x: xScale(s.p1.x), y: yScale(s.p1.y) }
+            }));
+            let d = `M ${px[0].p0.x} ${px[0].p0.y}`;
+            px.forEach(s => { d += ` C ${s.cp1.x} ${s.cp1.y}, ${s.cp2.x} ${s.cp2.y}, ${s.p1.x} ${s.p1.y}`; });
+            return (
+              <g className="bezier-overlay">
+                <path d={d} fill="none" stroke="var(--accent-primary)" strokeWidth={2.5} opacity={0.95} pointerEvents="none" />
+                {px.map((s, i) => (
+                  <g key={`bz-${i}`}>
+                    <line x1={s.p0.x} y1={s.p0.y} x2={s.cp1.x} y2={s.cp1.y}
+                      stroke="var(--text-tertiary)" strokeDasharray="4 3" strokeWidth={1} pointerEvents="none" />
+                    <line x1={s.p1.x} y1={s.p1.y} x2={s.cp2.x} y2={s.cp2.y}
+                      stroke="var(--text-tertiary)" strokeDasharray="4 3" strokeWidth={1} pointerEvents="none" />
+                    <circle cx={s.cp1.x} cy={s.cp1.y} r={6}
+                      fill="var(--bg-surface)" stroke="var(--accent-primary)" strokeWidth={2}
+                      style={{ cursor: draggingBezier ? 'grabbing' : 'grab' }}
+                      onPointerDown={(e) => handleBezierHandleDown(e, i, 'cp1')}
+                    >
+                      <title>Poignée 1 du segment {i + 1} — tirer pour façonner la courbe</title>
+                    </circle>
+                    <circle cx={s.cp2.x} cy={s.cp2.y} r={6}
+                      fill="var(--bg-surface)" stroke="var(--accent-primary)" strokeWidth={2}
+                      style={{ cursor: draggingBezier ? 'grabbing' : 'grab' }}
+                      onPointerDown={(e) => handleBezierHandleDown(e, i, 'cp2')}
+                    >
+                      <title>Poignée 2 du segment {i + 1} — tirer pour façonner la courbe</title>
+                    </circle>
+                  </g>
+                ))}
+              </g>
+            );
+          })()}
 
           {mousePos && selectedCurveId && !draggingPoint && (
             <g className="crosshair" pointerEvents="none">
