@@ -181,3 +181,22 @@ Un **AbacCurveManager PAR graphe** (prérequis de l'atelier multi-colonnes P2) :
   consommateur dans le repo).
 - Les `tempManager` éphémères de `handleFitAll`/exports restent inchangés (calculs
   jetables, hors sujet).
+
+## 10. P2a — EXÉCUTÉE (2026-06-11) · P2b (drag Bézier) À VENIR
+
+**L'atelier multi-graphes est en place** (étape « Construction & Interpolation ») :
+
+- **Bandeau d'aperçus LIVE** : une carte par graphe du set, rendant le Chart RÉEL
+  (image filigrane, axes calibrés, courbes + interpolées) en lecture seule, mis à
+  jour à chaque saisie. Tous les graphes de la chaîne sont visibles en permanence.
+- **Focus au clic** : carte orange = graphe édité par les outils en dessous
+  (le mini-wizard image/position/axes/calibration/courbes s'applique au focus) ;
+  cliquer une autre carte déplace le focus — la navigation aveugle ◀ ▶ par index
+  est masquée (prop `hideGraphNav`, conservée pour compat hors atelier).
+- Carte « ＋ » dans le bandeau = nouveau graphe + focus immédiat (logique extraite
+  dans `addGraphToWorkshop`, partagée avec le bouton du wizard).
+- Badges par carte : rôle (⭐ primaire / 🔗 intermédiaire), ⛓ lié, nombre de
+  courbes de référence. Écran étroit : la grille passe sur plusieurs rangées
+  (auto-fit minmax 320px).
+- **P2b (suite)** : recycler le drag Bézier de v2 (poignées de contrôle) dans le
+  Chart d'édition, puis P5 (suppression de v2/).

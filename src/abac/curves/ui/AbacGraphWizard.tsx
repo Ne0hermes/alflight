@@ -64,6 +64,9 @@ interface AbacGraphWizardProps {
   onAddGraph: () => void;
   onRemoveGraph?: () => void;
   onFinish: () => void;
+  /** Atelier multi-graphes (P2) : la navigation entre graphes se fait par le
+   *  bandeau d'aperçus du builder — masque les boutons ◀ ▶ par index. */
+  hideGraphNav?: boolean;
 }
 
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
@@ -73,7 +76,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onUpdateGraph, onSetBackgroundImage, onSetCustomAxisTicks, onSetChartSize, onSelectCurve,
     onAddCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
-    onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish
+    onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish,
+    hideGraphNav
   } = props;
 
   const [subStep, setSubStep] = useState<WizardSubStep>('image');
@@ -228,22 +232,28 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             </span>
           )}
         </span>
-        <button
-          onClick={onPreviousGraph}
-          disabled={graphIndex === 0}
-          title="Graphique précédent"
-          style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex === 0 ? 0.4 : 1 }}
-        >
-          ◀
-        </button>
-        <button
-          onClick={onNextGraph}
-          disabled={graphIndex >= totalGraphs - 1}
-          title="Graphique suivant"
-          style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex >= totalGraphs - 1 ? 0.4 : 1 }}
-        >
-          ▶
-        </button>
+        {/* Atelier P2 : navigation par le bandeau d'aperçus — les ◀ ▶ par index
+            ne s'affichent que hors atelier (compat anciens montages). */}
+        {!hideGraphNav && (
+          <button
+            onClick={onPreviousGraph}
+            disabled={graphIndex === 0}
+            title="Graphique précédent"
+            style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex === 0 ? 0.4 : 1 }}
+          >
+            ◀
+          </button>
+        )}
+        {!hideGraphNav && (
+          <button
+            onClick={onNextGraph}
+            disabled={graphIndex >= totalGraphs - 1}
+            title="Graphique suivant"
+            style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex >= totalGraphs - 1 ? 0.4 : 1 }}
+          >
+            ▶
+          </button>
+        )}
         <div style={{ flex: 1 }} />
         <button
           onClick={onAddGraph}
