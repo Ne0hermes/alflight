@@ -30,6 +30,7 @@ import { evaluateAircraft } from './utils/aircraftCompleteness';
 // pour récupérer arms, weightBalance, cgEnvelope, armLengths, etc.
 import communityService from '@services/communityService';
 import { getFuelDensity } from '@utils/fuelDensity';
+import { armToMeters } from '@utils/armUnits';
 import { getCurrentAiracCycle } from '@/config/airacConfig';
 
 // Composant pour l'aide contextuelle
@@ -896,21 +897,25 @@ export const AircraftModule = memo(() => {
           addText('Limites de centrage:', 50, yPosition, { bold: true, size: 11 });
           yPosition -= 15;
 
-          // 🔧 FIX audit QA (D6) : conversion en %MAC si la corde MAC est renseignée (mm).
-          // %MAC = (bras − LEMAC) / corde MAC × 100. Tout en mm (repère des bras).
-          const macLength = Number(fullAircraft.cgEnvelope.macLength ?? fullAircraft.macLength) || null;
-          const lemac = Number(fullAircraft.cgEnvelope.lemac ?? fullAircraft.lemac);
-          const hasMac = macLength != null && macLength > 0 && Number.isFinite(lemac);
-          const pctMac = (cgMm) => {
-            const n = Number(cgMm);
+          // 🔧 FIX audit QA (D6) + C2 : %MAC = (bras − LEMAC) / corde MAC × 100.
+          // HOMOGÉNÉITÉ STRICTE : les 3 longueurs sont ramenées en MÈTRES via
+          // armToMeters (couvre le canonique m ET le legacy mm) avant soustraction.
+          const macLength = (() => {
+            const v = armToMeters(fullAircraft.cgEnvelope.macLength ?? fullAircraft.macLength);
+            return Number.isFinite(v) && v > 0 ? v : null;
+          })();
+          const lemac = armToMeters(fullAircraft.cgEnvelope.lemac ?? fullAircraft.lemac);
+          const hasMac = macLength != null && Number.isFinite(lemac);
+          const pctMac = (cgValue) => {
+            const n = armToMeters(cgValue);
             if (!hasMac || !Number.isFinite(n)) return '';
             return ` (${((n - lemac) / macLength * 100).toFixed(1)} %MAC)`;
           };
 
           addText(
             hasMac
-              ? `(bras / station en mm — %MAC : corde ${macLength} mm, LEMAC ${lemac} mm)`
-              : '(bras / station en mm — %MAC indisponible : corde MAC non renseignee)',
+              ? `(%MAC : corde ${(macLength * 1000).toFixed(0)} mm, LEMAC ${(lemac * 1000).toFixed(0)} mm)`
+              : '(%MAC indisponible : corde MAC non renseignee)',
             70, yPosition, { size: 8, color: rgb(0.45, 0.45, 0.45) }
           );
           yPosition -= 18;

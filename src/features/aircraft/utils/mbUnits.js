@@ -4,9 +4,12 @@
 //
 // Toutes les valeurs M&C sont stockées dans une unité CANONIQUE INTERNE :
 //   - weight       → kg
-//   - armLength    → mm  (préférence par défaut Europe)
+//   - armLength    → m   (C3.1 : pivot unique = MÈTRE — aligné sur le moteur de
+//                         centrage, les golden tests, le CentrogramReader et le
+//                         normaliseur d'import ; l'ancien contrat 'mm' n'était
+//                         honoré par personne — cf. AUDIT_MASSE_CENTRAGE_UNITES.md ANO-1)
 //   - fuel         → L
-//   - moment       → kg·mm (masse_canonique × longueur_canonique)
+//   - moment       → kg·m (masse_canonique × longueur_canonique)
 //
 // L'affichage et la saisie passent toujours par les préférences utilisateur
 // (units du store unitsStore). Conversion auto via convertValue.
@@ -24,7 +27,7 @@ import { getFuelDensity as canonicalFuelDensity } from '@utils/fuelDensity';
 // ─── Unités canoniques internes (storage) ──────────────────────────────────
 export const STORAGE_UNITS = {
   weight: 'kg',
-  armLength: 'mm',  // ← préférence utilisateur par défaut
+  armLength: 'm',   // C3.1 — pivot unique = mètre (voir en-tête)
   fuel: 'ltr',
   speed: 'kt',
   fuelConsumption: 'lph',
@@ -50,19 +53,23 @@ export const FUEL_DENSITIES = {
  * @param {number|string} value    Valeur en unité utilisateur
  * @param {string}        userUnit Unité utilisateur (ex: 'mm', 'cm', 'kg')
  * @param {string}        category Catégorie (armLength, weight, fuel, …)
- * @returns {number|null}          Valeur en unité canonique, ou null si invalide
+ * @param {object}        [opts]   Options convertValue (ex: { density } pour fuel)
+ * @returns {number|null}          Valeur en unité canonique, ou null si invalide/inconvertible
  */
-export function toStorage(value, userUnit, category) {
+export function toStorage(value, userUnit, category, opts = {}) {
   if (value === '' || value === null || value === undefined) return null;
   const num = typeof value === 'number' ? value : parseFloat(value);
   if (!Number.isFinite(num)) return null;
   const targetUnit = STORAGE_UNITS[category];
   if (!targetUnit || userUnit === targetUnit) return num;
   try {
-    return convertValue(num, userUnit, targetUnit, category);
+    const out = convertValue(num, userUnit, targetUnit, category, opts);
+    // C1.3 (ANO-4) : fail-closed — une conversion impossible ne produit JAMAIS
+    // une valeur dans la mauvaise unité. null ⇒ champ invalide, verdict bloqué.
+    return Number.isFinite(out) ? out : null;
   } catch (e) {
-    console.warn(`[mbUnits.toStorage] Conversion failed`, { value, userUnit, category, error: e.message });
-    return num;
+    console.warn(`[mbUnits.toStorage] Conversion refusée (fail-closed)`, { value, userUnit, category, error: e.message });
+    return null;
   }
 }
 
@@ -73,19 +80,22 @@ export function toStorage(value, userUnit, category) {
  * @param {number|string} storedValue Valeur en unité canonique
  * @param {string}        userUnit    Unité utilisateur (ex: 'mm', 'cm', 'kg')
  * @param {string}        category    Catégorie (armLength, weight, fuel, …)
- * @returns {number|''}               Valeur en unité utilisateur, ou '' si invalide
+ * @param {object}        [opts]      Options convertValue (ex: { density } pour fuel)
+ * @returns {number|''}               Valeur en unité utilisateur, ou '' si invalide/inconvertible
  */
-export function fromStorage(storedValue, userUnit, category) {
+export function fromStorage(storedValue, userUnit, category, opts = {}) {
   if (storedValue === '' || storedValue === null || storedValue === undefined) return '';
   const num = typeof storedValue === 'number' ? storedValue : parseFloat(storedValue);
   if (!Number.isFinite(num)) return '';
   const sourceUnit = STORAGE_UNITS[category];
   if (!sourceUnit || userUnit === sourceUnit) return num;
   try {
-    return convertValue(num, sourceUnit, userUnit, category);
+    const out = convertValue(num, sourceUnit, userUnit, category, opts);
+    // C1.3 (ANO-4) : fail-closed — jamais le nombre brut dans la mauvaise unité.
+    return Number.isFinite(out) ? out : '';
   } catch (e) {
-    console.warn(`[mbUnits.fromStorage] Conversion failed`, { storedValue, userUnit, category, error: e.message });
-    return num;
+    console.warn(`[mbUnits.fromStorage] Conversion refusée (fail-closed)`, { storedValue, userUnit, category, error: e.message });
+    return '';
   }
 }
 
@@ -111,28 +121,28 @@ export function getMBUnitSymbol(units, category) {
 
 /**
  * Convertit une valeur de moment (masse × longueur) entre unités utilisateur
- * et canonique. Le moment canonique est kg·mm.
+ * et canonique. Le moment canonique = STORAGE_UNITS.weight × STORAGE_UNITS.armLength
+ * (kg·m) — toujours dérivé du pivot, jamais codé en dur.
  *
- * @param {number}   storedMoment   Moment en kg·mm
+ * @param {number}   value          Moment
  * @param {object}   units          Préférences utilisateur
- * @param {string}   direction      'fromStorage' (kg·mm → user) ou 'toStorage' (user → kg·mm)
+ * @param {string}   direction      'fromStorage' (kg·m → user) ou 'toStorage' (user → kg·m)
  * @returns {number}
  */
 export function convertMoment(value, units, direction) {
   if (!Number.isFinite(value)) return value;
-  const userWeight = units.weight || 'kg';
-  const userArm = units.armLength || 'mm';
+  const userWeight = units.weight || STORAGE_UNITS.weight;
+  const userArm = units.armLength || STORAGE_UNITS.armLength;
 
   if (direction === 'fromStorage') {
-    // kg·mm → userWeight × userArm
-    // moment = mass × arm. Si on change d'unités : moment_user = moment_kgmm × (kg→userWeight) × (mm→userArm)
-    const wRatio = convertValue(1, 'kg', userWeight, 'weight');
-    const aRatio = convertValue(1, 'mm', userArm, 'armLength');
+    // canonique → userWeight × userArm
+    const wRatio = convertValue(1, STORAGE_UNITS.weight, userWeight, 'weight');
+    const aRatio = convertValue(1, STORAGE_UNITS.armLength, userArm, 'armLength');
     return value * wRatio * aRatio;
   } else {
-    // userWeight × userArm → kg·mm
-    const wRatio = convertValue(1, userWeight, 'kg', 'weight');
-    const aRatio = convertValue(1, userArm, 'mm', 'armLength');
+    // userWeight × userArm → canonique
+    const wRatio = convertValue(1, userWeight, STORAGE_UNITS.weight, 'weight');
+    const aRatio = convertValue(1, userArm, STORAGE_UNITS.armLength, 'armLength');
     return value * wRatio * aRatio;
   }
 }
@@ -151,7 +161,7 @@ export function getFuelDensity(fuelType) {
  * Calcul dynamique 2-sur-3 : étant donné deux des trois valeurs (masse, bras,
  * moment), retourne la troisième.
  *
- * Toutes les valeurs sont en unité CANONIQUE (kg, mm, kg·mm).
+ * Toutes les valeurs sont en unité CANONIQUE (kg, m, kg·m).
  *
  * @param {object} values - { mass, arm, moment } — au moins 2 doivent être Number
  * @returns {object} - { mass, arm, moment } complétés ; ou null si moins de 2 valeurs

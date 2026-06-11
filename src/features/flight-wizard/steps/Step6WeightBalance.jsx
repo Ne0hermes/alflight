@@ -7,6 +7,7 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
+import { getFuelDensity } from '@utils/fuelDensity';
 import { useUnits } from '@hooks/useUnits';
 
 // Styles communs
@@ -317,11 +318,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             fuelLitres = fobFuel.ltr;
           }
 
-          // Utiliser DENSITIES centralisées
-          const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
-          const fuelDensity = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
-
-          console.log('🔧 [Step6] Updating loads.fuel:', { fuelLitres, fuelDensity });
+          // C3.6 (ANO-14) : densité via la source canonique (alias gérés),
+          // plus de string-match 'JET'. Type inconnu ⇒ fail-closed : aucune
+          // masse carburant fabriquée (le store signalera fuelDensityMissing).
+          const fuelDensity = getFuelDensity(aircraft.fuelType);
+          if (fuelDensity == null) {
+            console.warn('[Step6] Type carburant inconnu — masse carburant non calculée (fail-closed):', aircraft.fuelType);
+            return;
+          }
           updateFuelLoad(fuelLitres, fuelDensity);
         }
       }, [aircraft, aircraft?.fuelType, fobFuel, updateFuelLoad]);
@@ -637,8 +641,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     };
 
     // Calculer le poids du carburant depuis l'étape 4 (bilan carburant)
-    const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
-    const fuelDensity = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
+    // C3.6 (ANO-14) : source canonique. Repli AVGAS SIGNALÉ tant que ce flux
+    // d'affichage ne gère pas null — le verdict du store, lui, est fail-closed.
+    let fuelDensity = getFuelDensity(aircraft.fuelType);
+    if (fuelDensity == null) {
+      console.warn('[Step6] Densité inconnue — repli AVGAS (affichage uniquement):', aircraft.fuelType);
+      fuelDensity = DENSITIES.AVGAS;
+    }
 
     // fobFuel peut être soit un nombre (litres), soit un objet {gal, ltr}
     let fuelLitres = 0;
@@ -994,8 +1003,8 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               plafonné à la capacité de chaque réservoir. Le moment est calculé
               avec le bras de CHAQUE réservoir (cf. weightBalanceStore). */}
           {Array.isArray(aircraft.additionalFuelTanks) && aircraft.additionalFuelTanks.length > 0 && (() => {
-            const isJet = aircraft.fuelType?.toUpperCase().includes('JET');
-            const density = isJet ? DENSITIES.JET_A1 : DENSITIES.AVGAS;
+            // C3.6 (ANO-14) : source canonique, repli AVGAS signalé (affichage).
+            const density = getFuelDensity(aircraft.fuelType) ?? DENSITIES.AVGAS;
             const fobLtr = typeof fobFuel === 'number' ? fobFuel : (fobFuel?.ltr || 0);
             const distributed = aircraft.additionalFuelTanks.reduce(
               (s, t, i) => s + (parseFloat(loads[`fuel_${t.id ?? i}`]) || 0), 0
