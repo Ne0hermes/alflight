@@ -16,13 +16,17 @@
 // Helper : lit une valeur potentiellement imbriquée ("speeds.vne") sur l'avion.
 // Supporte également des chemins MULTIPLES séparés par « | » (logique OR) :
 //   "cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints"
-// → retourne la première valeur non-vide trouvée dans la liste.
+// → retourne la première valeur SIGNIFICATIVE (au sens hasValue) de la liste.
+// ⚠️ Le test doit être hasValue, pas juste ≠ null/'' : une valeur présente mais
+// vide-de-sens (0, [], placeholder) court-circuitait le scan des alternatives →
+// faux « manquants » (vécu : performanceModels:[] masquait advancedPerformance.tables
+// sur F-HSTR ; cgLimits.forward:0 masquait cgEnvelope.forwardPoints sur F-GOFP).
 const getValue = (obj, path) => {
   if (!obj || !path) return undefined;
   const candidates = path.split('|').map((p) => p.trim()).filter(Boolean);
   for (const p of candidates) {
     const v = p.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
-    if (v !== undefined && v !== null && v !== '') return v;
+    if (hasValue(v)) return v;
   }
   return undefined;
 };

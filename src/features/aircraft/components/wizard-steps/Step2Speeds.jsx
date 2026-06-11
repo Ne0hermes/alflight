@@ -14,7 +14,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Alert
 } from '@mui/material';
 import {
   Speed as SpeedIcon,
@@ -34,13 +35,17 @@ import { StyledTextField } from './FormFieldStyles';
 const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const units = unitsSelectors.useUnits();
   const unit = units.speed; // Utiliser l'unité de vitesse depuis le store
+  // Panneaux réorganisés autour du BADIN (demande pilote) : les vitesses d'arc
+  // (VSO/VFE/VS1/VNO/VNE) vivaient éclatées sur 3 panneaux exclusifs (« volets
+  // sortis », « lisse », « VNE ») avec la visualisation hors de vue en bas de
+  // page → recopier la page Limitations du MANEX demandait des allers-retours.
+  // Désormais : 1 panneau « Repères anémomètre » (visu EN TÊTE + saisie par arc),
+  // puis VO, vitesses d'utilisation, croisière (panneau 4) et vent.
   const [expandedPanels, setExpandedPanels] = useState({
-    cruise: true,   // Accordion vitesse de croisière (auto-ouvert au chargement)
-    flapsOut: false,
-    clean: false,
-    vne: false,
+    arcs: true,     // auto-ouvert : c'est la saisie principale (arcs du badin)
     vo: false,
-    optional: false,
+    utilisation: false,
+    cruise: false,
     wind: false
   });
 
@@ -48,12 +53,10 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     if (isExpanded) {
       // When opening a panel, close all others and open this one
       setExpandedPanels({
-        cruise: false,
-        flapsOut: false,
-        clean: false,
-        vne: false,
+        arcs: false,
         vo: false,
-        optional: false,
+        utilisation: false,
+        cruise: false,
         wind: false,
         [panel]: true
       });
@@ -245,57 +248,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     updateData('speeds.voRanges', newRanges);
   };
 
-  // Vitesses critiques (obligatoires) - incluant VO
-  const criticalSpeeds = {
-    vso: {
-      name: "VSO",
-      label: "Vitesse de décrochage volets sortis",
-      description: "",
-      color: "#ffffff",
-      category: "critical",
-      required: true
-    },
-    vfeLdg: {
-      name: "VFE LDG",
-      label: "Vitesse max volets atterrissage",
-      description: "",
-      color: "#ffffff",
-      category: "critical",
-      required: true
-    },
-    vfeTO: {
-      name: "VFE T/O",
-      label: "Vitesse max volets décollage",
-      description: "",
-      color: "#ffffff",
-      category: "critical",
-      required: true
-    },
-    vs1: {
-      name: "VS1",
-      label: "Vitesse de décrochage lisse",
-      description: "",
-      color: "#28a745",
-      category: "critical",
-      required: true
-    },
-    vno: {
-      name: "VNO",
-      label: "Vitesse maximale de croisière",
-      description: "",
-      color: "var(--accent-primary)",
-      category: "critical",
-      required: true
-    },
-    vne: {
-      name: "VNE",
-      label: "Vitesse à ne jamais dépasser",
-      description: "",
-      color: "var(--color-red-critical)",
-      category: "critical",
-      required: true
-    }
-  };
+  // (criticalSpeeds supprimé — code mort : les vitesses d'arc sont saisies via
+  //  arcField dans le panneau « Repères anémomètre », configs inline.)
 
   // Vitesses facultatives (avec VA)
   const optionalSpeeds = {
@@ -400,6 +354,74 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     );
   };
 
+  // Couleurs AVIATION des arcs de vitesse — EXCEPTION assumée à la charte
+  // sombre : blanc / vert / jaune / rouge / violet / cyan sont les repères
+  // normalisés de l'anémomètre, ils DOIVENT rester fidèles à la réalité.
+  // (Hissées au niveau composant : partagées entre la visu et les libellés
+  // de saisie par arc.)
+  const SA = {
+    white: '#E8EAED',
+    whiteBorder: '#AAB2BD',
+    whiteText: '#1A1D21',
+    // Mêmes teintes (vert/jaune/rouge/violet/cyan) mais désaturées : plus
+    // douces, moins « flash », pour mieux s'intégrer à la charte sombre.
+    green: '#5BA378',
+    yellow: '#D9C06A',
+    yellowText: '#1A1D21',
+    red: '#D17268',
+    violet: '#A079B5',
+    cyan: '#5FA3AE',
+  };
+
+  // ─── Cohérence des arcs : SIMPLES AVERTISSEMENTS, jamais bloquants ───
+  // (décision pilote : une incohérence n'empêche ni la saisie ni le « Suivant » —
+  // la validation wizard ne bloque que sur la PRÉSENCE des vitesses requises.)
+  const speedWarnings = (() => {
+    const s = data.speeds || {};
+    const num = (v) => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
+    const vso = num(s.vso), vs1 = num(s.vs1), vno = num(s.vno), vne = num(s.vne);
+    const vfeLdg = num(s.vfeLdg), vfeTO = num(s.vfeTO);
+    const w = [];
+    if (vso !== null && vs1 !== null && vso >= vs1) w.push('VS1 devrait être supérieure à VSO (le début de l\'arc vert est au-dessus du blanc).');
+    if (vso !== null && vfeLdg !== null && vfeLdg <= vso) w.push('VFE LDG devrait être supérieure à VSO (sinon l\'arc blanc est vide).');
+    if (vs1 !== null && vno !== null && vs1 >= vno) w.push('VNO devrait être supérieure à VS1 (sinon l\'arc vert est vide).');
+    if (vno !== null && vne !== null && vno >= vne) w.push('VNE devrait être supérieure à VNO (sinon l\'arc jaune est vide).');
+    if (vfeLdg !== null && vne !== null && vfeLdg > vne) w.push('VFE LDG dépasse VNE.');
+    if (vfeTO !== null && vne !== null && vfeTO > vne) w.push('VFE T/O dépasse VNE.');
+    return w;
+  })();
+
+  // Champ de saisie compact pour une borne d'arc (le détail vit dans le
+  // libellé du groupe, pas dans un helperText par champ).
+  const arcField = (key, label, required = false) => (
+    <StyledTextField
+      fullWidth
+      size="small"
+      variant="outlined"
+      label={label}
+      type="number"
+      value={data.speeds?.[key] || ''}
+      onChange={(e) => updateData(`speeds.${key}`, e.target.value)}
+      placeholder="---"
+      error={!!errors[`speeds.${key}`]}
+      helperText={errors[`speeds.${key}`] || ''}
+      required={required}
+      InputProps={{
+        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
+      }}
+      InputLabelProps={{ shrink: true }}
+    />
+  );
+
+  // Pastille couleur d'arc + libellé de groupe
+  const arcGroupLabel = (swatch, text, extra = null) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      <Box sx={{ width: 14, height: 14, borderRadius: 0.5, flexShrink: 0, ...swatch }} />
+      <Typography variant="body2" sx={{ fontWeight: 600 }}>{text}</Typography>
+      {extra}
+    </Box>
+  );
+
   const renderSpeedChart = () => {
     const speeds = data.speeds || {};
     const maxSpeed = Math.max(
@@ -410,23 +432,6 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     const getPosition = (speed) => {
       if (!speed) return 0;
       return (parseFloat(speed) / maxSpeed) * 100;
-    };
-
-    // Couleurs AVIATION des arcs de vitesse — EXCEPTION assumée à la charte
-    // sombre : blanc / vert / jaune / rouge / violet / cyan sont les repères
-    // normalisés de l'anémomètre, ils DOIVENT rester fidèles à la réalité.
-    const SA = {
-      white: '#E8EAED',
-      whiteBorder: '#AAB2BD',
-      whiteText: '#1A1D21',
-      // Mêmes teintes (vert/jaune/rouge/violet/cyan) mais désaturées : plus
-      // douces, moins « flash », pour mieux s'intégrer à la charte sombre.
-      green: '#5BA378',
-      yellow: '#D9C06A',
-      yellowText: '#1A1D21',
-      red: '#D17268',
-      violet: '#A079B5',
-      cyan: '#5FA3AE',
     };
 
     return (
@@ -762,10 +767,12 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 
-      {/* 0. Vitesse de croisière + Base Factor (déplacé depuis Step1) */}
+      {/* 1. Repères anémomètre — arcs (obligatoire). Fusion des anciens panneaux
+          « volets sortis » / « lisse » / « VNE » : visualisation EN TÊTE (mise à
+          jour à chaque saisie) + champs groupés PAR ARC dans l'ordre du badin. */}
       <Accordion
-        expanded={expandedPanels.cruise}
-        onChange={handlePanelChange('cruise')}
+        expanded={expandedPanels.arcs}
+        onChange={handlePanelChange('arcs')}
         elevation={0}
         sx={{
           mb: 2,
@@ -792,236 +799,100 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         >
           <SpeedIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Vitesse de croisière (obligatoire)
+            Repères anémomètre — arcs (obligatoire)
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                label="Vitesse de croisière *"
-                type="number"
-                value={data.cruiseSpeedKt || ''}
-                onChange={(e) => handleCruiseSpeedChange(e.target.value)}
-                error={!!errors.cruiseSpeedKt}
-                helperText={errors.cruiseSpeedKt || "Vitesse réelle de croisière utilisée pour les calculs de navigation"}
-                required
-                placeholder="Ex: 110"
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(unit)}</InputAdornment>,
-                }}
-              />
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                variant="outlined"
-                label="Base Factor"
-                type="number"
-                value={data.baseFactor || ''}
-                placeholder="Auto-calculé"
-                helperText="60 / vitesse de croisière (auto-calculé)"
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-            </Grid>
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}>
+            {/* Visualisation en tête — feedback immédiat pendant la saisie */}
+            {renderSpeedChart()}
+
+            {/* Cohérence : SIMPLE AVERTISSEMENT, jamais bloquant (décision pilote) */}
+            {speedWarnings.length > 0 && (
+              <Alert severity="warning">
+                <Typography variant="body2" fontWeight={600}>
+                  Cohérence des arcs (non bloquant)
+                </Typography>
+                <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                  {speedWarnings.map((w, i) => (
+                    <li key={i}><Typography variant="caption">{w}</Typography></li>
+                  ))}
+                </ul>
+              </Alert>
+            )}
+
+            {/* Arc blanc — VSO → VFE LDG */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+              {arcGroupLabel(
+                { bgcolor: SA.white, border: `1px solid ${SA.whiteBorder}` },
+                'Arc blanc — plage volets sortis'
+              )}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vso', 'Début · VSO (décrochage volets atterrissage) *', true)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vfeLdg', 'Fin · VFE LDG (max volets atterrissage) *', true)}
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Arc vert — VS1 → VNO */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+              {arcGroupLabel({ bgcolor: SA.green }, 'Arc vert — plage normale')}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vs1', 'Début · VS1 (décrochage lisse) *', true)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vno', 'Fin · VNO (max air calme) *', true)}
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Arc jaune — DÉDUIT de VNO → VNE, aucune saisie */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+              {arcGroupLabel(
+                { bgcolor: SA.yellow },
+                'Arc jaune — précaution (air calme)',
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  auto : de VNO{data.speeds?.vno ? ` (${data.speeds.vno})` : ''} à VNE{data.speeds?.vne ? ` (${data.speeds.vne})` : ''} — déduit, aucune saisie
+                </Typography>
+              )}
+            </Box>
+
+            {/* Trait rouge — VNE */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+              {arcGroupLabel({ bgcolor: SA.red }, 'Trait rouge — ne jamais dépasser')}
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vne', 'VNE (vitesse à ne jamais dépasser) *', true)}
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Repères additionnels — VFE T/O (trait cyan) + VS T/O */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Repères additionnels
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vfeTO', 'VFE T/O (max volets décollage) *', true)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {arcField('vsTO', 'VS T/O (décrochage volets décollage)')}
+                </Grid>
+              </Grid>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                VFE T/O = trait cyan sur la visualisation. VS T/O : utile si l'avion a une position volets décollage intermédiaire.
+              </Typography>
+            </Box>
           </Box>
         </AccordionDetails>
       </Accordion>
 
-      {/* 1. Configuration volets sortis (obligatoire) */}
-      <Accordion
-        expanded={expandedPanels.flapsOut}
-        onChange={handlePanelChange('flapsOut')}
-        elevation={0}
-        sx={{ 
-          mb: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          '&:before': { display: 'none' }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ 
-            minHeight: '40px',
-            '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              margin: '8px 0'
-            },
-            '& .MuiAccordionSummary-content.Mui-expanded': {
-              margin: '8px 0'
-            }
-          }}
-        >
-          <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Configuration volets sortis (obligatoire)
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vso', {
-                name: "VSO",
-                label: "VSO - Vitesse de décrochage volets atterrissage *",
-                description: "Vitesse minimale de sustentation en configuration atterrissage (volets pleine sortie)",
-                color: "#ffffff",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vsTO', {
-                name: "VS T/O",
-                label: "VS T/O - Vitesse de décrochage volets décollage",
-                description: "Vitesse minimale de sustentation en configuration décollage (volets T/O sortis). Distinct de VSO si l'avion a une position volets décollage intermédiaire.",
-                color: "#ffffff",
-                category: "critical",
-                required: false
-              })}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vfeLdg', {
-                name: "VFE LDG",
-                label: "VFE LDG - Vitesse max volets atterrissage *",
-                description: "Vitesse maximale avec volets en configuration atterrissage",
-                color: "#ffffff",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vfeTO', {
-                name: "VFE T/O",
-                label: "VFE T/O - Vitesse max volets décollage *",
-                description: "Vitesse maximale avec volets en configuration décollage",
-                color: "#ffffff",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* 2. Configuration lisse (obligatoire) */}
-      <Accordion 
-        expanded={expandedPanels.clean}
-        onChange={handlePanelChange('clean')}
-        elevation={0}
-        sx={{ 
-          mb: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          '&:before': { display: 'none' }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ 
-            minHeight: '40px',
-            '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              margin: '8px 0'
-            },
-            '& .MuiAccordionSummary-content.Mui-expanded': {
-              margin: '8px 0'
-            }
-          }}
-        >
-          <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Configuration lisse (obligatoire)
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vs1', {
-                name: "VS1",
-                label: "VS1 - Vitesse de décrochage lisse *",
-                description: "Vitesse minimale de sustentation en configuration lisse",
-                color: "#28a745",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vno', {
-                name: "VNO",
-                label: "VNO - Vitesse max en air calme *",
-                description: "Vitesse maximale pour opérations normales",
-                color: "var(--accent-primary)",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* 3. VNE (obligatoire) */}
-      <Accordion 
-        expanded={expandedPanels.vne}
-        onChange={handlePanelChange('vne')}
-        elevation={0}
-        sx={{ 
-          mb: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          '&:before': { display: 'none' }
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{ 
-            minHeight: '40px',
-            '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 1,
-              margin: '8px 0'
-            },
-            '& .MuiAccordionSummary-content.Mui-expanded': {
-              margin: '8px 0'
-            }
-          }}
-        >
-          <CriticalIcon color="error" />
-          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            VNE (obligatoire)
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vne', {
-                name: "VNE",
-                label: "VNE - Vitesse à ne jamais dépasser *",
-                description: "Vitesse maximale absolue de l'avion",
-                color: "var(--color-red-critical)",
-                category: "critical",
-                required: true
-              })}
-            </Grid>
-          </Box>
-        </AccordionDetails>
-      </Accordion>
-
-      {/* 4. VO - Vitesses de manœuvre */}
+      {/* 2. VO - Vitesses de manœuvre */}
       <Accordion 
         expanded={expandedPanels.vo}
         onChange={handlePanelChange('vo')}
@@ -1156,12 +1027,12 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionDetails>
       </Accordion>
 
-      {/* 5. Autres vitesses (facultatif) */}
-      <Accordion 
-        expanded={expandedPanels.optional}
-        onChange={handlePanelChange('optional')}
+      {/* 3. Vitesses d'utilisation (facultatif) — groupées par phase de vol */}
+      <Accordion
+        expanded={expandedPanels.utilisation}
+        onChange={handlePanelChange('utilisation')}
         elevation={0}
-        sx={{ 
+        sx={{
           mb: 2,
           border: '1px solid',
           borderColor: 'divider',
@@ -1170,12 +1041,12 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       >
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
-          sx={{ 
+          sx={{
             minHeight: '40px',
             '&.Mui-expanded': { minHeight: '40px' },
-            '& .MuiAccordionSummary-content': { 
-              display: 'flex', 
-              alignItems: 'center', 
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
               gap: 1,
               margin: '8px 0'
             },
@@ -1186,47 +1057,147 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         >
           <OptionalIcon color="success" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Autres vitesses (facultatif)
+            Vitesses d'utilisation (facultatif)
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
+            {/* Décollage & montée */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Décollage &amp; montée
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vr', optionalSpeeds.vr)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('initialClimb', optionalSpeeds.initialClimb)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vx', optionalSpeeds.vx)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vy', optionalSpeeds.vy)}
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Approche & plané */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 1.5 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Approche &amp; plané
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vapp', {
+                    name: "VApp",
+                    label: "VApp - Vitesse d'approche",
+                    description: "Vitesse de référence en approche finale",
+                    color: "#17a2b8",
+                    category: "optional",
+                    required: false
+                  })}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vglide', optionalSpeeds.vglide)}
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Train rentrant */}
+            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 1.5 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Train rentrant (si applicable)
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vle', optionalSpeeds.vle)}
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vlo', optionalSpeeds.vlo)}
+                </Grid>
+              </Grid>
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+
+      {/* 4. Croisière & navigation (obligatoire) — vitesse de croisière + base
+          factor. Déplacé APRÈS les arcs (décision pilote) : donnée de NAVIGATION,
+          pas une limitation badin. */}
+      <Accordion
+        expanded={expandedPanels.cruise}
+        onChange={handlePanelChange('cruise')}
+        elevation={0}
+        sx={{
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': {
+              margin: '8px 0'
+            }
+          }}
+        >
+          <SpeedIcon color="primary" />
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
+            Croisière &amp; navigation (obligatoire)
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 1.5 }}>
             <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vr', optionalSpeeds.vr)}
+              <StyledTextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                label="Vitesse de croisière *"
+                type="number"
+                value={data.cruiseSpeedKt || ''}
+                onChange={(e) => handleCruiseSpeedChange(e.target.value)}
+                error={!!errors.cruiseSpeedKt}
+                helperText={errors.cruiseSpeedKt || "Vitesse réelle de croisière utilisée pour les calculs de navigation"}
+                required
+                placeholder="Ex: 110"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">{getUnitSymbol(unit)}</InputAdornment>,
+                }}
+              />
             </Grid>
             <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vx', optionalSpeeds.vx)}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vy', optionalSpeeds.vy)}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vapp', {
-                name: "VApp",
-                label: "VApp - Vitesse d'approche",
-                description: "Vitesse de référence en approche finale",
-                color: "#17a2b8",
-                category: "optional",
-                required: false
-              })}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('initialClimb', optionalSpeeds.initialClimb)}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vglide', optionalSpeeds.vglide)}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vle', optionalSpeeds.vle)}
-            </Grid>
-            <Grid size={12} sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              {renderSpeedInput('vlo', optionalSpeeds.vlo)}
+              <StyledTextField
+                fullWidth
+                size="small"
+                variant="outlined"
+                label="Base Factor"
+                type="number"
+                value={data.baseFactor || ''}
+                placeholder="Auto-calculé"
+                helperText="60 / vitesse de croisière (auto-calculé)"
+                InputProps={{
+                  readOnly: true,
+                }}
+              />
             </Grid>
           </Box>
         </AccordionDetails>
       </Accordion>
 
-      {/* 6. Limitations de vent */}
+      {/* 5. Limitations de vent */}
       <Accordion
         expanded={expandedPanels.wind}
         onChange={handlePanelChange('wind')}
@@ -1334,8 +1305,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionDetails>
       </Accordion>
 
-      {/* Visualisation graphique */}
-      {renderSpeedChart()}
+      {/* (Visualisation graphique déplacée EN TÊTE du panneau « Repères
+          anémomètre » — feedback immédiat pendant la saisie des arcs.) */}
 
       {/* Boutons de navigation */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
