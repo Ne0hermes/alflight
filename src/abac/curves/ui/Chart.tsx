@@ -694,7 +694,7 @@ export const Chart: React.FC<ChartProps> = ({
                       <rect
                         key={h.kind}
                         x={cxClamped} y={cyClamped} width={HANDLE} height={HANDLE}
-                        fill={clamped ? '#f26921' : (isCorner ? 'var(--accent-primary)' : 'var(--accent-primary)')}
+                        fill="var(--accent-primary)"
                         stroke="white" strokeWidth="2" rx="2"
                         style={{ cursor: h.cursor, touchAction: 'none' }}
                         onPointerDown={handleResizeStart(h.kind)}

@@ -167,7 +167,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
   // === Création de courbe guidée (Option A) ===
   const [newCurveName, setNewCurveName] = useState('');
-  const [newCurveColor, setNewCurveColor] = useState('#ef4444');
+  const [newCurveColor, setNewCurveColor] = useState('#F26921');
 
   const handleStartCurve = () => {
     if (!newCurveName.trim()) {
@@ -193,10 +193,10 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
       {/* Ligne 1 : pagination des graphiques */}
       <div style={{
         display: 'flex', gap: 6, padding: '10px 12px', marginBottom: 8,
-        backgroundColor: '#eef2ff', borderRadius: 6, alignItems: 'center', flexWrap: 'wrap',
-        borderLeft: '4px solid #4338ca'
+        backgroundColor: 'var(--bg-overlay)', borderRadius: 6, alignItems: 'center', flexWrap: 'wrap',
+        borderLeft: '4px solid var(--accent-primary)'
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#312e81' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
           Graphique {graphIndex + 1} / {totalGraphs}
           {/* Affichage des axes (variables canoniques posées en sous-étape 3)
               à la place d'un nom libre. */}
@@ -206,7 +206,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             const xLabel = xVar?.label || graph.axes?.xAxis?.title || '—';
             const yLabel = yVar?.label || graph.axes?.yAxis?.title || '—';
             return (
-              <span style={{ fontWeight: 500, color: '#4338ca', marginLeft: 6, fontSize: 12 }}>
+              <span style={{ fontWeight: 500, color: 'var(--text-primary)', marginLeft: 6, fontSize: 12 }}>
                 — X : {xLabel} / Y : {yLabel}
               </span>
             );
@@ -214,7 +214,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           {graph.role === 'intermediate' && (
             <span style={{
               marginLeft: 8, padding: '2px 6px', fontSize: 10, fontWeight: 600,
-              backgroundColor: 'rgba(242, 105, 33, 0.10)', color: '#92400e', borderRadius: 3
+              backgroundColor: 'rgba(242, 105, 33, 0.10)', color: 'var(--accent-primary)', borderRadius: 3
             }}>
               🔗 Tableau {graph.cascadeOrder ?? '?'} (intermédiaire)
             </span>
@@ -222,7 +222,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           {graph.operationId && (graph.role || 'primary') === 'primary' && (
             <span style={{
               marginLeft: 8, padding: '2px 6px', fontSize: 10, fontWeight: 600,
-              backgroundColor: '#dcfce7', color: '#065f46', borderRadius: 3
+              backgroundColor: 'rgba(79, 174, 127, 0.12)', color: 'var(--status-success)', borderRadius: 3
             }}>
               ⭐ {graph.operationId}
             </span>
@@ -232,7 +232,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           onClick={onPreviousGraph}
           disabled={graphIndex === 0}
           title="Graphique précédent"
-          style={{ ...btnStyle('#6b7280', true), padding: '4px 8px', opacity: graphIndex === 0 ? 0.4 : 1 }}
+          style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex === 0 ? 0.4 : 1 }}
         >
           ◀
         </button>
@@ -240,7 +240,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           onClick={onNextGraph}
           disabled={graphIndex >= totalGraphs - 1}
           title="Graphique suivant"
-          style={{ ...btnStyle('#6b7280', true), padding: '4px 8px', opacity: graphIndex >= totalGraphs - 1 ? 0.4 : 1 }}
+          style={{ ...btnStyle('var(--text-secondary)', true), padding: '4px 8px', opacity: graphIndex >= totalGraphs - 1 ? 0.4 : 1 }}
         >
           ▶
         </button>
@@ -248,7 +248,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         <button
           onClick={onAddGraph}
           title="Créer un nouveau graphique vide et l'ouvrir"
-          style={btnStyle('#3b82f6')}
+          style={btnStyle('var(--accent-primary)')}
         >
           + Ajouter un graphique
         </button>
@@ -260,7 +260,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               }
             }}
             title="Supprimer ce graphique"
-            style={btnStyle('#dc2626', true)}
+            style={btnStyle('var(--color-red-critical)', true)}
           >
             🗑 Supprimer ce graphique
           </button>
@@ -270,9 +270,9 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
       {/* Ligne 2 : sous-étapes du graphique courant */}
       <div style={{
         display: 'flex', gap: 6, padding: '10px 12px',
-        backgroundColor: '#f3f4f6', borderRadius: 6, alignItems: 'center', flexWrap: 'wrap'
+        backgroundColor: 'var(--bg-overlay)', borderRadius: 6, alignItems: 'center', flexWrap: 'wrap'
       }}>
-        <span style={{ fontSize: 12, fontWeight: 600, marginRight: 4, color: '#6b7280' }}>
+        <span style={{ fontSize: 12, fontWeight: 600, marginRight: 4, color: 'var(--text-secondary)' }}>
           Sous-étapes :
         </span>
         {SUB_STEPS.map((s, idx) => {
@@ -280,14 +280,14 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
           const done = SUB_STEPS.findIndex(x => x.id === subStep) > idx;
           return (
             <React.Fragment key={s.id}>
-              {idx > 0 && <span style={{ color: '#9ca3af' }}>→</span>}
+              {idx > 0 && <span style={{ color: 'var(--text-tertiary)' }}>→</span>}
               <button
                 onClick={() => goToSubStep(s.id)}
                 style={{
                   padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                  backgroundColor: active ? '#4338ca' : done ? '#dcfce7' : 'white',
-                  color: active ? 'white' : done ? '#166534' : '#6b7280',
-                  border: '1px solid', borderColor: active ? '#4338ca' : done ? '#86efac' : '#d1d5db',
+                  backgroundColor: active ? 'var(--accent-primary)' : done ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)',
+                  color: active ? 'white' : done ? 'var(--status-success)' : 'var(--text-secondary)',
+                  border: '1px solid', borderColor: active ? 'var(--accent-primary)' : done ? 'var(--status-success)' : 'var(--border-subtle)',
                   borderRadius: 4, fontWeight: active ? 600 : 400
                 }}
               >
@@ -302,7 +302,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
   // === Rendu Chart commun (réutilisé partout sauf substep image) ===
   const renderChart = (interactive = true, height?: number) => (
-    <div style={{ position: 'relative', display: 'inline-block', border: '1px solid #e5e7eb', borderRadius: 4, backgroundColor: 'white' }}>
+    <div style={{ position: 'relative', display: 'inline-block', border: '1px solid var(--border-subtle)', borderRadius: 4, backgroundColor: 'var(--bg-surface)' }}>
       <Chart
         axesConfig={axesConfig}
         curves={graph.curves}
@@ -338,23 +338,23 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {/* === Identité du graphique : type canonique + nom libre === */}
             <div style={{
               padding: 12, marginBottom: 16,
-              backgroundColor: 'rgba(242, 105, 33, 0.06)', border: '1px solid #fcd34d', borderRadius: 6
+              backgroundColor: 'rgba(242, 105, 33, 0.06)', border: '1px solid var(--border-regular)', borderRadius: 6
             }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)', marginBottom: 8 }}>
                 🏷 Identité du graphique
               </div>
 
               {/* === Sélecteur de rôle : primaire (= produit valeur finale) ou intermédiaire (= étape de correction) === */}
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   Rôle de ce graphique dans le set
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <label style={{
                     flex: 1, minWidth: 220, padding: '8px 10px',
-                    border: `2px solid ${(graph.role || 'primary') === 'primary' ? '#16a34a' : '#d1d5db'}`,
+                    border: `2px solid ${(graph.role || 'primary') === 'primary' ? 'var(--status-success)' : 'var(--border-subtle)'}`,
                     borderRadius: 4, cursor: 'pointer',
-                    backgroundColor: (graph.role || 'primary') === 'primary' ? '#dcfce7' : 'white',
+                    backgroundColor: (graph.role || 'primary') === 'primary' ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)',
                     display: 'flex', alignItems: 'flex-start', gap: 8
                   }}>
                     <input
@@ -366,16 +366,16 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     />
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>⭐ Primaire</div>
-                      <div style={{ fontSize: 11, color: '#6b7280' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                         Produit la valeur finale du set. Reçoit l'output du dernier intermédiaire et donne le résultat final.
                       </div>
                     </div>
                   </label>
                   <label style={{
                     flex: 1, minWidth: 220, padding: '8px 10px',
-                    border: `2px solid ${graph.role === 'intermediate' ? '#f59e0b' : '#d1d5db'}`,
+                    border: `2px solid ${graph.role === 'intermediate' ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
                     borderRadius: 4, cursor: 'pointer',
-                    backgroundColor: graph.role === 'intermediate' ? 'rgba(242, 105, 33, 0.10)' : 'white',
+                    backgroundColor: graph.role === 'intermediate' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-surface)',
                     display: 'flex', alignItems: 'flex-start', gap: 8
                   }}>
                     <input
@@ -387,7 +387,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     />
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>🔗 Intermédiaire</div>
-                      <div style={{ fontSize: 11, color: '#6b7280' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                         Étape de correction (température, masse, vent…). Son output alimente le tableau suivant dans la cascade.
                       </div>
                     </div>
@@ -398,7 +398,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               {/* === Si INTERMÉDIAIRE : position dans la cascade === */}
               {graph.role === 'intermediate' && (
                 <label style={{ display: 'block', marginBottom: 10 }}>
-                  <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
                     🔗 Position de ce tableau dans la cascade de calcul
                   </div>
                   <select
@@ -409,7 +409,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     }}
                     style={{
                       width: '100%', padding: '6px 8px',
-                      border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13, backgroundColor: 'white'
+                      border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
                     }}
                   >
                     <option value="">— Choisir la position —</option>
@@ -419,7 +419,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       </option>
                     ))}
                   </select>
-                  <div style={{ fontSize: 11, color: '#92400e', marginTop: 4, fontStyle: 'italic' }}>
+                  <div style={{ fontSize: 11, color: 'var(--accent-primary)', marginTop: 4, fontStyle: 'italic' }}>
                     L'output de ce tableau servira d'entrée au tableau de position {(graph.cascadeOrder || 0) + 1} (ou au primaire si c'est le dernier intermédiaire).
                   </div>
                 </label>
@@ -428,7 +428,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               {/* === Si PRIMAIRE : dropdown opération canonique === */}
               {(graph.role || 'primary') === 'primary' && (
               <label style={{ display: 'block', marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
                   🔒 Opération canonique (Operation ID) — détermine comment cet abaque sera consommé par la préparation de vol
                 </div>
                 <select
@@ -446,7 +446,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   }}
                   style={{
                     width: '100%', padding: '6px 8px',
-                    border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13, backgroundColor: 'white'
+                    border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
                   }}
                 >
                   <option value="">— Choisir l'opération —</option>
@@ -464,7 +464,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   const op = getOperation(graph.operationId);
                   if (!op) {
                     return (
-                      <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4, fontWeight: 600 }}>
+                      <div style={{ fontSize: 11, color: 'var(--color-red-critical)', marginTop: 4, fontWeight: 600 }}>
                         ⚠ operationId inconnu — vérifier le catalogue
                       </div>
                     );
@@ -472,11 +472,11 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   return (
                     <>
                       {op.description && (
-                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, fontStyle: 'italic' }}>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>
                           {op.description}
                         </div>
                       )}
-                      <div style={{ fontSize: 10, color: '#92400e', marginTop: 4 }}>
+                      <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 4 }}>
                         ID : <code>{op.id}</code> · Phase : {op.phase}
                         {op.configuration?.flaps && ` · Flaps : ${op.configuration.flaps}`}
                       </div>
@@ -492,7 +492,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 if (!op || op.acceptedOutputs.length <= 1) return null;
                 return (
                   <label style={{ display: 'block', marginBottom: 10 }}>
-                    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
                       Nature de la sortie de CET abaque (que mesure-t-il exactement ?)
                     </div>
                     <select
@@ -507,7 +507,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       }}
                       style={{
                         width: '100%', padding: '6px 8px',
-                        border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13, backgroundColor: 'white'
+                        border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
                       }}
                     >
                       <option value="">— Choisir la nature de sortie —</option>
@@ -518,7 +518,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       ))}
                     </select>
                     {graph.outputKind && (
-                      <div style={{ fontSize: 10, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>
                         Cet abaque produit : <strong>{graph.outputKind}</strong> en <strong>{graph.outputUnit}</strong>
                       </div>
                     )}
@@ -527,15 +527,15 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               })()}
             </div>
 
-            <p style={{ color: '#6b7280', marginBottom: 16 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
               Charge l'image (PDF rasterisé ou PNG/JPG) du graphique d'abaque que tu veux digitaliser.
               Elle servira de référence visuelle pour positionner les points.
             </p>
             {backgroundImage ? (
               <div style={{ marginBottom: 16 }}>
-                <img src={backgroundImage.url} alt="Aperçu" style={{ maxWidth: 300, maxHeight: 200, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                <img src={backgroundImage.url} alt="Aperçu" style={{ maxWidth: 300, maxHeight: 200, border: '1px solid var(--border-subtle)', borderRadius: 4 }} />
                 <div style={{ marginTop: 8 }}>
-                  <label style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer' }}>
+                  <label style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)', borderRadius: 4, cursor: 'pointer' }}>
                     Changer l'image
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
                   </label>
@@ -543,12 +543,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               </div>
             ) : (
               <label style={{
-                display: 'block', padding: 32, border: '2px dashed #9ca3af', borderRadius: 8,
-                textAlign: 'center', cursor: 'pointer', backgroundColor: '#f9fafb', maxWidth: 500
+                display: 'block', padding: 32, border: '2px dashed var(--border-regular)', borderRadius: 8,
+                textAlign: 'center', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', maxWidth: 500
               }}>
                 <div style={{ fontSize: 48, marginBottom: 8 }}>📷</div>
                 <div style={{ fontWeight: 500, marginBottom: 4 }}>Clique pour choisir une image</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>PNG, JPG ou page de PDF rasterisée</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>PNG, JPG ou page de PDF rasterisée</div>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
               </label>
             )}
@@ -559,7 +559,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         return (
           <div style={{ padding: 16 }}>
             <h3 style={{ marginTop: 0 }}>✥ Étape 2 : Positionner l'image</h3>
-            <p style={{ color: '#6b7280', marginBottom: 8 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
               Active le mode ajustement pour glisser l'image et utiliser les 8 poignées (4 coins + 4 milieux de bord).
               Cale grossièrement — la précision se fera à l'étape 4 (Calibration).
             </p>
@@ -568,15 +568,15 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 onClick={() => setEditorMode(editorMode === 'adjusting-image' ? 'idle' : 'adjusting-image')}
                 style={{
                   padding: '8px 14px',
-                  backgroundColor: editorMode === 'adjusting-image' ? '#3b82f6' : 'white',
-                  color: editorMode === 'adjusting-image' ? 'white' : '#3b82f6',
-                  border: '1px solid #3b82f6', borderRadius: 4, cursor: 'pointer', fontWeight: 500
+                  backgroundColor: editorMode === 'adjusting-image' ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                  color: editorMode === 'adjusting-image' ? 'white' : 'var(--accent-primary)',
+                  border: '1px solid var(--accent-primary)', borderRadius: 4, cursor: 'pointer', fontWeight: 500
                 }}
               >
                 {editorMode === 'adjusting-image' ? '✓ Terminer l\'ajustement' : '✥ Activer l\'ajustement de l\'image'}
               </button>
               {!backgroundImage && (
-                <span style={{ marginLeft: 12, color: '#dc2626' }}>⚠ Charge d'abord une image à l'étape 1</span>
+                <span style={{ marginLeft: 12, color: 'var(--color-red-critical)' }}>⚠ Charge d'abord une image à l'étape 1</span>
               )}
             </div>
             {backgroundImage && renderChart(false)}
@@ -587,15 +587,15 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         return (
           <div style={{ padding: 16 }}>
             <h3 style={{ marginTop: 0 }}>📐 Étape 3 : Définir les axes</h3>
-            <p style={{ color: '#6b7280', marginBottom: 12 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>
               Renseigne <strong>Min</strong>, <strong>Max</strong> et <strong>Pas</strong> pour chaque axe.
               La première graduation = Min (pas forcément 0). Les graduations sont générées : Min, Min+Pas, Min+2×Pas, …, Max.
             </p>
             {graph.isWindRelated && (
               <div style={{
                 marginBottom: 12, padding: '8px 12px',
-                backgroundColor: '#eff6ff', border: '1px solid #93c5fd', borderRadius: 6,
-                fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8
+                backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 6,
+                fontSize: 12, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8
               }}>
                 <span>💨</span>
                 <strong>Graphique vent activé</strong> — chaque courbe pourra être marquée
@@ -615,7 +615,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 };
                 const selectedVar = getAxisVariable(cfg.title);
                 return (
-                  <div key={axis} style={{ padding: 12, border: '1px solid #e5e7eb', borderRadius: 6, backgroundColor: '#fafafa' }}>
+                  <div key={axis} style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 6, backgroundColor: 'var(--bg-overlay)' }}>
                     <h4 style={{ marginTop: 0 }}>Axe {axis.toUpperCase()}</h4>
                     <AxisVariableSelect
                       label="Variable (titre)"
@@ -643,7 +643,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       }}
                     />
                     {selectedVar?.description && (
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: -4, marginBottom: 6 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: -4, marginBottom: 6 }}>
                         {selectedVar.description}
                       </div>
                     )}
@@ -652,7 +652,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     <Field label="Max" value={String(cfg.max)} onChange={v => setCfg({ max: Number(v) || 0 })} type="number" />
                     <Field label="Pas" value={String(cfg.step ?? '')} onChange={v => setCfg({ step: Number(v) || undefined })} type="number" />
                     {/* Sens de l'axe — utile p.ex. pour une masse qui décroît de gauche à droite */}
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#374151', marginBottom: 6, cursor: 'pointer', padding: '4px 0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-primary)', marginBottom: 6, cursor: 'pointer', padding: '4px 0' }}>
                       <input
                         type="checkbox"
                         checked={!!cfg.reversed}
@@ -665,7 +665,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       </span>
                     </label>
                     {cfg.step && (
-                      <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
                         {(() => {
                           const vals = buildAxisValues(cfg.min, cfg.max, cfg.step, cfg.reversed, axis);
                           const arrow = axis === 'x'
@@ -684,12 +684,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {/* === Mode d'interpolation === */}
             <div style={{
               marginTop: 20, padding: 12,
-              backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid #f59e0b', borderRadius: 6
+              backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid var(--accent-primary)', borderRadius: 6
             }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', marginBottom: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)', marginBottom: 6 }}>
                 🧮 Mode d'interpolation de ce graphe
               </div>
-              <div style={{ fontSize: 11, color: '#78350f', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: 'var(--accent-primary)', marginBottom: 8 }}>
                 Choisis comment le moteur doit interpoler les courbes de ce graphe :
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -702,8 +702,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   <label key={opt.value} style={{
                     display: 'flex', alignItems: 'flex-start', gap: 8,
                     padding: 8,
-                    backgroundColor: (graph.interpolationMode || '') === opt.value ? '#dcfce7' : 'white',
-                    border: `1px solid ${(graph.interpolationMode || '') === opt.value ? '#16a34a' : '#d1d5db'}`,
+                    backgroundColor: (graph.interpolationMode || '') === opt.value ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)',
+                    border: `1px solid ${(graph.interpolationMode || '') === opt.value ? 'var(--status-success)' : 'var(--border-subtle)'}`,
                     borderRadius: 4, cursor: 'pointer'
                   }}>
                     <input
@@ -716,7 +716,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                     />
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 12 }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: '#6b7280' }}>{opt.desc}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{opt.desc}</div>
                     </div>
                   </label>
                 ))}
@@ -727,12 +727,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {(graph.interpolationMode === 'family' || graph.interpolationMode === undefined) && (
             <div style={{
               marginTop: 20, padding: 12,
-              backgroundColor: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 6
+              backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 6
             }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#312e81', marginBottom: 6 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
                 🔀 Paramètre familial des courbes (mode bracket)
               </div>
-              <div style={{ fontSize: 11, color: '#4338ca', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Si tes courbes représentent une famille paramétrée par une variable (ex. plusieurs courbes pour différentes altitudes pression : 0 ft, 2000 ft, 4000 ft…), déclare cette variable ici.
                 Ça permettra au résolveur de chercher la <strong>paire encadrante la plus proche</strong> et d'interpoler par lecture pilote (au lieu d'un IDW 4D approximatif).
               </div>
@@ -760,8 +760,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   return (
                     <div style={{
                       marginBottom: 8, padding: 8,
-                      backgroundColor: '#dbeafe', border: '1px solid #3b82f6',
-                      borderRadius: 4, fontSize: 11, color: '#1e40af',
+                      backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--accent-primary)',
+                      borderRadius: 4, fontSize: 11, color: 'var(--text-primary)',
                       display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'
                     }}>
                       <span style={{ flex: 1 }}>
@@ -770,7 +770,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                       <button
                         onClick={() => onUpdateGraph({ familyAxisVariable: suggestion })}
                         style={{
-                          padding: '4px 10px', backgroundColor: '#3b82f6', color: 'white',
+                          padding: '4px 10px', backgroundColor: 'var(--accent-primary)', color: 'white',
                           border: 'none', borderRadius: 3, fontSize: 11, fontWeight: 600, cursor: 'pointer'
                         }}
                       >
@@ -782,7 +782,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 return null;
               })()}
               <label style={{ display: 'block' }}>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
                   Variable familiale (différente des axes X et Y)
                 </div>
                 <select
@@ -790,7 +790,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   onChange={(e) => onUpdateGraph({ familyAxisVariable: e.target.value || undefined })}
                   style={{
                     width: '100%', padding: '6px 8px',
-                    border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13, backgroundColor: 'white'
+                    border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
                   }}
                 >
                   <option value="">— Aucun (mono-courbe ou paramètre non identifié) —</option>
@@ -810,7 +810,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               {graph.familyAxisVariable && (
                 <div style={{
                   marginTop: 8, padding: 8, backgroundColor: 'rgba(242, 105, 33, 0.10)',
-                  border: '1px solid #f59e0b', borderRadius: 4, fontSize: 11, color: '#92400e'
+                  border: '1px solid var(--accent-primary)', borderRadius: 4, fontSize: 11, color: 'var(--accent-primary)'
                 }}>
                   ℹ Tu dois maintenant saisir la <strong>valeur de cette variable pour chaque courbe</strong> dans la sous-étape 5 (à côté du nom de la courbe). Sans cela, le bracket ne pourra pas fonctionner.
                 </div>
@@ -821,8 +821,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             {graph.interpolationMode === 'slope-follow' && (
               <div style={{
                 marginTop: 12, padding: 12,
-                backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid #f59e0b', borderRadius: 6,
-                fontSize: 11, color: '#92400e'
+                backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid var(--accent-primary)', borderRadius: 6,
+                fontSize: 11, color: 'var(--accent-primary)'
               }}>
                 🚀 <strong>Mode suivi de pente activé.</strong> Aucune valeur à saisir sur les courbes — elles seront utilisées comme guides.
                 Le moteur calcule automatiquement le ratio d'entrée à X = X_min et le préserve jusqu'à X = cible (input courant).
@@ -843,7 +843,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         return (
           <div style={{ padding: 16 }}>
             <h3 style={{ marginTop: 0 }}>🎯 Étape 4 : Calibration sur l'image</h3>
-            <p style={{ color: '#6b7280', marginBottom: 8 }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
               Aligne chaque graduation du graphique sur la graduation correspondante de l'image filigrane.
               <strong>Recommandé</strong> pour corriger les déformations du scan.
             </p>
@@ -851,30 +851,30 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               <button
                 onClick={() => startCalibration('x')}
                 disabled={!!calibrationSession || !axesConfig.xAxis.step}
-                style={btnStyle(customAxisTicks?.x ? '#22c55e' : '#3b82f6')}
+                style={btnStyle(customAxisTicks?.x ? 'var(--status-success)' : 'var(--accent-primary)')}
               >
                 🎯 Calibrer X {customAxisTicks?.x ? `(${customAxisTicks.x.length} pts ✓)` : ''}
               </button>
               <button
                 onClick={() => startCalibration('y')}
                 disabled={!!calibrationSession || !axesConfig.yAxis.step}
-                style={btnStyle(customAxisTicks?.y ? '#22c55e' : '#3b82f6')}
+                style={btnStyle(customAxisTicks?.y ? 'var(--status-success)' : 'var(--accent-primary)')}
               >
                 🎯 Calibrer Y {customAxisTicks?.y ? `(${customAxisTicks.y.length} pts ✓)` : ''}
               </button>
               {(customAxisTicks?.x || customAxisTicks?.y) && (
                 <>
-                  <button onClick={() => onSetCustomAxisTicks('x', null)} style={btnStyle('#ef4444', true)}>↺ Reset X</button>
-                  <button onClick={() => onSetCustomAxisTicks('y', null)} style={btnStyle('#ef4444', true)}>↺ Reset Y</button>
+                  <button onClick={() => onSetCustomAxisTicks('x', null)} style={btnStyle('var(--color-red-critical)', true)}>↺ Reset X</button>
+                  <button onClick={() => onSetCustomAxisTicks('y', null)} style={btnStyle('var(--color-red-critical)', true)}>↺ Reset Y</button>
                 </>
               )}
               {!axesConfig.xAxis.step && (
-                <span style={{ color: '#dc2626', fontSize: 12 }}>⚠ Définis le pas X à l'étape 3</span>
+                <span style={{ color: 'var(--color-red-critical)', fontSize: 12 }}>⚠ Définis le pas X à l'étape 3</span>
               )}
             </div>
             {calibrationSession && (
               <div style={{
-                padding: 10, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid #f59e0b', borderRadius: 4,
+                padding: 10, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4,
                 display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'
               }}>
                 <strong>📍 Calibration {calibrationSession.axis.toUpperCase()} :</strong>
@@ -884,13 +884,13 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 </span>
                 <button
                   onClick={() => { setCalibrationSession(null); setEditorMode('idle'); }}
-                  style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'white', border: '1px solid #f59e0b', borderRadius: 3 }}
+                  style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--accent-primary)', borderRadius: 3 }}
                 >
                   ✕ Annuler
                 </button>
               </div>
             )}
-            {backgroundImage ? renderChart(false) : <p style={{ color: '#dc2626' }}>⚠ Pas d'image à l'étape 1</p>}
+            {backgroundImage ? renderChart(false) : <p style={{ color: 'var(--color-red-critical)' }}>⚠ Pas d'image à l'étape 1</p>}
           </div>
         );
 
@@ -901,40 +901,40 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
             {editorMode === 'placing-points' && selectedCurve ? (
               /* Mode placement de points en cours */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid #f59e0b', borderRadius: 4 }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4 }}>
                 <strong>📍 Tracé de "{selectedCurve.name}" en cours.</strong>{' '}
                 Clique sur la courbe de l'image pour ajouter des points. Glisse un point pour le déplacer, clic droit pour le supprimer.
-                <span style={{ marginLeft: 8, color: '#374151' }}>
+                <span style={{ marginLeft: 8, color: 'var(--text-primary)' }}>
                   {selectedCurve.points.length} point(s) placé(s)
                 </span>
                 <button
                   onClick={handleFinishCurve}
-                  style={{ marginLeft: 12, padding: '4px 10px', cursor: 'pointer', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
+                  style={{ marginLeft: 12, padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
                 >
                   ✓ Terminer cette courbe
                 </button>
               </div>
             ) : selectedCurve ? (
               /* Courbe sélectionnée mais hors mode placement : édition libre */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: '#ecfdf5', border: '2px solid #10b981', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <strong style={{ color: '#065f46' }}>✏ Édition de "{selectedCurve.name}"</strong>
-                <span style={{ color: '#065f46', fontSize: 13 }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '2px solid var(--status-success)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <strong style={{ color: 'var(--status-success)' }}>✏ Édition de "{selectedCurve.name}"</strong>
+                <span style={{ color: 'var(--status-success)', fontSize: 13 }}>
                   → <strong>glisse un point</strong> pour le repositionner, <strong>clic droit</strong> pour le supprimer,
                   ou édite les coordonnées dans le tableau ci-dessous.
                 </span>
-                <span style={{ marginLeft: 'auto', color: '#374151', fontSize: 12 }}>
+                <span style={{ marginLeft: 'auto', color: 'var(--text-primary)', fontSize: 12 }}>
                   {selectedCurve.points.length} point(s)
                 </span>
                 <button
                   onClick={() => setEditorMode('placing-points')}
-                  style={btnStyle('#f59e0b')}
+                  style={btnStyle('var(--accent-primary)')}
                   title="Reprendre le placement de points par clic sur l'image"
                 >
                   📍 Ajouter des points
                 </button>
                 <button
                   onClick={() => onSelectCurve(null)}
-                  style={btnStyle('#6b7280', true)}
+                  style={btnStyle('var(--text-secondary)', true)}
                   title="Désélectionner la courbe"
                 >
                   ✕ Désélectionner
@@ -942,7 +942,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
               </div>
             ) : (
               /* Aucune courbe sélectionnée : création d'une nouvelle */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: '#eff6ff', border: '1px solid #93c5fd', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>Nouvelle courbe :</strong>
                 <input
                   type="text"
@@ -950,7 +950,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   value={newCurveName}
                   onChange={e => setNewCurveName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleStartCurve(); }}
-                  style={{ padding: '4px 8px', border: '1px solid #93c5fd', borderRadius: 3, flex: 1, minWidth: 200 }}
+                  style={{ padding: '4px 8px', border: '1px solid var(--border-regular)', borderRadius: 3, flex: 1, minWidth: 200 }}
                   autoFocus
                 />
                 <input
@@ -962,11 +962,11 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 <button
                   onClick={handleStartCurve}
                   disabled={!newCurveName.trim()}
-                  style={btnStyle('#22c55e')}
+                  style={btnStyle('var(--status-success)')}
                 >
                   ➕ Créer & placer les points
                 </button>
-                <span style={{ fontSize: 12, color: '#6b7280', width: '100%' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', width: '100%' }}>
                   💡 Pour modifier une courbe existante, clique son nom dans la liste à droite.
                 </span>
               </div>
@@ -1020,30 +1020,30 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     const isFirst = curIdx === 0;
     const isLast = curIdx === SUB_STEPS.length - 1;
     return (
-      <div style={{ display: 'flex', gap: 8, padding: 16, borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, padding: 16, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-overlay)', flexWrap: 'wrap' }}>
         <button
           onClick={() => isFirst ? onPreviousGraph() : goToSubStep(SUB_STEPS[curIdx - 1].id)}
           disabled={isFirst && graphIndex === 0}
-          style={btnStyle('#6b7280')}
+          style={btnStyle('var(--text-secondary)')}
         >
           {isFirst ? (graphIndex > 0 ? `← Graphique ${graphIndex} (précédent)` : '← Précédent') : `← ${SUB_STEPS[curIdx - 1].label}`}
         </button>
         <div style={{ flex: 1 }} />
         {!isLast ? (
-          <button onClick={() => goToSubStep(SUB_STEPS[curIdx + 1].id)} style={btnStyle('#3b82f6')}>
+          <button onClick={() => goToSubStep(SUB_STEPS[curIdx + 1].id)} style={btnStyle('var(--accent-primary)')}>
             {SUB_STEPS[curIdx + 1].label} →
           </button>
         ) : (
           <>
             {graphIndex < totalGraphs - 1 && (
-              <button onClick={onNextGraph} style={btnStyle('#3b82f6', true)}>
+              <button onClick={onNextGraph} style={btnStyle('var(--accent-primary)', true)}>
                 Graphique {graphIndex + 2}/{totalGraphs} →
               </button>
             )}
-            <button onClick={onAddGraph} style={btnStyle('#3b82f6')}>
+            <button onClick={onAddGraph} style={btnStyle('var(--accent-primary)')}>
               + Ajouter un graphique
             </button>
-            <button onClick={onFinish} style={btnStyle('#22c55e')}>
+            <button onClick={onFinish} style={btnStyle('var(--status-success)')}>
               🪄 Interpoler {totalGraphs > 1 ? `les ${totalGraphs} graphiques` : 'le graphique'} & Valider →
             </button>
           </>
@@ -1053,7 +1053,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
   };
 
   return (
-    <div style={{ border: '1px solid #d1d5db', borderRadius: 8, backgroundColor: 'white' }}>
+    <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 8, backgroundColor: 'var(--bg-surface)' }}>
       {renderSubStepBar()}
       {renderSubStep()}
       {renderNav()}
@@ -1065,12 +1065,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
 const Field: React.FC<{ label: string; value: string; onChange: (v: string) => void; type?: string }> = ({ label, value, onChange, type = 'text' }) => (
   <label style={{ display: 'block', marginBottom: 8 }}>
-    <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>{label}</div>
+    <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>{label}</div>
     <input
       type={type}
       value={value}
       onChange={e => onChange(e.target.value)}
-      style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13 }}
+      style={{ width: '100%', padding: '5px 8px', border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13 }}
     />
   </label>
 );
@@ -1095,11 +1095,11 @@ const AxisVariableSelect: React.FC<{
   const isKnown = AXIS_VARIABLES.some(v => v.id === value);
   return (
     <label style={{ display: 'block', marginBottom: 8 }}>
-      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>{label}</div>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 3, fontSize: 13, backgroundColor: 'white' }}
+        style={{ width: '100%', padding: '5px 8px', border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)' }}
       >
         {!isKnown && value !== '' && (
           <option value={value}>⚠ {value} (legacy)</option>
@@ -1126,7 +1126,7 @@ const btnStyle = (bg: string, outline = false): React.CSSProperties => ({
   fontSize: 13,
   fontWeight: 500,
   cursor: 'pointer',
-  backgroundColor: outline ? 'white' : bg,
+  backgroundColor: outline ? 'var(--bg-surface)' : bg,
   color: outline ? bg : 'white',
   border: outline ? `1px solid ${bg}` : 'none',
   borderRadius: 4
