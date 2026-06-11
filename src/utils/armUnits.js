@@ -33,6 +33,8 @@ const ARM_KEYS = [
  * Ramène un bras de levier en MÈTRES. Une valeur |x| > 10 est interprétée comme des
  * millimètres et divisée par 1000. Les valeurs non numériques sont renvoyées telles
  * quelles (le moteur gère lui-même l'absence via Number.isFinite → bras manquant).
+ * ⚠️ Ne couvre QUE la paire m/mm (ANO-12) : des cm ou des pouces legacy seront
+ * mal interprétés — la migration P5 doit les désambiguïser, pas cette fonction.
  * @param {number|string|null|undefined} value
  * @returns {number|null|undefined} mètres (ou la valeur d'origine si non numérique)
  */
@@ -40,6 +42,19 @@ export function armToMeters(value) {
   const n = typeof value === 'number' ? value : parseFloat(value);
   if (!Number.isFinite(n)) return value;
   return Math.abs(n) > 10 ? n / 1000 : n;
+}
+
+/**
+ * Ramène un MOMENT en kg·m. Même logique de magnitude que armToMeters mais avec
+ * un seuil adapté : un moment GA réel en kg·m vaut ~100–40 000, en kg·mm il vaut
+ * ~100 000–10 000 000. Le seuil 50 000 sépare proprement les deux populations.
+ * @param {number|string|null|undefined} value
+ * @returns {number|null|undefined} kg·m (ou la valeur d'origine si non numérique)
+ */
+export function momentToKgM(value) {
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  if (!Number.isFinite(n)) return value;
+  return Math.abs(n) > 50000 ? n / 1000 : n;
 }
 
 /**
@@ -81,6 +96,84 @@ export function normalizeAircraftArmsToMeters(aircraft) {
       if (al[k] !== undefined && al[k] !== null) al[k] = armToMeters(al[k]);
     }
     out.armLengths = al;
+  }
+
+  return out;
+}
+
+/**
+ * C2 (hydratation wizard) — Normalise un avion EXISTANT vers le canonique du
+ * wizard (bras en m, moments en kg·m) avant édition. Couvre la forme « wizard »
+ * (arms.*, moments.*, cgLimits, cgEnvelope.*) EN PLUS de la forme moteur
+ * (weightBalance/armLengths via normalizeAircraftArmsToMeters).
+ *
+ * Les MASSES ne sont jamais touchées : kg et lbs sont indiscernables par
+ * magnitude (ANO-11) — seule la migration P5 (référence externe) peut trancher.
+ *
+ * @param {object|null} aircraft
+ * @returns {object|null} copie normalisée (ou l'entrée telle quelle si nulle)
+ */
+export function normalizeAircraftForWizard(aircraft) {
+  if (!aircraft || typeof aircraft !== 'object') return aircraft;
+  const out = normalizeAircraftArmsToMeters(aircraft);
+
+  const mapObj = (obj, fn) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    const copy = { ...obj };
+    for (const k of Object.keys(copy)) {
+      if (copy[k] !== undefined && copy[k] !== null && copy[k] !== '') copy[k] = fn(copy[k]);
+    }
+    return copy;
+  };
+
+  if (out.arms) out.arms = mapObj(out.arms, armToMeters);
+  if (out.moments) out.moments = mapObj(out.moments, momentToKgM);
+  if (out.cgLimits) out.cgLimits = mapObj(out.cgLimits, armToMeters);
+
+  if (out.additionalSeats) {
+    out.additionalSeats = out.additionalSeats.map((s) =>
+      s && s.arm != null && s.arm !== '' ? { ...s, arm: armToMeters(s.arm) } : s
+    );
+  }
+  if (out.baggageCompartments) {
+    out.baggageCompartments = out.baggageCompartments.map((c) => {
+      if (!c) return c;
+      const copy = { ...c };
+      if (copy.arm != null && copy.arm !== '') copy.arm = armToMeters(copy.arm);
+      if (copy.momentMax != null && copy.momentMax !== '') copy.momentMax = momentToKgM(copy.momentMax);
+      return copy;
+    });
+  }
+  if (out.additionalFuelTanks) {
+    out.additionalFuelTanks = out.additionalFuelTanks.map((t) => {
+      if (!t) return t;
+      const copy = { ...t };
+      if (copy.arm != null && copy.arm !== '') copy.arm = armToMeters(copy.arm);
+      if (copy.momentAtFull != null && copy.momentAtFull !== '') copy.momentAtFull = momentToKgM(copy.momentAtFull);
+      return copy;
+    });
+  }
+
+  if (out.cgEnvelope && typeof out.cgEnvelope === 'object') {
+    const env = { ...out.cgEnvelope };
+    const armKeys = ['aftCG', 'aftMinCG', 'aftMaxCG', 'forwardCG', 'macLength', 'lemac'];
+    const momentKeys = ['aftMinMoment', 'aftMaxMoment'];
+    for (const k of armKeys) {
+      if (env[k] != null && env[k] !== '') env[k] = armToMeters(env[k]);
+    }
+    for (const k of momentKeys) {
+      if (env[k] != null && env[k] !== '') env[k] = momentToKgM(env[k]);
+    }
+    const normPoint = (p) => {
+      if (!p) return p;
+      const copy = { ...p };
+      if (copy.cg != null && copy.cg !== '') copy.cg = armToMeters(copy.cg);
+      if (copy.moment != null && copy.moment !== '') copy.moment = momentToKgM(copy.moment);
+      return copy;
+    };
+    if (Array.isArray(env.forwardPoints)) env.forwardPoints = env.forwardPoints.map(normPoint);
+    if (Array.isArray(env.intermediatePoints)) env.intermediatePoints = env.intermediatePoints.map(normPoint);
+    out.cgEnvelope = env;
   }
 
   return out;

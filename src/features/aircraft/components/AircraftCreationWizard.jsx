@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
+import { normalizeAircraftForWizard } from '@utils/armUnits';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
@@ -56,6 +57,12 @@ const CustomStepIcon = styled(StepIcon)(({ theme, ownerState }) => ({
 }));
 
 function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraft = null }) {
+  // C2 (hydratation) : un avion legacy peut porter des bras en mm (ancien
+  // contrat) et des moments en kg·mm — le wizard travaille désormais en
+  // canonique (m, kg·m, cf. mbUnits.STORAGE_UNITS). Normalisation par
+  // magnitude à l'entrée ; les masses (kg/lbs indiscernables) ne sont JAMAIS
+  // devinées (AUDIT_MASSE_CENTRAGE_UNITES.md, ANO-11/12).
+  existingAircraft = normalizeAircraftForWizard(existingAircraft);
   // Hook pour accéder au contexte des avions
   const { addAircraft, updateAircraft, setSelectedAircraft, aircraftList } = useAircraft();
 

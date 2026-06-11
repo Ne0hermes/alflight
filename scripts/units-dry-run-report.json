@@ -1,0 +1,943 @@
+{
+  "generatedAt": "2026-06-10T16:10:21.245Z",
+  "summary": {
+    "migrableAuto": 6,
+    "quarantaine": 0,
+    "total": 6
+  },
+  "report": [
+    {
+      "id": "d8bea0e3-7b1c-473a-93ff-45e364408dbd",
+      "registration": "F-HFGI",
+      "model": "DR401",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 13
+        },
+        "ambiguous": 0,
+        "n": 13
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 4
+        },
+        "ambiguous": 0,
+        "n": 4
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 620,
+        "mtow": 1050
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.emptyWeightArm",
+          "value": 0.3226,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.fuelArm",
+          "value": 0.8019,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontLeftSeatArm",
+          "value": 0.4037,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontRightSeatArm",
+          "value": 0.4037,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearLeftSeatArm",
+          "value": 1.1875,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearRightSeatArm",
+          "value": 1.1875,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 0.3226,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 0.8019,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.rearSeats",
+          "value": 1.1875,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 0.4037,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[1].arm",
+          "value": 0.337,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[2].arm",
+          "value": 1.1484,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 1.4652,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 0.2031,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 0.19,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 0.4276,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 0.5619,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "83bb6788-fb01-400e-8fd0-3e2803b0b0fa",
+      "registration": "F-HSTR",
+      "model": "DA40NG",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 13
+        },
+        "ambiguous": 0,
+        "n": 13
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 6
+        },
+        "ambiguous": 0,
+        "n": 6
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 900,
+        "mtow": 1310
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.emptyWeightArm",
+          "value": 2.4231,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.fuelArm",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontLeftSeatArm",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontRightSeatArm",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearLeftSeatArm",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearRightSeatArm",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 2.4231,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.rearSeats",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[0].arm",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 3.65,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[1].arm",
+          "value": 4.32,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 2.4,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 2.4,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 2.469,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 2.53,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMinCG",
+          "value": 2.53,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMaxCG",
+          "value": 2.53,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "376f3850-659c-4411-8969-2aae8ce815b8",
+      "registration": "H-HDIM",
+      "model": "Skyhawk 172P",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 12
+        },
+        "ambiguous": 0,
+        "n": 12
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 4
+        },
+        "ambiguous": 0,
+        "n": 4
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 706.5,
+        "mtow": 1089
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.emptyWeightArm",
+          "value": 0.93,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.fuelArm",
+          "value": 1.22,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontLeftSeatArm",
+          "value": 1.01,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontRightSeatArm",
+          "value": 1.01,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearLeftSeatArm",
+          "value": 1.85,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearRightSeatArm",
+          "value": 1.85,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 0.93,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 1.22,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.rearSeats",
+          "value": 1.85,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 1.01,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[0].arm",
+          "value": 1.22,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 2.41,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 0.89,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 1,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 0.89,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 1.2,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "230f767e-82c3-49b9-b3b5-eae29095ee10",
+      "registration": "F-GUVV",
+      "model": "DA40TDI",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 16
+        },
+        "ambiguous": 0,
+        "n": 16
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 6
+        },
+        "ambiguous": 0,
+        "n": 6
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 796.5,
+        "mtow": 1150
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.emptyWeightArm",
+          "value": 2.515,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.fuelArm",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontLeftSeatArm",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontRightSeatArm",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearLeftSeatArm",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearRightSeatArm",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.baggageArm",
+          "value": 3.5,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.auxiliaryArm",
+          "value": 3.7,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 2.515,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.rearSeats",
+          "value": 3.25,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.baggageAft",
+          "value": 3.7,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.baggageFwd",
+          "value": 3.5,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 2.3,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[0].arm",
+          "value": 2.63,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 3.65,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 2.4,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 2.4,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 2.46,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 2.59,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMinCG",
+          "value": 2.59,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMaxCG",
+          "value": 2.59,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3882015c-d822-4429-badf-afe52c1c2b5c",
+      "registration": "F-GOVE",
+      "model": "DR400",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 12
+        },
+        "ambiguous": 0,
+        "n": 12
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 6
+        },
+        "ambiguous": 0,
+        "n": 6
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 574,
+        "mtow": 900
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.fuelArm",
+          "value": 0.254,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontLeftSeatArm",
+          "value": 0.4002,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.frontRightSeatArm",
+          "value": 0.4002,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearLeftSeatArm",
+          "value": 1.1644,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "weightBalance.rearRightSeatArm",
+          "value": 1.1644,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 0.3798,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 1.1027,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.rearSeats",
+          "value": 1.1455,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 0.394,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[0].arm",
+          "value": 1.1027,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[1].arm",
+          "value": 1.7637,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 1.2651,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 0.2003,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 0.2067,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 0.4167,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 0.5722,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMinCG",
+          "value": 0.5488,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMaxCG",
+          "value": 0.5722,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "769f0df3-35ca-4d2a-8906-e8c67354f1f7",
+      "registration": "F-GOFP",
+      "model": "F152",
+      "metadataVersion": "3.0.0",
+      "unitsVerified": true,
+      "arms": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 7
+        },
+        "ambiguous": 0,
+        "n": 7
+      },
+      "envelopeCg": {
+        "verdict": "ARMS_OK_M",
+        "votes": {
+          "m": 6
+        },
+        "ambiguous": 0,
+        "n": 6
+      },
+      "weights": {
+        "verdict": "AMBIGU_KG_OU_LBS",
+        "empty": 515,
+        "mtow": 758
+      },
+      "global": "MIGRABLE_AUTO",
+      "armDetails": [
+        {
+          "path": "weightBalance.emptyWeightArm",
+          "value": 0.765,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.empty",
+          "value": 0.765,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.fuelMain",
+          "value": 1.08,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "arms.frontSeats",
+          "value": 0.9416,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[0].arm",
+          "value": 1.08,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "tanks[1].arm",
+          "value": 0.7,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "baggage[0].arm",
+          "value": 0.67,
+          "candidates": [
+            "m"
+          ]
+        }
+      ],
+      "envDetails": [
+        {
+          "path": "env.forward[0].cg",
+          "value": 0.79,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[1].cg",
+          "value": 0.79,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.forward[2].cg",
+          "value": 0.8349,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftCG",
+          "value": 0.93,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMinCG",
+          "value": 0.93,
+          "candidates": [
+            "m"
+          ]
+        },
+        {
+          "path": "env.aftMaxCG",
+          "value": 0.93,
+          "candidates": [
+            "m"
+          ]
+        }
+      ]
+    }
+  ]
+}

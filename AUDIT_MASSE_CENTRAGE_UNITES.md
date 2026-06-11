@@ -1,353 +1,342 @@
-# PLAN D'AUDIT TECHNIQUE — Unités de mesure & Équations du module Masse & Centrage (W&B)
+# AUDIT TECHNIQUE v2.0 — Unités de mesure & Équations du module Masse & Centrage (W&B)
 
 > **Classe :** Système critique — calcul de centrage (sécurité du vol & certification)
-> **Périmètre :** conversion, persistance et homogénéité dimensionnelle des unités (m / mm / cm / in), et validité de **toutes** les équations W&B de l'application.
+> **Périmètre :** conversion, persistance et homogénéité dimensionnelle des unités de **longueur** (m / mm / cm / in) **et de masse (kg / lbs)**, et validité de toutes les équations W&B de l'application.
 > **Auteur :** Audit d'architecture (revue principale systèmes critiques)
-> **Date :** 2026-06-05 · **Version :** 1.0 · **Statut :** Plan d'audit + constats préliminaires (pré-audit)
-
----
-
-## 0. Synthèse exécutive & constat préliminaire (cause racine)
-
-L'anomalie m/mm signalée n'est **pas un cas isolé** : elle est le symptôme d'un défaut structurel de gouvernance des unités. Le pré-audit a déjà établi, **preuve à l'appui**, le fait suivant :
-
-> ### ⛔ Constat majeur (P0 — bloquant certification)
-> **L'application possède DEUX « sources uniques de vérité » contradictoires pour le bras de levier, qui diffèrent d'un facteur 1000.**
+> **Date :** 2026-06-10 · **Version :** 2.0 (refonte intégrale de la v1.0 du 2026-06-05) · **Statut :** Audit instruit — constats vérifiés ligne à ligne
 >
-> | Sous-système | Unité canonique du bras | Unité du moment | Preuve |
-> |---|---|---|---|
-> | `mbUnits.STORAGE_UNITS` (assistant de création) | **mm** | **kg·mm** | [mbUnits.js:25-34](src/features/aircraft/utils/mbUnits.js#L25) — `armLength: 'mm'`, commentaire l.8-9 « moment → kg·mm » |
-> | `weightBalanceStore.calculateWeightBalance` (moteur de centrage réel) | **m** | **kg·m** | Test doré : `emptyWeightArm: 2.10`, `moment = 700×2.10+… = 2025`, `cg = 2025/950 = 2.132` — [weightBalanceStore.golden.test.js:48-58](src/core/stores/__tests__/weightBalanceStore.golden.test.js#L48) |
->
-> Ces deux contrats sont câblés **sur les mêmes champs** (`weightBalance.emptyWeightArm`, `fuelArm`, …). Un avion dont les bras sont écrits en **mm** (2100) puis lus par le moteur en **m** produit un moment et un CG **1000× faux**, et un verdict d'enveloppe dénué de sens. Le défaut est **latent** parce que tous les garde-fous de conversion échouent en silence (voir Axe 3) : une conversion manquante n'émet pas d'erreur, elle laisse passer la valeur **non convertie**.
-
-**Aggravant :** la valeur du bras est, en l'état, persistée **dans l'unité d'affichage courante de l'utilisateur** (l'assistant n'appelle pas `toStorage()` sur les champs de bras, contrairement aux champs de carburant) et **aucune métadonnée d'unité n'est stockée**. À la relecture, rien ne permet de savoir si un « 2100 » en base signifie 2100 mm, 2,1 m ou 2100 m.
-
-**Conséquence sécurité :** un CG faux de 1000× (ou même de quelques %) sort silencieusement de l'enveloppe réelle → risque de centrage hors limites présenté comme « dans les limites », ou inversement. **Inacceptable pour un outil d'aide à la décision de vol.**
-
-> **Échelle de sévérité utilisée dans ce rapport**
-> - **P0 — Bloquant** : peut produire un verdict de centrage faux sans alerte. Correction avant toute mise en production.
-> - **P1 — Critique** : fausse l'affichage ou un calcul intermédiaire ; détectable mais trompeur.
-> - **P2 — Majeur** : robustesse / dette technique exposant à une régression future.
-> - **P3 — Mineur** : qualité de code, lisibilité, observabilité.
+> **Nouveautés v2.0 :** ① ré-instruction complète de tous les constats v1 (confirmations, corrections — voir Annexe C) ; ② **analyse particulière dédiée au problème de conversion kg ↔ lbs dans le module avion** (chapitre A) ; ③ découverte de la couche corrective `armUnits.js` (heuristique de magnitude) et de la métadonnée d'unités, absentes de la v1, qui changent le diagnostic.
 
 ---
 
-## Méthodologie générale
+## 0. Synthèse exécutive
 
-L'audit procède en **4 passes** sur les 5 axes, puis livre l'Axe 5 (remédiation) :
+L'audit v2 confirme que l'anomalie m/mm n'est pas un incident isolé mais l'expression d'un **défaut systémique de gouvernance des unités**, qui se manifeste désormais sur **trois fronts** :
 
-1. **Statique** — lecture exhaustive + analyse dimensionnelle de chaque équation (grille fournie §2).
-2. **Dynamique** — instrumentation : tracer la valeur d'un bras de la frappe clavier jusqu'au pixel et jusqu'à la base (Axe 4).
-3. **Différentielle** — exécuter le même avion sous chaque préréglage d'unités (Europe mm / USA in / Metric cm) et comparer les CG ; tout écart ≠ erreur d'arrondi attendue = anomalie.
-4. **Adversariale** — cas limites volontairement hostiles (0, négatif, NaN, unité absente, enveloppe vide, magnitude aberrante).
+### D1 — Double pivot du bras de levier (m vs mm), « ponté » par une heuristique — P0
+Le contrat de stockage déclare le bras en **mm** (`STORAGE_UNITS.armLength='mm'`, [mbUnits.js:25-34](alflight/src/features/aircraft/utils/mbUnits.js#L25)) tandis que le moteur de centrage calcule en **mètres** (prouvé par les tests dorés : `emptyWeightArm 2.10 → cg 2.132`, [weightBalanceStore.golden.test.js:48-58](alflight/src/core/stores/__tests__/weightBalanceStore.golden.test.js#L48)). **Le code lui-même l'avoue désormais** : l'en-tête de [armUnits.js:5-9](alflight/src/utils/armUnits.js#L5) écrit « *Cause racine : double pivot… des données mixtes en circulation (ex. F-HFGI : fuelMain 805.9 mm, autres bras en m) donnent un moment ×1000 → centrage faux* ». Le palliatif en place est une **devinette d'unité par magnitude** (`|x| > 10 ⇒ ÷1000`, [armUnits.js:39-43](alflight/src/utils/armUnits.js#L39)) appliquée à l'entrée du moteur ([weightBalanceStore.js:40](alflight/src/core/stores/weightBalanceStore.js#L40)). Cette heuristique **ne couvre que la paire m/mm** : elle **corrompt les cm (erreur ×10 : 210 cm → 0,21 m) et les pouces (erreur ×25,4 : 83 in → 0,083 m)** — deux unités pourtant offertes dans les préférences ([unitsStore.js:35](alflight/src/core/stores/unitsStore.js#L35), préréglage USA `armLength:'in'` l.89). Et elle **exclut explicitement l'enveloppe CG** (« *Ne touche PAS aux limites CG* », [armUnits.js:48](alflight/src/utils/armUnits.js#L48)) → bras normalisés en m, limites comparées dans l'unité de saisie : comparaison potentiellement hétérogène.
 
-**Fichiers pivots identifiés** (cœur de l'audit) :
+### D2 — Mutation de l'unité de référence des masses (kg ↔ lbs) — P0 — **objet de l'analyse particulière (chapitre A)**
+Les masses de l'avion (masse à vide, MTOW, MLW, bagages max, points d'enveloppe) sont **stockées dans l'unité d'affichage courante** et **réécrites sur place** à chaque changement de préférence kg↔lbs ([Step3WeightBalance.jsx:305-322](alflight/src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx#L305)), tandis que le moteur les lit **en kg, sans conversion ni garde-fou** ([weightBalanceStore.js:46-51](alflight/src/core/stores/weightBalanceStore.js#L46)). Contrairement aux bras, **aucune heuristique de magnitude n'est possible** (750 kg et 750 lbs sont tous deux plausibles). Un avion créé sous préférence `lbs` est **faux de ×2,2046 dans tous ses champs de masse**, de façon **internement cohérente donc indétectable**, et le devient de façon **mixte** dès qu'on y additionne des charges de vol saisies en kg. Détail complet au chapitre A.
 
-| Rôle | Fichier |
-|---|---|
-| Convertisseur central | [src/utils/unitConversions.js](src/utils/unitConversions.js) |
-| Helper unités M&C (storage/display) | [src/features/aircraft/utils/mbUnits.js](src/features/aircraft/utils/mbUnits.js) |
-| Affichage/édition génériques | [src/utils/unitsDisplay.js](src/utils/unitsDisplay.js), [src/shared/components/ValueWithUnit.jsx](src/shared/components/ValueWithUnit.jsx) |
-| Préférences (store) | [src/core/stores/unitsStore.js](src/core/stores/unitsStore.js) |
-| **Moteur de centrage** | [src/core/stores/weightBalanceStore.js](src/core/stores/weightBalanceStore.js) |
-| Équations scénarios (doublon) | [src/features/weight-balance/utils/calculations.js](src/features/weight-balance/utils/calculations.js) |
-| Saisie création avion | [src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx](src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx) |
-| Hydratation / normalisation | [src/utils/aircraftNormalizer.js](src/utils/aircraftNormalizer.js), [src/utils/aircraftValidation.js](src/utils/aircraftValidation.js) |
-| Restitution graphique / table | [WeightBalanceChart.jsx](src/features/weight-balance/components/WeightBalanceChart.jsx), [WeightBalanceTable.jsx](src/features/weight-balance/components/WeightBalanceTable.jsx), [CgEnvelopeDualChart.jsx](src/features/aircraft/components/CgEnvelopeDualChart.jsx) |
+### D3 — Métadonnée d'unités mensongère & couches correctives qui masquent le défaut — P0
+La persistance écrit bien une métadonnée d'unités ([aircraftStore.js:309-319](alflight/src/core/stores/aircraftStore.js#L309)) — **mais c'est une constante codée en dur** (`weight:'kg', armLength:'mm'`, …) apposée **quel que soit le contenu réel** de l'enregistrement. Elle déclare `armLength:'mm'` alors que la chaîne aval normalise en mètres, et `weight:'kg'` sur des masses potentiellement en lbs (D2). Conséquence aggravante : le chemin de migration legacy au chargement ne convertit **que si la métadonnée diffère du canonique** ([aircraftStore.js:190-202](alflight/src/core/stores/aircraftStore.js#L190)) — la métadonnée mensongère **court-circuite donc la seule machinerie de correction existante**. Une métadonnée fausse est pire qu'une métadonnée absente.
+
+**Verdict global :** l'architecture corrige les symptômes par strates défensives (heuristique moteur, garde-fou d'import, réconciliations de `validateAndRepairAircraft`) au lieu de garantir l'invariant fondamental « *une grandeur = un pivot unique, conversion aux seules frontières, échec explicite sinon* ». Chaque strate ajoute sa propre classe d'erreurs (cm/in cassés, enveloppe exclue, métadonnée fausse). **Non conforme aux exigences d'un calcul de centrage certifiable.**
+
+> **Échelle de sévérité** — **P0** : peut produire un verdict de centrage faux sans alerte ; correction avant toute production. **P1** : fausse un affichage/calcul intermédiaire ; trompeur mais détectable. **P2** : robustesse/dette exposant à régression. **P3** : qualité/observabilité.
 
 ---
+
+# A. ANALYSE PARTICULIÈRE — Conversion kg ↔ lbs dans le module avion
+
+*Chapitre dédié demandé en complément de l'audit. Tous les constats ci-dessous sont vérifiés dans le code, références exactes.*
+
+## A.1 Les deux mécanismes de corruption
+
+### Mécanisme M1 — Saisie brute dans l'unité d'affichage (pas de `toStorage`)
+Les champs de masse de l'assistant de création écrivent la frappe clavier **telle quelle** dans les données de l'avion :
+
+```jsx
+// Step3WeightBalance.jsx — AUCUNE conversion vers le pivot kg
+l.1570  updateData('weights.emptyWeight', e.target.value);   // masse à vide
+l.1679  onChange={(e) => updateData('weights.mtow', e.target.value)}  // MTOW
+l.1696  onChange={(e) => updateData('weights.mlw', e.target.value)}   // MLW
+```
+
+Le libellé d'unité, lui, est **dynamique** (`getUnitSymbol(units.weight)`). Donc : préférence `lbs` → l'utilisateur saisit « 2425 » sous un libellé « lbs » → **2425 est persisté nu**. Le moteur lira 2425 **kg**.
+
+### Mécanisme M2 — Réécriture sur place au changement de préférence (l'unité de référence « suit » l'affichage)
+Quand `units.weight` change **pendant que l'assistant est monté**, un effet convertit et **réécrit dans les données** tous les champs de masse :
+
+```jsx
+// Step3WeightBalance.jsx:294-322
+const weightFields = ['weights.emptyWeight','weights.mtow','weights.mlw',
+  'weights.minTakeoffWeight','weights.maxBaggageFwd','weights.maxBaggageAft'];
+if (previousUnits.weight !== units.weight) {
+  weightFields.forEach(field => {
+    ...
+    const convertedValue = convertValue(value, previousUnits.weight, units.weight, 'weight');
+    if (convertedValue && convertedValue !== value) {
+      updateData(field, Math.round(convertedValue * 10) / 10);   // l.317 — réécrit en lbs, arrondi 1 décimale
+    }
+  });
+}
+```
+
+Idem pour `maxWeight` des compartiments bagages (l.378-384), les **masses des points d'enveloppe CG** `forwardPoints[].weight` (l.396-402), `aftCG.min/maxWeight` (l.417-419) et les points intermédiaires (l.439-452). **L'intégralité du référentiel de masse de l'avion bascule en lbs**, de manière cohérente — puis est persistée ainsi, sous une métadonnée qui affirme `weight:'kg'` ([aircraftStore.js:315](alflight/src/core/stores/aircraftStore.js#L315)).
+
+### Lecture moteur — aucune défense
+```js
+// weightBalanceStore.js:46-51 — lecture directe, AUCUNE conversion, AUCUNE heuristique
+const emptyWeight = parseFloat(aircraft.weights?.emptyWeight || aircraft.emptyWeight || aircraft.masses?.emptyMass);
+const maxTakeoffWeight = parseFloat(aircraft.weights?.mtow || aircraft.maxTakeoffWeight);
+```
+Contrairement aux bras (D1), **il n'existe pas d'équivalent `normalizeAircraftWeightsToKg`** — et il ne peut pas en exister par magnitude : les plages kg et lbs de l'aviation légère se recouvrent totalement (600–1 200 kg ↔ 1 300–2 650 lbs, toutes valeurs plausibles dans les deux unités).
+
+## A.2 Scénario chiffré de bout en bout (DA40 type)
+
+| Étape | Préférence | Donnée | Valeur stockée | Réalité physique |
+|---|---|---|---|---|
+| 1. Création avion | `kg` (Europe) | masse à vide / MTOW | 780 / 1200 | 780 kg / 1200 kg ✔ |
+| 2. L'utilisateur passe en préréglage USA (`lbs`) **assistant ouvert** | `lbs` | effet l.305-322 réécrit | **1719.6 / 2645.5** | toujours 780/1200 kg, mais **stockés en lbs** |
+| 3. Sauvegarde | — | `aircraft_data` + `_metadata.units.weight:'kg'` | 1719.6 / 2645.5 « kg » | **métadonnée fausse** |
+| 4. Préparation de vol : pilote + pax saisis | kg | charges de vol | 80 + 80 (kg) | mélange d'unités dans la même somme |
+| 5. Moteur : `totalWeight = 1719.6 + 80 + 80 + carburant(kg)` | — | ≈ 1 940 « kg » | masse réelle ≈ 1 020 kg |
+| 6. Verdict masse : `1940 ≤ MTOW 2645.5` → **OK** | — | — | **vrai par accident** (les deux bornes ont dérivé ensemble) |
+| 7. Verdict CG : `cg = Σ(m·bras)/Σm` avec masses **mixtes** kg/lbs | — | CG **pondéré faux** | le CG glisse vers le bras de la masse à vide (surpondérée ×2,2) |
+
+**Point clé :** comme MTOW et masse à vide dérivent **ensemble**, le contrôle de masse peut rester faussement vert pendant que la **marge réelle de chargement** est détruite : la capacité d'emport apparente (MTOW−vide−charges) est gonflée de ×2,2 sur les termes avion. À l'inverse, un avion créé en kg puis relu par un utilisateur lbs affiche des nombres faux d'un facteur 2,2 sous le mauvais libellé. **Et le CG, lui, est toujours faux en mélange** — c'est le danger silencieux.
+
+## A.3 Mécanismes aggravants
+
+| ID | Mécanisme | Preuve | Effet |
+|----|---|---|---|
+| M3 | **Conversion seulement si l'assistant est monté** : `previousUnits` est initialisé à la valeur courante au montage (`useState(units)`, [Step3:291](alflight/src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx#L291)). Préférence changée depuis l'écran Pilote (assistant fermé) → à la réouverture `previousUnits === units` → **aucune conversion**, mais les libellés ont changé | l.291 + dépendance `[units]` | valeurs kg affichées sous libellé lbs ; toute « correction » manuelle de l'utilisateur produit un avion **mixte** |
+| M4 | **Dérive d'aller-retour** : `kgToLbs = ×2.20462`, `lbsToKg = ×0.453592` ([unitConversions.js:42-43](alflight/src/utils/unitConversions.js#L42)) ; produit = **0,999998 ≠ 1** ; combiné à l'arrondi **1 décimale** `Math.round(×10)/10` (l.317) réappliqué à chaque bascule | l.317, 380-384, 397-402 | chaque cycle kg→lbs→kg altère la valeur stockée (quantification ±0,05 + biais −2·10⁻⁶) ; jamais le même avion après N bascules |
+| M5 | **`if (value)` saute les zéros et chaînes vides** — mais convertit les chaînes : les champs stockent des **strings** (`e.target.value`), `convertValue` les parseFloat ; un champ « 0 » légitime n'est jamais converti | l.309, 340 | incohérences de type + champs à 0 figés dans l'ancienne unité |
+| M6 | **Les moments ne sont PAS convertis** : `moments.empty` (recalcul 2-sur-3, l.255-289) et `aftCG.min/maxMoment` (« gardés tels quels », l.429-430) ne figurent dans aucune liste de conversion | l.296-303, 325-334, 429-430 | après bascule kg↔lbs, le moment stocké est dans l'ancien produit d'unités ; si `lastEditedEmptyField==='moment'`, le 2-sur-3 **recalcule masse ou bras depuis un moment périmé** (l.277, 282) |
+| M7 | **Affichages/PDF en kg figé** : la fiche avion et l'export PDF impriment la valeur stockée avec « kg » en dur (AircraftModule, ex. `addText(...kg)`) ; moments PDF libellés **kg·mm** en dur (l.853, 882) | AircraftModule.jsx | un avion-lbs est documenté « kg » sur le document de masse & centrage imprimé |
+
+## A.4 Volet carburant du problème kg/lbs (masse de carburant)
+
+Le carburant peut être préféré **en kg** (préréglage `aviation` : `fuel:'kg'`, [unitsStore.js:117](alflight/src/core/stores/unitsStore.js#L117)) ou en gal/lbs (USA). Trois défauts convergents :
+
+1. **Densité ignorée par le helper canonique** : `mbUnits.toStorage()` appelle `convertValue` **sans `options.density`** ([mbUnits.js:62](alflight/src/features/aircraft/utils/mbUnits.js#L62)) → toute conversion kg↔ltr passe par la densité **par défaut AVGAS 0,72** ([unitConversions.js:15](alflight/src/utils/unitConversions.js#L15)), même pour un avion **JET A-1 (0,84)** → volume faux de **17 %**.
+2. **Facteur figé 6.01 lbs/gal** : `galToLbs = ×6.01` et `lbsToGal = ÷6.01` ([unitConversions.js:21,31](alflight/src/utils/unitConversions.js#L21)) **ignorent le paramètre densité** (la signature ne l'accepte même pas) — exact pour l'AVGAS seulement ; pour JET A-1, 1 gal ≈ 7,0 lbs → erreur 14 %.
+3. **Source de densité divergente côté vol** : Step6 choisit la densité par **string-match** `fuelType.includes('JET') ? JET_A1 : AVGAS` au lieu du helper canonique `getFuelDensity` ([Step6WeightBalance.jsx:309-327](alflight/src/features/flight-wizard/steps/Step6WeightBalance.jsx#L309)) — tolérable aujourd'hui (valeurs alignées depuis A1) mais contourne la source unique et re-divergera à la première évolution.
+
+À noter, côté positif : le moteur lui-même est **fail-closed sur la densité** (type carburant inconnu ⇒ `fuelDensityMissing`, pas de 0,84 fabriqué, [weightBalanceStore.js:147-165](alflight/src/core/stores/weightBalanceStore.js#L147)).
+
+## A.5 Pourquoi kg/lbs est PLUS dangereux que m/mm
+
+| Critère | m/mm (D1) | kg/lbs (D2) |
+|---|---|---|
+| Facteur d'erreur | ×1000 — produit des CG **absurdes**, souvent visibles (graphe illisible, verdict toujours hors limites) | ×2,2046 — produit des valeurs **plausibles** |
+| Désambiguïsation par magnitude | possible (plages disjointes 0,01-10 m vs 300-10000 mm) — c'est le pont actuel | **impossible** (plages totalement recouvrantes) |
+| Cohérence interne après corruption | données souvent **mixtes** (un bras sur deux) → détectable | corruption **cohérente** (tous les champs basculent ensemble, M2) → indétectable de l'intérieur |
+| Garde-fou existant | `normalizeAircraftArmsToMeters` à l'entrée moteur | **aucun** |
+| Voie de détection | magnitude + enveloppe | **uniquement** comparaison à une référence externe (fiche constructeur, préréglage communautaire du même modèle) ou confirmation utilisateur |
+
+**Conclusion A :** le bug kg/lbs relève des mêmes causes racines que m/mm (stockage en unité d'affichage, pivot non garanti, conversions silencieuses, métadonnée constante) mais sa remédiation **exige** la stratégie de migration assistée par référence externe décrite en §5.4 — la magnitude ne sauvera personne ici.
+
+---
+
+# Les 5 axes de l'audit
 
 ## AXE 1 — Cartographie de la donnée & gestion des préférences
 
 ### 1.1 Source unique de vérité (SSOT)
+- [x] **CTRL-1.1 Unicité du pivot par grandeur — ÉCHEC.** Bras : mm (mbUnits) vs m (moteur, tests dorés) — admis par [armUnits.js:5-9](alflight/src/utils/armUnits.js#L5). Masse : kg (métadonnée/moteur) vs unité d'affichage (données réelles, chap. A).
+- [x] **CTRL-1.2 Cohérence inter-catégories des longueurs — ÉCHEC.** Une même grandeur physique vit en 4 pivots : `armLength:'mm'`, `runway:'m'` ([mbUnits.js:33](alflight/src/features/aircraft/utils/mbUnits.js#L33)), `altitude:'ft'`, visibilité m/km. Toute formule croisant ces champs exige des conversions explicites — à inventorier (Axe 2).
+- [x] **CTRL-1.3 Stockage en unité d'affichage — CONFIRMÉ** pour bras (Step3 brut : réservoirs l.1079-1097, sièges l.1282-1287, bagages l.1451-1466) **et masses** (l.1570/1679/1696) — alors que le champ **capacité carburant** du même écran convertit correctement (`convertValue(...,'ltr',...)`, l.1044-1074) : le bon patron existe à 30 lignes des champs défaillants.
+- [x] **CTRL-1.4 Métadonnée d'unité — EXISTE MAIS MENSONGÈRE (correction v1).** Constante figée déclarant le canonique quel que soit le contenu ([aircraftStore.js:309-319](alflight/src/core/stores/aircraftStore.js#L309)) ; déclare `armLength:'mm'` quand la chaîne aval vit en m ; **désarme la migration legacy** (l.190-202 ne convertit que si métadonnée ≠ canonique).
 
-**Objectif :** prouver qu'il existe **une et une seule** unité-pivot par grandeur, stockée telle quelle, indépendamment du contexte et des préférences.
+**Registre des grandeurs (état réel vérifié) :**
 
-**Points de contrôle :**
-- [ ] **CTRL-1.1** Lister toutes les unités-pivot déclarées et vérifier l'**unicité** par grandeur. → **ÉCHEC déjà constaté** : bras = mm côté `mbUnits` mais m côté moteur (§0).
-- [ ] **CTRL-1.2** Vérifier la **cohérence inter-catégories** des longueurs : `STORAGE_UNITS.armLength = 'mm'` mais `STORAGE_UNITS.runway = 'm'` ([mbUnits.js:33](src/features/aircraft/utils/mbUnits.js#L33)) et `unitsStore.runway = 'm'`, `altitude = 'ft'`. Une même grandeur physique (longueur) vit dans 4 unités-pivot selon le champ → **toute formule mélangeant piste, altitude et bras est suspecte** (P1).
-- [ ] **CTRL-1.3** Vérifier qu'aucune valeur n'est stockée « dans l'unité d'affichage ». → **ÉCHEC** : les bras le sont (Axe 4).
-- [ ] **CTRL-1.4** Vérifier la présence d'une **métadonnée d'unité + version de schéma** sur chaque enregistrement avion persistant. → **Absente** (P0, voir Axe 4).
+| Grandeur | Pivot déclaré (métadonnée) | Pivot `mbUnits` | Pivot moteur | Données réelles en base | Verdict |
+|---|---|---|---|---|---|
+| Bras de levier | mm | mm | **m** (+ heuristique >10→÷1000) | **mixtes** (F-HFGI cité par armUnits.js:8) | ⛔ P0 |
+| Masse | kg | kg | kg (lecture nue) | **unité de préférence du créateur** | ⛔ P0 |
+| Moment | — (non déclaré) | kg·mm | kg·m | produit des unités de saisie | ⛔ P0 |
+| Carburant (vol.) | ltr | ltr | ltr→kg via densité fail-closed | ltr ✔ | ✔ |
+| Enveloppe CG (cg) | — | — | unité de saisie, **exclue de l'heuristique** ([armUnits.js:48](alflight/src/utils/armUnits.js#L48)) | unité de préférence | ⛔ P0/P1 |
 
-**Livrable Axe 1.1 :** un **registre des grandeurs** (tableau ci-dessous, à compléter et figer en `constants`) :
+### 1.2 Isolation des préférences
+- [x] **CTRL-1.5 La préférence mute la donnée — CONFIRMÉ.** L'effet [Step3:294-466](alflight/src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx#L294) réécrit masses (×10/10), bras (×100/100), CG d'enveloppe (×10000/10000) dans la nouvelle unité d'affichage. Le « pivot » d'un avion est donc **l'historique des préférences de son créateur**. Violation du principe d'isolation (P0 via D2, P1 via bras).
+- [x] **CTRL-1.6 Fenêtres de non-conversion — CONFIRMÉ** (M3, chap. A) : conversion seulement si le composant est monté au moment du changement. Vérifier en dynamique le double-déclenchement StrictMode (risque de double conversion ×2,2² ou ÷1000²) — **à tester** (T-DYN-1).
+- [x] **CTRL-1.7 Convergence des écrans de préférences — OK.** Les 3 composants (`features/units`, `features/pilot` ×2) écrivent via `unitsSelectors.useUnitsActions().setUnit()` sur le même store Zustand persisté. Duplication de code à factoriser (P3).
 
-| Grandeur | Unité-pivot CIBLE (à décider) | Pivot actuel `mbUnits` | Pivot actuel moteur | Conflit |
-|---|---|---|---|---|
-| Masse | kg | kg | kg | — |
-| **Bras de levier** | **à trancher (recommandé : m, voir Axe 5)** | **mm** | **m** | **OUI (P0)** |
-| Moment | masse×bras cohérent | kg·mm | kg·m | **OUI (P0)** |
-| Carburant (vol.) | L | ltr | — | — |
-| Piste | m | m | — | cohérence à valider |
+### 1.3 IHM — liaison valeur ↔ unité
+- [x] **CTRL-1.8/1.9 Inventaire des libellés.** Champs de saisie Step3 : symboles **dynamiques** ✔ (mais valeurs non converties — le libellé dit vrai sur l'intention, faux sur le contenu après bascule). Libellés **en dur** confirmés :
 
-### 1.2 Isolation des préférences utilisateur
-
-**Objectif :** une préférence d'affichage ne doit **jamais** muter la donnée brute. Changer mm→cm ne doit changer que la couche d'affichage (ou re-convertir proprement sans perte), jamais réinterpréter le nombre.
-
-**Points de contrôle :**
-- [ ] **CTRL-1.5** Tracer `useUnitsWatcher` / l'effet de re-conversion. **Constat préliminaire** : [Step3WeightBalance.jsx](src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx) contient un `useEffect` (≈ l.282-454) qui, au changement de préférence, **réécrit en base les bras re-convertis** via `convertValue(value, previousUnits.armLength||'mm', units.armLength||'mm', 'armLength')`. → La donnée « brute » suit donc la préférence : **violation du principe d'isolation** (P1). Le pivot effectif d'un avion dépend de l'historique des préférences de l'utilisateur qui l'a saisi.
-- [ ] **CTRL-1.6** Vérifier que `previousUnits` est initialisé de façon fiable (sinon première conversion contre un défaut erroné) et qu'une double-exécution de l'effet (StrictMode) ne re-convertit pas deux fois (risque ×1000 ou ÷1000 accidentel) — **à confirmer en dynamique**.
-- [ ] **CTRL-1.7** Confirmer la **convergence** des écrans de préférences. Il existe **≥ 3 composants** : [features/units/components/UnitsPreferences.jsx](src/features/units/components/UnitsPreferences.jsx), [features/pilot/components/UnitsPreferences.jsx](src/features/pilot/components/UnitsPreferences.jsx), [features/pilot/components/UnitsConfiguration.jsx](src/features/pilot/components/UnitsConfiguration.jsx). Tous écrivent via `unitsSelectors.useUnitsActions().setUnit()` sur le **même** store → pas de divergence d'état, mais **duplication de code** à factoriser (P3).
-
-### 1.3 IHM — liaison explicite valeur ↔ unité
-
-**Objectif :** aucun champ « aveugle ». Chaque saisie et chaque affichage porte dynamiquement son symbole d'unité, issu de la préférence courante.
-
-**Points de contrôle :**
-- [ ] **CTRL-1.8** Inventaire de tous les champs numériques de bras/masse/moment et vérification du symbole dynamique.
-- [ ] **CTRL-1.9** Liste des **symboles codés en dur** (ne suivent pas la préférence → mensonge d'unité). **Constats préliminaires (échantillon déjà relevé)** :
-
-| Fichier:ligne | Libellé en dur | Sévérité |
+| Fichier:ligne | Libellé figé | Note |
 |---|---|---|
-| [WeightBalanceChart.jsx:397](src/features/weight-balance/components/WeightBalanceChart.jsx#L397) | axe X `Centre de Gravité (mm)` | P1 |
-| WeightBalanceChart.jsx:410 | axe `Moment (kg.m)` | P1 |
-| WeightBalanceChart.jsx:343-344 | tooltip `…m` puis `(×1000) mm` codé en dur | P1 |
-| [WeightBalanceTable.jsx:133-135](src/features/weight-balance/components/WeightBalanceTable.jsx#L133) | en-têtes `Masse (kg)`, `Bras (m)`, `Moment (kg.m)` | P1 |
-| Step6WeightBalance.jsx:828, 832, 861, 894, 932 | `… m`, `… kg.m` | P1 |
-| AircraftModule.jsx:782, 790, 794 | export PDF figé en `mm`/`kg` | P2 (acceptable si standard MANEX documenté) |
-
-> ⚠️ **Incohérence critique d'IHM** : l'axe du graphe est titré **« (mm) »** alors que la valeur traitée par le moteur est en **m**, et le code multiplie en plus par 1000. La table affiche **« Bras (m) »** sur des données qui peuvent être en mm. **Le pilote lit une unité, le calcul en utilise une autre.**
-
-**Livrable Axe 1 :** registre des grandeurs figé + matrice « champ → catégorie → source unité → liaison (dynamique/dur) » exhaustive.
+| [WeightBalanceChart.jsx:397](alflight/src/features/weight-balance/components/WeightBalanceChart.jsx#L397) | `Centre de Gravité (mm)` | l'axe dit mm, le moteur sort des m, le code multiplie ×1000 (l.402, 58-59) |
+| WeightBalanceChart.jsx:410 | `Moment (kg.m)` | |
+| WeightBalanceChart.jsx:343-344 | tooltip `…m` / `(×1000) mm` | figé m/mm, ignore cm/in |
+| [WeightBalanceTable.jsx:133-135](alflight/src/features/weight-balance/components/WeightBalanceTable.jsx#L133) | `Masse (kg)`, `Bras (m)`, `Moment (kg.m)` | + formule affichée l.197 |
+| Step6WeightBalance.jsx:828+ | `… m`, `… kg.m` | bras/moments figés ; le carburant, lui, est converti dynamiquement (l.651-657) ✔ |
+| AircraftModule.jsx:853, 882 | moments PDF `kg·mm` en dur | **mixte** (l.839 passe l'unité en paramètre) — correction v1 : pas « uniformément figé » |
+| CgEnvelopeDualChart.jsx:269 | `Moment (${massUnit}·${armUnit})` — **dynamique** ✔ | **correction v1** : le libellé suit les props (`armUnit="mm"` passé par Step3:1773) ; le risque est dans la **valeur** de `p.cg` (l.193/202/212 `p.weight*p.cg`), pas le libellé |
 
 ---
 
-## AXE 2 — Audit intégral des équations & formules
+## AXE 2 — Audit intégral des équations
 
-### 2.1 Recensement & analyse dimensionnelle
+### 2.1 Recensement & analyse dimensionnelle (grille vérifiée)
 
-**Méthode :** pour **chaque** expression mathématique de l'app (CG, moment, %MAC, masses, densités, interpolation d'enveloppe, conversions de perf), remplir la **grille d'analyse dimensionnelle** :
-
-| ID | Fichier:ligne | Expression | Calcule | Unité de chaque entrée | Unité résultat | Homogène ? | Edge cases | Verdict |
-|----|---------------|------------|---------|------------------------|----------------|-----------|------------|---------|
-
-**Recensement initial (cœur W&B) :**
-
-| ID | Fichier:ligne | Expression | Unités entrées → résultat | Verdict |
+| ID | Fichier:ligne | Expression | Unités | Verdict |
 |----|---|---|---|---|
-| EQ-01 | [weightBalanceStore.js:189-194](src/core/stores/weightBalanceStore.js#L189) | `moment = poids * bras` (×6 stations) | kg × **m** → kg·m | ✔ homogène **en interne**, mais bras supposé **m** (cf. EQ-00) |
-| EQ-02 | [weightBalanceStore.js:196-203](src/core/stores/weightBalanceStore.js#L196) | `totalMoment = Σ moments` | kg·m → kg·m | ✔ |
-| EQ-03 | [weightBalanceStore.js:206](src/core/stores/weightBalanceStore.js#L206) | `cg = totalMoment / totalWeight` | kg·m / kg → **m** | ✔ **si** bras en m |
-| EQ-00 | (transverse) | bras injecté dans EQ-01 | **mm côté création, m côté moteur** | ⛔ **P0** : non homogène entre sous-systèmes |
-| EQ-04 | [weightBalanceStore.js:233-236](src/core/stores/weightBalanceStore.js#L233) | `isWithinCG = cg ≥ fwd && cg ≤ aft` | compare `cg` (m) à enveloppe (unité **saisie utilisateur**, non garantie) | ⚠️ **P0/P1** : comparaison non garantie homogène |
-| EQ-05 | calculations.js:52-53 | `cg = totalMoment / totalWeight` (**doublon** d'EQ-03) | idem | ⚠️ **P1 DRY** : 2e moteur de CG, risque de divergence |
-| EQ-06 | CgEnvelopeDualChart.jsx:193,202,212 | `x = useMoment ? weight*cg : cg` | kg × unité(cg) → moment d'axe | ⚠️ P1 : dépend de l'unité de `cg` |
-| EQ-07 | cgEnvelope (interp) | `interpAt(points, masse)` interpolation linéaire des limites | points enveloppe (unité saisie) → limite | ⚠️ garbage-in si enveloppe ≠ unité du `cg` testé |
-| EQ-08 | **%MAC** (à localiser) | `%MAC = (CG − BA) / MAC × 100` | **3 longueurs à homogénéiser** | ❓ **à recenser** — vérifier d'où viennent BA (bord d'attaque) et MAC et en quelle unité |
-| EQ-09 | carburant | `masse = volume × densité` | L × kg/L → kg | ✔ (densité canonique 0.84 Jet, 0.72 AVGAS — voir [constants](src/utils/constants.js)) |
+| EQ-01 | [weightBalanceStore.js:189-194](alflight/src/core/stores/weightBalanceStore.js#L189) | `moment = poids × bras` (×6 stations) | kg × m → kg·m | ✔ homogène **après** l'heuristique l.40 ; ⛔ dépend d'elle (D1) |
+| EQ-02 | l.196-203 | `totalMoment = Σ` | kg·m | ✔ |
+| EQ-03 | l.206 | `cg = totalMoment/totalWeight` | → m ; garde `totalWeight>0` | ✔ si entrées saines |
+| EQ-04 | l.233-236 | `cg ≥ forward && cg ≤ aft` | cg en **m** vs enveloppe en **unité de saisie** (exclue de l'heuristique) | ⛔ P0/P1 — homogénéité non garantie |
+| EQ-05 | calculations.js:65-70 | `calculateFromItems` : même formule CG (scénarios) | idem moteur | ⚠️ P2 — doublon ; logique identique constatée, divergence possible à terme |
+| EQ-06 | calculations.js:58-61, 75-76 | `kgCarburant = L × densité` | L × kg/L → kg ; densité via `getFuelDensity` fail-closed | ✔ |
+| EQ-07 | [weightBalanceStore.js:161](alflight/src/core/stores/weightBalanceStore.js#L161) | `fuelWeight = ltr × densité` | idem | ✔ |
+| EQ-08 | Step3:266-287 | 2-sur-3 : `M=e×a`, `a=M/e`, `m=M/a` | **unités d'affichage courantes** | ⚠️ P2 — moment en produit d'unités de saisie, non converti (M6) |
+| EQ-09 | [mbUnits.js:159-172](alflight/src/features/aircraft/utils/mbUnits.js#L159) | `compute2of3` | canonique kg/mm/kg·mm déclaré | ✔ interne ; ⛔ contrat mm contredit D1 |
+| EQ-10 | CgEnvelopeDualChart.jsx:193/202/212 | `x = weight × cg` | kg × unité(p.cg) | ⚠️ P1 — hérite de l'ambiguïté enveloppe |
+| EQ-11 | cgEnvelope.js (interp.) | `cg_limite(masse)` interpolation linéaire | unité de saisie | ⚠️ garbage-in/garbage-out |
 
-> **Action P0 Axe 2 :** localiser et auditer **toute** formule **%MAC** et la dérivation du **bord d'attaque / corde MAC** (non encore localisée dans le périmètre lu) : c'est l'équation la plus exposée car elle **soustrait** des longueurs avant de diviser — une seule en mauvaise unité fausse le pourcentage sans changer l'ordre de grandeur (donc indétectable à l'œil).
+### 2.2 **%MAC — constat formel : LA FORMULE N'EXISTE PAS** (réponse au point « à localiser » de la v1)
+Recherche exhaustive : l'application **stocke** `macLength` et `lemac` comme métadonnées d'enveloppe (centrogramAdapter.js:112-113, cgEnvelope.js) mais **ne calcule jamais** `%MAC = (CG − LEMAC)/MAC × 100`. Le centrage est exprimé et vérifié exclusivement en CG absolu vs enveloppe. **Décision requise** : implémenter le %MAC avec homogénéité stricte (3 longueurs dans le même pivot) **ou** retirer ces champs morts qui suggèrent une capacité inexistante (P2).
 
-### 2.2 Vérification de l'homogénéité stricte
+### 2.3 Cas limites — acquis à préserver et trous restants
+**Acquis (vérifiés, à sanctuariser) :** masse à vide/MTOW absentes ⇒ calcul **refusé** (`return null`, l.57-62) ; bras manquant sur station chargée ⇒ `cgReliable=false`, `isWithinCG=null`, warning (l.208-220) ; densité inconnue ⇒ fail-closed (l.147-165) ; enveloppe absente ⇒ verdict null ; division par zéro gardée partout où vérifiée ; `compute2of3` refuse les dénominateurs nuls.
 
-**Points de contrôle :**
-- [ ] **CTRL-2.1** Aucune addition/soustraction de longueurs d'unités différentes (bras mm + bord d'attaque m).
-- [ ] **CTRL-2.2** Toute multiplication masse×longueur produit un moment dont l'unité est **tracée et cohérente** avec l'unité attendue par le diviseur en aval.
-- [ ] **CTRL-2.3** Les deux côtés de chaque comparaison (`cg` vs `forward/aft`, `totalWeight` vs `MTOW`) sont dans la **même** unité. → EQ-04 à prouver.
-- [ ] **CTRL-2.4** Éliminer le **doublon** EQ-03 / EQ-05 ou prouver leur équivalence par test (sinon deux vérités du CG).
-
-### 2.3 Analyse des cas limites (robustesse)
-
-**Constats préliminaires (points positifs à conserver) :**
-- ✔ Division par zéro CG gardée : `totalWeight > 0 ? … : 0` ([weightBalanceStore.js:206](src/core/stores/weightBalanceStore.js#L206)) et `compute2of3` retourne `null` si masse ou bras = 0 ([mbUnits.js:167-169](src/features/aircraft/utils/mbUnits.js#L167)).
-- ✔ **Fail-closed** sur bras manquant : `cgReliable=false ⇒ isWithinCG=null` (jamais un faux « OK ») ([weightBalanceStore.js:208-239](src/core/stores/weightBalanceStore.js#L208)) — **excellent réflexe sécurité, à généraliser**.
-- ✔ Masse à vide absente ⇒ calcul refusé (`null`), pas de 600 kg fabriqué (test doré l.138-146).
-
-**Points de contrôle restants :**
-- [ ] **CTRL-2.5** Retour `0` au lieu d'erreur : `convertValue` renvoie `0` si `!value || isNaN(value)` ([unitConversions.js:167](src/utils/unitConversions.js#L167)) → un bras NaN devient **0** silencieusement (moment 0, CG tiré vers l'avant). **P1** : préférer lever/propager une erreur explicite ou `null`.
-- [ ] **CTRL-2.6** Valeurs aberrantes / négatives : aucune borne de plausibilité (bras négatif, masse > 10×MTOW, CG hors plage physique). Ajouter des **assertions de domaine** (P2).
-- [ ] **CTRL-2.7** Enveloppe vide / 1 point / points non triés : vérifier `interpAt` (bornes, extrapolation) et le rendu (axe dégénéré 0-1 constaté possible dans le chart).
-
-**Livrable Axe 2 :** grille dimensionnelle complète (1 ligne/équation, **toute** l'app, pas seulement W&B), liste des non-homogénéités classées P0-P3, et liste des edge cases non couverts.
+**Trous :**
+- [ ] **CTRL-2.5** `convertValue` retourne **0** sur NaN/falsy ([unitConversions.js:166-169](alflight/src/utils/unitConversions.js#L166)) — un bras illisible devient moment nul silencieux (P1).
+- [ ] **CTRL-2.6** Aucune borne de plausibilité physique (bras négatif au-delà du datum légitime vs erreur, masse > 10×MTOW, CG hors fuselage) (P2).
+- [ ] **CTRL-2.7** Enveloppe à 0/1 point, points non triés, axe dégénéré 0-1 du graphe (P2).
 
 ---
 
 ## AXE 3 — Matrice de conversion & précision numérique
 
-### 3.1 Audit du convertisseur central
+### 3.1 Le convertisseur central — défauts confirmés
 
-**Cible :** `convertValue()` et les tables de [unitConversions.js](src/utils/unitConversions.js), `toStorage/fromStorage/convertMoment` de [mbUnits.js](src/features/aircraft/utils/mbUnits.js).
-
-**Constats préliminaires (déjà relevés, à figer par tests) :**
-
-| ID | Fichier:ligne | Risque | Sévérité |
+| ID | Fichier:ligne | Défaut | Sévérité |
 |----|---|---|---|
-| CV-1 | [unitConversions.js:249-250](src/utils/unitConversions.js#L249) | **Pass-through silencieux** : si aucune fonction ne correspond à la clé, retourne la valeur **non convertie** (simple `console.warn`). → une conversion manquante = corruption mm-vu-comme-m **indétectable**. **C'est le vecteur n°1 du bug.** | **P0** |
-| CV-2 | mbUnits.js:63-66 & 86-89 | `toStorage/fromStorage` **renvoient le nombre brut** dans leur `catch` → même corruption silencieuse | **P0** |
-| CV-3 | [unitConversions.js:167](src/utils/unitConversions.js#L167) | `return 0` sur `!value || isNaN` (cf. CTRL-2.5) | P1 |
-| CV-4 | [unitConversions.js:184](src/utils/unitConversions.js#L184) | **Dispatch par concaténation de chaîne** : `` `${fromUnit}To${Cap(toUnit)}` ``. Fragile : une unité avec casse/typo (`'m/s'`, `'km/h'`) ne mappe pas → tombe sur CV-1 | P1 |
-| CV-5 | unitConversions.js:186 & 240 | `console.log` en **chemin chaud** de conversion (exécuté à chaque frappe/refresh) → bruit + fuite de données + perf | P3 |
-| CV-6 | [armLengthConversions](src/utils/unitConversions.js#L95) | **Vérifier l'absence d'inversion de facteur** : `mmToM = /1000`, `mToMm = ×1000`, `inToMm = ×25.4`, `mmToIn = /25.4`… (revue ligne à ligne + test exhaustif de la matrice) | à figer |
+| CV-1 | [unitConversions.js:249-250](alflight/src/utils/unitConversions.js#L249) | clé introuvable ⇒ **retourne la valeur d'origine** (« returning original value ») — une conversion manquante = corruption silencieuse. Vecteur n°1 | **P0** |
+| CV-2 | [mbUnits.js:63-66, 86-89](alflight/src/features/aircraft/utils/mbUnits.js#L63) | `catch ⇒ return num` (nombre brut non converti) | **P0** |
+| CV-3 | unitConversions.js:166-169 | `return 0` sur falsy/NaN | P1 |
+| CV-4 | l.184 | dispatch par **concaténation de chaîne** `${from}To${Cap(to)}` — `'km/h'`, `'m/s'` et toute casse inattendue ⇒ CV-1 | P1 |
+| CV-5 | l.186, 240 | `console.log` en chemin chaud (chaque frappe) | P3 |
+| CV-6 | l.21, 31 | `galToLbs=×6.01` / `lbsToGal=÷6.01` figés AVGAS, densité non paramétrable | P1 (chap. A.4) |
+| CV-7 | l.42-43 | `2.20462` / `0.453592` : corrects isolément mais **non inverses exacts** (produit 0,999998) ; combinés à la réécriture in-place ⇒ dérive (M4). Référence exacte : 1 lb = 0,45359237 kg | P2 |
+| CV-8 | [armUnits.js:39-43](alflight/src/utils/armUnits.js#L39) + [aircraftNormalizer.js:96-104](alflight/src/utils/aircraftNormalizer.js#L96) | **heuristique magnitude >10 ⇒ ÷1000** : casse **cm (×10)** et **in (×25,4)** ; le commentaire « zéro faux positif » n'est vrai que pour la paire m/mm | **P0** |
 
-**Points de contrôle :**
-- [ ] **CTRL-3.1** Pour **chaque** paire d'unités de longueur/masse, vérifier `a→b` puis `b→a` et l'**identité** `a→b→a ≈ a`. Tout aller-retour qui dérive de > ε = inversion ou perte.
-- [ ] **CTRL-3.2** Vérifier qu'aucune clé attendue n'est **manquante** (sinon CV-1). Construire la matrice complète attendue et diffuser contre les tables réelles.
-- [ ] **CTRL-3.3** Remplacer les fallbacks silencieux (CV-1, CV-2) par une **erreur explicite** en mode dev/test et un comportement fail-closed en prod (valeur marquée invalide, jamais « passée telle quelle »).
+- [ ] **CTRL-3.1/3.2** Test exhaustif de la matrice : toutes paires × aller-retour × valeurs de référence ; détection des clés manquantes (qui aujourd'hui tombent dans CV-1 sans bruit).
+- [ ] **CTRL-3.3** Remplacer CV-1/CV-2/CV-3 par erreur explicite (dev/test) + fail-closed (prod).
 
-### 3.2 Précision numérique & arrondis (floating-point)
+### 3.2 Précision numérique
+Calculs en `number` IEEE-754 (double) : ~15-16 chiffres significatifs — **suffisant** ; `BigDecimal` non requis. Les vrais risques sont les **arrondis prématurés réinjectés** :
+- [ ] **CTRL-3.4** Réécritures arrondies à chaque bascule de préférence : masses **1 décimale** (l.317), bras 2 (l.348), CG enveloppe 4 (l.409) — quantification cumulative à chaque cycle (M4). En lbs, 1 décimale ≈ ±0,05 lbs ; acceptable isolément, non-idempotent en boucle.
+- [ ] **CTRL-3.5** `cg.toFixed(3)` tronque le **résultat de calcul** ([weightBalanceStore.js:244](alflight/src/core/stores/weightBalanceStore.js#L244)) — 3 décimales = précision mm si pivot m (OK) ; à re-décider avec le pivot.
+- [ ] **CTRL-3.6** Comparaisons d'enveloppe sans tolérance ε (l.235) — borne flottante stricte.
 
-**Constats :** tous les calculs utilisent le `number` JS (IEEE-754 double). Pas de `BigDecimal`.
-
-**Analyse :**
-- Pour des bras au mm et des masses au kg, le double offre ~15-16 chiffres significatifs : **la précision brute n'est pas le risque principal**. Le risque réel est :
-  - [ ] **CTRL-3.4** **Arrondis prématurés** puis ré-exploités : ex. l'effet de re-conversion écrit `Math.round(converted*100)/100` (Axe 1.2) → **perte cumulative** sur conversions successives mm↔cm↔in↔m répétées. Quantifier la dérive sur N aller-retours.
-  - [ ] **CTRL-3.5** **Arrondi d'affichage vs arrondi de calcul** : `cg: parseFloat(cg.toFixed(3))` ([weightBalanceStore.js:244](src/core/stores/weightBalanceStore.js#L244)) **tronque le résultat de calcul à 3 décimales** (et non seulement l'affichage). En mm cela ferait perdre toute précision sub-mm ; en m, 3 décimales = précision mm (acceptable) — **mais le choix de précision dépend de l'unité-pivot retenue** (cf. Axe 5).
-  - [ ] **CTRL-3.6** Comparaisons d'égalité/bornes d'enveloppe : utiliser une **tolérance** (`>= forward - ε`) plutôt qu'une égalité stricte sur flottants.
-
-**Décision attendue (Axe 5) :** conserver `number` mais **(a)** fixer l'unité-pivot, **(b)** convertir **une seule fois** aux frontières (saisie/affichage), **(c)** ne jamais arrondir une valeur de calcul intermédiaire, **(d)** centraliser les arrondis d'affichage. `BigDecimal` non requis si ces règles sont tenues.
-
-**Livrable Axe 3 :** matrice de conversion complète **prouvée par test** (toutes paires, aller-retour, contre constantes de référence), + liste des fallbacks silencieux remplacés par des erreurs.
+**Règles cibles :** pivot unique ; conversion aux seules frontières ; aucun arrondi sur valeur intermédiaire ; arrondi d'affichage centralisé ; ε déclaré pour les comparaisons.
 
 ---
 
 ## AXE 4 — Persistance & hydratation
 
-### 4.1 Scénario de référence « l'utilisateur saisit 1500 »
+### 4.1 Chemins réels (vérifiés)
+**Écriture** : `aircraftStore` sérialise l'avion entier dans Supabase `community_presets.aircraft_data` (l.340 ; mise à jour par fusion `deepMergeKeepExisting`, communityService.js:809-810) avec `_metadata.version '2.0.0'` + **unités constantes** (l.309-319 — D3).
+**Lecture** : `loadFromSupabase` (l.131-209) ne convertit **que si** la métadonnée diffère du canonique (l.190-202) — jamais le cas puisque la métadonnée est constante — puis `validateAndRepairAircraft` (réconciliation des 3 emplacements de masse à vide, projection `arms→weightBalance`, dérivation `cgLimits` ; **aucune conversion d'unité**).
+**Import/normalisation** : `normalizeAircraftImport` ([aircraftNormalizer.js:33-201](alflight/src/utils/aircraftNormalizer.js#L33)) convertit selon la métadonnée source + applique le garde-fou magnitude (l.96-104) — **chemin d'import uniquement**, pas le chemin assistant→sauvegarde.
+**Entrée moteur** : `normalizeAircraftArmsToMeters` (heuristique, bras seulement, enveloppe exclue).
 
-**Trace cible (à instrumenter en dynamique), confrontée au constat préliminaire :**
+### 4.2 Réponse au scénario « l'utilisateur saisit 1500 mm »
+> Écrit en base : **`"1500"`** (string), nu, sous métadonnée constante `armLength:'mm'`. À la relecture : aucune conversion (métadonnée = canonique) ; à l'entrée moteur : 1500 > 10 ⇒ **÷1000 ⇒ 1,5 m** ✔ *par heuristique*. **Mais** : saisi sous préférence **cm** (« 150 ») ⇒ 150 > 10 ⇒ 0,15 m (**×10 faux**) ; sous préférence **in** (« 59 ») ⇒ 0,059 m (**×25 faux**) ; et une **masse** « 1500 » saisie en lbs ⇒ lue 1500 kg (**×2,2 faux, aucun filet**). Le système ne *sait* pas ce qu'il a stocké — il le *devine*, et seulement pour une paire d'unités.
 
-| Étape | Comportement attendu (cible) | Constat préliminaire (réel) |
-|---|---|---|
-| **Saisie** champ « Bras de levier » | libellé = unité préférée ; valeur **convertie en pivot** via `toStorage()` | libellé **dynamique** ✔ ([Step3 …](src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx)) **mais** `onChange` stocke `arm: newArm` **brut, sans `toStorage()`** — contrairement au champ **capacité carburant** voisin qui, lui, appelle `convertValue(...,'ltr',...)` ✔. **Asymétrie P0.** |
-| **Écriture base** | écrit la valeur **pivot** + `arms_unit` + `schemaVersion` | écrit l'avion normalisé **tel quel** ; **aucune métadonnée d'unité** (à confirmer dans aircraftStore/service Supabase) |
-| **Relecture / hydratation** | relit pivot, applique `fromStorage()` pour l'affichage | `validateAndRepairAircraft` mappe `arms → weightBalance` **sans conversion** ; le moteur lit ensuite en **m** |
-| **Verdict** | CG correct | si saisi en mm (préf. défaut) et lu en m ⇒ **CG ×1000 faux** |
-
-**Réponse à la question posée — « si l'utilisateur saisit 1500 mm, qu'est-ce qui est écrit ? »**
-> En l'état : **`1500`**, **dans l'unité de préférence du moment** (mm par défaut), **sans étiquette**. Au rechargement, le moteur de centrage l'interprète comme **1500 m**. Rien ne garantit l'invariant « stocké = pivot ». **C'est exactement le mécanisme du bug signalé.**
-
-### 4.2 Points de contrôle persistance
-
-- [ ] **CTRL-4.1** Localiser et lire le **chemin d'écriture** réel (aircraftStore / communityService / Supabase `.from('aircraft')` / localStorage) et **citer** la valeur sérialisée d'un bras.
-- [ ] **CTRL-4.2** Prouver la **symétrie write/read** : `read(write(x)) === x` pour un bras, sous chaque préférence.
-- [ ] **CTRL-4.3** Vérifier l'**absence de devinette d'unité par magnitude** (« si bras < 10 alors mètres »). *Non trouvée au pré-audit* — **à confirmer**. Si présente : **P0** (heuristique = corruption déterministe).
-- [ ] **CTRL-4.4** Vérifier les imports MANEX / bases communautaires ([communityAircraftDatabase.js](src/features/aircraft/data/communityAircraftDatabase.js), manexExtraction*) : en quelle unité arrivent les bras importés ? Conversion à la frontière d'import ?
-- [ ] **CTRL-4.5** Vérifier le **double centrage** (le module données signale un calcul dupliqué store vs FlightPlanData) : s'assurer qu'un seul moteur fait foi.
-
-**Livrable Axe 4 :** schéma write/read annoté + preuve de l'asymétrie + inventaire des frontières d'entrée (saisie, import MANEX, communauté, duplication).
+### 4.3 Points de contrôle
+- [x] **CTRL-4.1/4.2** Chemins cités ci-dessus ; asymétrie write/read prouvée (conversion d'affichage jamais appliquée à l'écriture des bras/masses, heuristique appliquée seulement à la lecture moteur, seulement bras).
+- [x] **CTRL-4.3 Devinette par magnitude — CONFIRMÉE (correction v1 : la v1 n'en avait pas trouvé).** Bras : armUnits.js:39-43 + aircraftNormalizer.js:96-104. **Motif systémique** ailleurs : capacité < 50 ⇒ gallons et conso < 15 ⇒ gph (useAlternateSelection.js), altitude > 5000 ⇒ pieds (elevationUtils.js:88-91), pression > 2000 ⇒ Pa (weatherAPI.js). Chaque heuristique est une dette de désambiguïsation non payée à la frontière (P0 pour bras cm/in, P2 ailleurs).
+- [ ] **CTRL-4.4** Frontières d'import MANEX (`manexExtractionMapper`) : unité des masses/bras extraits d'un POH US (lbs/in) — **à instruire** (chantier T-IMP).
+- [ ] **CTRL-4.5** Unicité du moteur : `calculateScenarios` (calculations.js) vs `calculateWeightBalance` — logique identique constatée ce jour ; consolider en un seul point de calcul (P2).
+- [ ] **CTRL-4.6 (nouveau)** Synchronisation `aftCG` : la conversion de préférence fait `setAftCG` local **sans** `updateData('cgEnvelope…')` symétrique (l.432, contrairement aux forward l.412 et intermédiaires l.462) — vérifier qu'un autre effet persiste l'aft converti, sinon désynchronisation state/donnée (P2).
 
 ---
 
-## AXE 5 — Stratégie de remédiation & livrables techniques
+## AXE 5 — Stratégie de remédiation & livrables
 
-### 5.1 Cible architecturale (recommandation)
+### 5.1 Cible architecturale
+1. **Pivot unique : mètre (longueurs), kg (masses), kg·m (moments), L (volumes)** — déclaré dans un seul module, consommé partout. Le moteur testé est déjà en m/kg ; le chantier « pivot = mètre » est d'ailleurs annoncé dans [armUnits.js:11](alflight/src/utils/armUnits.js#L11). Aligner `mbUnits.STORAGE_UNITS`, `CANONICAL_UNITS` (unitsDisplay) et la métadonnée.
+2. **Conversion aux seules frontières** : `toStorage()` sur **chaque** `onChange` (bras ET masses — répliquer le patron du champ capacité carburant, Step3:1044-1074), `fromStorage()` sur chaque `value=`. **Supprimer l'effet de réécriture in-place** (l.294-466) : un changement de préférence ne touche plus que l'affichage.
+3. **Fail-closed, jamais pass-through** : CV-1/CV-2/CV-3 lèvent en dev/test, marquent la valeur invalide en prod (le verdict suit le modèle `cgReliable`). La densité devient un paramètre obligatoire des conversions volume↔masse.
+4. **Métadonnée VRAIE** : `schemaVersion` + unités **réelles** écrites à la sauvegarde ; les heuristiques de magnitude deviennent des **détecteurs d'alerte** (log + quarantaine), plus jamais des correcteurs silencieux.
+5. **IHM** : symboles 100 % dynamiques (corriger les 6 sites figés) ; le %MAC : implémenter proprement ou retirer `macLength/lemac`.
 
-1. **Unité-pivot UNIQUE par grandeur, déclarée dans un seul module `constants`** et **référencée partout** (supprimer la divergence `mbUnits` mm vs moteur m).
-   - **Recommandation : pivot longueur = mètre (m), masse = kg, moment = kg·m.**
-   - *Justification :* le moteur de centrage **déjà couvert par test doré** opère en m ; l'enveloppe et le %MAC aéronautiques sont usuellement en m/in ; déplacer le pivot vers le moteur testé est **moins risqué** que l'inverse. Le « mm par défaut » n'est qu'une **préférence d'affichage** européenne, pas un pivot.
-2. **Quantité typée** (a minima par convention de nommage `armM`, `momentKgM` ; idéalement un petit type `Quantity{value, unit}` ou des « branded types`) pour rendre une erreur d'unité **détectable à la compilation/au lint**.
-3. **Conversion uniquement aux frontières** : `toStorage()` à la saisie/import, `fromStorage()` à l'affichage. **Le cœur ne voit que le pivot.**
-4. **Fail-closed, jamais pass-through** : `convertValue` lève en l'absence de clé (dev/test) ; en prod, marque la valeur invalide et **bloque le verdict** (comme `cgReliable`). Supprimer les `return value`/`return num`/`return 0` silencieux (CV-1, CV-2, CV-3).
-5. **IHM** : tout symbole d'unité dérivé de la préférence via `getMBUnitSymbol(units, category)` ; **zéro libellé en dur** (corriger les 6 sites de l'Axe 1.3).
-
-### 5.2 Modèle de rapport d'anomalie
-
-Chaque anomalie est consignée selon ce gabarit :
-
+### 5.2 Gabarit de rapport d'anomalie
 ```
-ANO-<n> — <titre court>
-Axe / Catégorie : <1-5> / <SSOT|équation|conversion|persistance|IHM>
-Sévérité        : P0 | P1 | P2 | P3
-Statut          : Ouvert | En cours | Corrigé | Vérifié
-Fichier:ligne   : src/...:NNN  (+ extrait de code)
-Description     : symptôme observable
-Cause racine    : mécanisme exact (unité attendue vs réelle)
-Reproduction    : étapes + préréglage d'unités + valeurs
-Impact sécurité : effet sur le CG/verdict + ordre de grandeur (ex. ×1000)
-Correctif       : diff proposé
-Test de non-régression : id du test ajouté (§5.3)
-Migration       : impact données existantes (§5.4)
+ANO-<n> — <titre> | Axe | Sévérité P0-P3 | Statut
+Fichier:ligne + extrait | Description | Cause racine (unité attendue vs réelle)
+Reproduction (préréglage + valeurs) | Impact sécurité (effet CG/verdict + facteur)
+Correctif proposé | Test de non-régression (id §5.3) | Impact migration (§5.4)
 ```
 
-> **Anomalies déjà pré-qualifiées** : ANO-1 (double pivot m/mm, P0), ANO-2 (saisie bras sans `toStorage`, P0), ANO-3 (pass-through silencieux `convertValue`, P0), ANO-4 (`toStorage/fromStorage` catch renvoie brut, P0), ANO-5 (libellés d'unité en dur, P1), ANO-6 (doublon de moteur CG store/calculations, P1), ANO-7 (`return 0` sur NaN, P1), ANO-8 (re-conversion qui mute la donnée brute + arrondi cumulatif, P1), ANO-9 (absence de métadonnée d'unité/version en base, P0).
+### 5.3 Plan de tests (Vitest — étendre les golden existants)
+**A. Conversions** : matrice exhaustive paires×valeurs de référence ; propriété aller-retour `b→a∘a→b ≈ id` (ε déclaré) ; **clé manquante ⇒ throw** ; `fromStorage∘toStorage ≈ id` sous chaque préférence ; conversions carburant **avec densité obligatoire** (AVGAS/JET-A1/MOGAS).
+**B. Invariance par unité (le test-clé)** : même avion physique saisi sous Europe(kg/mm), USA(lbs/in), Metric(kg/cm) ⇒ **même CG, même verdict** à ε près. *Doit échouer aujourd'hui sur USA et Metric (chap. A + CV-8) — c'est la preuve, puis le verrou.*
+**C. Adversariaux** : masses lbs lues comme kg (détection) ; bras cm/in vs heuristique ; bascule de préférence répétée ×20 (dérive M4 bornée puis nulle après correctif) ; préférence changée assistant démonté (M3) ; moment périmé + 2-sur-3 (M6) ; StrictMode double-effet (T-DYN-1).
+**D. E2E** : création (chaque préréglage) → sauvegarde → rechargement → calcul : CG identique ; changement de préférence post-création : affichage converti, **pivot intact**.
+**Sortie** : 100 % des paires couvertes ; invariance verte sur ≥ 3 avions réels ; zéro pass-through restant.
 
-### 5.3 Plan de tests automatisés (sanctuarisation)
+### 5.4 Migration des données existantes — sans corruption
+Deux populations distinctes :
 
-Cadre existant : **Vitest** + un test doré déjà en place ([weightBalanceStore.golden.test.js](src/core/stores/__tests__/weightBalanceStore.golden.test.js)) → **réutiliser et étendre**.
+**Bras (m/mm/cm/in)** — désambiguïsation **physique** par interprétations candidates : pour chaque unité candidate, recalculer le CG et le confronter à l'enveloppe propre de l'avion + plage plausible (bras GA ∈ ]0;10] m). Une seule interprétation plausible ⇒ migrer + journaliser. Sinon ⇒ **quarantaine**.
 
-**A. Tests de conversion (unitaires)**
-- [ ] Matrice exhaustive : pour chaque paire d'unités d'une grandeur, `convertValue(x, a, b)` == valeur de référence (table figée), à ε près.
-- [ ] **Propriété aller-retour** : ∀ unité a,b et ∀ x d'un échantillon : `convert(convert(x,a,b),b,a) ≈ x` (tolérance déclarée).
-- [ ] **Absence de clé** : une catégorie/unité sans table **lève** (et ne renvoie ni 0 ni la valeur brute).
-- [ ] `toStorage(fromStorage(v)) ≈ v` et `fromStorage(toStorage(v)) ≈ v` pour bras/masse/carburant, sous chaque préférence.
+**Masses (kg/lbs) — la magnitude est inopérante (chap. A.5)** :
+1. **Référence externe** : comparer masse à vide/MTOW aux préréglages communautaires du **même modèle** (`communityAircraftDatabase`) et aux fiches constructeur ; un ratio ≈ 2,20 ± arrondi sur les deux champs simultanément signe un avion-lbs.
+2. **Indices internes** : cohérence interne ne suffit pas (corruption cohérente, M2) mais des invariants aident : masse à vide < MTOW dans les deux lectures ; densité de l'enveloppe (masses des points) cohérente avec MTOW.
+3. **Ambiguïté résiduelle ⇒ quarantaine** : `units='UNVERIFIED'`, **verdict de centrage désactivé** (fail-closed, modèle `cgReliable`), bannière demandant au pilote une **re-confirmation explicite** des masses dans l'unité de son choix. **Jamais de coercition silencieuse.**
 
-**B. Tests d'équations (golden + propriétés)**
-- [ ] Golden CG par avion de référence (étendre l'existant) sous **chaque** préréglage (Europe/USA/Metric) → **même CG physique** (invariance par unité). *Ce test échoue aujourd'hui = preuve du bug, puis garde-fou après correction.*
-- [ ] Invariants dimensionnels : `moment/masse` a la dimension d'une longueur ; `%MAC ∈ [0,100]` (ou borne définie) ; `CG ∈ [bornes physiques avion]`.
-- [ ] Équivalence des deux moteurs (EQ-03 vs EQ-05) ou suppression du doublon.
-
-**C. Cas limites (adversariaux)**
-- [ ] `totalWeight = 0` → CG défini, pas d'Infinity.
-- [ ] Bras manquant sur station chargée → `isWithinCG = null` + warning (déjà couvert, **conserver**).
-- [ ] NaN / négatif / magnitude aberrante → erreur explicite, **jamais** verdict « OK ».
-- [ ] Enveloppe vide / 1 point / non triée → pas de crash, verdict fail-closed.
-
-**D. Intégration / E2E**
-- [ ] Création avion (bras saisis en mm) → persistance → rechargement → CG calculé == CG attendu (anti-régression du bug m/mm).
-- [ ] Changement de préférence d'unité **n'altère pas** le CG calculé ni la donnée pivot.
-
-**Critère de sortie (Definition of Done) :** 100 % des paires de conversion testées ; invariance par unité verte sur ≥ 3 avions réels ; zéro fallback silencieux ; couverture des chemins de saisie/persistance des bras.
-
-### 5.4 Migration des données existantes (sans corruption)
-
-**Problème :** des avions déjà créés ont des bras persistés **dans une unité inconnue** (mm, m, cm, in selon l'historique de préférence de l'auteur), **sans métadonnée**. Une migration naïve « tout en m » corromprait ceux déjà en m.
-
-**Stratégie (non destructive, traçable) :**
-
-1. **Geler le schéma** : introduire `schemaVersion` + `arms_unit` sur l'enregistrement avion. Toute **nouvelle** écriture est en pivot (m) et estampillée `arms_unit='m'`, `schemaVersion=N`.
-2. **Migration one-shot des legacy (`schemaVersion` absent)**, par avion, **par désambiguïsation physique** (pas par magnitude seule) :
-   - Pour chaque interprétation candidate (la valeur lue est-elle en m ? mm ? cm ? in ?), **recalculer le CG** et le confronter à **l'enveloppe propre de l'avion** et à la plage physique plausible (bras ∈ ~[0,15] m pour l'aviation légère).
-   - **Si une seule interprétation** place le CG dans/à proximité de l'enveloppe **et** dans la plage physique → migrer vers le pivot, **journaliser** (avant/après, interprétation retenue, marge).
-   - **Si ambiguïté ou aucune** interprétation plausible → **quarantaine** : marquer l'avion `arms_unit='UNVERIFIED'`, **désactiver le verdict de centrage** (fail-closed) et **demander une re-confirmation au pilote** (re-saisie ou validation explicite). **Jamais de coercition silencieuse.**
-3. **Sauvegarde préalable** + **dry-run** : exécuter la migration en lecture seule, produire un **rapport** (n avions migrés sans ambiguïté / n en quarantaine), revue humaine, **puis** application. Réversibilité garantie (backup + journal).
-4. **Bannière utilisateur** pour les avions en quarantaine, avec rappel sécurité : « centrage à re-vérifier suite à mise à niveau des unités ».
-
-> ⚠️ **Règle d'or migration :** en cas de doute, **bloquer le verdict** (fail-closed) plutôt que deviner. Un CG faux présenté comme valide est pire qu'un CG indisponible.
+Procédure commune : backup → **dry-run** en lecture seule → rapport (migrés / quarantaine, avant/après, marges) → revue humaine → application → journal réversible. Toute nouvelle écriture porte `schemaVersion`+unités réelles dès la phase P1, ce qui borne la population à migrer.
 
 ### 5.5 Séquencement & RACI
 
-| Phase | Contenu | Sortie | Responsable |
+| Phase | Contenu | Sortie | R/A |
 |---|---|---|---|
-| **P0 — Filet** | Étendre les tests dorés (invariance par unité) **avant** toute correction | suite rouge = bug prouvé | Dev + Audit |
-| **P1 — Pivot** | Trancher l'unité-pivot (m), unifier `mbUnits`/moteur, supprimer pass-through silencieux | conversions fail-closed | Dev (R) / Archi (A) |
-| **P2 — Frontières** | `toStorage`/`fromStorage` sur **tous** les champs de bras (Step3), corriger libellés en dur | IHM cohérente | Dev |
-| **P3 — Équations** | Recenser %MAC/bord d'attaque, dédoublonner CG, bornes de plausibilité | grille dimensionnelle complète | Dev + Audit |
-| **P4 — Persistance** | Schéma `arms_unit`+version, migration dry-run, quarantaine | rapport migration | Dev + Data (R) / PO (A) |
-| **P5 — Vérif** | Suite verte, tests E2E, revue croisée, validation empirique sur avions réels | PV de recette | Audit (A) |
+| **P0 — Filet** | Tests d'invariance par unité (B) AVANT correction — rouges = preuve | suite rouge documentée | Dev / Audit |
+| **P1 — Pivot & fail-closed** | Pivot m/kg unifié (mbUnits, unitsDisplay, métadonnée VRAIE) ; CV-1/2/3 ⇒ erreurs ; densité obligatoire | conversions sûres | Dev / Archi |
+| **P2 — Frontières** | `toStorage/fromStorage` sur TOUS les champs bras+masses ; suppression réécriture in-place ; libellés dynamiques | IHM cohérente | Dev |
+| **P3 — Équations** | Décision %MAC ; fusion des 2 moteurs CG ; bornes de plausibilité ; enveloppe dans le pivot | grille EQ verte | Dev / Audit |
+| **P4 — Migration** | Schéma versionné ; dry-run bras (physique) + masses (référence externe) ; quarantaine | rapport de migration | Dev+Data / PO |
+| **P5 — Recette** | Suite verte, E2E, validation empirique ≥ 3 avions réels, revue croisée | PV de recette | Audit |
 
 ---
 
-## Annexe A — Checklist de contrôle consolidée
-
+## Annexe A — Checklist consolidée
 ```
-AXE 1  [ ]1.1 unicité pivot  [ ]1.2 cohérence longueurs  [ ]1.3 pas de stockage en unité d'affichage
-       [ ]1.4 métadonnée+version  [ ]1.5 isolation préférences  [ ]1.6 double-exec effet
-       [ ]1.7 convergence écrans préfs  [ ]1.8 inventaire champs  [ ]1.9 zéro libellé en dur
-AXE 2  [ ]2.1 grille dimensionnelle exhaustive  [ ]2.2 pas d'addition hétérogène  [ ]2.3 comparaisons homogènes
-       [ ]2.4 dédoublonner CG  [ ]2.5 NaN→erreur  [ ]2.6 bornes plausibilité  [ ]2.7 enveloppe dégénérée
-       [ ]2.8 LOCALISER+auditer %MAC / bord d'attaque
-AXE 3  [ ]3.1 aller-retour  [ ]3.2 clés manquantes  [ ]3.3 supprimer fallbacks silencieux
-       [ ]3.4 arrondi cumulatif  [ ]3.5 arrondi calcul vs affichage  [ ]3.6 tolérance bornes
-AXE 4  [ ]4.1 chemin d'écriture réel  [ ]4.2 symétrie write/read  [ ]4.3 pas de devinette magnitude
-       [ ]4.4 frontières d'import MANEX/communauté  [ ]4.5 un seul moteur (double centrage)
-AXE 5  [ ]5.1 pivot tranché  [ ]5.2 gabarit ANO  [ ]5.3 suite de tests  [ ]5.4 migration dry-run+quarantaine  [ ]5.5 RACI
+AXE 1  [x]1.1 pivot non unique (ÉCHEC)  [x]1.2 longueurs multi-pivots (ÉCHEC)  [x]1.3 stockage en unité d'affichage (CONFIRMÉ)
+       [x]1.4 métadonnée mensongère  [x]1.5 préférence mute la donnée  [~]1.6 StrictMode à tester  [x]1.7 écrans préfs convergents
+       [x]1.8/1.9 inventaire libellés (6 sites figés)
+AXE 2  [x]2.1 grille EQ-01..11  [x]2.2 %MAC ABSENT (décision requise)  [x]2.3 acquis fail-closed sanctuarisés
+       [ ]2.5 NaN→0 à corriger  [ ]2.6 bornes plausibilité  [ ]2.7 enveloppes dégénérées
+AXE 3  [x]CV-1..8 qualifiés  [ ]3.1/3.2 matrice testée  [ ]3.3 suppression pass-through  [ ]3.4-3.6 arrondis/ε
+AXE 4  [x]4.1/4.2 chemins+asymétrie prouvés  [x]4.3 heuristiques magnitude CONFIRMÉES (bras + 3 autres domaines)
+       [ ]4.4 import MANEX à instruire  [ ]4.5 fusion moteurs  [ ]4.6 sync aftCG
+AXE 5  [x]5.1 cible  [x]5.2 gabarit  [x]5.3 plan de tests  [x]5.4 migration duale (physique / référence externe)  [x]5.5 RACI
+CHAP A [x]M1-M7 qualifiés  [x]volet carburant  [x]stratégie de détection lbs
 ```
 
-## Annexe B — Inventaire des anomalies pré-qualifiées (à confirmer en audit formel)
+## Annexe B — Inventaire des anomalies (v2)
 
-| ID | Axe | Sévérité | Fichier:ligne | Synthèse |
-|----|-----|----------|---------------|----------|
-| ANO-1 | 1/2 | **P0** | mbUnits.js:25-34 ↔ weightBalanceStore.golden.test.js:48-58 | Double pivot bras : mm (création) vs m (moteur) |
-| ANO-2 | 4 | **P0** | Step3WeightBalance.jsx (onChange bras) | Saisie bras sans `toStorage()` (≠ champ carburant) |
-| ANO-3 | 3 | **P0** | unitConversions.js:249 | `convertValue` laisse passer la valeur non convertie si clé absente |
-| ANO-4 | 3 | **P0** | mbUnits.js:63-66, 86-89 | `toStorage/fromStorage` renvoient le nombre brut sur erreur |
-| ANO-9 | 4 | **P0** | persistance avion (à localiser) | Aucune métadonnée d'unité / version de schéma en base |
-| ANO-5 | 1 | P1 | WeightBalanceChart.jsx:397,410 ; Table:133-135 ; Step6:828+ | Libellés d'unité codés en dur |
-| ANO-6 | 2 | P1 | weightBalanceStore.js:206 ↔ calculations.js:53 | Deux moteurs de CG (doublon) |
-| ANO-7 | 2/3 | P1 | unitConversions.js:167 | `return 0` sur NaN/falsy (perte silencieuse) |
-| ANO-8 | 1/3 | P1 | Step3WeightBalance.jsx (useEffect ~282-454) | Re-conversion qui mute la donnée brute + arrondi cumulatif |
-| ANO-10 | 3 | P3 | unitConversions.js:186,240 | `console.log` en chemin chaud |
+| ID | Axe | Sév. | Fichier:ligne | Synthèse |
+|----|-----|------|---------------|----------|
+| ANO-1 | 1/2 | **P0** | mbUnits.js:25-34 ↔ golden.test.js:48-58 ↔ armUnits.js:5-9 | Double pivot bras mm/m — admis par le code ; ponté par heuristique |
+| ANO-2 | 4 | **P0** | Step3:1079-1097, 1282-1287, 1451-1466 (bras) ; **1570, 1679, 1696 (masses)** | Saisie stockée brute en unité d'affichage, sans `toStorage` (le champ carburant l.1044-1074 montre le bon patron) |
+| ANO-3 | 3 | **P0** | unitConversions.js:249-250 | Pass-through silencieux sur clé manquante |
+| ANO-4 | 3 | **P0** | mbUnits.js:63-66, 86-89 | `catch ⇒ return num` (brut) |
+| ANO-9 | 4 | **P0** | aircraftStore.js:309-319 + 190-202 | **(corrigée v2)** Métadonnée d'unités = constante mensongère qui désarme la migration legacy |
+| **ANO-11** | A | **P0** | Step3:305-322 + weightBalanceStore.js:46-51 | **kg/lbs : mutation de l'unité de référence des masses + lecture moteur nue, sans garde-fou possible par magnitude** |
+| **ANO-12** | 3/4 | **P0** | armUnits.js:39-43 ; aircraftNormalizer.js:96-104 ; unitsStore.js:35,89 | Heuristique >10⇒÷1000 corrompt cm (×10) et in (×25,4), unités offertes par les préférences |
+| **ANO-13** | 2 | **P0/P1** | armUnits.js:48 + weightBalanceStore.js:97-103, 233-236 | Normalisation asymétrique : bras → m, enveloppe CG exclue → comparaison potentiellement hétérogène |
+| ANO-5 | 1 | P1 | Chart:397/410/343-344 ; Table:133-135/197 ; Step6:828+ ; PDF:853/882 | Libellés figés (PDF mixte ; CgEnvelopeDualChart:269 dynamique — v1 corrigée) |
+| ANO-7 | 2/3 | P1 | unitConversions.js:166-169 | `return 0` sur NaN/falsy |
+| ANO-8 | 1/3 | P1 | Step3:294-466 | Réécriture in-place au changement de préférence + arrondis (1 déc. masses) — vecteur de M2/M4 |
+| **ANO-14** | A | P1 | mbUnits.js:62 ; unitConversions.js:21,31 ; Step6:309-327 | Densité absente de `toStorage` (kg→L toujours 0,72) ; 6.01 lbs/gal figé ; densité par string-match côté vol |
+| ANO-6 | 2 | P2 | weightBalanceStore.js:206 ↔ calculations.js:65-70 | Doublon de moteur CG (logique identique constatée — fusionner) |
+| **ANO-15** | A | P2 | Step3:291 | Conversion seulement si assistant monté (`useState(units)`) — fenêtre de non-conversion M3 |
+| **ANO-16** | A/2 | P2 | Step3:255-289, 296-334, 429-430 | Moments exclus des conversions ; 2-sur-3 peut recalculer depuis un moment périmé |
+| **ANO-17** | 4 | P2 | Step3:432 vs 412/462 | `aftCG` converti en state local sans écriture symétrique — sync à vérifier |
+| ANO-10 | 3 | P3 | unitConversions.js:186, 240 | `console.log` en chemin chaud |
+
+## Annexe C — Corrections apportées aux constats v1 (traçabilité d'audit)
+
+| Constat v1 | Verdict v2 | Évidence |
+|---|---|---|
+| « Aucune métadonnée d'unité en base » (ANO-9) | **INEXACT** → métadonnée présente mais **constante mensongère** (pire : désarme la migration) | aircraftStore.js:309-319, 190-202 |
+| « Pas de devinette d'unité par magnitude » (CTRL-4.3) | **RÉFUTÉ** → heuristiques confirmées sur bras (×2 implémentations) + carburant + altitude + pression | armUnits.js:39-43 ; aircraftNormalizer.js:96-104 ; useAlternateSelection ; elevationUtils.js:88-91 ; weatherAPI.js |
+| « Le moteur lit les bras sans pont » | **ÉVOLUÉ** → pont heuristique à l'entrée moteur depuis Item L | weightBalanceStore.js:40 |
+| « CgEnvelopeDualChart : axe moment figé kg·m » | **RÉFUTÉ** → libellé dynamique `${massUnit}·${armUnit}` ; le risque porte sur la valeur de `p.cg` | CgEnvelopeDualChart.jsx:269, 193/202/212 |
+| « PDF uniformément figé mm/kg » | **NUANCÉ** → mixte : unité paramétrée (l.839) mais moments `kg·mm` en dur (l.853, 882) | AircraftModule.jsx |
+| « %MAC à localiser » | **TRANCHÉ** → la formule **n'existe pas** ; seuls macLength/lemac sont stockés | centrogramAdapter.js:112-113 |
+| Constats CV-1..5, ANO-1..8, libellés Chart/Table, asymétrie Step3 | **CONFIRMÉS** ligne à ligne | Annexe B |
 
 ---
-
-*Fin du plan d'audit v1.0. Les constats marqués « préliminaires » proviennent d'une première lecture du code (échantillon) ; l'audit formel doit les confirmer ligne à ligne et compléter le recensement (notamment %MAC, chemin de persistance Supabase, imports MANEX).*
+*Fin de l'audit v2.0. Restent à instruire : import MANEX (CTRL-4.4), test dynamique StrictMode (CTRL-1.6/T-DYN-1), sync aftCG (CTRL-4.6).*

@@ -36,6 +36,7 @@ import {
 } from '@mui/icons-material';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
+import { toStorage, fromStorage, convertMoment } from '../../utils/mbUnits';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
@@ -288,182 +289,41 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.weights?.emptyWeight, data.arms?.empty, data.moments?.empty, lastEditedEmptyField]);
   const units = unitsSelectors.useUnits();
-  const [previousUnits, setPreviousUnits] = useState(units);
 
-  // Gérer les conversions automatiques lors du changement d'unités
-  useEffect(() => {
-    // Convertir toutes les masses
-    const weightFields = [
-      'weights.emptyWeight',
-      'weights.mtow',
-      'weights.mlw',
-      'weights.minTakeoffWeight',
-      'weights.maxBaggageFwd',
-      'weights.maxBaggageAft'
-    ];
-    
-    if (previousUnits.weight !== units.weight) {
-      weightFields.forEach(field => {
-        const keys = field.split('.');
-        const value = keys.reduce((obj, key) => obj?.[key], data);
-        if (value) {
-          const convertedValue = convertValue(
-            value,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          );
-          if (convertedValue && convertedValue !== value) {
-            updateData(field, Math.round(convertedValue * 10) / 10);
-          }
-        }
-      });
-
-    }
-
-    // Convertir les bras de levier
-    const armFields = [
-      'arms.empty',
-      'arms.frontSeats',
-      'arms.rearSeats',
-      'arms.fuelMain',
-      'arms.baggageFwd',
-      'arms.baggageAft',
-      'cgLimits.forward',
-      'cgLimits.aft'
-    ];
-    
-    if (previousUnits.armLength !== units.armLength) {
-      armFields.forEach(field => {
-        const keys = field.split('.');
-        const value = keys.reduce((obj, key) => obj?.[key], data);
-        if (value) {
-          const convertedValue = convertValue(
-            value,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          );
-          if (convertedValue && convertedValue !== value) {
-            updateData(field, Math.round(convertedValue * 100) / 100);
-          }
-        }
-      });
-
-      // Convertir les sièges supplémentaires
-      if (additionalSeats.length > 0) {
-        const convertedSeats = additionalSeats.map(seat => ({
-          ...seat,
-          arm: seat.arm ? Math.round(convertValue(
-            seat.arm,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          ) * 100) / 100 : ''
-        }));
-        setAdditionalSeats(convertedSeats);
-        updateData('additionalSeats', convertedSeats);
-      }
-
-      // Convertir les compartiments bagages
-      if (baggageCompartments.length > 0) {
-        const convertedCompartments = baggageCompartments.map(compartment => ({
-          ...compartment,
-          arm: compartment.arm ? Math.round(convertValue(
-            compartment.arm,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          ) * 100) / 100 : '',
-          maxWeight: compartment.maxWeight && previousUnits.weight !== units.weight ? 
-            Math.round(convertValue(
-              compartment.maxWeight,
-              previousUnits.weight,
-              units.weight,
-              'weight'
-            ) * 10) / 10 : compartment.maxWeight
-        }));
-        setBaggageCompartments(convertedCompartments);
-        updateData('baggageCompartments', convertedCompartments);
-      }
-
-    }
-
-    // Convertir les points Forward CG
-    if (forwardCGPoints.length > 0) {
-      const convertedForwardPoints = forwardCGPoints.map(point => ({
-        ...point,
-        weight: point.weight && previousUnits.weight !== units.weight ?
-          Math.round(convertValue(
-            point.weight,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          ) * 10) / 10 : point.weight,
-        cg: point.cg && previousUnits.armLength !== units.armLength ?
-          Math.round(convertValue(
-            point.cg,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          ) * 10000) / 10000 : point.cg
-      }));
-      setForwardCGPoints(convertedForwardPoints);
-      updateData('cgEnvelope.forwardPoints', convertedForwardPoints);
-    }
-
-    // Convertir les données Aft CG (2 points : min + max, chacun avec son CG)
-    if (aftCG.minWeight || aftCG.maxWeight || aftCG.minCG || aftCG.maxCG) {
-      const convertWeight = (v) => v && previousUnits.weight !== units.weight
-        ? Math.round(convertValue(v, previousUnits.weight, units.weight, 'weight') * 10) / 10
-        : v;
-      const convertArm = (v) => v && previousUnits.armLength !== units.armLength
-        ? Math.round(convertValue(v, previousUnits.armLength || 'mm', units.armLength || 'mm', 'armLength') * 10000) / 10000
-        : v;
-      const convertedAft = {
-        minWeight: convertWeight(aftCG.minWeight),
-        maxWeight: convertWeight(aftCG.maxWeight),
-        minCG: convertArm(aftCG.minCG),
-        maxCG: convertArm(aftCG.maxCG),
-        // Moments : recalculés à partir des nouvelles valeurs (masse × bras)
-        minMoment: aftCG.minMoment,  // gardés tels quels — le 2-sur-3 les recalculera
-        maxMoment: aftCG.maxMoment
-      };
-      setAftCG(convertedAft);
-    }
-
-    // Convertir les points intermédiaires
-    if (intermediatePoints.length > 0) {
-      const convertedPoints = intermediatePoints.map(point => ({
-        ...point,
-        minWeight: point.minWeight && previousUnits.weight !== units.weight ?
-          Math.round(convertValue(
-            point.minWeight,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          ) * 10) / 10 : point.minWeight,
-        maxWeight: point.maxWeight && previousUnits.weight !== units.weight ?
-          Math.round(convertValue(
-            point.maxWeight,
-            previousUnits.weight,
-            units.weight,
-            'weight'
-          ) * 10) / 10 : point.maxWeight,
-        cg: point.cg && previousUnits.armLength !== units.armLength ?
-          Math.round(convertValue(
-            point.cg,
-            previousUnits.armLength || 'mm',
-            units.armLength || 'mm',
-            'armLength'
-          ) * 10000) / 10000 : point.cg
-      }));
-      setIntermediatePoints(convertedPoints);
-      updateData('cgEnvelope.intermediatePoints', convertedPoints);
-    }
-
-    setPreviousUnits(units);
-  }, [units]);
+  // ─── C2 (Phase 2) : conversion AUX FRONTIÈRES uniquement ──────────────────
+  // data/state ne contiennent QUE du canonique (kg, m, kg·m, L — cf. mbUnits
+  // STORAGE_UNITS). Chaque champ AFFICHE via disp* (canonique → unité user) et
+  // STOCKE via in* (user → canonique). Un changement de préférence d'unités ne
+  // réécrit plus JAMAIS la donnée (l'ancien effet de conversion in-place était
+  // le vecteur du bug kg/lbs — ANO-8/ANO-11, AUDIT_MASSE_CENTRAGE_UNITES.md).
+  const dispArm = (v) => {
+    const x = fromStorage(v, units.armLength, 'armLength');
+    return x === '' ? '' : Math.round(x * 10000) / 10000;
+  };
+  const inArm = (raw) => {
+    const x = toStorage(raw, units.armLength, 'armLength');
+    return x === null ? '' : Math.round(x * 100000) / 100000; // m, 5 déc. = 0,01 mm
+  };
+  const dispWeight = (v) => {
+    const x = fromStorage(v, units.weight, 'weight');
+    return x === '' ? '' : Math.round(x * 100) / 100;
+  };
+  const inWeight = (raw) => {
+    const x = toStorage(raw, units.weight, 'weight');
+    return x === null ? '' : Math.round(x * 1000) / 1000; // kg, 3 déc.
+  };
+  const dispMoment = (v) => {
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    if (!Number.isFinite(n)) return '';
+    const x = convertMoment(n, units, 'fromStorage');
+    return Number.isFinite(x) ? Math.round(x * 100) / 100 : '';
+  };
+  const inMoment = (raw) => {
+    const n = parseFloat(raw);
+    if (!Number.isFinite(n)) return '';
+    const x = convertMoment(n, units, 'toStorage');
+    return Number.isFinite(x) ? Math.round(x * 10000) / 10000 : ''; // kg·m, 4 déc.
+  };
 
   // Gestion des points Forward CG
   const addForwardPoint = () => {
@@ -578,6 +438,113 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       return updated;
     });
   };
+
+  // ─── Sièges : écriture des champs d'une rangée FIXE (avant / arrière) ───
+  // Le bras reste à son emplacement HISTORIQUE arms.<rowKey> (consommé par le
+  // moteur M&C, la transposition weightBalance, etc.) ; masse max et moment max
+  // (informatif / garde-fou, comme momentMax des compartiments bagages) vivent
+  // dans seatLimits.<rowKey>.{maxWeight, momentMax} — nouveaux champs additifs.
+  const applySeatRowFields = (rowKey) => (fields) => {
+    if ('arm' in fields) updateData(`arms.${rowKey}`, fields.arm);
+    if ('maxWeight' in fields) updateData(`seatLimits.${rowKey}.maxWeight`, fields.maxWeight);
+    if ('momentMax' in fields) updateData(`seatLimits.${rowKey}.momentMax`, fields.momentMax);
+  };
+
+  // ─── Trio « Masse max × Bras = Moment max » pour une rangée de sièges ───
+  // MÊME pattern (et même logique réciproque) que les compartiments bagages :
+  //   - saisir la masse ou le bras → moment recalculé ;
+  //   - saisir le moment → bras déduit (M/masse), sinon masse déduite (M/bras).
+  // `values` = { maxWeight, arm, momentMax } en CANONIQUE (kg / m / kg·m),
+  // `applyFields` écrit les champs modifiés au bon endroit (rangée fixe ou
+  // siège additionnel). Tous les champs du trio sont OPTIONNELS.
+  const renderSeatTrio = (values, applyFields, { armError, armHelper } = {}) => (
+    <Grid container spacing={2}>
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <StyledTextField
+          fullWidth
+          size="small"
+          label="Masse max occupants"
+          type="number"
+          value={dispWeight(values.maxWeight)}
+          onChange={(e) => {
+            const massCanonical = inWeight(e.target.value); // kg
+            const m = parseFloat(massCanonical);
+            const a = parseFloat(values.arm);               // m
+            const fields = { maxWeight: massCanonical };
+            if (Number.isFinite(m) && Number.isFinite(a)) {
+              fields.momentMax = Math.round(m * a * 100) / 100; // kg·m
+            }
+            applyFields(fields);
+          }}
+          placeholder="Optionnel"
+          InputProps={{
+            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>,
+          }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <StyledTextField
+          fullWidth
+          size="small"
+          label="Bras de levier"
+          type="number"
+          value={dispArm(values.arm)}
+          onChange={(e) => {
+            const armCanonical = inArm(e.target.value);     // m
+            const m = parseFloat(values.maxWeight);         // kg
+            const a = parseFloat(armCanonical);
+            const fields = { arm: armCanonical };
+            if (Number.isFinite(m) && Number.isFinite(a)) {
+              fields.momentMax = Math.round(m * a * 100) / 100; // kg·m
+            }
+            applyFields(fields);
+          }}
+          placeholder="Station"
+          error={!!armError}
+          helperText={armError || armHelper}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+          }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <StyledTextField
+          fullWidth
+          size="small"
+          label="Moment max"
+          type="number"
+          value={dispMoment(values.momentMax)}
+          onChange={(e) => {
+            const momentCanonical = inMoment(e.target.value); // kg·m
+            const M = parseFloat(momentCanonical);
+            const m = parseFloat(values.maxWeight);           // kg
+            const a = parseFloat(values.arm);                 // m
+            const fields = { momentMax: momentCanonical };
+            if (Number.isFinite(M) && Number.isFinite(m) && m !== 0) {
+              fields.arm = Math.round((M / m) * 100000) / 100000;   // m
+            } else if (Number.isFinite(M) && Number.isFinite(a) && a !== 0) {
+              fields.maxWeight = Math.round((M / a) * 100) / 100;   // kg
+            }
+            applyFields(fields);
+          }}
+          placeholder="Auto (masse × bras)"
+          helperText={(() => {
+            const m = parseFloat(values.maxWeight);
+            const a = parseFloat(values.arm);
+            const M = parseFloat(values.momentMax);
+            if (Number.isFinite(m) && Number.isFinite(a) && Number.isFinite(M)) {
+              const computed = m * a;
+              return Math.abs(computed - M) < 0.5 ? '✓' : `⚠ ≠ ${dispMoment(computed)}`;
+            }
+            return '';
+          })()}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}·{getUnitSymbol(units.armLength)}</InputAdornment>,
+          }}
+        />
+      </Grid>
+    </Grid>
+  );
 
   // Gestion des compartiments bagages
   const addBaggageCompartment = () => {
@@ -879,7 +846,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   // Helpers pour les libellés/unités de l'enveloppe (mode CG par défaut)
   const envLabel = 'Bras de levier (CG)';
   const envUnit = getUnitSymbol(units.armLength);
-  const envPlaceholder = '2130';
+  const envPlaceholder = { mm: '2130', cm: '213', m: '2.13', in: '83.9' }[units.armLength] || '2.13';
   const isMoment = false; // legacy — gardé pour les helpers UI plus bas
 
   return (
@@ -1070,11 +1037,11 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                                 ? convertValue(newCapUser, units.fuel, 'ltr', 'fuel')
                                 : '';
                               const cap = parseFloat(newCapCanonical);
-                              const arm = parseFloat(tank.arm);
+                              const arm = parseFloat(tank.arm); // m (canonique)
                               const density = getFuelDensity(data.fuelType);
                               const fields = { capacity: newCapCanonical };
-                              if (Number.isFinite(cap) && Number.isFinite(arm)) {
-                                fields.momentAtFull = Math.round(cap * density * arm * 100) / 100;
+                              if (Number.isFinite(cap) && Number.isFinite(arm) && density != null) {
+                                fields.momentAtFull = Math.round(cap * density * arm * 100) / 100; // kg·m
                               }
                               updateFuelTankFields(tank.id, fields);
                             }}
@@ -1090,15 +1057,15 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             size="small"
                             label="Bras de levier"
                             type="number"
-                            value={tank.arm || ''}
+                            value={dispArm(tank.arm)}
                             onChange={(e) => {
-                              const newArm = e.target.value;
-                              const cap = parseFloat(tank.capacity);
-                              const arm = parseFloat(newArm);
+                              const armCanonical = inArm(e.target.value); // m
+                              const cap = parseFloat(tank.capacity);      // L (canonique)
+                              const arm = parseFloat(armCanonical);
                               const density = getFuelDensity(data.fuelType);
-                              const fields = { arm: newArm };
-                              if (Number.isFinite(cap) && Number.isFinite(arm)) {
-                                fields.momentAtFull = Math.round(cap * density * arm * 100) / 100;
+                              const fields = { arm: armCanonical };
+                              if (Number.isFinite(cap) && Number.isFinite(arm) && density != null) {
+                                fields.momentAtFull = Math.round(cap * density * arm * 100) / 100; // kg·m
                               }
                               updateFuelTankFields(tank.id, fields);
                             }}
@@ -1114,18 +1081,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             size="small"
                             label="Moment à plein"
                             type="number"
-                            value={tank.momentAtFull || ''}
+                            value={dispMoment(tank.momentAtFull)}
                             onChange={(e) => {
-                              const newMoment = e.target.value;
-                              const M = parseFloat(newMoment);
-                              const cap = parseFloat(tank.capacity);
-                              const arm = parseFloat(tank.arm);
+                              const momentCanonical = inMoment(e.target.value); // kg·m
+                              const M = parseFloat(momentCanonical);
+                              const cap = parseFloat(tank.capacity);            // L
+                              const arm = parseFloat(tank.arm);                 // m
                               const density = getFuelDensity(data.fuelType);
-                              const fields = { momentAtFull: newMoment };
-                              if (Number.isFinite(M) && Number.isFinite(cap) && cap !== 0 && density !== 0) {
-                                fields.arm = Math.round((M / (cap * density)) * 100) / 100;
-                              } else if (Number.isFinite(M) && Number.isFinite(arm) && arm !== 0 && density !== 0) {
-                                fields.capacity = Math.round((M / (arm * density)) * 100) / 100;
+                              const fields = { momentAtFull: momentCanonical };
+                              if (Number.isFinite(M) && Number.isFinite(cap) && cap !== 0 && density != null && density !== 0) {
+                                fields.arm = Math.round((M / (cap * density)) * 100000) / 100000; // m
+                              } else if (Number.isFinite(M) && Number.isFinite(arm) && arm !== 0 && density != null && density !== 0) {
+                                fields.capacity = Math.round((M / (arm * density)) * 100) / 100;  // L
                               }
                               updateFuelTankFields(tank.id, fields);
                             }}
@@ -1231,7 +1198,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         >
           <SeatIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Sièges (bras de levier)
+            Sièges (masse max · bras · moment)
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
@@ -1249,64 +1216,83 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
             
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
 
-              {/* ─── Sièges avant — bras de levier seul ─── */}
+              {/* ─── Sièges avant — trio Masse max × Bras = Moment max (comme bagages) ─── */}
               <Box sx={{ width: '100%', maxWidth: 700 }}>
-                <StyledTextField
-                  fullWidth
-                  size="small"
-                  label="Sièges avant (Pilote + Copilote)"
-                  type="number"
-                  value={data.arms?.frontSeats || ''}
-                  onChange={(e) => updateData('arms.frontSeats', e.target.value)}
-                  error={!!errors['arms.frontSeats']}
-                  helperText="Position du siège. Moment = bras × masse occupant (calculé au chargement)"
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                  }}
-                />
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                  Sièges avant (Pilote + Copilote)
+                </Typography>
+                {renderSeatTrio(
+                  {
+                    maxWeight: data.seatLimits?.frontSeats?.maxWeight,
+                    arm: data.arms?.frontSeats,
+                    momentMax: data.seatLimits?.frontSeats?.momentMax
+                  },
+                  applySeatRowFields('frontSeats'),
+                  {
+                    armError: errors['arms.frontSeats'],
+                    armHelper: 'Position du siège. Moment au chargement = bras × masse occupant'
+                  }
+                )}
               </Box>
 
-              {/* ─── Sièges arrière — bras de levier seul ─── */}
+              <Divider sx={{ width: '100%', maxWidth: 700 }} />
+
+              {/* ─── Sièges arrière — OPTIONNELS (certains avions n'ont pas de
+                    places arrière : biplaces, F152…). Même trio que les autres. ─── */}
               <Box sx={{ width: '100%', maxWidth: 700 }}>
-                <StyledTextField
-                  fullWidth
-                  size="small"
-                  label="Sièges arrière (Rangée 2)"
-                  type="number"
-                  value={data.arms?.rearSeats || ''}
-                  onChange={(e) => updateData('arms.rearSeats', e.target.value)}
-                  error={!!errors['arms.rearSeats']}
-                  helperText="Position du siège. Moment = bras × masse passager (calculé au chargement)"
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                  }}
-                />
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Sièges arrière (Rangée 2){' '}
+                  <Typography component="span" variant="caption" color="text.secondary">
+                    — optionnel
+                  </Typography>
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                  Laissez vide si l'avion n'a pas de places arrière.
+                </Typography>
+                {renderSeatTrio(
+                  {
+                    maxWeight: data.seatLimits?.rearSeats?.maxWeight,
+                    arm: data.arms?.rearSeats,
+                    momentMax: data.seatLimits?.rearSeats?.momentMax
+                  },
+                  applySeatRowFields('rearSeats'),
+                  {
+                    armError: errors['arms.rearSeats'],
+                    armHelper: 'Position du siège. Moment au chargement = bras × masse passager'
+                  }
+                )}
               </Box>
 
-              {/* ─── Sièges supplémentaires — bras de levier seul par siège ─── */}
+              {/* ─── Sièges supplémentaires — même trio par siège ─── */}
               {additionalSeats.map((seat) => (
-                <Box key={seat.id} sx={{ width: '100%', maxWidth: 700, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                  <StyledTextField
-                    fullWidth
-                    size="small"
-                    label={seat.name || 'Siège additionnel'}
-                    type="number"
-                    value={seat.arm || ''}
-                    onChange={(e) => updateSeat(seat.id, 'arm', e.target.value)}
-                    placeholder="Station du siège"
-                    InputProps={{
-                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
-                    }}
-                  />
-                  <IconButton
-                    color="error"
-                    onClick={() => removeSeat(seat.id)}
-                    size="small"
-                    sx={{ mt: 0.5 }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
+                <React.Fragment key={seat.id}>
+                  <Divider sx={{ width: '100%', maxWidth: 700 }} />
+                  <Box sx={{ width: '100%', maxWidth: 700 }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+                      <StyledTextField
+                        fullWidth
+                        size="small"
+                        label="Nom du siège"
+                        value={seat.name || ''}
+                        onChange={(e) => updateSeat(seat.id, 'name', e.target.value)}
+                        placeholder="Siège additionnel"
+                      />
+                      <IconButton
+                        color="error"
+                        onClick={() => removeSeat(seat.id)}
+                        size="small"
+                        sx={{ mt: 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    {renderSeatTrio(
+                      { maxWeight: seat.maxWeight, arm: seat.arm, momentMax: seat.momentMax },
+                      (fields) => updateSeatFields(seat.id, fields),
+                      { armHelper: 'Station du siège' }
+                    )}
+                  </Box>
+                </React.Fragment>
               ))}
             </Box>
 
@@ -1437,14 +1423,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           size="small"
                           label="Masse max"
                           type="number"
-                          value={compartment.maxWeight || ''}
+                          value={dispWeight(compartment.maxWeight)}
                           onChange={(e) => {
-                            const newMass = e.target.value;
-                            const m = parseFloat(newMass);
-                            const a = parseFloat(compartment.arm);
-                            const fields = { maxWeight: newMass };
+                            const massCanonical = inWeight(e.target.value); // kg
+                            const m = parseFloat(massCanonical);
+                            const a = parseFloat(compartment.arm);          // m
+                            const fields = { maxWeight: massCanonical };
                             if (Number.isFinite(m) && Number.isFinite(a)) {
-                              fields.momentMax = Math.round(m * a * 100) / 100;
+                              fields.momentMax = Math.round(m * a * 100) / 100; // kg·m
                             }
                             updateBaggageCompartmentFields(compartment.id, fields);
                           }}
@@ -1460,14 +1446,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           size="small"
                           label="Bras de levier"
                           type="number"
-                          value={compartment.arm || ''}
+                          value={dispArm(compartment.arm)}
                           onChange={(e) => {
-                            const newArm = e.target.value;
-                            const m = parseFloat(compartment.maxWeight);
-                            const a = parseFloat(newArm);
-                            const fields = { arm: newArm };
+                            const armCanonical = inArm(e.target.value);     // m
+                            const m = parseFloat(compartment.maxWeight);    // kg
+                            const a = parseFloat(armCanonical);
+                            const fields = { arm: armCanonical };
                             if (Number.isFinite(m) && Number.isFinite(a)) {
-                              fields.momentMax = Math.round(m * a * 100) / 100;
+                              fields.momentMax = Math.round(m * a * 100) / 100; // kg·m
                             }
                             updateBaggageCompartmentFields(compartment.id, fields);
                           }}
@@ -1483,28 +1469,29 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           size="small"
                           label="Moment max"
                           type="number"
-                          value={compartment.momentMax || ''}
+                          value={dispMoment(compartment.momentMax)}
                           onChange={(e) => {
-                            const newMoment = e.target.value;
-                            const M = parseFloat(newMoment);
-                            const m = parseFloat(compartment.maxWeight);
-                            const a = parseFloat(compartment.arm);
-                            const fields = { momentMax: newMoment };
+                            const momentCanonical = inMoment(e.target.value); // kg·m
+                            const M = parseFloat(momentCanonical);
+                            const m = parseFloat(compartment.maxWeight);      // kg
+                            const a = parseFloat(compartment.arm);            // m
+                            const fields = { momentMax: momentCanonical };
                             if (Number.isFinite(M) && Number.isFinite(m) && m !== 0) {
-                              fields.arm = Math.round((M / m) * 100) / 100;
+                              fields.arm = Math.round((M / m) * 100000) / 100000;   // m
                             } else if (Number.isFinite(M) && Number.isFinite(a) && a !== 0) {
-                              fields.maxWeight = Math.round((M / a) * 100) / 100;
+                              fields.maxWeight = Math.round((M / a) * 100) / 100;   // kg
                             }
                             updateBaggageCompartmentFields(compartment.id, fields);
                           }}
                           placeholder="Auto (masse × bras)"
                           helperText={(() => {
+                            // Cohérence en CANONIQUE (kg·m), affichage en unité user
                             const m = parseFloat(compartment.maxWeight);
                             const a = parseFloat(compartment.arm);
                             const M = parseFloat(compartment.momentMax);
                             if (Number.isFinite(m) && Number.isFinite(a) && Number.isFinite(M)) {
                               const computed = m * a;
-                              return Math.abs(computed - M) < 0.5 ? '✓' : `⚠ ≠ ${computed.toFixed(1)}`;
+                              return Math.abs(computed - M) < 0.5 ? '✓' : `⚠ ≠ ${dispMoment(computed)}`;
                             }
                             return '';
                           })()}
@@ -1565,9 +1552,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   size="small"
                   label="Masse à vide *"
                   type="number"
-                  value={data.weights?.emptyWeight || ''}
+                  value={dispWeight(data.weights?.emptyWeight)}
                   onChange={(e) => {
-                    updateData('weights.emptyWeight', e.target.value);
+                    updateData('weights.emptyWeight', inWeight(e.target.value));
                     setLastEditedEmptyField('mass');
                   }}
                   error={!!errors['weights.emptyWeight']}
@@ -1582,9 +1569,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   size="small"
                   label="Bras de levier"
                   type="number"
-                  value={data.arms?.empty || ''}
+                  value={dispArm(data.arms?.empty)}
                   onChange={(e) => {
-                    updateData('arms.empty', e.target.value);
+                    updateData('arms.empty', inArm(e.target.value));
                     setLastEditedEmptyField('arm');
                   }}
                   error={!!errors['arms.empty']}
@@ -1597,9 +1584,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   size="small"
                   label="Moment à vide"
                   type="number"
-                  value={data.moments?.empty || ''}
+                  value={dispMoment(data.moments?.empty)}
                   onChange={(e) => {
-                    updateData('moments.empty', e.target.value);
+                    updateData('moments.empty', inMoment(e.target.value));
                     setLastEditedEmptyField('moment');
                   }}
                   error={!!errors['moments.empty']}
@@ -1636,30 +1623,31 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   );
                 }
                 if (count === 2) {
+                  // Calculs en CANONIQUE (kg, m, kg·m), affichage en unité user
                   let missing = '';
-                  if (!hasE) missing = `masse ≈ ${(m / a).toFixed(2)} ${getUnitSymbol(units.weight)}`;
-                  else if (!hasA) missing = `bras ≈ ${(m / e).toFixed(4)} ${getUnitSymbol(units.armLength)}`;
-                  else if (!hasM) missing = `moment ≈ ${(e * a).toFixed(2)} ${getUnitSymbol(units.weight)}·${getUnitSymbol(units.armLength)}`;
+                  if (!hasE) missing = `masse ≈ ${dispWeight(m / a)} ${getUnitSymbol(units.weight)}`;
+                  else if (!hasA) missing = `bras ≈ ${dispArm(m / e)} ${getUnitSymbol(units.armLength)}`;
+                  else if (!hasM) missing = `moment ≈ ${dispMoment(e * a)} ${getUnitSymbol(units.weight)}·${getUnitSymbol(units.armLength)}`;
                   return (
                     <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 0.5 }}>
                       ✓ Calcul automatique en cours : {missing}
                     </Typography>
                   );
                 }
-                // count === 3 : vérifier la cohérence
+                // count === 3 : vérifier la cohérence (en canonique)
                 const computedMoment = e * a;
                 const diff = Math.abs(m - computedMoment);
-                const tolerance = Math.max(0.5, computedMoment * 0.01); // 1% ou 0.5
+                const tolerance = Math.max(0.5, computedMoment * 0.01); // 1% ou 0.5 kg·m
                 if (diff < tolerance) {
                   return (
                     <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 0.5 }}>
-                      ✓ Cohérent : {e.toFixed(2)} × {a.toFixed(4)} = {computedMoment.toFixed(2)} ≈ moment saisi
+                      ✓ Cohérent : {dispWeight(e)} × {dispArm(a)} = {dispMoment(computedMoment)} ≈ moment saisi
                     </Typography>
                   );
                 }
                 return (
                   <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
-                    ⚠ Incohérence : masse × bras = {computedMoment.toFixed(2)} (écart {diff.toFixed(2)}). Vérifie tes valeurs.
+                    ⚠ Incohérence : masse × bras = {dispMoment(computedMoment)} (écart {dispMoment(diff)}). Vérifie tes valeurs.
                   </Typography>
                 );
               })()}
@@ -1675,8 +1663,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 size="small"
                 label="MTOW *"
                 type="number"
-                value={data.weights?.mtow || ''}
-                onChange={(e) => updateData('weights.mtow', e.target.value)}
+                value={dispWeight(data.weights?.mtow)}
+                onChange={(e) => updateData('weights.mtow', inWeight(e.target.value))}
                 error={!!errors['weights.mtow']}
                 helperText={errors['weights.mtow'] || "Masse maximale au décollage"}
                 required
@@ -1692,8 +1680,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 size="small"
                 label="MLW"
                 type="number"
-                value={data.weights?.mlw || ''}
-                onChange={(e) => updateData('weights.mlw', e.target.value)}
+                value={dispWeight(data.weights?.mlw)}
+                onChange={(e) => updateData('weights.mlw', inWeight(e.target.value))}
                 error={!!errors['weights.mlw']}
                 helperText={errors['weights.mlw'] || "Masse maximale à l'atterrissage"}
                 InputProps={{
@@ -1710,8 +1698,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 size="small"
                 label="Masse minimale de vol"
                 type="number"
-                value={data.weights?.minTakeoffWeight || ''}
-                onChange={(e) => updateData('weights.minTakeoffWeight', e.target.value)}
+                value={dispWeight(data.weights?.minTakeoffWeight)}
+                onChange={(e) => updateData('weights.minTakeoffWeight', inWeight(e.target.value))}
                 error={!!errors['weights.minTakeoffWeight']}
                 helperText={errors['weights.minTakeoffWeight'] || "Masse minimale de vol (Minimum Flight Mass)"}
                 InputProps={{
@@ -1770,14 +1758,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     fullWidth
                     size="small"
                     type="number"
-                    label="Longueur corde MAC (mm)"
-                    value={macLength}
+                    label="Longueur corde MAC"
+                    value={dispArm(macLength)}
                     onChange={(e) => {
-                      const v = e.target.value;
-                      setMacLength(v);
-                      updateData('cgEnvelope.macLength', v === '' ? null : parseFloat(v));
+                      const c = inArm(e.target.value); // canonique m
+                      setMacLength(c);
+                      updateData('cgEnvelope.macLength', c === '' ? null : c);
                     }}
                     helperText="Mean Aerodynamic Chord (MANEX)"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -1785,14 +1776,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     fullWidth
                     size="small"
                     type="number"
-                    label="LEMAC — bord d'attaque MAC (mm)"
-                    value={lemac}
+                    label="LEMAC — bord d'attaque MAC"
+                    value={dispArm(lemac)}
                     onChange={(e) => {
-                      const v = e.target.value;
-                      setLemac(v);
-                      updateData('cgEnvelope.lemac', v === '' ? null : parseFloat(v));
+                      const c = inArm(e.target.value); // canonique m
+                      setLemac(c);
+                      updateData('cgEnvelope.lemac', c === '' ? null : c);
                     }}
                     helperText="Station du bord d'attaque (même repère que les bras)"
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                    }}
                   />
                 </Grid>
               </Grid>
@@ -1853,14 +1847,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             size="small"
                             label="Masse *"
                             type="number"
-                            value={point.weight || ''}
+                            value={dispWeight(point.weight)}
                             onChange={(e) => {
-                              const newW = e.target.value;
-                              const w = parseFloat(newW);
-                              const cg = parseFloat(point.cg);
-                              const fields = { weight: newW };
+                              const wCanonical = inWeight(e.target.value); // kg
+                              const w = parseFloat(wCanonical);
+                              const cg = parseFloat(point.cg);             // m
+                              const fields = { weight: wCanonical };
                               if (Number.isFinite(w) && Number.isFinite(cg)) {
-                                fields.moment = Math.round(w * cg * 100) / 100;
+                                fields.moment = Math.round(w * cg * 100) / 100; // kg·m
                               }
                               updateForwardPointFields(point.id, fields);
                             }}
@@ -1876,14 +1870,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             size="small"
                             label={`${envLabel} *`}
                             type="number"
-                            value={point.cg || ''}
+                            value={dispArm(point.cg)}
                             onChange={(e) => {
-                              const newCg = e.target.value;
-                              const w = parseFloat(point.weight);
-                              const cg = parseFloat(newCg);
-                              const fields = { cg: newCg };
+                              const cgCanonical = inArm(e.target.value);   // m
+                              const w = parseFloat(point.weight);          // kg
+                              const cg = parseFloat(cgCanonical);
+                              const fields = { cg: cgCanonical };
                               if (Number.isFinite(w) && Number.isFinite(cg)) {
-                                fields.moment = Math.round(w * cg * 100) / 100;
+                                fields.moment = Math.round(w * cg * 100) / 100; // kg·m
                               }
                               updateForwardPointFields(point.id, fields);
                             }}
@@ -1900,17 +1894,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             size="small"
                             label="Moment"
                             type="number"
-                            value={point.moment || ''}
+                            value={dispMoment(point.moment)}
                             onChange={(e) => {
-                              const newMoment = e.target.value;
-                              const M = parseFloat(newMoment);
-                              const w = parseFloat(point.weight);
-                              const cg = parseFloat(point.cg);
-                              const fields = { moment: newMoment };
+                              const momentCanonical = inMoment(e.target.value); // kg·m
+                              const M = parseFloat(momentCanonical);
+                              const w = parseFloat(point.weight);               // kg
+                              const cg = parseFloat(point.cg);                  // m
+                              const fields = { moment: momentCanonical };
                               if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
-                                fields.cg = Math.round((M / w) * 10000) / 10000;
+                                fields.cg = Math.round((M / w) * 100000) / 100000;  // m
                               } else if (Number.isFinite(M) && Number.isFinite(cg) && cg !== 0) {
-                                fields.weight = Math.round((M / cg) * 100) / 100;
+                                fields.weight = Math.round((M / cg) * 100) / 100;   // kg
                               }
                               updateForwardPointFields(point.id, fields);
                             }}
@@ -1950,17 +1944,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label="Masse min *"
                         type="number"
-                        value={aftCG.minWeight}
+                        value={dispWeight(aftCG.minWeight)}
                         onChange={(e) => {
-                          const newW = e.target.value;
-                          const w = parseFloat(newW);
-                          const cg = parseFloat(aftCG.minCG);
+                          const wCanonical = inWeight(e.target.value); // kg
+                          const w = parseFloat(wCanonical);
+                          const cg = parseFloat(aftCG.minCG);          // m
                           const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
-                            ? Math.round(w * cg * 100) / 100
+                            ? Math.round(w * cg * 100) / 100           // kg·m
                             : aftCG.minMoment;
-                          setAftCG(prev => ({ ...prev, minWeight: newW, minMoment: newMoment }));
+                          setAftCG(prev => ({ ...prev, minWeight: wCanonical, minMoment: newMoment }));
                         }}
-                        placeholder={String(data.weights?.minTakeoffWeight || '940')}
+                        placeholder={String(dispWeight(data.weights?.minTakeoffWeight) || '940')}
                         required
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
@@ -1972,15 +1966,15 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label={`${envLabel} à masse min *`}
                         type="number"
-                        value={aftCG.minCG}
+                        value={dispArm(aftCG.minCG)}
                         onChange={(e) => {
-                          const newCG = e.target.value;
-                          const w = parseFloat(aftCG.minWeight);
-                          const cg = parseFloat(newCG);
+                          const cgCanonical = inArm(e.target.value);   // m
+                          const w = parseFloat(aftCG.minWeight);       // kg
+                          const cg = parseFloat(cgCanonical);
                           const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
-                            ? Math.round(w * cg * 100) / 100
+                            ? Math.round(w * cg * 100) / 100           // kg·m
                             : aftCG.minMoment;
-                          setAftCG(prev => ({ ...prev, minCG: newCG, minMoment: newMoment }));
+                          setAftCG(prev => ({ ...prev, minCG: cgCanonical, minMoment: newMoment }));
                         }}
                         placeholder={envPlaceholder}
                         inputProps={{ step: "0.0001" }}
@@ -1995,27 +1989,27 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label="Moment à masse min"
                         type="number"
-                        value={aftCG.minMoment}
+                        value={dispMoment(aftCG.minMoment)}
                         onChange={(e) => {
-                          const newMoment = e.target.value;
-                          const M = parseFloat(newMoment);
-                          const w = parseFloat(aftCG.minWeight);
-                          const cg = parseFloat(aftCG.minCG);
+                          const momentCanonical = inMoment(e.target.value); // kg·m
+                          const M = parseFloat(momentCanonical);
+                          const w = parseFloat(aftCG.minWeight);            // kg
+                          const cg = parseFloat(aftCG.minCG);               // m
                           // Saisir moment → déduit cg si masse, sinon masse si cg
                           if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
                             setAftCG(prev => ({
                               ...prev,
-                              minMoment: newMoment,
-                              minCG: String(Math.round((M / w) * 10000) / 10000)
+                              minMoment: momentCanonical,
+                              minCG: Math.round((M / w) * 100000) / 100000   // m
                             }));
                           } else if (Number.isFinite(M) && Number.isFinite(cg) && cg !== 0) {
                             setAftCG(prev => ({
                               ...prev,
-                              minMoment: newMoment,
-                              minWeight: String(Math.round((M / cg) * 100) / 100)
+                              minMoment: momentCanonical,
+                              minWeight: Math.round((M / cg) * 100) / 100    // kg
                             }));
                           } else {
-                            setAftCG(prev => ({ ...prev, minMoment: newMoment }));
+                            setAftCG(prev => ({ ...prev, minMoment: momentCanonical }));
                           }
                         }}
                         placeholder="Auto"
@@ -2038,17 +2032,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label="Masse max *"
                         type="number"
-                        value={aftCG.maxWeight}
+                        value={dispWeight(aftCG.maxWeight)}
                         onChange={(e) => {
-                          const newW = e.target.value;
-                          const w = parseFloat(newW);
-                          const cg = parseFloat(aftCG.maxCG);
+                          const wCanonical = inWeight(e.target.value); // kg
+                          const w = parseFloat(wCanonical);
+                          const cg = parseFloat(aftCG.maxCG);          // m
                           const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
-                            ? Math.round(w * cg * 100) / 100
+                            ? Math.round(w * cg * 100) / 100           // kg·m
                             : aftCG.maxMoment;
-                          setAftCG(prev => ({ ...prev, maxWeight: newW, maxMoment: newMoment }));
+                          setAftCG(prev => ({ ...prev, maxWeight: wCanonical, maxMoment: newMoment }));
                         }}
-                        placeholder={String(data.weights?.mtow || '1310')}
+                        placeholder={String(dispWeight(data.weights?.mtow) || '1310')}
                         required
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.weight)}</InputAdornment>
@@ -2060,15 +2054,15 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label={`${envLabel} à masse max *`}
                         type="number"
-                        value={aftCG.maxCG}
+                        value={dispArm(aftCG.maxCG)}
                         onChange={(e) => {
-                          const newCG = e.target.value;
-                          const w = parseFloat(aftCG.maxWeight);
-                          const cg = parseFloat(newCG);
+                          const cgCanonical = inArm(e.target.value);   // m
+                          const w = parseFloat(aftCG.maxWeight);       // kg
+                          const cg = parseFloat(cgCanonical);
                           const newMoment = (Number.isFinite(w) && Number.isFinite(cg))
-                            ? Math.round(w * cg * 100) / 100
+                            ? Math.round(w * cg * 100) / 100           // kg·m
                             : aftCG.maxMoment;
-                          setAftCG(prev => ({ ...prev, maxCG: newCG, maxMoment: newMoment }));
+                          setAftCG(prev => ({ ...prev, maxCG: cgCanonical, maxMoment: newMoment }));
                         }}
                         placeholder={envPlaceholder}
                         inputProps={{ step: "0.0001" }}
@@ -2083,26 +2077,26 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         fullWidth size="small"
                         label="Moment à masse max"
                         type="number"
-                        value={aftCG.maxMoment}
+                        value={dispMoment(aftCG.maxMoment)}
                         onChange={(e) => {
-                          const newMoment = e.target.value;
-                          const M = parseFloat(newMoment);
-                          const w = parseFloat(aftCG.maxWeight);
-                          const cg = parseFloat(aftCG.maxCG);
+                          const momentCanonical = inMoment(e.target.value); // kg·m
+                          const M = parseFloat(momentCanonical);
+                          const w = parseFloat(aftCG.maxWeight);            // kg
+                          const cg = parseFloat(aftCG.maxCG);               // m
                           if (Number.isFinite(M) && Number.isFinite(w) && w !== 0) {
                             setAftCG(prev => ({
                               ...prev,
-                              maxMoment: newMoment,
-                              maxCG: String(Math.round((M / w) * 10000) / 10000)
+                              maxMoment: momentCanonical,
+                              maxCG: Math.round((M / w) * 100000) / 100000   // m
                             }));
                           } else if (Number.isFinite(M) && Number.isFinite(cg) && cg !== 0) {
                             setAftCG(prev => ({
                               ...prev,
-                              maxMoment: newMoment,
-                              maxWeight: String(Math.round((M / cg) * 100) / 100)
+                              maxMoment: momentCanonical,
+                              maxWeight: Math.round((M / cg) * 100) / 100    // kg
                             }));
                           } else {
-                            setAftCG(prev => ({ ...prev, maxMoment: newMoment }));
+                            setAftCG(prev => ({ ...prev, maxMoment: momentCanonical }));
                           }
                         }}
                         placeholder="Auto"
@@ -2135,11 +2129,16 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       {/* Double graphique de l'enveloppe — CG + Moment côte à côte (2 points aft) */}
       <CGEnvelopeDualChart
         cgEnvelope={{
-          forwardPoints: forwardCGPoints,
-          aftMinWeight: data.cgEnvelope?.aftMinWeight || aftCG.minWeight,
-          aftMaxWeight: data.cgEnvelope?.aftMaxWeight || aftCG.maxWeight,
-          aftMinCG: data.cgEnvelope?.aftMinCG || aftCG.minCG,
-          aftMaxCG: data.cgEnvelope?.aftMaxCG || aftCG.maxCG
+          // Données canoniques (kg, m) converties en unité user POUR L'AFFICHAGE
+          forwardPoints: forwardCGPoints.map((p) => ({
+            ...p,
+            weight: dispWeight(p.weight),
+            cg: dispArm(p.cg)
+          })),
+          aftMinWeight: dispWeight(data.cgEnvelope?.aftMinWeight || aftCG.minWeight),
+          aftMaxWeight: dispWeight(data.cgEnvelope?.aftMaxWeight || aftCG.maxWeight),
+          aftMinCG: dispArm(data.cgEnvelope?.aftMinCG || aftCG.minCG),
+          aftMaxCG: dispArm(data.cgEnvelope?.aftMaxCG || aftCG.maxCG)
         }}
         massUnit={getUnitSymbol(units.weight)}
         armUnit={getUnitSymbol(units.armLength)}
