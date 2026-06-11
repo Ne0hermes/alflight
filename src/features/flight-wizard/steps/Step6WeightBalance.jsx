@@ -707,17 +707,37 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 )}
               </div>
             </div>
-            {/* Bouton « Voir rapport de pesée » — affiché uniquement si le
-                fichier est attaché à l'avion. PDF stocké en base64 → ouverture
-                directe en local, fonctionne hors ligne. */}
-            {aircraft.weighingReport?.hasData && aircraft.weighingReport?.pdfData && (
+            {/* Bouton « Voir rapport de pesée » — fiche de pesée (PDF) attachée
+                à la carte avion. ⚠️ La liste avion ne porte souvent que le FLAG
+                hasWeighingReport (le PDF base64 est strippé pour la mémoire) :
+                le bouton s'affiche dès que le rapport EXISTE et va chercher le
+                PDF dans IndexedDB à la demande s'il n'est pas en mémoire. */}
+            {(aircraft.weighingReport?.hasData || aircraft.weighingReport?.pdfData || aircraft.hasWeighingReport) && (
               <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    let pdfData = aircraft.weighingReport?.pdfData;
+                    let fileName = aircraft.weighingReport?.fileName;
+                    if (!pdfData && aircraft.id) {
+                      // PDF non chargé en mémoire → relecture du record complet IndexedDB
+                      try {
+                        const { default: dbm } = await import('@utils/dataBackupManager');
+                        await dbm.initPromise;
+                        const full = await dbm.getAircraftData(aircraft.id);
+                        pdfData = full?.weighingReport?.pdfData;
+                        fileName = fileName || full?.weighingReport?.fileName;
+                      } catch (err) {
+                        console.warn('[Step6] Lecture fiche de pesée IndexedDB échouée:', err?.message);
+                      }
+                    }
+                    if (!pdfData) {
+                      alert('Fiche de pesée introuvable en local. Ouvrez la fiche de l\'avion (module Aéronefs) pour la recharger, ou ré-importez le PDF via le wizard.');
+                      return;
+                    }
                     const w = window.open();
                     if (w) {
                       w.document.write(
-                        `<iframe src="${aircraft.weighingReport.pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
+                        `<iframe src="${pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
                       );
                     }
                   }}
@@ -734,12 +754,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     alignItems: 'center',
                     gap: 6
                   }}
-                  title={aircraft.weighingReport.fileName}
+                  title={aircraft.weighingReport?.fileName || 'Fiche de pesée (PDF)'}
                 >
                   Voir rapport de pesée
                 </button>
                 <span style={{ fontSize: 11, color: theme.colors.textSecondary }}>
-                  ({aircraft.weighingReport.fileName})
+                  ({aircraft.weighingReport?.fileName || 'PDF attaché à la carte avion'})
                 </span>
               </div>
             )}

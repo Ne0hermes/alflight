@@ -745,39 +745,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           newErrors['speeds.vno'] = "VNO est requise";
         }
 
-        // Validation de l'ordre des vitesses (uniquement si valeurs renseignées et valides)
-        {
-          const num = (v) => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
-          const vso = num(aircraftData.speeds?.vso);
-          const vs1 = num(aircraftData.speeds?.vs1);
-          const vno = num(aircraftData.speeds?.vno);
-          const vne = num(aircraftData.speeds?.vne);
-          const vfeTO = num(aircraftData.speeds?.vfeTO);
-          const vfeLdg = num(aircraftData.speeds?.vfeLdg);
-          const va = num(aircraftData.speeds?.va);
-
-          if (vso !== null && vs1 !== null && vso >= vs1 && !newErrors['speeds.vs1']) {
-            newErrors['speeds.vs1'] = "VS1 doit être supérieure à VSO";
-          }
-          if (vs1 !== null && vno !== null && vs1 >= vno && !newErrors['speeds.vno']) {
-            newErrors['speeds.vno'] = "VNO doit être supérieure à VS1";
-          }
-          if (vno !== null && vne !== null && vno >= vne && !newErrors['speeds.vne']) {
-            newErrors['speeds.vne'] = "VNE doit être supérieure à VNO";
-          }
-          if (vfeTO !== null && vne !== null && vfeTO > vne && !newErrors['speeds.vfeTO']) {
-            newErrors['speeds.vfeTO'] = "VFE T/O doit être inférieure ou égale à VNE";
-          }
-          if (vfeLdg !== null && vne !== null && vfeLdg > vne && !newErrors['speeds.vfeLdg']) {
-            newErrors['speeds.vfeLdg'] = "VFE LDG doit être inférieure ou égale à VNE";
-          }
-          if (vfeLdg !== null && vso !== null && vfeLdg < vso && !newErrors['speeds.vfeLdg']) {
-            newErrors['speeds.vfeLdg'] = "VFE LDG doit être supérieure ou égale à VSO";
-          }
-          if (va !== null && vne !== null && va > vne) {
-            newErrors['speeds.va'] = "VA doit être inférieure à VNE";
-          }
-        }
+        // Cohérence de l'ORDRE des vitesses : SIMPLE AVERTISSEMENT, jamais
+        // bloquant (décision pilote 2026-06). L'incohérence est signalée en
+        // direct dans le panneau « Repères anémomètre » de Step2Speeds
+        // (Alert warning + visualisation des arcs) — seule la PRÉSENCE des
+        // vitesses requises ci-dessus bloque le passage à l'étape suivante.
 
         // Limitations de vent : OPTIONNELLES (pas toujours documentées dans le MANEX,
         // surtout pour les avions GA légers). Le pilote peut continuer sans les saisir.
