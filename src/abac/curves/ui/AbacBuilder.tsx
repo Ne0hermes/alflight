@@ -1448,9 +1448,32 @@ const renderStepContent = () => {
 
       case 'points': {
         // ─── REFONTE SPRINT B : mini-wizard par graphique ───
+        // ─── + ATELIER P2a (AUDIT_ABAC_CONSTRUCTION.md) : TOUS les graphes du set
+        //     restent visibles côte à côte (bandeau d'aperçus LIVE) ; cliquer une
+        //     carte met le graphe au focus — fini la navigation aveugle ◀ ▶.
         // L'ancien code de cette étape reste plus bas dans le fichier (inatteignable)
         // jusqu'à un cleanup ultérieur — backup dans backups/sprint-B-*.
         const currentGraphForWizard = graphs[Math.min(subStepGraphIndex, Math.max(0, graphs.length - 1))];
+
+        // Ajout d'un graphe au set — partagé entre la carte « ＋ » du bandeau et
+        // le bouton du wizard (création + focus immédiat sur le nouveau).
+        const addGraphToWorkshop = () => {
+          const newGraph: GraphConfig = {
+            id: uuidv4(),
+            name: `Graphique ${graphs.length + 1}`,
+            isWindRelated: false,
+            axes: {
+              xAxis: { min: 0, max: 100, unit: '', title: '' },
+              yAxis: { min: 0, max: 100, unit: '', title: '' }
+            },
+            curves: []
+          };
+          setGraphs(prev => [...prev, newGraph]);
+          setSelectedGraphId(newGraph.id);
+          setSelectedCurveId(null);
+          // On positionne l'index sur le nouveau graphique (length AVANT l'ajout = nouvel index).
+          setSubStepGraphIndex(graphs.length);
+        };
         if (!currentGraphForWizard) {
           return (
             <div className={styles.stepContent}>
@@ -1483,7 +1506,103 @@ const renderStepContent = () => {
               )}
             </div>
 
+            {/* ─── BANDEAU ATELIER (P2a) : aperçus LIVE de tous les graphes ───
+                Chaque carte rend le Chart réel du graphe (image filigrane, axes
+                calibrés, courbes) en lecture seule, mis à jour à chaque saisie.
+                Carte orange = graphe au FOCUS (édité par les outils ci-dessous) ;
+                cliquer une autre carte déplace le focus. Sur écran étroit, la
+                grille passe automatiquement sur plusieurs rangées. */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: 10,
+              marginBottom: 14
+            }}>
+              {graphs.map((g, gi) => {
+                const isFocus = g.id === currentGraphForWizard.id;
+                const role = g.role || 'primary';
+                const refCurveCount = g.curves.filter(c => !c.name.includes('(interpolé)')).length;
+                const isLinked = (g.linkedTo?.length || 0) + (g.linkedFrom?.length || 0) > 0;
+                return (
+                  <div
+                    key={g.id}
+                    onClick={() => { if (!isFocus) setSubStepGraphIndex(gi); }}
+                    title={isFocus ? 'Graphique en cours d\'édition' : 'Cliquer pour éditer ce graphique'}
+                    style={{
+                      cursor: isFocus ? 'default' : 'pointer',
+                      border: `2px solid ${isFocus ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+                      borderRadius: 6,
+                      backgroundColor: isFocus ? 'rgba(242, 105, 33, 0.08)' : 'var(--bg-surface)',
+                      padding: 8,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      minWidth: 0
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, minWidth: 0 }}>
+                      <strong style={{
+                        color: isFocus ? 'var(--accent-primary)' : 'var(--text-primary)',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                      }}>
+                        {gi + 1} · {g.name || 'Graphique'}
+                      </strong>
+                      <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {role === 'primary' ? '⭐ primaire' : '🔗 intermédiaire'}
+                        {isLinked ? ' · ⛓ lié' : ''}
+                      </span>
+                    </div>
+                    <div style={{ overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+                      <Chart
+                        axesConfig={g.axes || {
+                          xAxis: { min: 0, max: 100, unit: '', title: '' },
+                          yAxis: { min: 0, max: 100, unit: '', title: '' }
+                        }}
+                        curves={g.curves}
+                        selectedCurveId={null}
+                        width={300}
+                        height={170}
+                        showGrid={true}
+                        showLegend={false}
+                        backgroundImage={backgroundImages[g.id] || null}
+                        backgroundImageOpacity={0.25}
+                        customXTicks={customAxisTicks[g.id]?.x}
+                        customYTicks={customAxisTicks[g.id]?.y}
+                      />
+                    </div>
+                    <div style={{ fontSize: 10, color: isFocus ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+                      {refCurveCount} courbe{refCurveCount > 1 ? 's' : ''} de référence
+                      {isFocus ? ' — EN ÉDITION' : ''}
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Carte « ＋ » : nouveau graphe dans le set, focus immédiat */}
+              <button
+                onClick={addGraphToWorkshop}
+                title="Créer un nouveau graphique vide et l'ouvrir"
+                style={{
+                  cursor: 'pointer',
+                  border: '2px dashed var(--border-regular)',
+                  borderRadius: 6,
+                  backgroundColor: 'var(--bg-overlay)',
+                  color: 'var(--text-secondary)',
+                  minHeight: 120,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  fontSize: 13
+                }}
+              >
+                <span style={{ fontSize: 22, color: 'var(--accent-primary)' }}>＋</span>
+                Ajouter un graphique
+              </button>
+            </div>
+
             <AbacGraphWizard
+              hideGraphNav
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}
               totalGraphs={graphs.length}
@@ -1543,24 +1662,7 @@ const renderStepContent = () => {
               onNextGraph={() => {
                 if (subStepGraphIndex < graphs.length - 1) setSubStepGraphIndex(subStepGraphIndex + 1);
               }}
-              onAddGraph={() => {
-                // Crée un nouveau graphique vide et navigue dessus immédiatement.
-                const newGraph: GraphConfig = {
-                  id: uuidv4(),
-                  name: `Graphique ${graphs.length + 1}`,
-                  isWindRelated: false,
-                  axes: {
-                    xAxis: { min: 0, max: 100, unit: '', title: '' },
-                    yAxis: { min: 0, max: 100, unit: '', title: '' }
-                  },
-                  curves: []
-                };
-                setGraphs(prev => [...prev, newGraph]);
-                setSelectedGraphId(newGraph.id);
-                setSelectedCurveId(null);
-                // On positionne l'index sur le nouveau graphique (length AVANT l'ajout = nouvel index).
-                setSubStepGraphIndex(graphs.length);
-              }}
+              onAddGraph={addGraphToWorkshop}
               onRemoveGraph={() => {
                 const idToRemove = currentGraphForWizard.id;
                 const newIndex = Math.max(0, subStepGraphIndex - (subStepGraphIndex >= graphs.length - 1 ? 1 : 0));
