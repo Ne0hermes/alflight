@@ -102,6 +102,55 @@ export function normalizeAircraftArmsToMeters(aircraft) {
 }
 
 /**
+ * C3.3 (moteur) — Normalise en MÈTRES les valeurs de **CG** de l'enveloppe et
+ * des limites de centrage, à l'entrée du moteur. Complète
+ * normalizeAircraftArmsToMeters (qui excluait l'enveloppe) : sans cela, un
+ * avion legacy (copie IndexedDB locale, import externe) avec une enveloppe en
+ * mm était comparé à un CG calculé en mètres → verdict faux (ANO-13).
+ *
+ * ⚠️ NE TOUCHE QUE les champs de CG : jamais les masses des points (kg > 10
+ * légitimes), jamais les moments (seuil différent, cf. momentToKgM).
+ *
+ * @param {object} aircraft
+ * @returns {object} copie avec enveloppe/limites CG en mètres
+ */
+export function normalizeAircraftCgEnvelopeToMeters(aircraft) {
+  if (!aircraft || typeof aircraft !== 'object') return aircraft;
+  const out = { ...aircraft };
+
+  const normPoints = (pts) =>
+    Array.isArray(pts)
+      ? pts.map((p) => (p && p.cg !== undefined && p.cg !== null && p.cg !== '' ? { ...p, cg: armToMeters(p.cg) } : p))
+      : pts;
+
+  const normLimits = (lim) => {
+    if (!lim || typeof lim !== 'object') return lim;
+    const copy = { ...lim };
+    for (const k of ['forward', 'aft']) {
+      if (copy[k] !== undefined && copy[k] !== null && copy[k] !== '') copy[k] = armToMeters(copy[k]);
+    }
+    if (Array.isArray(copy.forwardVariable)) copy.forwardVariable = normPoints(copy.forwardVariable);
+    return copy;
+  };
+
+  if (out.cgEnvelope && typeof out.cgEnvelope === 'object') {
+    const env = { ...out.cgEnvelope };
+    for (const k of ['aftCG', 'aftMinCG', 'aftMaxCG', 'forwardCG']) {
+      if (env[k] !== undefined && env[k] !== null && env[k] !== '') env[k] = armToMeters(env[k]);
+    }
+    env.forwardPoints = normPoints(env.forwardPoints);
+    env.intermediatePoints = normPoints(env.intermediatePoints);
+    out.cgEnvelope = env;
+  }
+  if (out.cgLimits) out.cgLimits = normLimits(out.cgLimits);
+  if (out.weightBalance?.cgLimits) {
+    out.weightBalance = { ...out.weightBalance, cgLimits: normLimits(out.weightBalance.cgLimits) };
+  }
+
+  return out;
+}
+
+/**
  * C2 (hydratation wizard) — Normalise un avion EXISTANT vers le canonique du
  * wizard (bras en m, moments en kg·m) avant édition. Couvre la forme « wizard »
  * (arms.*, moments.*, cgLimits, cgEnvelope.*) EN PLUS de la forme moteur
