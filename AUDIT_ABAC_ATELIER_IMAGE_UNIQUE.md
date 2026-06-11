@@ -189,3 +189,29 @@ Le modèle de données de l'atelier est posé (fondation silencieuse) :
 **Reste pour R2b** : règle Y commune ÉDITABLE (valeurs/pas/titre/unité) sur le
 canevas, règles X par cadre, calibration par clics sur le canevas (Y commun une
 fois + X par cadre), retrait des chips manuelles de liaison devenues inutiles.
+
+## 11. R2b — EXÉCUTÉE (2026-06-11) · les axes vivent sur le canevas
+
+- **Panneau « Axes » sous le canevas** : à gauche le **Y COMMUN** (titre, unité,
+  min, max, pas, inversé) — paramétré UNE fois, c'est la définition de l'abaque ;
+  à droite le **X du cadre ACTIF** (mêmes champs + « inversé », ex. masse
+  décroissante). L'axe X reste porté par le GRAPHE (aucun nouveau lieu de
+  vérité) ; le Y commun vit dans workshop.sharedY.
+- **Règles graduées dessinées** : règle Y à gauche (graduations du pas, lignes
+  guides légères quand calibrée), règle X sous CHAQUE cadre (graduations + titre/
+  unité + sens), badge « calibré ✓ ».
+- **Calibration PAR CLICS sur le canevas** : « 🎯 Calibrer Y » (une fois pour le
+  set) et « 🎯 Calibrer X » (par cadre) — bannière guidée valeur par valeur
+  (ordre visuel : Y haut→bas, X gauche→droite, sens inversé respecté), overlay
+  crosshair qui capture les clics (drags désactivés pendant la session), ↺ Reset
+  par axe. Stockage : workshop.yTicks / frame.xTicks (types R1).
+- **Sync builder** : le Y commun se PROPAGE en continu aux graphes cadrés
+  (cohérence wizard/test cascade/export, réécriture seulement si différence) ;
+  dans le wizard, le panneau « Axe Y » devient une VITRINE en lecture seule
+  quand l'atelier est actif (« se règle une fois sur le canevas ») — le X y
+  reste éditable (même donnée que le panneau du canevas).
+- Chips manuelles de liaison : déjà retirées avec le bandeau en R2a (la chaîne
+  est automatique par l'ordre des cadres).
+
+**Reste pour R3** : tracé des courbes SUR le canevas (clic-points + Bézier
+reprojetés dans le cadre actif, via les mappings value↔pixel de R2b).

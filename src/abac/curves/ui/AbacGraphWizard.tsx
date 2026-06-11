@@ -691,6 +691,27 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   });
                 };
                 const selectedVar = getAxisVariable(cfg.title);
+
+                // R2b — Atelier « image unique » : l'axe Y est COMMUN à tous les
+                // cadres et se règle UNE fois sur le canevas (panneau Y COMMUN).
+                // Ici, simple vitrine en lecture seule (le sync du builder
+                // écraserait toute saisie locale — on ne tend pas ce piège).
+                if (axis === 'y' && hideImageSubSteps) {
+                  return (
+                    <div key={axis} style={{ padding: 12, border: '1px solid var(--accent-primary)', borderRadius: 6, backgroundColor: 'rgba(242, 105, 33, 0.06)' }}>
+                      <h4 style={{ marginTop: 0 }}>Axe Y — COMMUN au set</h4>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                        L'axe Y est partagé par tous les cadres de l'abaque : il se règle
+                        <strong> une fois</strong> dans le panneau « Y COMMUN » du canevas, pas ici.
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+                        {cfg.title || '—'} {cfg.unit ? `(${cfg.unit})` : ''} · {cfg.min} → {cfg.max}
+                        {cfg.step ? ` · pas ${cfg.step}` : ''}{cfg.reversed ? ' · inversé' : ''}
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div key={axis} style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 6, backgroundColor: 'var(--bg-overlay)' }}>
                     <h4 style={{ marginTop: 0 }}>Axe {axis.toUpperCase()}</h4>
