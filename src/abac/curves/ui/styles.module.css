@@ -1,6 +1,6 @@
 /* CurveManager styles */
 .curveManager {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 8px;
   padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -106,7 +106,7 @@
 
 .colorOptionSelected {
   border-color: var(--text-primary);
-  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--text-primary);
 }
 
 .curvesList {
@@ -209,7 +209,7 @@
 
 /* PointEditor styles */
 .pointEditor {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 8px;
   padding: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -370,7 +370,7 @@
 .stepper {
   display: flex;
   padding: 10px;
-  background: white;
+  background: var(--bg-surface);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -437,7 +437,7 @@
 }
 
 .stepContent {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 8px;
   padding: 10px;
   min-height: 500px;
@@ -506,7 +506,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  background: white;
+  background: var(--bg-surface);
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -520,7 +520,7 @@
 }
 
 .demoHeader {
-  background: white;
+  background: var(--bg-surface);
   padding: 10px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

@@ -123,7 +123,7 @@ const AXIS_OPTIONS = {
 const styles = {
   form: {
     padding: '10px',
-    background: 'white',
+    background: 'var(--bg-surface)',
     borderRadius: '8px',
     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     width: '100%',
