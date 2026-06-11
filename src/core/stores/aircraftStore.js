@@ -180,7 +180,20 @@ export const useAircraftStore = create(
           // vers canonique avant de l'écrire en state. Sinon on laisse tel quel.
           let processedAircraft = aircraft;
           const meta = aircraft._metadata?.units;
-          const isLegacyNonCanonical = meta && (
+          // C3.2 (ANO-9) — unitsVerified=true (écrit depuis la v3.0.0) garantit
+          // des données canoniques PAR CONSTRUCTION (toStorage aux frontières du
+          // wizard) : on les laisse strictement telles quelles. Surtout, ne
+          // JAMAIS appliquer la migration par métadonnée ci-dessous à un avion
+          // v3 (armLength 'm' ≠ ancien 'mm' la déclencherait → ×1000).
+          const unitsVerified = aircraft._metadata?.unitsVerified === true;
+          // ⚠️ LEGACY : l'ancienne métadonnée était une CONSTANTE (toujours
+          // ltr/lph/kg/mm/kt) apposée quel que soit le contenu réel — elle MENT
+          // sur armLength (données mixtes m/mm en circulation, cf. armUnits.js).
+          // On garde donc 'mm' comme valeur « attendue » ici UNIQUEMENT pour que
+          // la constante historique ne déclenche rien (comportement inchangé) ;
+          // une conversion de bras pilotée par cette métadonnée corromprait les
+          // avions déjà en mètres. La désambiguïsation réelle = migration C5.
+          const isLegacyNonCanonical = !unitsVerified && meta && (
             (meta.fuel && meta.fuel !== 'ltr') ||
             (meta.fuelConsumption && meta.fuelConsumption !== 'lph') ||
             (meta.weight && meta.weight !== 'kg') ||
@@ -304,15 +317,20 @@ export const useAircraftStore = create(
         // convertit vers canonique avant écriture). Donc à l'envoi vers
         // Supabase, AUCUNE conversion supplémentaire n'est nécessaire.
         //
-        // On ajoute juste le tag _metadata.units = CANONIQUE pour signaler
-        // explicitement le format aux autres clients.
+        // C3.2 (ANO-9) — métadonnée VRAIE. Depuis la Phase 2, le wizard garantit
+        // par construction des données canoniques (toStorage aux frontières) :
+        //   armLength = MÈTRE (plus 'mm' — l'ancienne constante mentait sur des
+        //   données mixtes et désarmait la migration legacy).
+        // `unitsVerified: true` = ces unités sont garanties par le flux de saisie,
+        // pas déclarées a priori. Le chemin de lecture s'appuie dessus.
         const normalizedAircraft = {
           ...validatedAircraft,
           _metadata: {
-            version: '2.0.0',
+            version: '3.0.0',
+            unitsVerified: true,
             units: {
               fuel: 'ltr', fuelConsumption: 'lph', weight: 'kg',
-              armLength: 'mm', speed: 'kt', altitude: 'ft', distance: 'nm'
+              armLength: 'm', speed: 'kt', altitude: 'ft', distance: 'nm'
             },
             exportedAt: new Date().toISOString()
           }
@@ -549,6 +567,22 @@ export const useAircraftStore = create(
 
         // 1. Valider les données
         const validatedAircraft = validateAndRepairAircraft(aircraftData);
+
+        // C3.2 (ANO-9) : un avion qui arrive ici sort du wizard — canonique PAR
+        // CONSTRUCTION depuis la Phase 2 (hydratation normalizeAircraftForWizard
+        // + toStorage à chaque frontière de saisie). On estampille la métadonnée
+        // VRAIE, y compris pour un avion legacy réédité : la réédition vaut
+        // re-confirmation humaine (le pilote a vu les valeurs affichées dans ses
+        // unités ; des masses lbs-corrompues apparaîtraient absurdes à l'écran).
+        validatedAircraft._metadata = {
+          ...validatedAircraft._metadata,
+          version: '3.0.0',
+          unitsVerified: true,
+          units: {
+            fuel: 'ltr', fuelConsumption: 'lph', weight: 'kg',
+            armLength: 'm', speed: 'kt', altitude: 'ft', distance: 'nm'
+          }
+        };
 
         // 2. Mettre à jour localement d'abord (optimistic update)
         const newList = [...state.aircraftList];
