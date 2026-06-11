@@ -1,0 +1,134 @@
+{
+  "appliedAt": "2026-06-11T08:49:57.119Z",
+  "decisions": "Pilote 2026-06-10 : ambigus = mm ; masses = kg ; application autorisée",
+  "backup": "scripts/backup-community-presets-2026-06-11T08-49-36-136Z.json",
+  "results": {
+    "ok": 7,
+    "failed": 0,
+    "untouchedButStamped": 6
+  },
+  "journal": [
+    {
+      "registration": "F-GOFP",
+      "id": "769f0df3-35ca-4d2a-8906-e8c67354f1f7",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-HFGI",
+      "id": "d8bea0e3-7b1c-473a-93ff-45e364408dbd",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-HSTR",
+      "id": "83bb6788-fb01-400e-8fd0-3e2803b0b0fa",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "H-HDIM",
+      "id": "376f3850-659c-4411-8969-2aae8ce815b8",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GUVV",
+      "id": "230f767e-82c3-49b9-b3b5-eae29095ee10",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GOVE",
+      "id": "3882015c-d822-4429-badf-afe52c1c2b5c",
+      "changes": [],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GNAM",
+      "id": "513e9ccc-6cc7-4e68-a262-e0c2152aeb29",
+      "changes": [
+        {
+          "path": "arms.empty",
+          "before": "2.241",
+          "after": 2.241,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": "3.000",
+          "after": 3,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": "2.045",
+          "after": 2.045,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[0].arm",
+          "before": "2.413",
+          "after": 2.413,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[1].arm",
+          "before": "2.413",
+          "after": 2.413,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "baggage[0].arm",
+          "before": "3.627",
+          "after": 3.627,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "2.365",
+          "after": 2.365,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinCG",
+          "before": "2.365",
+          "after": 2.365,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMaxCG",
+          "before": "2.365",
+          "after": 2.365,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].cg",
+          "before": "2.085",
+          "after": 2.085,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "before": "2.085",
+          "after": 2.085,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[2].cg",
+          "before": "2.245",
+          "after": 2.245,
+          "interpretedAs": "m"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    }
+  ]
+}
