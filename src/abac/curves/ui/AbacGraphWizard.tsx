@@ -78,6 +78,10 @@ interface AbacGraphWizardProps {
    *  vivent sur le CANEVAS du builder (une seule image pour le set) → les
    *  sous-étapes « Image » et « Position » du wizard sont masquées. */
   hideImageSubSteps?: boolean;
+  /** R3 — remonte le mode d'édition au builder : le CANEVAS accepte le
+   *  clic-points quand le wizard est en mode « placement » (même verrou
+   *  anti-clics-fantômes que le Chart du wizard). */
+  onEditorModeChange?: (mode: EditorMode) => void;
 }
 
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
@@ -88,7 +92,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onAddCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
     onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish,
-    hideGraphNav, hideImageSubSteps
+    hideGraphNav, hideImageSubSteps, onEditorModeChange
   } = props;
 
   // R2a — sous-étapes réellement proposées : sans « Image »/« Position » quand
@@ -111,6 +115,13 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hideImageSubSteps, subStep]);
+
+  // R3 — remonte le mode au builder (le canevas n'accepte le clic-points
+  // que lorsque le wizard est en mode « placement »).
+  React.useEffect(() => {
+    onEditorModeChange?.(editorMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorMode]);
   const [calibrationSession, setCalibrationSession] = useState<null | {
     axis: 'x' | 'y';
     values: number[];
