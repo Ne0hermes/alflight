@@ -134,12 +134,20 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     
 
     if (startAtStep === 2 && initialData) {
-      
-      
+
+
+      // R5 (AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md) — « Nouvel abaque » depuis le
+      // récapitulatif : ouverture DIRECTE de l'atelier image unique. L'image
+      // s'importe à l'étape 1 du canevas → plus de tunnel type/upload/pages.
+      if (initialData.directToBuilder) {
+        setPerformanceType('abacs');
+        setCurrentStep(4);
+        return;
+      }
 
       // Si on édite un abaque existant
       if (initialData.abacCurves && initialData.editingModelIndex !== undefined) {
-        
+
         setPerformanceType('abacs');
         setManualFile({ name: 'Manuel existant', restored: true });
         setCurrentStep(4); // ✅ Changement d'état UNIQUE vers l'étape 4

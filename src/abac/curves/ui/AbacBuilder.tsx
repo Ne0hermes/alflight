@@ -1764,6 +1764,30 @@ const renderStepContent = () => {
                 </div>
               )}
 
+              {/* ─── R4 : TEST DE CASCADE intégré à la VALIDATION — vérifier le
+                  modèle complet (entrée → G1 → G2 → G3 → résultat) AVANT de
+                  l'enregistrer, sur le même écran. Les courbes ont été
+                  interpolées à l'entrée de cette étape (onFinish → fitAll). */}
+              <details open style={{
+                marginTop: 16,
+                border: '1px solid var(--accent-primary)',
+                borderRadius: 6,
+                backgroundColor: 'var(--bg-overlay)'
+              }}>
+                <summary style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)'
+                }}>
+                  🧪 Tester le modèle avant validation (cascade complète)
+                </summary>
+                <div style={{ padding: 8 }}>
+                  <CascadeCalculator graphs={graphs} />
+                </div>
+              </details>
+
               {/* Boutons de navigation */}
               <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                 {/* Bouton Précédent pour retourner à Construire et Interpoler */}
@@ -1808,10 +1832,9 @@ const renderStepContent = () => {
                   }}
                   onClick={handleExportJSON}
                   disabled={!modelNameInput}
-                  title="Sauvegarder et passer à l'étape suivante"
+                  title="Interpoler + valider + enregistrer le modèle d'abaque en un geste"
                 >
-                  Suivant
-                  <span style={{ fontSize: 'var(--fs-title)' }}>→</span>
+                  ✓ Valider et enregistrer le modèle
                 </button>
               </div>
             </div>

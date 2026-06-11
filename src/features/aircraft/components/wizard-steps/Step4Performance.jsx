@@ -15,6 +15,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   // État local pour stocker les données de performance temporaires
   const [savedPerformanceData, setSavedPerformanceData] = useState(null);
   const [wizardStep, setWizardStep] = useState(2); // Démarrer à l'étape 2 (Step 1 retiré)
+  // R5 — « Nouvel abaque » depuis le récap : ouverture directe de l'atelier
+  // image unique (bypass du tunnel type/upload/analyse/pages).
+  const [directNewAbaque, setDirectNewAbaque] = useState(false);
   const [showExistingData, setShowExistingData] = useState(false);
   const [forceShowSummary, setForceShowSummary] = useState(false);
   const [performanceWizardRef, setPerformanceWizardRef] = useState(null);
@@ -1032,6 +1035,31 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         )}
 
         {/* Bouton pour modifier */}
+        {/* R5 — chemin DIRECT vers l'atelier image unique : plus de tunnel
+            type/upload/pages pour créer un abaque (l'image s'importe sur le
+            canevas). Le bouton « Ajouter des données » reste pour les
+            TABLEAUX MANEX (extraction IA) et flux mixtes. */}
+        <button
+          onClick={() => {
+            setDirectNewAbaque(true);
+            setShowExistingData(false);
+            setForceShowSummary(false);
+          }}
+          style={{
+            marginTop: '8px',
+            padding: '10px',
+            backgroundColor: 'var(--accent-primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: 'var(--fs-body)',
+            cursor: 'pointer',
+            fontWeight: '600',
+            width: '100%'
+          }}
+        >
+          ➕ Nouvel abaque — atelier image unique
+        </button>
         <button
           onClick={() => {
             setShowExistingData(false);
@@ -1050,7 +1078,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             width: '100%'
           }}
         >
-          Ajouter des données de performance
+          Ajouter des données de performance (tableaux MANEX / mixte)
         </button>
 
         {/* Boutons de navigation */}
@@ -1089,7 +1117,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   // Si on édite un abaque existant, passer ses données
   // Si on édite des tableaux, passer les données des tableaux
   // Sinon, ne pas passer de données initiales pour éviter le saut automatique à l'étape 4
-  const wizardInitialData = savedPerformanceData?.editingModel
+  // R5 — « Nouvel abaque » : saut DIRECT vers l'atelier image unique (priorité).
+  const wizardInitialData = directNewAbaque
+    ? { directToBuilder: true }
+    : savedPerformanceData?.editingModel
     ? {
         abacCurves: savedPerformanceData.editingModel.data,
         editingModelIndex: savedPerformanceData.editingModelIndex
@@ -1250,6 +1281,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         startAtStep={wizardStep}
         abacBuilderRefCallback={handleAbacBuilderRefCallback}
         onCancel={() => {
+          // R5 — sortir du mode « Nouvel abaque direct » en quittant l'atelier
+          setDirectNewAbaque(false);
 
           // Si on a des données de performance, revenir à la vue récapitulative
           if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
