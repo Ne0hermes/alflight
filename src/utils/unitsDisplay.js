@@ -29,7 +29,9 @@ import { convertValue, getUnitSymbol } from './unitConversions';
 // Modifier ce tableau impactera l'app entière — ne pas changer sans migration.
 export const CANONICAL_UNITS = {
   weight:           'kg',     // Système International
-  armLength:        'mm',     // Système International + précision sans décimale
+  armLength:        'm',      // C3.1 — pivot unique = MÈTRE (aligné sur le moteur
+                              // de centrage, les golden tests, le CentrogramReader
+                              // et le normaliseur d'import ; cf. audit ANO-1)
   fuel:             'ltr',    // SI métrique
   fuelConsumption:  'lph',    // SI métrique
   speed:            'kt',     // Standard aviation mondial
@@ -75,10 +77,12 @@ export function toUserUnit(canonicalValue, category, userUnit) {
   if (!canonical || canonical === userUnit) return num;
 
   try {
-    return convertValue(num, canonical, userUnit, category);
+    const out = convertValue(num, canonical, userUnit, category);
+    // Fail-closed (ANO-4) : jamais le nombre brut dans la mauvaise unité.
+    return Number.isFinite(out) ? out : null;
   } catch (e) {
-    console.warn(`[unitsDisplay.toUserUnit] Conversion échouée`, { canonicalValue, category, userUnit, error: e.message });
-    return num;
+    console.warn(`[unitsDisplay.toUserUnit] Conversion refusée (fail-closed)`, { canonicalValue, category, userUnit, error: e.message });
+    return null;
   }
 }
 
@@ -101,10 +105,12 @@ export function toCanonical(userValue, category, userUnit) {
   if (!canonical || canonical === userUnit) return num;
 
   try {
-    return convertValue(num, userUnit, canonical, category);
+    const out = convertValue(num, userUnit, canonical, category);
+    // Fail-closed (ANO-4) : jamais le nombre brut dans la mauvaise unité.
+    return Number.isFinite(out) ? out : null;
   } catch (e) {
-    console.warn(`[unitsDisplay.toCanonical] Conversion échouée`, { userValue, category, userUnit, error: e.message });
-    return num;
+    console.warn(`[unitsDisplay.toCanonical] Conversion refusée (fail-closed)`, { userValue, category, userUnit, error: e.message });
+    return null;
   }
 }
 

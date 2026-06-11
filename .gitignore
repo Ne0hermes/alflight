@@ -37,6 +37,11 @@ src/config/secrets.js
 *.backup
 *.bak
 
+# Sauvegardes de base (migration unités C5) — instantanés volumineux (~15 Mo),
+# conservés localement pour restauration ; le journal des conversions, lui,
+# est versionné (trace d'audit).
+scripts/backup-community-presets-*.json
+
 # Backups des photos originales (créés par scripts/compress-hero-photos.mjs)
 # Conservés localement pour pouvoir restaurer si nécessaire, mais pas
 # déployés en production (gain ~47 Mo sur le déploiement Vercel).

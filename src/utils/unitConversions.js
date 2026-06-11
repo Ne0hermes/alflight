@@ -18,7 +18,8 @@ export const fuelConversions = {
   // Gallons vers autres unités
   galToLtr: (gal) => gal * 3.78541,
   galToKg: (gal, density = DENSITIES.AVGAS) => gal * 3.78541 * density,
-  galToLbs: (gal) => gal * 6.01, // poids moyen AVGAS
+  // C1.4 (ANO-14) : densité paramétrable — le 6.01 figé n'était vrai que pour l'AVGAS
+  galToLbs: (gal, density = DENSITIES.AVGAS) => gal * 3.78541 * density * 2.20462,
 
   // Kilogrammes vers autres unités
   kgToLtr: (kg, density = DENSITIES.AVGAS) => kg / density,
@@ -28,7 +29,7 @@ export const fuelConversions = {
   // Livres vers autres unités
   lbsToKg: (lbs) => lbs * 0.453592,
   lbsToLtr: (lbs, density = DENSITIES.AVGAS) => (lbs * 0.453592) / density,
-  lbsToGal: (lbs) => lbs / 6.01
+  lbsToGal: (lbs, density = DENSITIES.AVGAS) => (lbs * 0.453592) / density / 3.78541
 };
 
 // Conversions de consommation de carburant
@@ -157,40 +158,64 @@ export const coordinateConversions = {
  * @param {Object} options - Options supplémentaires (ex: density)
  * @returns {number} - La valeur convertie
  */
+// C1.6 (CV-4) — Alias d'unités : les préférences stockent 'km/h'/'m/s' alors que
+// les tables de conversion utilisent 'kmh'/'ms'. Normalisés AVANT de construire
+// la clé — sinon la paire tombait dans le pass-through silencieux.
+const UNIT_ALIASES = { 'km/h': 'kmh', 'm/s': 'ms', 'mi/h': 'mph' };
+const normalizeUnit = (u) => UNIT_ALIASES[u] ?? u;
+
+// C1.1 (ANO-3) — Fail-closed : en dev/test une conversion impossible LÈVE une
+// erreur ; en production elle renvoie NaN (visible : formatWithUnit affiche
+// '---', les moteurs fail-closed refusent le calcul). Plus JAMAIS la valeur
+// d'origine non convertie — c'était le vecteur n°1 des corruptions m/mm.
+const STRICT_CONVERSIONS = (() => {
+  try {
+    return Boolean(import.meta.env?.DEV || import.meta.env?.MODE === 'test');
+  } catch {
+    return false;
+  }
+})();
+
+const conversionFailure = (message) => {
+  if (STRICT_CONVERSIONS) {
+    throw new Error(message);
+  }
+  console.error(message);
+  return NaN;
+};
+
 export function convertValue(value, fromUnit, toUnit, category, options = {}) {
   // Si les unités sont identiques, retourner la valeur telle quelle
   if (fromUnit === toUnit) {
     return value;
   }
 
-  // Si la valeur est invalide, retourner 0
-  if (!value || isNaN(value)) {
-    return 0;
+  // C1.2 (ANO-7) : 0 est une valeur VALIDE (0 °C → 32 °F). Seuls les
+  // non-numériques sont rejetés — en NaN, jamais en 0 : un bras illisible ne
+  // doit pas devenir un moment nul silencieux.
+  const numValue = typeof value === 'number' ? value : parseFloat(value);
+  if (!Number.isFinite(numValue)) {
+    return NaN;
   }
 
-  const numValue = parseFloat(value);
-
-  // Température (cas spécial car utilise des fonctions)
-  if (category === 'temperature') {
-    if (fromUnit === 'C' && toUnit === 'F') {
-      return temperatureConversions.celsiusToFahrenheit(numValue);
-    } else if (fromUnit === 'F' && toUnit === 'C') {
-      return temperatureConversions.fahrenheitToCelsius(numValue);
-    }
+  const from = normalizeUnit(fromUnit);
+  const to = normalizeUnit(toUnit);
+  if (from === to) {
     return numValue;
   }
 
-  // Construire la clé de conversion
-  const conversionKey = `${fromUnit}To${toUnit.charAt(0).toUpperCase() + toUnit.slice(1)}`;
+  // Température (cas spécial car non multiplicatif)
+  if (category === 'temperature') {
+    if (from === 'C' && to === 'F') {
+      return temperatureConversions.celsiusToFahrenheit(numValue);
+    } else if (from === 'F' && to === 'C') {
+      return temperatureConversions.fahrenheitToCelsius(numValue);
+    }
+    return conversionFailure(`[convertValue] Température : paire non gérée ${fromUnit} → ${toUnit}`);
+  }
 
-  console.log('🔍 [convertValue]', {
-    value: numValue,
-    fromUnit,
-    toUnit,
-    category,
-    conversionKey,
-    options
-  });
+  // Construire la clé de conversion
+  const conversionKey = `${from}To${to.charAt(0).toUpperCase() + to.slice(1)}`;
 
   let conversionFunc = null;
 
@@ -228,26 +253,19 @@ export function convertValue(value, fromUnit, toUnit, category, options = {}) {
       conversionFunc = runwayConversions[conversionKey];
       break;
     default:
-      console.warn(`⚠️ [convertValue] Unknown category: ${category}`);
-      return numValue;
+      return conversionFailure(
+        `[convertValue] Catégorie inconnue « ${category} » (${fromUnit} → ${toUnit}) — valeur refusée (fail-closed)`
+      );
   }
 
   if (conversionFunc) {
     // Passer la densité si disponible (pour le carburant)
-    const density = options.density;
-    const result = conversionFunc(numValue, density);
-
-    console.log('✅ [convertValue] Conversion result:', {
-      input: numValue,
-      output: result,
-      densityUsed: density
-    });
-
-    return result;
+    return conversionFunc(numValue, options.density);
   }
 
-  console.warn(`⚠️ [convertValue] No conversion function found for ${conversionKey}, returning original value`);
-  return numValue;
+  return conversionFailure(
+    `[convertValue] Conversion impossible : ${fromUnit} → ${toUnit} (catégorie ${category}, clé ${conversionKey}) — valeur refusée (fail-closed)`
+  );
 }
 
 /**

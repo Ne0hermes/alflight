@@ -1,0 +1,485 @@
+{
+  "appliedAt": "2026-06-10T16:00:53.192Z",
+  "decisions": "Pilote 2026-06-10 : ambigus = mm ; masses = kg ; application autorisée",
+  "backup": "scripts/backup-community-presets-2026-06-10T16-00-35-915Z.json",
+  "results": {
+    "ok": 6,
+    "failed": 0,
+    "untouchedButStamped": 0
+  },
+  "journal": [
+    {
+      "registration": "F-HFGI",
+      "id": "d8bea0e3-7b1c-473a-93ff-45e364408dbd",
+      "changes": [
+        {
+          "path": "arms.fuelMain",
+          "before": 801.9,
+          "after": 0.8019,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": 1187.5,
+          "after": 1.1875,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": 403.7,
+          "after": 0.4037,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "tanks[1].arm",
+          "before": 337,
+          "after": 0.337,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "tanks[2].arm",
+          "before": 1148.4,
+          "after": 1.1484,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "baggage[0].arm",
+          "before": 1465.2,
+          "after": 1.4652,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "0.5619",
+          "after": 0.5619,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].moment",
+          "before": "132",
+          "after": 132,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.forward[1].moment",
+          "before": "152",
+          "after": 152,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.forward[2].moment",
+          "before": "449",
+          "after": 449,
+          "interpretedAs": "kg·m (typage)"
+        }
+      ],
+      "unresolved": [
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "value": 0.19
+        }
+      ],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-HSTR",
+      "id": "83bb6788-fb01-400e-8fd0-3e2803b0b0fa",
+      "changes": [
+        {
+          "path": "arms.fuelMain",
+          "before": "2.63",
+          "after": 2.63,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": "3.25",
+          "after": 3.25,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": "2.3",
+          "after": 2.3,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[0].arm",
+          "before": "2.63",
+          "after": 2.63,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "2.53",
+          "after": 2.53,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinCG",
+          "before": "2.53",
+          "after": 2.53,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMaxCG",
+          "before": "2.53",
+          "after": 2.53,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].cg",
+          "before": "2.4",
+          "after": 2.4,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "before": "2.4",
+          "after": 2.4,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[2].cg",
+          "before": "2.469",
+          "after": 2.469,
+          "interpretedAs": "m"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "H-HDIM",
+      "id": "376f3850-659c-4411-8969-2aae8ce815b8",
+      "changes": [
+        {
+          "path": "arms.empty",
+          "before": "0.930",
+          "after": 0.93,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": "1.85",
+          "after": 1.85,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": "1.01",
+          "after": 1.01,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[0].arm",
+          "before": "1.22",
+          "after": 1.22,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "1.2",
+          "after": 1.2,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].cg",
+          "before": "0.89",
+          "after": 0.89,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "before": "1",
+          "after": 1,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[2].cg",
+          "before": "0.89",
+          "after": 0.89,
+          "interpretedAs": "m"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GUVV",
+      "id": "230f767e-82c3-49b9-b3b5-eae29095ee10",
+      "changes": [
+        {
+          "path": "arms.empty",
+          "before": "2.5150",
+          "after": 2.515,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": "3.25",
+          "after": 3.25,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": "2.3",
+          "after": 2.3,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[0].arm",
+          "before": "2.630",
+          "after": 2.63,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgLimits.aft",
+          "before": "2.31",
+          "after": 2.31,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgLimits.forward",
+          "before": "2.05",
+          "after": 2.05,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "2.59",
+          "after": 2.59,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinCG",
+          "before": "2.59",
+          "after": 2.59,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMaxCG",
+          "before": "2.59",
+          "after": 2.59,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].cg",
+          "before": "2.4",
+          "after": 2.4,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "before": "2.4",
+          "after": 2.4,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[2].cg",
+          "before": "2.46",
+          "after": 2.46,
+          "interpretedAs": "m"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GOVE",
+      "id": "3882015c-d822-4429-badf-afe52c1c2b5c",
+      "changes": [
+        {
+          "path": "weightBalance.fuelArm",
+          "before": 10,
+          "after": 0.254,
+          "interpretedAs": "in"
+        },
+        {
+          "path": "arms.fuelMain",
+          "before": 1102.7,
+          "after": 1.1027,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "arms.rearSeats",
+          "before": 1145.5,
+          "after": 1.1455,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "arms.frontSeats",
+          "before": 394,
+          "after": 0.394,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "tanks[0].arm",
+          "before": 1102.7,
+          "after": 1.1027,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "tanks[0].momentAtFull",
+          "before": "792",
+          "after": 792,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "tanks[1].arm",
+          "before": 1763.7,
+          "after": 1.7637,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "baggage[0].arm",
+          "before": 1265.1,
+          "after": 1.2651,
+          "interpretedAs": "mm"
+        },
+        {
+          "path": "baggage[0].momentMax",
+          "before": 50604,
+          "after": 50.604,
+          "interpretedAs": "kg·mm"
+        },
+        {
+          "path": "moments.empty",
+          "before": "218",
+          "after": 218,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "0.5722",
+          "after": 0.5722,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinCG",
+          "before": "0.5488",
+          "after": 0.5488,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMaxCG",
+          "before": "0.5722",
+          "after": 0.5722,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinMoment",
+          "before": "315",
+          "after": 315,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.aftMaxMoment",
+          "before": "515",
+          "after": 515,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.forward[0].moment",
+          "before": "115",
+          "after": 115,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.forward[1].moment",
+          "before": "155",
+          "after": 155,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgEnvelope.forward[2].moment",
+          "before": "375",
+          "after": 375,
+          "interpretedAs": "kg·m (typage)"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    },
+    {
+      "registration": "F-GOFP",
+      "id": "769f0df3-35ca-4d2a-8906-e8c67354f1f7",
+      "changes": [
+        {
+          "path": "arms.frontSeats",
+          "before": "0.9416",
+          "after": 0.9416,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "tanks[0].momentAtFull",
+          "before": "72",
+          "after": 72,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "tanks[1].momentAtFull",
+          "before": "72",
+          "after": 72,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "baggage[0].momentMax",
+          "before": "36",
+          "after": 36,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "moments.empty",
+          "before": "394",
+          "after": 394,
+          "interpretedAs": "kg·m (typage)"
+        },
+        {
+          "path": "cgLimits.aft",
+          "before": "0.930",
+          "after": 0.93,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftCG",
+          "before": "0.930",
+          "after": 0.93,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMinCG",
+          "before": "0.930",
+          "after": 0.93,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.aftMaxCG",
+          "before": "0.930",
+          "after": 0.93,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[0].cg",
+          "before": "0.790",
+          "after": 0.79,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[1].cg",
+          "before": "0.790",
+          "after": 0.79,
+          "interpretedAs": "m"
+        },
+        {
+          "path": "cgEnvelope.forward[2].cg",
+          "before": "0.8349",
+          "after": 0.8349,
+          "interpretedAs": "m"
+        }
+      ],
+      "unresolved": [],
+      "writeStatus": "OK"
+    }
+  ]
+}

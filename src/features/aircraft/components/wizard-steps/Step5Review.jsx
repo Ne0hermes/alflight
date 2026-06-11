@@ -41,7 +41,8 @@ import { getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
 import { trackingActions } from '../../../../utils/autoTracking';
 import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
-import { formatCanonical } from '@utils/unitsDisplay';
+import { formatCanonical, toUserUnit } from '@utils/unitsDisplay';
+import { convertMoment } from '../../utils/mbUnits';
 
 const Step5Review = ({ data, setCurrentStep, onSave }) => {
   // Récupérer les préférences d'unités de l'utilisateur
@@ -816,11 +817,16 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   );
 
   // Préparer les données pour le graphique d'enveloppe CG
+  // C2 : data est en CANONIQUE (kg, m) — le graphique affiche en unité user.
   const cgEnvelopeData = {
-    forwardPoints: data.cgEnvelope?.forwardPoints || [],
-    aftMinWeight: data.cgEnvelope?.aftMinWeight,
-    aftCG: data.cgEnvelope?.aftCG,
-    aftMaxWeight: data.cgEnvelope?.aftMaxWeight
+    forwardPoints: (data.cgEnvelope?.forwardPoints || []).map((p) => ({
+      ...p,
+      weight: toUserUnit(p.weight, 'weight', units.weight),
+      cg: toUserUnit(p.cg, 'armLength', units.armLength)
+    })),
+    aftMinWeight: toUserUnit(data.cgEnvelope?.aftMinWeight, 'weight', units.weight),
+    aftCG: toUserUnit(data.cgEnvelope?.aftCG, 'armLength', units.armLength),
+    aftMaxWeight: toUserUnit(data.cgEnvelope?.aftMaxWeight, 'weight', units.weight)
   };
 
   // Préparer les données pour le graphique de vitesses
@@ -939,24 +945,34 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         const aU = getUnitSymbol(units.armLength);
         const mU = `${wU}·${aU}`;
 
+        // C2 : data est en CANONIQUE (kg, m, kg·m) — formatters canoniques → user
+        const fmtW = (v) => formatCanonical(v, 'weight', units);
+        const fmtA = (v) => formatCanonical(v, 'armLength', units);
+        const fmtM = (v) => {
+          const n = typeof v === 'number' ? v : parseFloat(v);
+          if (!Number.isFinite(n)) return '—';
+          const x = convertMoment(n, units, 'fromStorage');
+          return Number.isFinite(x) ? `${Math.round(x * 100) / 100} ${mU}` : '—';
+        };
+
         // Construire dynamiquement la liste de TOUS les champs M&C
         const weightBalanceFields = [
           // ─── Masse à vide (trio masse/bras/moment) ───
-          { label: 'Masse à vide', value: formatValue(data.weights?.emptyWeight, wU) },
-          { label: 'Bras à vide', value: formatValue(data.arms?.empty, aU) },
-          { label: 'Moment à vide', value: formatValue(data.moments?.empty, mU) },
+          { label: 'Masse à vide', value: fmtW(data.weights?.emptyWeight) },
+          { label: 'Bras à vide', value: fmtA(data.arms?.empty) },
+          { label: 'Moment à vide', value: fmtM(data.moments?.empty) },
 
           // ─── Masses limites (MZFW retiré : peu utile en aviation générale) ─
-          { label: 'MTOW', value: formatValue(data.weights?.mtow, wU) },
-          { label: 'MLW', value: formatValue(data.weights?.mlw, wU) },
-          { label: 'Masse min de vol', value: formatValue(data.weights?.minTakeoffWeight, wU) },
+          { label: 'MTOW', value: fmtW(data.weights?.mtow) },
+          { label: 'MLW', value: fmtW(data.weights?.mlw) },
+          { label: 'Masse min de vol', value: fmtW(data.weights?.minTakeoffWeight) },
 
           // ─── Carburant total (somme calculée des réservoirs ci-dessous) ──
           { label: 'Capacité totale carburant', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) },
 
           // ─── Sièges (bras de levier uniquement — moment dépend du passager) ───
-          { label: 'Bras sièges avant', value: formatValue(data.arms?.frontSeats, aU) },
-          { label: 'Bras sièges arrière', value: formatValue(data.arms?.rearSeats, aU) }
+          { label: 'Bras sièges avant', value: fmtA(data.arms?.frontSeats) },
+          { label: 'Bras sièges arrière', value: fmtA(data.arms?.rearSeats) }
         ];
 
         // ─── Tous les réservoirs (principal, ailes, optionnels…) ───
@@ -967,8 +983,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             const label = tank.name || `Réservoir ${idx + 1}`;
             weightBalanceFields.push(
               { label: `${label} — capacité`, value: formatCanonical(tank.capacity, 'fuel', units, { both: true }) },
-              { label: `${label} — bras`, value: formatValue(tank.arm, aU) },
-              { label: `${label} — moment (plein)`, value: formatValue(tank.momentAtFull, mU) }
+              { label: `${label} — bras`, value: fmtA(tank.arm) },
+              { label: `${label} — moment (plein)`, value: fmtM(tank.momentAtFull) }
             );
           });
         }
@@ -978,7 +994,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           data.additionalSeats.forEach((seat, idx) => {
             const label = seat.name || `Siège ${idx + 3}`;
             weightBalanceFields.push(
-              { label: `${label} — bras`, value: formatValue(seat.arm, aU) }
+              { label: `${label} — bras`, value: fmtA(seat.arm) }
             );
           });
         }
@@ -988,9 +1004,9 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           data.baggageCompartments.forEach((comp, idx) => {
             const label = comp.name || `Compartiment ${idx + 1}`;
             weightBalanceFields.push(
-              { label: `${label} — masse max`, value: formatValue(comp.maxWeight, wU) },
-              { label: `${label} — bras`, value: formatValue(comp.arm, aU) },
-              { label: `${label} — moment max`, value: formatValue(comp.momentMax, mU) }
+              { label: `${label} — masse max`, value: fmtW(comp.maxWeight) },
+              { label: `${label} — bras`, value: fmtA(comp.arm) },
+              { label: `${label} — moment max`, value: fmtM(comp.momentMax) }
             );
           });
         }
@@ -999,21 +1015,21 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         if (data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0) {
           data.cgEnvelope.forwardPoints.forEach((pt, idx) => {
             weightBalanceFields.push(
-              { label: `Forward #${idx + 1} — masse`, value: formatValue(pt.weight, wU) },
-              { label: `Forward #${idx + 1} — CG`, value: formatValue(pt.cg, aU) },
-              { label: `Forward #${idx + 1} — moment`, value: formatValue(pt.moment, mU) }
+              { label: `Forward #${idx + 1} — masse`, value: fmtW(pt.weight) },
+              { label: `Forward #${idx + 1} — CG`, value: fmtA(pt.cg) },
+              { label: `Forward #${idx + 1} — moment`, value: fmtM(pt.moment) }
             );
           });
         }
         // Enveloppe arrière (2 points indépendants avec CG/moment propres)
         const legacyAftCG = data.cgEnvelope?.aftCG;
         weightBalanceFields.push(
-          { label: 'Aft point bas — masse min', value: formatValue(data.cgEnvelope?.aftMinWeight, wU) },
-          { label: 'Aft point bas — CG', value: formatValue(data.cgEnvelope?.aftMinCG || legacyAftCG, aU) },
-          { label: 'Aft point bas — moment', value: formatValue(data.cgEnvelope?.aftMinMoment, mU) },
-          { label: 'Aft point haut — masse max', value: formatValue(data.cgEnvelope?.aftMaxWeight, wU) },
-          { label: 'Aft point haut — CG', value: formatValue(data.cgEnvelope?.aftMaxCG || legacyAftCG, aU) },
-          { label: 'Aft point haut — moment', value: formatValue(data.cgEnvelope?.aftMaxMoment, mU) }
+          { label: 'Aft point bas — masse min', value: fmtW(data.cgEnvelope?.aftMinWeight) },
+          { label: 'Aft point bas — CG', value: fmtA(data.cgEnvelope?.aftMinCG || legacyAftCG) },
+          { label: 'Aft point bas — moment', value: fmtM(data.cgEnvelope?.aftMinMoment) },
+          { label: 'Aft point haut — masse max', value: fmtW(data.cgEnvelope?.aftMaxWeight) },
+          { label: 'Aft point haut — CG', value: fmtA(data.cgEnvelope?.aftMaxCG || legacyAftCG) },
+          { label: 'Aft point haut — moment', value: fmtM(data.cgEnvelope?.aftMaxMoment) }
         );
 
         return renderSection(
