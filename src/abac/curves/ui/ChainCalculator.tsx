@@ -145,11 +145,11 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
       {availableChains.length === 0 ? (
         <div style={{
           padding: '20px',
-          backgroundColor: 'var(--accent-soft)',
+          backgroundColor: '#fff3e0',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <p style={{ margin: 0, color: 'var(--accent-primary)' }}>
+          <p style={{ margin: 0, color: '#f57c00' }}>
             Aucune chaîne d'abaques configurée.
             <br />
             Liez des graphiques dans l'étape 1 pour créer des chaînes.
@@ -172,7 +172,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
               style={{
                 width: '100%',
                 padding: '8px',
-                border: '1px solid var(--border-subtle)',
+                border: '1px solid #ddd',
                 borderRadius: '4px'
               }}
             >
@@ -187,7 +187,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                   <option key={index} value={chain.join(',')}>
                     {chainNames}
                   </option>
-
+                );
               })}
             </select>
           </div>
@@ -207,7 +207,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                     style={{
                       flex: 1,
                       padding: '8px',
-                      border: '1px solid var(--border-subtle)',
+                      border: '1px solid #ddd',
                       borderRadius: '4px'
                     }}
                   />
@@ -215,7 +215,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                     onClick={calculateChain}
                     style={{
                       padding: '8px 16px',
-                      backgroundColor: 'var(--accent-primary)',
+                      backgroundColor: '#4CAF50',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -231,7 +231,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
               {/* Résultats */}
               {chainResults.length > 0 && (
                 <div style={{
-                  backgroundColor: 'var(--bg-overlay)',
+                  backgroundColor: '#f5f5f5',
                   borderRadius: '8px',
                   padding: '16px'
                 }}>
@@ -243,17 +243,17 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                       <div
                         key={index}
                         style={{
-                          backgroundColor: 'var(--bg-overlay)',
+                          backgroundColor: 'white',
                           borderRadius: '6px',
                           padding: '12px',
                           marginBottom: index < chainResults.length - 1 ? '12px' : 0,
-                          border: '1px solid var(--border-subtle)'
+                          border: '1px solid #ddd'
                         }}
                       >
                         <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
                           {step.graphName}
                         </div>
-                        <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: '14px', color: '#666' }}>
                           <div>
                             Entrée ({graph?.axes?.xAxis?.title}):
                             <span style={{ fontWeight: 'bold', marginLeft: '8px' }}>
@@ -265,7 +265,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                             <span style={{
                               fontWeight: 'bold',
                               marginLeft: '8px',
-                              color: step.outputValue !== null ? 'var(--accent-primary)' : 'var(--color-red-critical)'
+                              color: step.outputValue !== null ? '#4CAF50' : '#f44336'
                             }}>
                               {step.outputValue !== null
                                 ? `${step.outputValue.toFixed(2)} ${graph?.axes?.yAxis?.unit}`
@@ -273,7 +273,7 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                             </span>
                           </div>
                           {step.curveUsed && (
-                            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                            <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
                               Courbe utilisée : {step.curveUsed}
                             </div>
                           )}
@@ -283,13 +283,13 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                           <div style={{
                             textAlign: 'center',
                             marginTop: '12px',
-                            color: 'var(--accent-primary)'
+                            color: '#2196F3'
                           }}>
                             ↓
                           </div>
                         )}
                       </div>
-
+                    );
                   })}
 
                   {/* Résultat final */}
@@ -297,14 +297,14 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
                     <div style={{
                       marginTop: '16px',
                       padding: '12px',
-                      backgroundColor: 'var(--accent-soft)',
+                      backgroundColor: '#e8f5e9',
                       borderRadius: '6px',
-                      border: '2px solid var(--accent-primary)'
+                      border: '2px solid #4CAF50'
                     }}>
-                      <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                      <div style={{ fontWeight: 'bold', color: '#2e7d32' }}>
                         Résultat final :
                       </div>
-                      <div style={{ fontSize: 'var(--fs-title)', marginTop: '8px' }}>
+                      <div style={{ fontSize: '18px', marginTop: '8px' }}>
                         {chainResults[chainResults.length - 1].outputValue?.toFixed(2)}{' '}
                         {graphs.find(g => g.id === chainResults[chainResults.length - 1].graphId)?.axes?.yAxis?.unit}
                       </div>
@@ -317,4 +317,5 @@ export const ChainCalculator: React.FC<ChainCalculatorProps> = ({ graphs }) => {
         </>
       )}
     </div>
+  );
 };

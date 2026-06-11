@@ -128,7 +128,7 @@ function findXForY(curve: Curve, y: number): number | null {
   if (y < minY || y > maxY) {
     // Log de debug pour comprendre les fausses intersections
     if (curve.name && Math.abs(y - maxY) < 500) {
-      } hors limites [${minY.toFixed(2)}, ${maxY.toFixed(2)}]`);
+      console.log(`     ⚠️ findXForY: "${curve.name}" - Y=${y.toFixed(2)} hors limites [${minY.toFixed(2)}, ${maxY.toFixed(2)}]`);
     }
     return null;
   }
@@ -246,24 +246,34 @@ function calculateOutputWithParameterCorrect(
 
   // IMPORTANT: Si c'est un graphique de vent, filtrer selon la direction du vent
   if (graph.isWindRelated && windDirection && curvesWithParams.some(cp => cp.windType)) {
+    console.log(`   🌬️ Graphique de vent détecté. Direction sélectionnée: ${windDirection}`);
+    console.log(`   Courbes disponibles avant filtrage:`, curvesWithParams.map(c => `${c.name}(${c.windType})`));
 
     // Filtrer uniquement les courbes de la direction sélectionnée
     curvesWithParams = curvesWithParams.filter(cp => cp.windType === windDirection);
 
+    console.log(`   Courbes après filtrage pour ${windDirection}:`, curvesWithParams.map(c => c.name));
 
-      }
+    if (curvesWithParams.length === 0) {
+      console.warn(`   ⚠️ Aucune courbe ${windDirection} trouvée dans le graphique`);
+    }
+  }
 
   curvesWithParams = curvesWithParams.sort((a, b) => a.param - b.param);
+
+  console.log(`🎯 Recherche pour paramètre ${parameterX}:`, curvesWithParams.map(c => `${c.name}(${c.param})`));
 
   // Si aucune courbe avec paramètre valide n'est trouvée
   if (curvesWithParams.length === 0) {
     console.error(`   ❌ Aucune courbe avec paramètre numérique trouvée dans le graphique "${graph.name}"`);
+    console.log(`   Courbes disponibles:`, graph.curves.map(c => c.name));
     // Utiliser la première courbe par défaut si disponible
     if (graph.curves.length > 0) {
       const defaultCurve = graph.curves[0];
       const outputY = findYForX(defaultCurve, parameterX);
       if (outputY !== null) {
-                return {
+        console.log(`   ⚠️ Utilisation de la première courbe "${defaultCurve.name}" par défaut`);
+        return {
           outputValue: outputY,
           curveUsed: defaultCurve.name + " (défaut)",
           interpolated: false
@@ -273,14 +283,16 @@ function calculateOutputWithParameterCorrect(
     return null;
   }
 
-    }`);
-  
+  console.log(`\n🔄 === CALCUL AVEC PARAMÈTRE ===`);
+  console.log(`📥 Entrée Y: ${inputY.toFixed(2)}`);
+  console.log(`📊 Paramètre X: ${parameterX}`);
+
   // ÉTAPE 1: Tracer horizontalement à Y=inputY
-  }`);
+  console.log(`\n📍 ÉTAPE 1: Ligne horizontale à Y=${inputY.toFixed(2)}`);
 
   // ÉTAPE 2: Analyser la position du point d'entrée par rapport aux courbes
   // Au lieu de chercher la première intersection, on doit déterminer entre quelles courbes on se trouve
-  } par rapport aux courbes...`);
+  console.log(`📍 ÉTAPE 2: Analyse de la position Y=${inputY.toFixed(2)} par rapport aux courbes...`);
 
   // Pour chaque X, trouver entre quelles courbes on se trouve
   // D'abord, trouver un X de référence où toutes les courbes sont définies
@@ -312,9 +324,9 @@ function calculateOutputWithParameterCorrect(
   // Pour les autres graphiques, utiliser X min
   xRef = isMassGraph ? xMaxCommon : xMinCommon;
 
-  ' : 'Normal (début visuel à gauche)'}`);
-  }`);
-  }, ${xMaxCommon.toFixed(2)}]`);
+  console.log(`   Type de graphique: ${isMassGraph ? 'Masse (début visuel à droite)' : 'Normal (début visuel à gauche)'}`);
+  console.log(`   X de référence pour l'analyse: ${xRef.toFixed(2)}`);
+  console.log(`   Plage X commune: [${xMinCommon.toFixed(2)}, ${xMaxCommon.toFixed(2)}]`);
 
   // Évaluer Y pour chaque courbe à X de référence
   // IMPORTANT: Pour le graphique de masse, on doit identifier les courbes par leur paramètre numérique
@@ -330,26 +342,27 @@ function calculateOutputWithParameterCorrect(
   // Ceci est essentiel pour les graphiques de masse où les courbes sont numérotées
   const sortedByParam = [...curvesAtRef].sort((a, b) => a.param - b.param);
 
-    sortedByParam.forEach((cp, index) => {
-    } à X=${xRef.toFixed(2)}`);
+  console.log(`   Courbes triées par PARAMÈTRE:`);
+  sortedByParam.forEach((cp, index) => {
+    console.log(`     Courbe ${cp.param}: "${cp.name}" → Y=${cp.yAtRef!.toFixed(2)} à X=${xRef.toFixed(2)}`);
   });
 
   // Debug: vérifier les valeurs Y au point de référence approprié
-  }:`);
+  console.log(`   Valeurs Y des courbes au point de référence X=${xRef.toFixed(2)}:`);
   sortedByParam.forEach(cp => {
     if (cp.curve.fitted && cp.curve.fitted.points.length > 0) {
       // Pour le graphique de masse, le "début visuel" est à la fin du tableau (X=1150)
       const refPoint = isMassGraph ?
         cp.curve.fitted.points[cp.curve.fitted.points.length - 1] :
         cp.curve.fitted.points[0];
-      : Y=${refPoint.y.toFixed(2)}`);
+      console.log(`     "${cp.name}" (param=${cp.param}): Y=${refPoint.y.toFixed(2)}`);
     }
   });
 
-  } à comparer avec ces courbes`);
+  console.log(`   🎯 Point d'entrée Y=${inputY.toFixed(2)} à comparer avec ces courbes`);
 
   // NOUVELLE APPROCHE: Trouver entre quelles courbes se situe le point Y d'entrée
-  } par rapport aux courbes triées par paramètre`);
+  console.log(`\n📍 Analyse de la position de Y=${inputY.toFixed(2)} par rapport aux courbes triées par paramètre`);
 
   // Variables pour stocker les courbes encadrantes
   let lowerBoundCurve = null;
@@ -371,9 +384,9 @@ function calculateOutputWithParameterCorrect(
     .filter(cp => cp.yAtRef !== null)
     .sort((a, b) => a.yAtRef! - b.yAtRef!);
 
-  }:`);
+  console.log(`   Courbes triées par valeur Y à X=${xRef.toFixed(2)}:`);
   sortedByY.forEach(cp => {
-    : Y=${cp.yAtRef!.toFixed(2)}`);
+    console.log(`     "${cp.name}" (param=${cp.param}): Y=${cp.yAtRef!.toFixed(2)}`);
   });
 
   // Chercher l'encadrement dans les courbes triées par Y
@@ -389,9 +402,9 @@ function calculateOutputWithParameterCorrect(
       lowerParam = lower.param;
       upperParam = upper.param;
 
-      } est ENTRE les courbes:`);
-      }`);
-      }`);
+      console.log(`   🎯 Point Y=${inputY.toFixed(2)} est ENTRE les courbes:`);
+      console.log(`      - Courbe ${lowerParam} "${lowerName}": Y=${lower.yAtRef!.toFixed(2)}`);
+      console.log(`      - Courbe ${upperParam} "${upperName}": Y=${upper.yAtRef!.toFixed(2)}`);
       break;
     }
   }
@@ -409,7 +422,8 @@ function calculateOutputWithParameterCorrect(
   if (!lowerCurve && !upperCurve) {
     // Le point n'est pas entre deux courbes, vérifier s'il est au-dessus ou en dessous
 
-    
+    console.log(`   ⚠️ Pas trouvé entre deux courbes, analyse des limites...`);
+
     if (sortedByY.length > 0) {
       // Les limites Y min et max sont maintenant faciles à obtenir
       const minYCurve = sortedByY[0];
@@ -417,9 +431,10 @@ function calculateOutputWithParameterCorrect(
       const minY = minYCurve.yAtRef!;
       const maxY = maxYCurve.yAtRef!;
 
-            } (courbe ${minYCurve.param} "${minYCurve.name}")`);
-      } (courbe ${maxYCurve.param} "${maxYCurve.name}")`);
-      }`);
+      console.log(`   Plage Y des courbes:`);
+      console.log(`     - Y minimum: ${minY.toFixed(2)} (courbe ${minYCurve.param} "${minYCurve.name}")`);
+      console.log(`     - Y maximum: ${maxY.toFixed(2)} (courbe ${maxYCurve.param} "${maxYCurve.name}")`);
+      console.log(`   Point Y d'entrée: ${inputY.toFixed(2)}`);
 
       if (inputY < minY) {
         isBelowAllCurves = true;
@@ -428,18 +443,21 @@ function calculateOutputWithParameterCorrect(
         lowerParam = minYCurve.param;
         referenceCurve = lowerCurve;
         referenceName = lowerName;
-        } < min=${minY.toFixed(2)})`);
-              } else if (inputY > maxY) {
+        console.log(`   ⚠️ Point EN DESSOUS de la courbe ${lowerParam} (Y=${inputY.toFixed(2)} < min=${minY.toFixed(2)})`);
+        console.log(`   📍 Utilisation de la courbe ${lowerParam} "${referenceName}" pour l'extrapolation`);
+      } else if (inputY > maxY) {
         isAboveAllCurves = true;
         upperCurve = maxYCurve.curve;
         upperName = maxYCurve.name;
         upperParam = maxYCurve.param;
         referenceCurve = upperCurve;
         referenceName = upperName;
-        } > max=${maxY.toFixed(2)})`);
-              } else {
+        console.log(`   ⚠️ Point AU-DESSUS de la courbe ${upperParam} (Y=${inputY.toFixed(2)} > max=${maxY.toFixed(2)})`);
+        console.log(`   📍 Utilisation de la courbe ${upperParam} "${referenceName}" pour l'extrapolation`);
+      } else {
         // Le point est dans la plage mais on n'a pas trouvé deux courbes encadrantes
         // OU le point est au-dessus/en-dessous mais on veut quand même trouver les deux courbes les plus proches
+        console.log(`   ⚠️ Recherche des deux courbes les plus proches pour Y=${inputY.toFixed(2)}...`);
 
         // Rechercher manuellement les deux courbes les plus proches
         let closestBelow = null;
@@ -473,16 +491,18 @@ function calculateOutputWithParameterCorrect(
           const yUpperAtRef = closestAbove.yAtRef!;
           positionRatio = (inputY - yLowerAtRef) / (yUpperAtRef - yLowerAtRef);
 
-                    })`);
-          })`);
-          }`);
+          console.log(`   ✅ Trouvé par recherche manuelle:`);
+          console.log(`     Courbe inférieure: "${lowerName}" (Y=${yLowerAtRef.toFixed(2)})`);
+          console.log(`     Courbe supérieure: "${upperName}" (Y=${yUpperAtRef.toFixed(2)})`);
+          console.log(`     Ratio: ${positionRatio.toFixed(3)}`);
         } else {
           // Utiliser la courbe la plus proche
           const closest = closestBelow || closestAbove;
           if (closest) {
             referenceCurve = closest.curve;
             referenceName = closest.name;
-                      } else {
+            console.log(`   ⚠️ Une seule courbe proche trouvée: "${referenceName}"`);
+          } else {
             console.error(`   ❌ Erreur: Impossible de trouver une courbe de référence`);
             return null;
           }
@@ -501,11 +521,11 @@ function calculateOutputWithParameterCorrect(
       const range = yUpperAtRef - yLowerAtRef;
       positionRatio = (inputY - yLowerAtRef) / range;
 
-      }:`);
-      }`);
-      }`);
-      }`);
-      } (0=courbe inférieure, 1=courbe supérieure)`);
+      console.log(`   📏 Calcul du ratio de position à X=${xRef.toFixed(2)}:`);
+      console.log(`     Courbe inférieure "${lowerName}": Y=${yLowerAtRef.toFixed(2)}`);
+      console.log(`     Courbe supérieure "${upperName}": Y=${yUpperAtRef.toFixed(2)}`);
+      console.log(`     Point d'entrée: Y=${inputY.toFixed(2)}`);
+      console.log(`     Ratio: ${positionRatio.toFixed(3)} (0=courbe inférieure, 1=courbe supérieure)`);
 
       referenceCurve = lowerCurve;
       referenceName = `Entre ${lowerName} et ${upperName}`;
@@ -513,7 +533,14 @@ function calculateOutputWithParameterCorrect(
   }
 
   // ÉTAPE 3: Application du ratio au paramètre X
-              
+  console.log(`\n📍 ÉTAPE 3: Application au paramètre X=${parameterX}`);
+  console.log(`   État actuel:`);
+  console.log(`     - isAboveAllCurves: ${isAboveAllCurves}`);
+  console.log(`     - isBelowAllCurves: ${isBelowAllCurves}`);
+  console.log(`     - lowerCurve: ${lowerCurve ? 'défini' : 'null'}`);
+  console.log(`     - upperCurve: ${upperCurve ? 'défini' : 'null'}`);
+  console.log(`     - referenceCurve: ${referenceCurve ? 'défini' : 'null'}`);
+
   let outputY = null;
 
   if (lowerCurve && upperCurve) {
@@ -523,73 +550,87 @@ function calculateOutputWithParameterCorrect(
     // Étape 3: Récupérer les valeurs Y sur les deux courbes de référence
     // Étape 4: Interpoler en utilisant le ratio de position initial
 
-        } (${(positionRatio * 100).toFixed(2)}%)`);
-    
+    console.log(`\n   📊 INTERPOLATION CORRECTE DES ABAQUES:`);
+    console.log(`   Étape 1: Ratio de position Y = ${positionRatio.toFixed(4)} (${(positionRatio * 100).toFixed(2)}%)`);
+    console.log(`   Étape 2: Tracé vertical à X=${parameterX}`);
+
     // Récupérer les valeurs Y de référence au point X de référence
     const yLowerAtRef = findYForX(lowerCurve, xRef);
     const yUpperAtRef = findYForX(upperCurve, xRef);
 
-    }, Y=${inputY.toFixed(2)}):`);
-     || 'non trouvé'}`);
-     || 'non trouvé'}`);
-    }`);
+    console.log(`   Courbes de référence au point d'entrée (X=${xRef.toFixed(2)}, Y=${inputY.toFixed(2)}):`);
+    console.log(`     - Courbe inférieure "${lowerName}": Y=${yLowerAtRef?.toFixed(2) || 'non trouvé'}`);
+    console.log(`     - Courbe supérieure "${upperName}": Y=${yUpperAtRef?.toFixed(2) || 'non trouvé'}`);
+    console.log(`     - Ratio calculé: ${positionRatio.toFixed(4)}`);
 
     // Étape 3: Récupérer les valeurs sur les deux courbes de référence (lowerCurve et upperCurve)
     const yLowerAtParam = findYForX(lowerCurve, parameterX);
     const yUpperAtParam = findYForX(upperCurve, parameterX);
 
-         || 'non trouvé'}`);
-     || 'non trouvé'}`);
+    console.log(`   Étape 3: Valeurs croisées à X=${parameterX}:`);
+    console.log(`     - Courbe inférieure "${lowerName}": Y=${yLowerAtParam?.toFixed(2) || 'non trouvé'}`);
+    console.log(`     - Courbe supérieure "${upperName}": Y=${yUpperAtParam?.toFixed(2) || 'non trouvé'}`);
 
     // Debug additionnel pour le graphique de masse
     if (graph.name.toLowerCase().includes('masse') && lowerCurve.fitted && upperCurve.fitted) {
-      
+      console.log(`   🔍 DEBUG POINTS COURBES MASSE:`);
+
       // Afficher quelques points autour de X=1050 pour la courbe inférieure
-            const lowerPoints = lowerCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
-      lowerPoints.forEach(p => }, Y=${p.y.toFixed(2)}`));
+      console.log(`     Points courbe "${lowerName}" autour de X=1050:`);
+      const lowerPoints = lowerCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
+      lowerPoints.forEach(p => console.log(`       X=${p.x.toFixed(0)}, Y=${p.y.toFixed(2)}`));
 
       // Afficher quelques points autour de X=1050 pour la courbe supérieure
-            const upperPoints = upperCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
-      upperPoints.forEach(p => }, Y=${p.y.toFixed(2)}`));
+      console.log(`     Points courbe "${upperName}" autour de X=1050:`);
+      const upperPoints = upperCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
+      upperPoints.forEach(p => console.log(`       X=${p.x.toFixed(0)}, Y=${p.y.toFixed(2)}`));
 
       // Vérifier si les valeurs attendues correspondent
-      }:`);
+      console.log(`     Pour obtenir Y=870 avec ratio ${positionRatio.toFixed(4)}:`);
       const expectedYUpper = 805 + (870 - 805) / positionRatio;
-      })`);
-      } (actuel: ${yUpperAtParam?.toFixed(2)})`);
+      console.log(`       Y_lower devrait être: 805 (actuel: ${yLowerAtParam?.toFixed(2)})`);
+      console.log(`       Y_upper devrait être: ${expectedYUpper.toFixed(2)} (actuel: ${yUpperAtParam?.toFixed(2)})`);
     }
 
     if (yLowerAtParam !== null && yUpperAtParam !== null) {
       // Étape 4: Appliquer le ratio pour obtenir la valeur finale
-      // 🔧 FIX J : interpolation PRINCIPIELLE — purge du facteur magique 1.914 et de la sortie
-      // forcée 870, qui étaient calés sur UN seul point de test MANEX (inputY≈1115, paramX≈1050)
-      // et faussaient le graphe de masse partout ailleurs. On applique directement le ratio de
-      // position calculé entre les deux courbes encadrantes (méthode bracket), sans rustine masse.
+      // 🔧 FIX J (réappliqué après restauration du fichier) : interpolation
+      // PRINCIPIELLE — purge du facteur magique 1.914 et de la sortie forcée 870,
+      // qui étaient calés sur UN seul point de test MANEX (inputY≈1115, paramX≈1050)
+      // et faussaient le graphe de masse partout ailleurs. On applique directement
+      // le ratio de position calculé entre les deux courbes encadrantes (bracket).
+      // NB : ce fichier avait été MUTILÉ par une passe de strip de console.log
+      // (oct. 2025) et ne compilait plus — restauré depuis a3a3ed6 (dernière
+      // version syntaxiquement saine) lors de P4 (AUDIT_ABAC_CONSTRUCTION.md).
       const adjustedRatio = positionRatio;
 
       outputY = yLowerAtParam + adjustedRatio * (yUpperAtParam - yLowerAtParam);
 
-            } + ${adjustedRatio.toFixed(4)} × (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
-      } + ${adjustedRatio.toFixed(4)} × ${(yUpperAtParam - yLowerAtParam).toFixed(2)}`);
-      } + ${(adjustedRatio * (yUpperAtParam - yLowerAtParam)).toFixed(2)}`);
-      }`);
+      console.log(`   Étape 4: Interpolation finale:`);
+      console.log(`     ${yLowerAtParam.toFixed(2)} + ${adjustedRatio.toFixed(4)} × (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
+      console.log(`     = ${yLowerAtParam.toFixed(2)} + ${adjustedRatio.toFixed(4)} × ${(yUpperAtParam - yLowerAtParam).toFixed(2)}`);
+      console.log(`     = ${yLowerAtParam.toFixed(2)} + ${(adjustedRatio * (yUpperAtParam - yLowerAtParam)).toFixed(2)}`);
+      console.log(`   ✅ RÉSULTAT FINAL: Y=${outputY.toFixed(2)}`);
 
       // Debug spécial pour le graphique de masse
       if (graph.name.toLowerCase().includes('masse')) {
-                }`);
-        : ${parameterX}`);
-         et ${upperName} (param=${upperParam})`);
-        }:`);
-        }`);
-        }`);
-                }`);
-        }`);
-        }`);
-        } + ${positionRatio.toFixed(4)} * (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
-                }`);
+        console.log(`   🔍 DEBUG SPÉCIAL GRAPHIQUE DE MASSE:`);
+        console.log(`     - Entrée Y: ${inputY.toFixed(2)}`);
+        console.log(`     - Paramètre X (masse): ${parameterX}`);
+        console.log(`     - Courbes encadrantes: ${lowerName} (param=${lowerParam}) et ${upperName} (param=${upperParam})`);
+        console.log(`     - Y au point de référence X=${xRef.toFixed(2)}:`);
+        console.log(`       • ${lowerName}: Y=${yLowerAtRef?.toFixed(2)}`);
+        console.log(`       • ${upperName}: Y=${yUpperAtRef?.toFixed(2)}`);
+        console.log(`     - Y au paramètre X=${parameterX}:`);
+        console.log(`       • ${lowerName}: Y=${yLowerAtParam.toFixed(2)}`);
+        console.log(`       • ${upperName}: Y=${yUpperAtParam.toFixed(2)}`);
+        console.log(`     - Ratio de position: ${positionRatio.toFixed(4)}`);
+        console.log(`     - Calcul: ${yLowerAtParam.toFixed(2)} + ${positionRatio.toFixed(4)} * (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
+        console.log(`     - Résultat attendu selon l'utilisateur: Y=870`);
+        console.log(`     - Résultat calculé: Y=${outputY.toFixed(2)}`);
 
         if (Math.abs(outputY - 870) > 10) {
-          .toFixed(2)}`);
+          console.log(`     ⚠️ ÉCART IMPORTANT DÉTECTÉ: ${Math.abs(outputY - 870).toFixed(2)}`);
         }
       }
 
@@ -611,9 +652,11 @@ function calculateOutputWithParameterCorrect(
           upperYAtRef: yUpperAtRef
         }
       };
-            return result;
+      console.log(`   📊 Valeurs de référence stockées:`, result.referenceCurves);
+      return result;
     } else {
-      
+      console.warn(`   ⚠️ Impossible de trouver les valeurs Y sur les courbes de référence`);
+
       // Fallback: essayer de trouver les courbes par paramètre
       let lowerParamCurve = null;
       let upperParamCurve = null;
@@ -638,7 +681,8 @@ function calculateOutputWithParameterCorrect(
 
         if (yLowerParam !== null && yUpperParam !== null) {
           outputY = yLowerParam + paramRatio * (yUpperParam - yLowerParam);
-                    }`);
+          console.log(`   📈 Fallback: Interpolation par paramètre`);
+          console.log(`     Résultat: Y=${outputY.toFixed(2)}`);
         }
       }
     }
@@ -675,21 +719,22 @@ function calculateOutputWithParameterCorrect(
 
       outputY = yAtParam + verticalOffset;
 
-            }`);
-      }`);
-      } + ${verticalOffset.toFixed(2)} = Y=${outputY.toFixed(2)}`);
+      console.log(`   📐 Extrapolation ${isAboveAllCurves ? 'AU-DESSUS' : 'EN DESSOUS'} avec décalage vertical`);
+      console.log(`     Courbe de référence "${referenceName}" à X=${parameterX}: Y=${yAtParam.toFixed(2)}`);
+      console.log(`     Décalage vertical maintenu: ${verticalOffset.toFixed(2)}`);
+      console.log(`     Résultat: ${yAtParam.toFixed(2)} + ${verticalOffset.toFixed(2)} = Y=${outputY.toFixed(2)}`);
     }
   } else if (referenceCurve) {
     // Cas par défaut : suivre directement une courbe
     const yOnRefAtParameter = findYForX(referenceCurve, parameterX);
     if (yOnRefAtParameter !== null) {
       outputY = yOnRefAtParameter;
-      }`);
+      console.log(`   Lecture directe sur "${referenceName}": Y=${outputY.toFixed(2)}`);
     }
   }
 
   if (outputY !== null) {
-    }`);
+    console.log(`✅ RÉSULTAT FINAL: Y=${outputY.toFixed(2)}`);
 
     let curveDescription = referenceName;
     if (isAboveAllCurves) {
@@ -713,9 +758,11 @@ function calculateOutputWithParameterCorrect(
         upperYAtRef: findYForX(upperCurve, xRef)
       } : undefined
     };
-        return result;
+    console.log(`   📊 Résultat final avec courbes de référence:`, result.referenceCurves);
+    return result;
   } else {
-    
+    console.warn(`⚠️ Extrapolation nécessaire`);
+
     if (referenceCurve && referenceCurve.fitted && referenceCurve.fitted.points.length > 0) {
       const points = referenceCurve.fitted.points;
       const firstX = points[0].x;
@@ -725,7 +772,7 @@ function calculateOutputWithParameterCorrect(
         // Extrapolation à gauche
         const slope = (points[1].y - points[0].y) / (points[1].x - points[0].x);
         const extrapolatedY = points[0].y + slope * (parameterX - firstX);
-        }`);
+        console.log(`   📉 Extrapolation gauche: Y=${extrapolatedY.toFixed(2)}`);
         return {
           outputValue: extrapolatedY,
           curveUsed: referenceName + " (extrapolé)",
@@ -738,7 +785,7 @@ function calculateOutputWithParameterCorrect(
         const n = points.length;
         const slope = (points[n-1].y - points[n-2].y) / (points[n-1].x - points[n-2].x);
         const extrapolatedY = points[n-1].y + slope * (parameterX - lastX);
-        }`);
+        console.log(`   📈 Extrapolation droite: Y=${extrapolatedY.toFixed(2)}`);
         return {
           outputValue: extrapolatedY,
           curveUsed: referenceName + " (extrapolé)",
@@ -785,7 +832,8 @@ function calculateOutputWithParameter(
   let bestCurve: Curve | null = null;
   let exactMatch = false;
 
-    .join(', ')}`);
+  console.log(`🔍 Recherche de courbe pour paramètre ${parameterX} dans ${graph.name}`);
+  console.log(`   Courbes disponibles: ${graph.curves.map(c => c.name).join(', ')}`);
 
   // Essayer de trouver une correspondance exacte
   for (const curve of graph.curves) {
@@ -796,11 +844,13 @@ function calculateOutputWithParameter(
     const cleanName = curveName.replace(/\s*(kt|kg|°C|m|ft)\s*$/i, '');
     const curveParam = parseFloat(cleanName);
 
-    
+    console.log(`   Courbe "${curve.name}" → valeur: ${curveParam}`);
+
     if (!isNaN(curveParam) && Math.abs(curveParam - parameterX) < 0.1) {
       bestCurve = curve;
       exactMatch = true;
-            break;
+      console.log(`   ✅ Correspondance exacte trouvée: "${curve.name}"`);
+      break;
     }
   }
 
@@ -813,6 +863,8 @@ function calculateOutputWithParameter(
       })
       .filter(cp => !isNaN(cp.param))
       .sort((a, b) => a.param - b.param);
+
+    console.log(`   Courbes triées par paramètre:`, curvesWithParams.map(cp => `${cp.curve.name}(${cp.param})`));
 
     if (curvesWithParams.length === 0) {
       console.error(`❌ Impossible d'extraire les paramètres des courbes`);
@@ -870,7 +922,8 @@ function calculateOutputWithParameter(
   }
 
   // Utiliser la meilleure courbe trouvée
-  
+  console.log(`   Utilisation de la courbe: "${bestCurve.name}"`);
+
   // Dans un abaque avec paramètre :
   // 1. On entre avec une valeur Y (depuis le graphique précédent)
   // 2. On trace une ligne horizontale à cette valeur Y
@@ -883,16 +936,18 @@ function calculateOutputWithParameter(
   const intersectionX = findXForY(bestCurve, inputY);
 
   if (intersectionX === null) {
-        return null;
+    console.warn(`⚠️ Impossible de trouver l'intersection avec Y=${inputY} sur la courbe ${bestCurve.name}`);
+    return null;
   }
 
-  } pour Y=${inputY}`);
+  console.log(`   🎯 Intersection trouvée à X=${intersectionX.toFixed(2)} pour Y=${inputY}`);
 
   // Maintenant, trouver la valeur Y à X=parameterX sur la même courbe
   const outputY = findYForX(bestCurve, parameterX);
 
   if (outputY === null) {
-        // Essayons de trouver une valeur approchée
+    console.warn(`⚠️ Impossible de trouver Y pour X=${parameterX} sur la courbe ${bestCurve.name}`);
+    // Essayons de trouver une valeur approchée
     if (bestCurve.fitted && bestCurve.fitted.points.length > 0) {
       // Prendre le point le plus proche
       const points = bestCurve.fitted.points;
@@ -907,7 +962,8 @@ function calculateOutputWithParameter(
         }
       }
 
-            return {
+      console.log(`   Utilisation du point le plus proche: X=${closestPoint.x}, Y=${closestPoint.y}`);
+      return {
         outputValue: closestPoint.y,
         curveUsed: bestCurve.name + ' (extrapolé)',
         interpolated: true
@@ -916,7 +972,8 @@ function calculateOutputWithParameter(
     return null;
   }
 
-  
+  console.log(`   🔢 Valeur Y trouvée: ${outputY} pour X=${parameterX}`);
+
   return {
     outputValue: outputY,
     curveUsed: bestCurve.name + (exactMatch ? '' : ' (approx)'),
@@ -939,14 +996,18 @@ export function performCascadeCalculationWithParameters(
   initialValue: number,
   parameters: GraphParameters[] = []
 ): CascadeResult {
-    .join(' → '));
-    
+  console.log('🔄 === Début du calcul en cascade avec paramètres ===');
+  console.log('📊 Graphiques:', graphs.map(g => g.name).join(' → '));
+  console.log('📥 Valeur initiale:', initialValue);
+  console.log('📋 Paramètres:', parameters);
+
   const steps: CascadeStep[] = [];
   let currentValue = initialValue;
 
   for (let i = 0; i < graphs.length; i++) {
     const graph = graphs[i];
-    
+    console.log(`\n📈 Étape ${i + 1}: ${graph.name}`);
+
     // Vérifier que le graphique a des axes configurés
     if (!graph.axes) {
       return {
@@ -966,11 +1027,12 @@ export function performCascadeCalculationWithParameters(
       // Premier graphique : peut aussi avoir un paramètre (altitude pression)
       const paramValue = graphParam?.parameter;
 
-      : ${currentValue}`);
+      console.log(`  Entrée X (${graph.axes.xAxis.title}): ${currentValue}`);
 
       if (paramValue !== undefined) {
         // Si un paramètre est fourni (altitude), l'utiliser pour sélectionner la courbe
-        
+        console.log(`  Paramètre altitude: ${paramValue}`);
+
         // Trouver la courbe correspondant à l'altitude
         let selectedCurve: Curve | null = null;
 
@@ -981,7 +1043,8 @@ export function performCascadeCalculationWithParameters(
 
           if (!isNaN(curveAltitude) && Math.abs(curveAltitude - paramValue) < 100) {
             selectedCurve = curve;
-                        break;
+            console.log(`  ✅ Courbe altitude trouvée: "${curve.name}"`);
+            break;
           }
         }
 
@@ -1028,7 +1091,7 @@ export function performCascadeCalculationWithParameters(
                   interpolated: true
                 };
 
-                } → ${interpolatedY.toFixed(2)} → ${yUpper.toFixed(2)}`);
+                console.log(`  Interpolation altitude: ${yLower.toFixed(2)} → ${interpolatedY.toFixed(2)} → ${yUpper.toFixed(2)}`);
               }
             } else {
               // Utiliser la courbe la plus proche
@@ -1060,7 +1123,8 @@ export function performCascadeCalculationWithParameters(
         }
       } else {
         // Pas de paramètre altitude, utiliser la première courbe ou moyenne
-        
+        console.log(`  ⚠️ Pas d'altitude spécifiée, utilisation de la première courbe`);
+
         const curve = graph.curves[0];
         if (!curve) {
           return {
@@ -1088,7 +1152,8 @@ export function performCascadeCalculationWithParameters(
         };
       }
 
-          } else {
+      console.log(`  Sortie Y: ${result.outputValue}`);
+    } else {
       // Graphiques suivants : valeur sur Y avec paramètre sur X
       const paramValue = graphParam?.parameter;
 
@@ -1101,21 +1166,34 @@ export function performCascadeCalculationWithParameters(
         };
       }
 
-            : ${paramValue}`);
+      console.log(`  Entrée Y: ${currentValue}`);
+      console.log(`  Paramètre X (${graphParam.parameterName || graph.axes.xAxis.title}): ${paramValue}`);
 
       // Debug spécial pour le graphique de masse
       if (graph.name.toLowerCase().includes('masse')) {
-
+        console.log(`  🔍 DEBUG GRAPHIQUE DE MASSE - AVANT CALCUL:`);
+        console.log(`    - Entrée Y depuis graphique précédent: ${currentValue}`);
+        console.log(`    - Paramètre masse X: ${paramValue}`);
+        console.log(`    - Axes du graphique: X=[${graph.axes.xAxis.min}, ${graph.axes.xAxis.max}], Y=[${graph.axes.yAxis.min}, ${graph.axes.yAxis.max}]`);
+        console.log(`    - Nombre de courbes: ${graph.curves.length}`);
+        console.log(`    - Courbes disponibles:`, graph.curves.map(c => `${c.name} (${c.points.length} points)`));
       }
 
       // Si c'est un graphique de vent, passer la direction du vent
       const windDirection = graph.isWindRelated ? graphParam.windDirection : undefined;
-            result = calculateOutputWithParameterCorrect(graph, currentValue, paramValue, windDirection);
+      if (windDirection) {
+        console.log(`  Direction du vent: ${windDirection}`);
+      }
+
+      result = calculateOutputWithParameterCorrect(graph, currentValue, paramValue, windDirection);
 
       // Debug spécial pour le graphique de masse - après calcul
       if (graph.name.toLowerCase().includes('masse') && result) {
-                                if (Math.abs(result.outputValue - 870) > 10) {
-          .toFixed(2)}`);
+        console.log(`  🔍 DEBUG GRAPHIQUE DE MASSE - APRÈS CALCUL:`);
+        console.log(`    - Résultat Y calculé: ${result.outputValue}`);
+        console.log(`    - Valeur attendue selon utilisateur: 870`);
+        if (Math.abs(result.outputValue - 870) > 10) {
+          console.log(`    ⚠️ ÉCART SIGNIFICATIF: ${Math.abs(result.outputValue - 870).toFixed(2)}`);
         }
       }
 
@@ -1128,9 +1206,12 @@ export function performCascadeCalculationWithParameters(
         };
       }
 
-          }
+      console.log(`  Sortie Y: ${result.outputValue}`);
+    }
 
-        
+    console.log(`  Courbe: ${result.curveUsed || 'N/A'}`);
+    console.log(`  Interpolé: ${result.interpolated ? 'Oui' : 'Non'}`);
+
     // Enregistrer l'étape
     steps.push({
       graphId: graph.id,
@@ -1151,7 +1232,10 @@ export function performCascadeCalculationWithParameters(
     currentValue = result.outputValue;
   }
 
-      
+  console.log('\n✅ Calcul en cascade terminé');
+  console.log(`📊 Valeur finale: ${currentValue}`);
+  console.log('🔄 === Fin du calcul en cascade ===\n');
+
   return {
     steps,
     finalValue: currentValue,
@@ -1169,14 +1253,17 @@ export function performCascadeCalculation(
   graphs: GraphConfig[],
   initialValue: number
 ): CascadeResult {
-    .join(' → '));
-  
+  console.log('🔄 === Début du calcul en cascade ===');
+  console.log('📊 Graphiques:', graphs.map(g => g.name).join(' → '));
+  console.log('📥 Valeur initiale:', initialValue);
+
   const steps: CascadeStep[] = [];
   let currentValue = initialValue;
 
   for (let i = 0; i < graphs.length; i++) {
     const graph = graphs[i];
-    
+    console.log(`\n📈 Étape ${i + 1}: ${graph.name}`);
+
     // Vérifier que le graphique a des axes configurés
     if (!graph.axes) {
       return {
@@ -1210,11 +1297,13 @@ export function performCascadeCalculation(
 
         if (!xInRange && yInRange) {
           inputAxis = 'y';
-                            }
+          console.log(`  ⚠️ Valeur ${currentValue} hors limites X [${graph.axes.xAxis.min}, ${graph.axes.xAxis.max}]`);
+          console.log(`  ✅ Utilisation de l'axe Y [${graph.axes.yAxis.min}, ${graph.axes.yAxis.max}]`);
+        }
       }
     }
 
-    }: ${currentValue}`);
+    console.log(`  Entrée ${inputAxis.toUpperCase()}: ${currentValue}`);
 
     // Calculer la valeur de sortie
     const result = calculateOutputFromGraph(graph, currentValue, inputAxis);
@@ -1229,7 +1318,10 @@ export function performCascadeCalculation(
     }
 
     const outputAxis = inputAxis === 'x' ? 'Y' : 'X';
-            
+    console.log(`  Sortie ${outputAxis}: ${result.outputValue}`);
+    console.log(`  Courbe: ${result.curveUsed || 'N/A'}`);
+    console.log(`  Interpolé: ${result.interpolated ? 'Oui' : 'Non'}`);
+
     // Enregistrer l'étape
     steps.push({
       graphId: graph.id,
@@ -1246,7 +1338,10 @@ export function performCascadeCalculation(
     currentValue = result.outputValue;
   }
 
-      
+  console.log('\n✅ Calcul en cascade terminé');
+  console.log(`📊 Valeur finale: ${currentValue}`);
+  console.log('🔄 === Fin du calcul en cascade ===\n');
+
   return {
     steps,
     finalValue: currentValue,

@@ -7,7 +7,9 @@ import { Chart } from './Chart';
 import { PointEditor } from './PointEditor';
 import { PointsTable } from './PointsTable';
 import { GraphManager } from './GraphManager';
-import { ChainCalculator } from './ChainCalculator';
+// (import ChainCalculator retiré : jamais utilisé comme valeur → esbuild l'élidait,
+//  ce qui a masqué pendant des mois la casse syntaxique de tout le graphe cascade.
+//  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
 import { CascadeCalculator } from './CascadeCalculator';
 import { AbacCurveManager } from '../core/manager';
 import { calculateAutoAxesLimits, calculateGraphAutoLimits, updateAxesWithAutoLimits } from '../core/axesUtils';
@@ -1574,6 +1576,83 @@ const renderStepContent = () => {
                       {refCurveCount} courbe{refCurveCount > 1 ? 's' : ''} de référence
                       {isFocus ? ' — EN ÉDITION' : ''}
                     </div>
+
+                    {/* ─── P3 : CONNECTEURS DE CASCADE — les liaisons entre graphes
+                        s'éditent ICI, sur les cartes (chips ✕ pour délier, sélecteur
+                        « + lier → » pour relier la SORTIE de ce graphe à l'entrée
+                        d'un autre). Remplace les dropdowns abstraits du GraphManager. */}
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center',
+                        borderTop: '1px solid var(--border-subtle)', paddingTop: 6, minHeight: 26
+                      }}
+                    >
+                      {(g.linkedTo || []).map(toId => {
+                        const target = graphs.find(x => x.id === toId);
+                        const ti = graphs.findIndex(x => x.id === toId);
+                        return (
+                          <span key={`to-${toId}`} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 10, padding: '2px 6px', borderRadius: 10,
+                            border: '1px solid var(--accent-primary)', color: 'var(--accent-primary)'
+                          }}>
+                            sortie → {ti >= 0 ? `${ti + 1} · ` : ''}{target?.name || '?'}
+                            <span
+                              onClick={() => handleUnlinkGraphs(g.id, toId)}
+                              title="Supprimer cette liaison de cascade"
+                              style={{ cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              ✕
+                            </span>
+                          </span>
+                        );
+                      })}
+                      {(g.linkedFrom || []).map(fromId => {
+                        const src = graphs.find(x => x.id === fromId);
+                        const si = graphs.findIndex(x => x.id === fromId);
+                        return (
+                          <span key={`from-${fromId}`} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            fontSize: 10, padding: '2px 6px', borderRadius: 10,
+                            border: '1px solid var(--border-regular)', color: 'var(--text-secondary)'
+                          }}>
+                            entrée ← {si >= 0 ? `${si + 1} · ` : ''}{src?.name || '?'}
+                            <span
+                              onClick={() => handleUnlinkGraphs(fromId, g.id)}
+                              title="Supprimer cette liaison de cascade"
+                              style={{ cursor: 'pointer', fontWeight: 700 }}
+                            >
+                              ✕
+                            </span>
+                          </span>
+                        );
+                      })}
+                      {(() => {
+                        const candidates = graphs.filter(x =>
+                          x.id !== g.id && !(g.linkedTo || []).includes(x.id) && !(g.linkedFrom || []).includes(x.id)
+                        );
+                        if (candidates.length === 0) return null;
+                        return (
+                          <select
+                            value=""
+                            onChange={(e) => { if (e.target.value) handleLinkGraphs(g.id, e.target.value); }}
+                            title="Relier la SORTIE de ce graphe à l'entrée d'un autre (lecture en cascade)"
+                            style={{
+                              fontSize: 10, padding: '2px 4px', borderRadius: 10, cursor: 'pointer',
+                              backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)',
+                              border: '1px dashed var(--border-regular)', maxWidth: 130
+                            }}
+                          >
+                            <option value="">＋ lier la sortie →</option>
+                            {candidates.map(x => {
+                              const xi = graphs.findIndex(y => y.id === x.id);
+                              return <option key={x.id} value={x.id}>{xi + 1} · {x.name || 'Graphique'}</option>;
+                            })}
+                          </select>
+                        );
+                      })()}
+                    </div>
                   </div>
                 );
               })}
@@ -1600,6 +1679,31 @@ const renderStepContent = () => {
                 Ajouter un graphique
               </button>
             </div>
+
+            {/* ─── P4 : TEST DE CASCADE EN ÉDITION — exécute le calcul complet
+                (méthode des abaques, cascade.ts) sur les graphes EN L'ÉTAT, sans
+                quitter la construction : un chaînage incohérent se voit ICI, pas
+                en préparation de vol. Le CascadeCalculator est le même composant
+                que côté lecture ; il signale lui-même les courbes non interpolées. */}
+            <details style={{
+              marginBottom: 14,
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 6,
+              backgroundColor: 'var(--bg-overlay)'
+            }}>
+              <summary style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--accent-primary)'
+              }}>
+                🧪 Tester la cascade sur les graphes en l'état
+              </summary>
+              <div style={{ padding: 8 }}>
+                <CascadeCalculator graphs={graphs} />
+              </div>
+            </details>
 
             <AbacGraphWizard
               hideGraphNav
