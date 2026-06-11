@@ -74,6 +74,10 @@ interface AbacGraphWizardProps {
   /** Atelier multi-graphes (P2) : la navigation entre graphes se fait par le
    *  bandeau d'aperçus du builder — masque les boutons ◀ ▶ par index. */
   hideGraphNav?: boolean;
+  /** R2a — Atelier « image unique » actif : l'image et son positionnement
+   *  vivent sur le CANEVAS du builder (une seule image pour le set) → les
+   *  sous-étapes « Image » et « Position » du wizard sont masquées. */
+  hideImageSubSteps?: boolean;
 }
 
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
@@ -84,11 +88,29 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onAddCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
     onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish,
-    hideGraphNav
+    hideGraphNav, hideImageSubSteps
   } = props;
 
-  const [subStep, setSubStep] = useState<WizardSubStep>('image');
+  // R2a — sous-étapes réellement proposées : sans « Image »/« Position » quand
+  // l'atelier image unique est actif (l'image vit sur le canevas du builder).
+  const visibleSubSteps = hideImageSubSteps
+    ? SUB_STEPS.filter(s => s.id !== 'image' && s.id !== 'position')
+    : SUB_STEPS;
+
+  const [subStep, setSubStep] = useState<WizardSubStep>(hideImageSubSteps ? 'axes' : 'image');
   const [editorMode, setEditorMode] = useState<EditorMode>('idle');
+
+  // R2a — si l'atelier devient actif PENDANT qu'on est sur une sous-étape
+  // image/position (ex. import de l'image du set sur le canevas), on bascule
+  // sur la première sous-étape encore visible.
+  React.useEffect(() => {
+    if (hideImageSubSteps && (subStep === 'image' || subStep === 'position')) {
+      setEditorMode('idle');
+      setCalibrationSession(null);
+      setSubStep('axes');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideImageSubSteps, subStep]);
   const [calibrationSession, setCalibrationSession] = useState<null | {
     axis: 'x' | 'y';
     values: number[];
@@ -326,9 +348,9 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
         <span style={{ fontSize: 12, fontWeight: 600, marginRight: 4, color: 'var(--text-secondary)' }}>
           Sous-étapes :
         </span>
-        {SUB_STEPS.map((s, idx) => {
+        {visibleSubSteps.map((s, idx) => {
           const active = s.id === subStep;
-          const done = SUB_STEPS.findIndex(x => x.id === subStep) > idx;
+          const done = visibleSubSteps.findIndex(x => x.id === subStep) > idx;
           return (
             <React.Fragment key={s.id}>
               {idx > 0 && <span style={{ color: 'var(--text-tertiary)' }}>→</span>}
@@ -1103,23 +1125,24 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
   };
 
   // === Navigation bas de wizard ===
+  // R2a : navigue sur les sous-étapes VISIBLES (sans image/position en atelier).
   const renderNav = () => {
-    const curIdx = SUB_STEPS.findIndex(s => s.id === subStep);
-    const isFirst = curIdx === 0;
-    const isLast = curIdx === SUB_STEPS.length - 1;
+    const curIdx = visibleSubSteps.findIndex(s => s.id === subStep);
+    const isFirst = curIdx <= 0;
+    const isLast = curIdx === visibleSubSteps.length - 1;
     return (
       <div style={{ display: 'flex', gap: 8, padding: 16, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-overlay)', flexWrap: 'wrap' }}>
         <button
-          onClick={() => isFirst ? onPreviousGraph() : goToSubStep(SUB_STEPS[curIdx - 1].id)}
+          onClick={() => isFirst ? onPreviousGraph() : goToSubStep(visibleSubSteps[curIdx - 1].id)}
           disabled={isFirst && graphIndex === 0}
           style={btnStyle('var(--text-secondary)')}
         >
-          {isFirst ? (graphIndex > 0 ? `← Graphique ${graphIndex} (précédent)` : '← Précédent') : `← ${SUB_STEPS[curIdx - 1].label}`}
+          {isFirst ? (graphIndex > 0 ? `← Graphique ${graphIndex} (précédent)` : '← Précédent') : `← ${visibleSubSteps[curIdx - 1].label}`}
         </button>
         <div style={{ flex: 1 }} />
         {!isLast ? (
-          <button onClick={() => goToSubStep(SUB_STEPS[curIdx + 1].id)} style={btnStyle('var(--accent-primary)')}>
-            {SUB_STEPS[curIdx + 1].label} →
+          <button onClick={() => goToSubStep(visibleSubSteps[curIdx + 1].id)} style={btnStyle('var(--accent-primary)')}>
+            {visibleSubSteps[curIdx + 1].label} →
           </button>
         ) : (
           <>

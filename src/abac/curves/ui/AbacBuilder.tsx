@@ -5,6 +5,7 @@ import { TextField, Select, MenuItem, FormControl, InputLabel, FormHelperText } 
 // que par les cases supprimées ; PointEditor/GraphManager étaient orphelins).
 // CurveManager et PointsTable restent VIVANTS via AbacGraphWizard qui les monte.
 import { Chart } from './Chart';
+import { WorkshopCanvas } from './WorkshopCanvas';
 // (import ChainCalculator retiré : jamais utilisé comme valeur → esbuild l'élidait,
 //  ce qui a masqué pendant des mois la casse syntaxique de tout le graphe cascade.
 //  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
@@ -78,6 +79,30 @@ function AbacBuilderComponent(
     frames: []
   });
   const workshopActive = workshop.image !== null || workshop.frames.length > 0;
+
+  // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
+  // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
+  // Ne réécrit linkedTo/linkedFrom QUE pour les graphes CADRÉS, et seulement
+  // en cas de changement réel (sinon on rend la même référence → pas de boucle).
+  React.useEffect(() => {
+    if (workshop.frames.length === 0) return;
+    const order = [...workshop.frames].sort((a, b) => a.xLeftPx - b.xLeftPx).map(f => f.graphId);
+    setGraphs(prev => {
+      let changed = false;
+      const next = prev.map(g => {
+        const idx = order.indexOf(g.id);
+        if (idx === -1) return g;
+        const to = idx < order.length - 1 ? [order[idx + 1]] : [];
+        const from = idx > 0 ? [order[idx - 1]] : [];
+        const sameTo = JSON.stringify(g.linkedTo || []) === JSON.stringify(to);
+        const sameFrom = JSON.stringify(g.linkedFrom || []) === JSON.stringify(from);
+        if (sameTo && sameFrom) return g;
+        changed = true;
+        return { ...g, linkedTo: to, linkedFrom: from };
+      });
+      return changed ? next : prev;
+    });
+  }, [workshop.frames]);
 
   // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
@@ -1290,178 +1315,44 @@ const renderStepContent = () => {
               )}
             </div>
 
-            {/* ─── BANDEAU ATELIER (P2a) : aperçus LIVE de tous les graphes ───
-                Chaque carte rend le Chart réel du graphe (image filigrane, axes
-                calibrés, courbes) en lecture seule, mis à jour à chaque saisie.
-                Carte orange = graphe au FOCUS (édité par les outils ci-dessous) ;
-                cliquer une autre carte déplace le focus. Sur écran étroit, la
-                grille passe automatiquement sur plusieurs rangées. */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: 10,
-              marginBottom: 14
-            }}>
-              {graphs.map((g, gi) => {
-                const isFocus = g.id === currentGraphForWizard.id;
-                const role = g.role || 'primary';
-                const refCurveCount = g.curves.filter(c => !c.name.includes('(interpolé)')).length;
-                const isLinked = (g.linkedTo?.length || 0) + (g.linkedFrom?.length || 0) > 0;
-                return (
-                  <div
-                    key={g.id}
-                    onClick={() => { if (!isFocus) setSubStepGraphIndex(gi); }}
-                    title={isFocus ? 'Graphique en cours d\'édition' : 'Cliquer pour éditer ce graphique'}
-                    style={{
-                      cursor: isFocus ? 'default' : 'pointer',
-                      border: `2px solid ${isFocus ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                      borderRadius: 6,
-                      backgroundColor: isFocus ? 'rgba(242, 105, 33, 0.08)' : 'var(--bg-surface)',
-                      padding: 8,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 6,
-                      minWidth: 0
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, minWidth: 0 }}>
-                      <strong style={{
-                        color: isFocus ? 'var(--accent-primary)' : 'var(--text-primary)',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                      }}>
-                        {gi + 1} · {g.name || 'Graphique'}
-                      </strong>
-                      <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-tertiary)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {role === 'primary' ? '⭐ primaire' : '🔗 intermédiaire'}
-                        {isLinked ? ' · ⛓ lié' : ''}
-                      </span>
-                    </div>
-                    <div style={{ overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
-                      {/* R0 (demande pilote) : PLUS de photo en filigrane dans les
-                          aperçus — elle n'était pas à l'échelle de la vignette et
-                          brouillait la lecture. L'aperçu = courbes + axes seuls. */}
-                      <Chart
-                        axesConfig={g.axes || {
-                          xAxis: { min: 0, max: 100, unit: '', title: '' },
-                          yAxis: { min: 0, max: 100, unit: '', title: '' }
-                        }}
-                        curves={g.curves}
-                        selectedCurveId={null}
-                        width={300}
-                        height={170}
-                        showGrid={true}
-                        showLegend={false}
-                        customXTicks={customAxisTicks[g.id]?.x}
-                        customYTicks={customAxisTicks[g.id]?.y}
-                      />
-                    </div>
-                    <div style={{ fontSize: 10, color: isFocus ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
-                      {refCurveCount} courbe{refCurveCount > 1 ? 's' : ''} de référence
-                      {isFocus ? ' — EN ÉDITION' : ''}
-                    </div>
+            {/* ─── R2a — CANEVAS DE L'ATELIER « IMAGE UNIQUE » ───
+                Remplace le bandeau de cartes (P2a) : UNE image MANEX pour tout le
+                set, des CADRES tirés dessus (un par graphe), focus au clic,
+                chaîne G1→G2→G3 auto-synchronisée par l'ordre des cadres (effet
+                dédié plus haut). Les vignettes Chart disparaissent : l'image et
+                les cadres SONT la vue d'ensemble (R3 y ramènera les courbes). */}
+            <WorkshopCanvas
+              workshop={workshop}
+              graphs={graphs}
+              selectedGraphId={currentGraphForWizard.id}
+              onWorkshopChange={setWorkshop}
+              onFocusGraph={(graphId) => {
+                const gi = graphs.findIndex(g => g.id === graphId);
+                if (gi >= 0) setSubStepGraphIndex(gi);
+              }}
+              onRequestGraphForFrame={() => {
+                // 1er graphe encore sans cadre, sinon création d'un nouveau graphe
+                const framed = new Set(workshop.frames.map(f => f.graphId));
+                const unframed = graphs.find(g => !framed.has(g.id));
+                if (unframed) return unframed.id;
+                const newGraph: GraphConfig = {
+                  id: uuidv4(),
+                  name: `Graphique ${graphs.length + 1}`,
+                  isWindRelated: false,
+                  axes: {
+                    xAxis: { min: 0, max: 100, unit: '', title: '' },
+                    yAxis: { min: 0, max: 100, unit: '', title: '' }
+                  },
+                  curves: []
+                };
+                setGraphs(prev => [...prev, newGraph]);
+                setSelectedGraphId(newGraph.id);
+                setSelectedCurveId(null);
+                setSubStepGraphIndex(graphs.length);
+                return newGraph.id;
+              }}
+            />
 
-                    {/* ─── P3 : CONNECTEURS DE CASCADE — les liaisons entre graphes
-                        s'éditent ICI, sur les cartes (chips ✕ pour délier, sélecteur
-                        « + lier → » pour relier la SORTIE de ce graphe à l'entrée
-                        d'un autre). Remplace les dropdowns abstraits du GraphManager. */}
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center',
-                        borderTop: '1px solid var(--border-subtle)', paddingTop: 6, minHeight: 26
-                      }}
-                    >
-                      {(g.linkedTo || []).map(toId => {
-                        const target = graphs.find(x => x.id === toId);
-                        const ti = graphs.findIndex(x => x.id === toId);
-                        return (
-                          <span key={`to-${toId}`} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            fontSize: 10, padding: '2px 6px', borderRadius: 10,
-                            border: '1px solid var(--accent-primary)', color: 'var(--accent-primary)'
-                          }}>
-                            sortie → {ti >= 0 ? `${ti + 1} · ` : ''}{target?.name || '?'}
-                            <span
-                              onClick={() => handleUnlinkGraphs(g.id, toId)}
-                              title="Supprimer cette liaison de cascade"
-                              style={{ cursor: 'pointer', fontWeight: 700 }}
-                            >
-                              ✕
-                            </span>
-                          </span>
-                        );
-                      })}
-                      {(g.linkedFrom || []).map(fromId => {
-                        const src = graphs.find(x => x.id === fromId);
-                        const si = graphs.findIndex(x => x.id === fromId);
-                        return (
-                          <span key={`from-${fromId}`} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            fontSize: 10, padding: '2px 6px', borderRadius: 10,
-                            border: '1px solid var(--border-regular)', color: 'var(--text-secondary)'
-                          }}>
-                            entrée ← {si >= 0 ? `${si + 1} · ` : ''}{src?.name || '?'}
-                            <span
-                              onClick={() => handleUnlinkGraphs(fromId, g.id)}
-                              title="Supprimer cette liaison de cascade"
-                              style={{ cursor: 'pointer', fontWeight: 700 }}
-                            >
-                              ✕
-                            </span>
-                          </span>
-                        );
-                      })}
-                      {(() => {
-                        const candidates = graphs.filter(x =>
-                          x.id !== g.id && !(g.linkedTo || []).includes(x.id) && !(g.linkedFrom || []).includes(x.id)
-                        );
-                        if (candidates.length === 0) return null;
-                        return (
-                          <select
-                            value=""
-                            onChange={(e) => { if (e.target.value) handleLinkGraphs(g.id, e.target.value); }}
-                            title="Relier la SORTIE de ce graphe à l'entrée d'un autre (lecture en cascade)"
-                            style={{
-                              fontSize: 10, padding: '2px 4px', borderRadius: 10, cursor: 'pointer',
-                              backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)',
-                              border: '1px dashed var(--border-regular)', maxWidth: 130
-                            }}
-                          >
-                            <option value="">＋ lier la sortie →</option>
-                            {candidates.map(x => {
-                              const xi = graphs.findIndex(y => y.id === x.id);
-                              return <option key={x.id} value={x.id}>{xi + 1} · {x.name || 'Graphique'}</option>;
-                            })}
-                          </select>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                );
-              })}
-              {/* Carte « ＋ » : nouveau graphe dans le set, focus immédiat */}
-              <button
-                onClick={addGraphToWorkshop}
-                title="Créer un nouveau graphique vide et l'ouvrir"
-                style={{
-                  cursor: 'pointer',
-                  border: '2px dashed var(--border-regular)',
-                  borderRadius: 6,
-                  backgroundColor: 'var(--bg-overlay)',
-                  color: 'var(--text-secondary)',
-                  minHeight: 120,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  fontSize: 13
-                }}
-              >
-                <span style={{ fontSize: 22, color: 'var(--accent-primary)' }}>＋</span>
-                Ajouter un graphique
-              </button>
-            </div>
 
             {/* ─── P4 : TEST DE CASCADE EN ÉDITION — exécute le calcul complet
                 (méthode des abaques, cascade.ts) sur les graphes EN L'ÉTAT, sans
@@ -1490,6 +1381,7 @@ const renderStepContent = () => {
 
             <AbacGraphWizard
               hideGraphNav
+              hideImageSubSteps={workshopActive}
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}
               totalGraphs={graphs.length}
