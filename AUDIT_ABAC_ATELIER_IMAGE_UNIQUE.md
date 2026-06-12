@@ -514,3 +514,29 @@ calés sur UN jeu de données historique (xRef masse, fallback paramètre,
 debugs 870). Tout test de référence MANEX qui diverge doit être rejoué au
 JSON réel — la chaîne de reproduction (Supabase → replay navigateur →
 logs moteur) est désormais rodée.
+
+## 20. R12 — Extrapolation sous/au-dessus de l'enveloppe : décalage préservé (2026-06-12)
+
+**Déclencheur** : question pilote — « que se passe-t-il si une valeur se situe
+en dessous de la première courbe ? » (ex. 10 °C, PA 500 ft, 1100 kg, face
+4 kt).
+
+**Réponse vérifiée (rejeu réel, modèle masse réparé en mémoire)** : le moteur
+gère ce cas par **décalage vertical constant** — il suit le guide le plus
+proche EN PARALLÈLE (le geste du crayon), et l'étiquette « En dessous de la
+courbe "Headwind 1" (extrapolation) » apparaît dans la carte d'étape.
+Cas pilote : 1823 (interpolé 0ft/1000ft pour PA 500) → 1664 (masse, ratio
+0.15) → **1579 ft**.
+
+**Trou trouvé et corrigé en répondant** : si l'entrée est hors enveloppe ET
+que le guide le plus proche s'arrête avant le X cible (ex. face 15 kt avec
+« Headwind 1 » tracé jusqu'à 11,7 kt), `findYForX` sans extrapolation rendait
+null → un fallback renvoyait la valeur DU guide, **décalage perdu** : 1418 au
+lieu de 1307. Sous l'enveloppe l'erreur est conservatrice par chance ;
+AU-DESSUS elle sous-estimerait la distance (non conservateur, dangereux).
+Fix : extrapolation franche (`findYForX(..., true)`) aux deux lectures de la
+branche above/below — le décalage est maintenu au-delà du bout du guide.
+
+**Validation** : cas limite 15 kt sous enveloppe = **1307 ft** (≈ calcul
+manuel 1308) avec étiquette correcte ; cas pilote 4 kt inchangé (1579) ;
+non-régression R11 inchangée (1988). Build vert.

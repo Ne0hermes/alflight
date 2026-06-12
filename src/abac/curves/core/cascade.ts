@@ -646,12 +646,19 @@ function calculateOutputWithParameterCorrect(
       return null;
     }
   } else if (isAboveAllCurves || isBelowAllCurves) {
-    // Extrapolation avec décalage vertical
-    const yAtParam = findYForX(referenceCurve, parameterX);
+    // Extrapolation avec décalage vertical — entrée AU-DESSUS/EN DESSOUS de
+    // l'enveloppe des guides : on suit le guide le plus proche EN PARALLÈLE
+    // (décalage vertical constant, le geste du crayon sur le papier).
+    // R12 — extrapolation FRANCHE (true) ici aussi : si le guide tracé
+    // s'arrête avant le X cible, on le prolonge SANS perdre le décalage.
+    // (Avant : findYForX rendait null → un fallback rendait la valeur DU
+    // guide, décalage perdu — sous-estimation possible au-dessus de
+    // l'enveloppe, donc côté NON conservateur.)
+    const yAtParam = findYForX(referenceCurve, parameterX, true);
     if (yAtParam !== null) {
       // Calculer le décalage vertical à maintenir
       // D'abord, essayer de trouver le Y de la courbe de référence à X de référence
-      const yRefAtXRef = findYForX(referenceCurve, xRef);
+      const yRefAtXRef = findYForX(referenceCurve, xRef, true);
       let verticalOffset = 0;
 
       if (yRefAtXRef !== null) {
