@@ -454,3 +454,63 @@ cartes sur la MÊME ligne (tops identiques) avec flèche, bandeau final
 « 1686.67 ft (514 m) » (514,1 m exact). Leçon au passage : la 1re passe avait
 validé le flex sans voir que maxWidth 800 forçait le wrap — la CAPTURE a
 montré l'empilement, d'où le fix conteneur. tsc parse-clean, build vert.
+
+## 19. R11 — Test de référence PA-28 faux : 2968 ft au lieu de 1900 (2026-06-12)
+
+**Déclencheur** : test pilote sur F-GNAM (PA-28-181, décollage 50 ft) — PA
+2000 ft, OAT 21 °C, vent de face 15 kt, masse 1089 kg. Référence papier :
+**1900 ft**. L'app : **2968 ft** (+56 %).
+
+**Diagnostic (reproduction exacte en rejouant le moteur sur le JSON réel)** :
+QUATRE causes conspirent —
+1. **Sélecteur de vent resté sur « toutes »** (défaut UI) → le moteur a
+   interpolé entre « tailwind 1 » et « Headwind 2 », deux familles
+   physiquement OPPOSÉES. C'est le chemin exact du 2968.
+2. **Guides plus courts que le panneau** : « Headwind 1 » tracé jusqu'à
+   11,7 kt pour un X cible de 15 kt → `findYForX` rendait null (tolérance
+   10 %) → un « fallback par paramètre » comparait alors 15 kt aux NUMÉROS
+   de famille des courbes (1, 2, 3…) → valeurs plausibles mais fausses
+   (1417 ft en vent de face).
+3. **Heuristique xRef « masse ⇒ entrer à droite »** (codée en dur sur un
+   modèle historique, comme l'ex-facteur 1.914 du fix J) : l'entrée d'un
+   panneau de correction doit se faire sur sa LIGNE DE RÉFÉRENCE (bord
+   visuel GAUCHE — cf. papier : « ligne de référence 2550 lb », « ligne de
+   référence vent nul »).
+4. **Données : panneau MASSE tracé en MIROIR** — sur le papier l'axe va de
+   ~1150 kg (gauche) à ~950 (droite) ; le graphe a été déclaré [950..1150]
+   NON inversé, sans calibration X → 1089 kg étaient lus à ~1011 kg.
+
+**Fixes moteur (`core/cascade.ts`)** :
+- xRef = bord de la ligne de référence : `xAxis.reversed ? xMaxCommon :
+  xMinCommon` (heuristique isMassGraph supprimée).
+- `findYForX(curve, x, extrapolate)` : extrapolation FRANCHE du dernier
+  segment aux croisements (comme au crayon jusqu'au bord du panneau), signalée
+  dans `curveUsed` (« guide(s) prolongé(s) hors tracé »).
+- GARDE familles de vent : un graphe vent avec courbes face ET arrière sans
+  direction choisie → calcul REFUSÉ avec message explicite (jamais
+  d'interpolation mixte silencieuse). Doublé côté UI : blocage avant calcul +
+  mention rouge « Direction obligatoire » sous les boutons.
+- « Fallback par paramètre » supprimé ; purge des debugs « Y=870 » résiduels.
+
+**Fix données** : `scripts/fix-fgnam-mass-mirror.js` (dry-run par défaut,
+`--confirm` à lancer par le pilote) — miroir x′ = 2100 − x sur points +
+fitted du graphe masse, `xAxis.reversed = true` → le rendu sur l'image reste
+identique, les valeurs deviennent physiques.
+
+**Validation (rejeu du cas réel, moteur fixé)** :
+| Scénario | Résultat |
+|---|---|
+| données actuelles (miroir non réparé), face | 1638 ft (toujours faux → script requis) |
+| données réparées, face | **1988 ft** (2722 → 2444 → 1988) |
+| données réparées, sans direction | refus explicite ✓ |
+| papier | 1900 ft |
+
+Écart résiduel **+4,6 %** = précision du tracé (numérisation des courbes),
+côté conservateur. Affinable en retraçant le panneau 1 (2722 ft à 21 °/2000 ft)
+et en prolongeant les guides vent jusqu'à 15 kt.
+
+**Leçon** : le moteur de cascade restauré (P4) contenait encore des hacks
+calés sur UN jeu de données historique (xRef masse, fallback paramètre,
+debugs 870). Tout test de référence MANEX qui diverge doit être rejoué au
+JSON réel — la chaîne de reproduction (Supabase → replay navigateur →
+logs moteur) est désormais rodée.

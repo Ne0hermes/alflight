@@ -353,6 +353,30 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
       return;
     }
 
+    // R11 — un set qui contient des courbes vent de face ET vent arrière ne
+    // se calcule JAMAIS sans direction explicite : interpoler entre les deux
+    // familles est physiquement absurde (test de référence PA-28 : 2968 ft au
+    // lieu de 1900 avec le sélecteur resté sur « toutes »). Le moteur a la
+    // même garde — ceci donne le message AVANT de lancer le calcul.
+    if (windDirection === 'all') {
+      const mixedWindGraph = graphChain.find(g => {
+        if (!g.isWindRelated) return false;
+        const fams = new Set(
+          g.curves
+            .map(c => c.windDirection && c.windDirection !== 'none'
+              ? c.windDirection
+              : (c.name.toLowerCase().includes('headwind') ? 'headwind'
+                : c.name.toLowerCase().includes('tailwind') ? 'tailwind' : null))
+            .filter(Boolean)
+        );
+        return fams.size > 1;
+      });
+      if (mixedWindGraph) {
+        setError(`⛔ « ${mixedWindGraph.name} » contient des courbes vent de face ET vent arrière : choisis la direction du vent (boutons ci-dessus) avant de calculer.`);
+        return;
+      }
+    }
+
     // Préparer les paramètres pour TOUS les graphiques (y compris le premier pour l'altitude)
     const graphParameters: GraphParameters[] = [];
     const warningsList: string[] = [];
@@ -1000,6 +1024,11 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     ➡️ Vent arrière
                   </button>
                 </div>
+                {windDirection === 'all' && (
+                  <div style={{ marginTop: 6, fontSize: 'var(--fs-caption)', color: 'var(--color-red-critical)', fontWeight: 600 }}>
+                    Direction obligatoire : le calcul ne mélange jamais vent de face et vent arrière.
+                  </div>
+                )}
                 {windDirection !== 'all' && (
                   <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Seules les courbes {windDirection === 'headwind' ? 'vent de face' : 'vent arrière'} seront utilisées

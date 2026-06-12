@@ -47,7 +47,13 @@ export interface CascadeResult {
  * Trouve la valeur Y pour un X donné sur une courbe interpolée
  * Utilise l'interpolation linéaire entre les points
  */
-function findYForX(curve: Curve, x: number): number | null {
+// R11 — `extrapolate` : aux CROISEMENTS (étape 3 du suivi d'abaque), les
+// guides tracés s'arrêtent souvent juste avant le bord du panneau (ex.
+// Headwind 1 tracé jusqu'à 11,7 kt pour un panneau qui va à 15 kt). Sur le
+// papier on PROLONGE le guide jusqu'au bord : extrapolation linéaire du
+// dernier segment sans limite de tolérance. Hors croisements, la tolérance
+// de 10 % reste le comportement par défaut.
+function findYForX(curve: Curve, x: number, extrapolate = false): number | null {
   if (!curve.fitted || curve.fitted.points.length < 2) {
     return null;
   }
@@ -58,7 +64,7 @@ function findYForX(curve: Curve, x: number): number | null {
   if (x < points[0].x || x > points[points.length - 1].x) {
     // Extrapolation linéaire si proche des limites (tolérance de 10%)
     const range = points[points.length - 1].x - points[0].x;
-    const tolerance = range * 0.1;
+    const tolerance = extrapolate ? Infinity : range * 0.1;
 
     if (x < points[0].x && x >= points[0].x - tolerance) {
       // Extrapoler à gauche
@@ -259,6 +265,21 @@ function calculateOutputWithParameterCorrect(
     }
   }
 
+  // R11 — GARDE : on n'interpole JAMAIS entre deux familles de vent opposées.
+  // Un guide « vent debout » DESCEND (le vent de face raccourcit la distance),
+  // un guide « vent arrière » MONTE : toute paire mixte est physiquement
+  // absurde (c'est exactement ce qui a produit 2968 ft au lieu de 1900 sur le
+  // test de référence PA-28 : interpolation entre « tailwind 1 » et
+  // « Headwind 2 »). Sans direction choisie, on REFUSE le calcul plutôt que
+  // de rendre un résultat silencieusement faux.
+  if (graph.isWindRelated && !windDirection) {
+    const families = new Set(curvesWithParams.map(cp => cp.windType).filter(Boolean));
+    if (families.size > 1) {
+      console.warn('   ⛔ Graphe vent avec courbes vent de face ET vent arrière, aucune direction choisie — calcul refusé');
+      return null;
+    }
+  }
+
   curvesWithParams = curvesWithParams.sort((a, b) => a.param - b.param);
 
   console.log(`🎯 Recherche pour paramètre ${parameterX}:`, curvesWithParams.map(c => `${c.name}(${c.param})`));
@@ -310,22 +331,18 @@ function calculateOutputWithParameterCorrect(
     }
   }
 
-  // Choisir le meilleur X de référence selon le type de graphique
-  // IMPORTANT: Pour le graphique de masse, le "début visuel" est à X=1150 (à droite)
-  // car c'est là où les courbes commencent visuellement et où elles sont distinctes
-  // Pour le graphique de vent, c'est l'inverse
+  // R11 — L'ENTRÉE d'un panneau de correction se fait sur sa LIGNE DE
+  // RÉFÉRENCE, qui est toujours au bord VISUEL GAUCHE du panneau (cf.
+  // PA-28-181 : « ligne de référence 2550 lb » pour la masse, « ligne de
+  // référence vent nul » pour le vent). En DONNÉES : gauche = xMin, SAUF axe
+  // inversé (ex. masse décroissante vers la droite) où gauche = xMax.
+  // L'ancienne heuristique « la plage X ressemble à une masse ⇒ entrer à
+  // droite » (calée sur UN modèle historique) entrait par le mauvais bord
+  // dès que le modèle était construit autrement — supprimée.
+  const xAxisReversed = !!graph.axes?.xAxis?.reversed;
+  xRef = xAxisReversed ? xMaxCommon : xMinCommon;
 
-  // Déterminer si c'est un graphique de masse (où les courbes commencent à droite)
-  // On peut le détecter en regardant le nom du graphique ou en vérifiant que X va de 850 à 1150
-  const isMassGraph = graph.name.toLowerCase().includes('masse') ||
-                      (xMinCommon > 800 && xMaxCommon > 1100);
-
-  // Pour le graphique de masse, utiliser X max (1150) comme point de référence
-  // Pour les autres graphiques, utiliser X min
-  xRef = isMassGraph ? xMaxCommon : xMinCommon;
-
-  console.log(`   Type de graphique: ${isMassGraph ? 'Masse (début visuel à droite)' : 'Normal (début visuel à gauche)'}`);
-  console.log(`   X de référence pour l'analyse: ${xRef.toFixed(2)}`);
+  console.log(`   X de référence = ligne de référence du panneau (bord visuel gauche${xAxisReversed ? ', axe inversé ⇒ xMax' : ''}): ${xRef.toFixed(2)}`);
   console.log(`   Plage X commune: [${xMinCommon.toFixed(2)}, ${xMaxCommon.toFixed(2)}]`);
 
   // Évaluer Y pour chaque courbe à X de référence
@@ -347,12 +364,12 @@ function calculateOutputWithParameterCorrect(
     console.log(`     Courbe ${cp.param}: "${cp.name}" → Y=${cp.yAtRef!.toFixed(2)} à X=${xRef.toFixed(2)}`);
   });
 
-  // Debug: vérifier les valeurs Y au point de référence approprié
+  // Debug: vérifier les valeurs Y au bord d'entrée (R11 : bord de la ligne
+  // de référence = premier point si axe normal, dernier si axe inversé)
   console.log(`   Valeurs Y des courbes au point de référence X=${xRef.toFixed(2)}:`);
   sortedByParam.forEach(cp => {
     if (cp.curve.fitted && cp.curve.fitted.points.length > 0) {
-      // Pour le graphique de masse, le "début visuel" est à la fin du tableau (X=1150)
-      const refPoint = isMassGraph ?
+      const refPoint = xAxisReversed ?
         cp.curve.fitted.points[cp.curve.fitted.points.length - 1] :
         cp.curve.fitted.points[0];
       console.log(`     "${cp.name}" (param=${cp.param}): Y=${refPoint.y.toFixed(2)}`);
@@ -563,34 +580,22 @@ function calculateOutputWithParameterCorrect(
     console.log(`     - Courbe supérieure "${upperName}": Y=${yUpperAtRef?.toFixed(2) || 'non trouvé'}`);
     console.log(`     - Ratio calculé: ${positionRatio.toFixed(4)}`);
 
-    // Étape 3: Récupérer les valeurs sur les deux courbes de référence (lowerCurve et upperCurve)
-    const yLowerAtParam = findYForX(lowerCurve, parameterX);
-    const yUpperAtParam = findYForX(upperCurve, parameterX);
+    // Étape 3: Récupérer les valeurs sur les deux courbes de référence.
+    // R11 — extrapolation FRANCHE au croisement : les guides tracés s'arrêtent
+    // souvent avant le bord du panneau ; on les prolonge linéairement (comme
+    // au crayon sur le papier) et on le signale.
+    const yLowerAtParam = findYForX(lowerCurve, parameterX, true);
+    const yUpperAtParam = findYForX(upperCurve, parameterX, true);
+    const beyond = (c: Curve) => {
+      const pts = c.fitted?.points;
+      if (!pts || pts.length < 2) return false;
+      return parameterX < pts[0].x || parameterX > pts[pts.length - 1].x;
+    };
+    const crossingExtrapolated = beyond(lowerCurve) || beyond(upperCurve);
 
-    console.log(`   Étape 3: Valeurs croisées à X=${parameterX}:`);
+    console.log(`   Étape 3: Valeurs croisées à X=${parameterX}${crossingExtrapolated ? ' (guide(s) prolongé(s) hors tracé)' : ''}:`);
     console.log(`     - Courbe inférieure "${lowerName}": Y=${yLowerAtParam?.toFixed(2) || 'non trouvé'}`);
     console.log(`     - Courbe supérieure "${upperName}": Y=${yUpperAtParam?.toFixed(2) || 'non trouvé'}`);
-
-    // Debug additionnel pour le graphique de masse
-    if (graph.name.toLowerCase().includes('masse') && lowerCurve.fitted && upperCurve.fitted) {
-      console.log(`   🔍 DEBUG POINTS COURBES MASSE:`);
-
-      // Afficher quelques points autour de X=1050 pour la courbe inférieure
-      console.log(`     Points courbe "${lowerName}" autour de X=1050:`);
-      const lowerPoints = lowerCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
-      lowerPoints.forEach(p => console.log(`       X=${p.x.toFixed(0)}, Y=${p.y.toFixed(2)}`));
-
-      // Afficher quelques points autour de X=1050 pour la courbe supérieure
-      console.log(`     Points courbe "${upperName}" autour de X=1050:`);
-      const upperPoints = upperCurve.fitted.points.filter(p => p.x >= 1000 && p.x <= 1100);
-      upperPoints.forEach(p => console.log(`       X=${p.x.toFixed(0)}, Y=${p.y.toFixed(2)}`));
-
-      // Vérifier si les valeurs attendues correspondent
-      console.log(`     Pour obtenir Y=870 avec ratio ${positionRatio.toFixed(4)}:`);
-      const expectedYUpper = 805 + (870 - 805) / positionRatio;
-      console.log(`       Y_lower devrait être: 805 (actuel: ${yLowerAtParam?.toFixed(2)})`);
-      console.log(`       Y_upper devrait être: ${expectedYUpper.toFixed(2)} (actuel: ${yUpperAtParam?.toFixed(2)})`);
-    }
 
     if (yLowerAtParam !== null && yUpperAtParam !== null) {
       // Étape 4: Appliquer le ratio pour obtenir la valeur finale
@@ -608,36 +613,13 @@ function calculateOutputWithParameterCorrect(
 
       console.log(`   Étape 4: Interpolation finale:`);
       console.log(`     ${yLowerAtParam.toFixed(2)} + ${adjustedRatio.toFixed(4)} × (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
-      console.log(`     = ${yLowerAtParam.toFixed(2)} + ${adjustedRatio.toFixed(4)} × ${(yUpperAtParam - yLowerAtParam).toFixed(2)}`);
       console.log(`     = ${yLowerAtParam.toFixed(2)} + ${(adjustedRatio * (yUpperAtParam - yLowerAtParam)).toFixed(2)}`);
       console.log(`   ✅ RÉSULTAT FINAL: Y=${outputY.toFixed(2)}`);
-
-      // Debug spécial pour le graphique de masse
-      if (graph.name.toLowerCase().includes('masse')) {
-        console.log(`   🔍 DEBUG SPÉCIAL GRAPHIQUE DE MASSE:`);
-        console.log(`     - Entrée Y: ${inputY.toFixed(2)}`);
-        console.log(`     - Paramètre X (masse): ${parameterX}`);
-        console.log(`     - Courbes encadrantes: ${lowerName} (param=${lowerParam}) et ${upperName} (param=${upperParam})`);
-        console.log(`     - Y au point de référence X=${xRef.toFixed(2)}:`);
-        console.log(`       • ${lowerName}: Y=${yLowerAtRef?.toFixed(2)}`);
-        console.log(`       • ${upperName}: Y=${yUpperAtRef?.toFixed(2)}`);
-        console.log(`     - Y au paramètre X=${parameterX}:`);
-        console.log(`       • ${lowerName}: Y=${yLowerAtParam.toFixed(2)}`);
-        console.log(`       • ${upperName}: Y=${yUpperAtParam.toFixed(2)}`);
-        console.log(`     - Ratio de position: ${positionRatio.toFixed(4)}`);
-        console.log(`     - Calcul: ${yLowerAtParam.toFixed(2)} + ${positionRatio.toFixed(4)} * (${yUpperAtParam.toFixed(2)} - ${yLowerAtParam.toFixed(2)})`);
-        console.log(`     - Résultat attendu selon l'utilisateur: Y=870`);
-        console.log(`     - Résultat calculé: Y=${outputY.toFixed(2)}`);
-
-        if (Math.abs(outputY - 870) > 10) {
-          console.log(`     ⚠️ ÉCART IMPORTANT DÉTECTÉ: ${Math.abs(outputY - 870).toFixed(2)}`);
-        }
-      }
 
       // Stocker les valeurs de croisement pour l'affichage
       const result = {
         outputValue: outputY,
-        curveUsed: `Entre ${lowerName} et ${upperName} (ratio ${positionRatio.toFixed(2)})`,
+        curveUsed: `Entre ${lowerName} et ${upperName} (ratio ${positionRatio.toFixed(2)})${crossingExtrapolated ? ' — guide(s) prolongé(s) hors tracé' : ''}`,
         interpolated: true,
         referenceIntersectionX: referenceX,
         offset: positionRatio,
@@ -655,36 +637,13 @@ function calculateOutputWithParameterCorrect(
       console.log(`   📊 Valeurs de référence stockées:`, result.referenceCurves);
       return result;
     } else {
-      console.warn(`   ⚠️ Impossible de trouver les valeurs Y sur les courbes de référence`);
-
-      // Fallback: essayer de trouver les courbes par paramètre
-      let lowerParamCurve = null;
-      let upperParamCurve = null;
-      let lowerParamValue = -Infinity;
-      let upperParamValue = Infinity;
-
-      for (const cp of curvesWithParams) {
-        if (cp.param <= parameterX && cp.param > lowerParamValue) {
-          lowerParamCurve = cp.curve;
-          lowerParamValue = cp.param;
-        }
-        if (cp.param >= parameterX && cp.param < upperParamValue) {
-          upperParamCurve = cp.curve;
-          upperParamValue = cp.param;
-        }
-      }
-
-      if (lowerParamCurve && upperParamCurve && lowerParamCurve !== upperParamCurve) {
-        const paramRatio = (parameterX - lowerParamValue) / (upperParamValue - lowerParamValue);
-        const yLowerParam = findYForX(lowerParamCurve, parameterX);
-        const yUpperParam = findYForX(upperParamCurve, parameterX);
-
-        if (yLowerParam !== null && yUpperParam !== null) {
-          outputY = yLowerParam + paramRatio * (yUpperParam - yLowerParam);
-          console.log(`   📈 Fallback: Interpolation par paramètre`);
-          console.log(`     Résultat: Y=${outputY.toFixed(2)}`);
-        }
-      }
+      // R11 — plus de « fallback par paramètre » : il comparait le X cible
+      // (ex. 15 kt) aux NUMÉROS de famille des courbes (1, 2, 3…) — c'est lui
+      // qui fabriquait des valeurs plausibles mais fausses quand un guide
+      // s'arrêtait avant le X cible. Avec l'extrapolation franche de l'étape 3,
+      // n'arrivent ici que les courbes sans `fitted` : on REFUSE le calcul.
+      console.warn(`   ⛔ Valeurs introuvables sur les courbes de référence (fitted manquant ?) — calcul refusé`);
+      return null;
     }
   } else if (isAboveAllCurves || isBelowAllCurves) {
     // Extrapolation avec décalage vertical
@@ -1187,22 +1146,17 @@ export function performCascadeCalculationWithParameters(
 
       result = calculateOutputWithParameterCorrect(graph, currentValue, paramValue, windDirection);
 
-      // Debug spécial pour le graphique de masse - après calcul
-      if (graph.name.toLowerCase().includes('masse') && result) {
-        console.log(`  🔍 DEBUG GRAPHIQUE DE MASSE - APRÈS CALCUL:`);
-        console.log(`    - Résultat Y calculé: ${result.outputValue}`);
-        console.log(`    - Valeur attendue selon utilisateur: 870`);
-        if (Math.abs(result.outputValue - 870) > 10) {
-          console.log(`    ⚠️ ÉCART SIGNIFICATIF: ${Math.abs(result.outputValue - 870).toFixed(2)}`);
-        }
-      }
-
       if (!result) {
+        // R11 — le refus le plus fréquent : graphe vent à familles mixtes sans
+        // direction choisie (la garde anti-interpolation mixte a rendu null).
+        const windHint = graph.isWindRelated && !windDirection
+          ? ' Ce graphe contient des courbes vent de face ET vent arrière : choisis la direction du vent avant de calculer.'
+          : '';
         return {
           steps,
           finalValue: currentValue,
           success: false,
-          error: `Impossible de calculer la sortie pour Y=${currentValue} avec ${graph.axes.xAxis.title}=${paramValue} sur le graphique "${graph.name}"`
+          error: `Impossible de calculer la sortie pour Y=${currentValue} avec ${graph.axes.xAxis.title}=${paramValue} sur le graphique "${graph.name}".${windHint}`
         };
       }
 
