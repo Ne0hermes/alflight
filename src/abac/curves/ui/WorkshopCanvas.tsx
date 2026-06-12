@@ -50,6 +50,12 @@ interface WorkshopCanvasProps {
    *  par-dessus l'image pour suivre ses traits. */
   bezierSegments?: BezierSegment[] | null;
   onBezierHandleDrag?: (segIdx: number, which: 'cp1' | 'cp2', x: number, y: number) => void;
+  /** Capsule « Nouvelle courbe » (sous le panneau Axes, au-dessus du canevas) :
+   *  création extraite du bloc « Courbes du cadre actif » — qui RESTE sous
+   *  l'atelier (liste, édition, Bézier, points). Connexion fonctionnelle
+   *  inchangée : ces callbacks rejoignent les mêmes handlers du builder. */
+  onCreateCurve?: (name: string, color: string) => void;
+  onFinishCurve?: () => void;
   width?: number;
   height?: number;
 }
@@ -58,6 +64,14 @@ interface WorkshopCanvasProps {
 const MARGIN = { top: 30, right: 16, bottom: 46, left: 64 };
 const FRAME_MIN_W = 60;   // largeur minimale d'un cadre (px inner)
 const HANDLE_W = 7;       // largeur des poignées de bord
+const MAX_ZOOM = 8;       // zoom dynamique : 100 % → 800 %
+
+/** Borne le rectangle de vue (zoom) à l'intérieur du viewBox d'origine. */
+const clampViewRect = (v: { x: number; y: number; w: number; h: number }, W: number, H: number) => ({
+  ...v,
+  x: Math.max(0, Math.min(W - v.w, v.x)),
+  y: Math.max(0, Math.min(H - v.h, v.y))
+});
 
 const FRAME_IDLE = 'var(--text-tertiary)';
 const FRAME_FOCUS = 'var(--accent-primary)';
@@ -281,6 +295,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   onPointDelete,
   bezierSegments = null,
   onBezierHandleDrag,
+  onCreateCurve,
+  onFinishCurve,
   width = 960,
   height = 560
 }) => {
@@ -289,6 +305,53 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   const inner = { w: width - MARGIN.left - MARGIN.right, h: height - MARGIN.top - MARGIN.bottom };
 
   const [imageAdjust, setImageAdjust] = useState(false);
+
+  // ─── ZOOM DYNAMIQUE — précision du placement des points (demande pilote) ───
+  // La vue est un SOUS-RECTANGLE du viewBox d'origine : toute la géométrie
+  // existante (cadres, points, courbes, calibration) reste exprimée dans le
+  // même repère — seules les conversions client→viewBox tiennent compte de
+  // `view`. Molette = zoom centré curseur ; glisser le fond = déplacer la vue.
+  const [view, setView] = useState({ x: 0, y: 0, w: width, h: height });
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const zoomFactor = width / view.w;
+
+  useEffect(() => { setView({ x: 0, y: 0, w: width, h: height }); }, [width, height]);
+
+  /** Zoome d'un multiplicateur RELATIF à la vue courante, ancré sur le point
+   *  client (curseur). Le facteur se calcule DANS le updater (prev) : des
+   *  événements rapprochés (molette continue, double-clic bouton) se composent
+   *  correctement au lieu de relire un état de render périmé. */
+  const zoomBy = useCallback((mult: number, clientX?: number, clientY?: number) => {
+    const rect = svgRef.current?.getBoundingClientRect();
+    setView(prev => {
+      const f = Math.max(1, Math.min(MAX_ZOOM, (width / prev.w) * mult));
+      const w = width / f;
+      const h = height / f;
+      const rx = rect && clientX !== undefined ? (clientX - rect.left) / rect.width : 0.5;
+      const ry = rect && clientY !== undefined ? (clientY - rect.top) / rect.height : 0.5;
+      const ax = prev.x + rx * prev.w; // point viewBox sous l'ancre
+      const ay = prev.y + ry * prev.h;
+      return clampViewRect({ x: ax - rx * w, y: ay - ry * h, w, h }, width, height);
+    });
+  }, [width, height]);
+
+  // Molette = zoom continu. Listener natif NON passif : React enregistre les
+  // wheel en passif → preventDefault (anti-scroll page) y serait ignoré.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      zoomBy(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.clientX, e.clientY);
+    };
+    svg.addEventListener('wheel', onWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', onWheel);
+  }, [zoomBy]);
+
+  // ─── Capsule « Nouvelle courbe » : saisie locale (nom + couleur) ───
+  const [newCurveName, setNewCurveName] = useState('');
+  const [newCurveColor, setNewCurveColor] = useState('#F26921');
 
   // ─── R2b : session de calibration par clics sur le canevas ───
   // Y commun (une fois) ou X d'un cadre. Les valeurs à cliquer viennent du
@@ -306,24 +369,27 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     | { kind: 'img-move' | 'img-tl' | 'img-tr' | 'img-bl' | 'img-br'; startX: number; startY: number; origin: WorkshopImage }
     | { kind: 'frame-move' | 'frame-left' | 'frame-right'; graphId: string; startX: number; origin: WorkshopFrame }
     | { kind: 'point'; graphId: string; curveId: string; pointId: string }
-    | { kind: 'bezier'; graphId: string; segIdx: number; which: 'cp1' | 'cp2' };
+    | { kind: 'bezier'; graphId: string; segIdx: number; which: 'cp1' | 'cp2' }
+    | { kind: 'pan'; startX: number; startY: number; origin: { x: number; y: number; w: number; h: number } };
   const [drag, setDrag] = useState<DragState | null>(null);
 
+  // Les conversions client→viewBox passent par la VUE zoomée (sous-rectangle) :
+  // au zoom 1 elles sont identiques à l'ancien calcul plein cadre.
   const clientDeltaToInner = useCallback((dxClient: number, dyClient: number) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return { dx: 0, dy: 0 };
-    return { dx: (dxClient / rect.width) * width, dy: (dyClient / rect.height) * height };
-  }, [width, height]);
+    return { dx: (dxClient / rect.width) * view.w, dy: (dyClient / rect.height) * view.h };
+  }, [view.w, view.h]);
 
   // R3 — coordonnées INNER (post-marges) d'un événement pointeur.
   const eventToInner = useCallback((e: { clientX: number; clientY: number }) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return null;
     return {
-      x: ((e.clientX - rect.left) / rect.width) * width - MARGIN.left,
-      y: ((e.clientY - rect.top) / rect.height) * height - MARGIN.top
+      x: view.x + ((e.clientX - rect.left) / rect.width) * view.w - MARGIN.left,
+      y: view.y + ((e.clientY - rect.top) / rect.height) * view.h - MARGIN.top
     };
-  }, [width, height]);
+  }, [view.x, view.y, view.w, view.h]);
 
   // R3 — position du curseur (inner) pour le réticule de tracé.
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
@@ -331,6 +397,18 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   useEffect(() => {
     if (!drag) return;
     const onMove = (e: PointerEvent) => {
+      // ZOOM — déplacement de la VUE (glisser le fond quand on est zoomé) :
+      // delta client → delta viewBox via la vue d'ORIGINE du drag (w/h
+      // constants pendant un pan, pas de boucle de rétroaction).
+      if (drag.kind === 'pan') {
+        const rect = svgRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const dx = ((e.clientX - drag.startX) / rect.width) * drag.origin.w;
+        const dy = ((e.clientY - drag.startY) / rect.height) * drag.origin.h;
+        setView(clampViewRect({ ...drag.origin, x: drag.origin.x - dx, y: drag.origin.y - dy }, width, height));
+        return;
+      }
+
       // R3 — déplacement d'un POINT de courbe : position ABSOLUE → valeurs data
       // via les mappings inverses du cadre (calibration comprise).
       if (drag.kind === 'point') {
@@ -401,7 +479,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
-  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, eventToInner, graphs, onPointDrag, onBezierHandleDrag, inner.w, inner.h]);
+  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, eventToInner, graphs, onPointDrag, onBezierHandleDrag, inner.w, inner.h, width, height]);
 
   // ─── Import de l'image du set ───
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -474,8 +552,10 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     if (!calib) return;
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const vbX = ((e.clientX - rect.left) / rect.width) * width - MARGIN.left;
-    const vbY = ((e.clientY - rect.top) / rect.height) * height - MARGIN.top;
+    // Conversion via la vue ZOOMÉE : calibrer en zoom rapproché est précisément
+    // l'usage visé (les graduations fines se cliquent au pixel près).
+    const vbX = view.x + ((e.clientX - rect.left) / rect.width) * view.w - MARGIN.left;
+    const vbY = view.y + ((e.clientY - rect.top) / rect.height) * view.h - MARGIN.top;
     const value = calib.values[calib.index];
     const pixel = calib.kind === 'y' ? vbY : vbX;
     const collected = [...calib.collected, { value, pixel }];
@@ -540,8 +620,41 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         >
           ＋ Ajouter un cadre {unframedCount > 0 ? `(${unframedCount} graphe(s) à cadrer)` : ''}
         </button>
+
+        {/* ─── ZOOM dynamique — précision du positionnement des points ─── */}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
+          <button
+            onClick={() => zoomBy(1 / 1.4)}
+            disabled={zoomFactor <= 1}
+            title="Dézoomer (ou molette vers le bas sur le canevas)"
+            style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-regular)', borderRadius: 3, fontSize: 12, opacity: zoomFactor <= 1 ? 0.45 : 1 }}
+          >
+            🔍−
+          </button>
+          <span style={{ fontSize: 11, minWidth: 44, textAlign: 'center', fontWeight: 600, color: zoomFactor > 1 ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+            {Math.round(zoomFactor * 100)} %
+          </span>
+          <button
+            onClick={() => zoomBy(1.4)}
+            disabled={zoomFactor >= MAX_ZOOM}
+            title="Zoomer (ou molette vers le haut sur le canevas)"
+            style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-regular)', borderRadius: 3, fontSize: 12, opacity: zoomFactor >= MAX_ZOOM ? 0.45 : 1 }}
+          >
+            🔍+
+          </button>
+          {zoomFactor > 1 && (
+            <button
+              onClick={() => setView({ x: 0, y: 0, w: width, h: height })}
+              title="Revenir à la vue complète"
+              style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', borderRadius: 3, fontSize: 12 }}
+            >
+              ⤢ Vue 100 %
+            </button>
+          )}
+        </span>
+
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)' }}>
-          L'ordre gauche→droite des cadres = chaîne de lecture G1→G2→G3
+          Ordre gauche→droite des cadres = chaîne G1→G2→G3 · molette = zoom, glisser le fond = déplacer la vue
         </span>
       </div>
 
@@ -685,10 +798,95 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         )}
       </div>
 
+      {/* ─── CAPSULE « NOUVELLE COURBE » — entre le panneau Axes (valeurs X/Y)
+          et l'atelier (demande pilote) : la création vit au plus près du tracé.
+          Le bloc « Courbes du cadre actif » RESTE sous l'atelier (liste,
+          édition, Bézier, table de points) — connectés par les mêmes handlers
+          du builder, mais plus liés visuellement. ─── */}
+      {onCreateCurve && !calib && workshop.frames.length > 0 && (() => {
+        const focusedCurve = focusedGraph?.curves.find(c => c.id === selectedCurveId) || null;
+        const pill: React.CSSProperties = {
+          display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
+          margin: '0 0 8px', padding: '6px 14px', borderRadius: 999,
+          backgroundColor: 'var(--bg-overlay)'
+        };
+        // Tracé en cours sur le cadre actif : la capsule pilote la FIN du geste
+        // (créer → cliquer les points → terminer, sans quitter l'atelier).
+        if (tracingMode && focusedCurve) {
+          return (
+            <div style={{ ...pill, border: '2px solid var(--accent-primary)' }}>
+              <strong style={{ fontSize: 12, color: 'var(--accent-primary)', whiteSpace: 'nowrap' }}>
+                📍 Tracé de « {focusedCurve.name} »
+              </strong>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                clique dans le cadre actif pour poser les points · {focusedCurve.points.length} point(s)
+              </span>
+              {onFinishCurve && (
+                <button
+                  onClick={onFinishCurve}
+                  style={{ marginLeft: 'auto', padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
+                >
+                  ✓ Terminer la courbe
+                </button>
+              )}
+            </div>
+          );
+        }
+        return (
+          <div style={{ ...pill, border: '1px solid var(--border-regular)' }}>
+            <strong style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>➕ Nouvelle courbe</strong>
+            <input
+              type="text"
+              placeholder={focusedGraph
+                ? `Nom (ex: "0 ft", "20°C") — sur ${focusedGraph.name || 'le cadre actif'}`
+                : 'Clique d\'abord un cadre sur l\'image'}
+              value={newCurveName}
+              disabled={!focusedFrame}
+              onChange={(e) => setNewCurveName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newCurveName.trim() && focusedFrame) {
+                  onCreateCurve(newCurveName.trim(), newCurveColor);
+                  setNewCurveName('');
+                }
+              }}
+              style={{ flex: 1, minWidth: 170, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+            />
+            <input
+              type="color"
+              value={newCurveColor}
+              onChange={(e) => setNewCurveColor(e.target.value)}
+              title="Couleur de la courbe"
+              style={{ width: 30, height: 24, padding: 0, border: 'none', cursor: 'pointer', backgroundColor: 'transparent' }}
+            />
+            <button
+              onClick={() => {
+                if (!newCurveName.trim() || !focusedFrame) return;
+                onCreateCurve(newCurveName.trim(), newCurveColor);
+                setNewCurveName('');
+              }}
+              disabled={!newCurveName.trim() || !focusedFrame}
+              style={{ padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: (!newCurveName.trim() || !focusedFrame) ? 0.45 : 1 }}
+            >
+              Créer & tracer
+            </button>
+          </div>
+        );
+      })()}
+
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ width: '100%', display: 'block', backgroundColor: 'var(--bg-overlay)', borderRadius: 4, touchAction: 'none' }}
+        viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
+        style={{
+          width: '100%', display: 'block', backgroundColor: 'var(--bg-overlay)', borderRadius: 4, touchAction: 'none',
+          cursor: drag?.kind === 'pan' ? 'grabbing' : (zoomFactor > 1 && !calib ? 'grab' : undefined)
+        }}
+        onPointerDown={(e) => {
+          // ZOOM — pan au glisser sur le FOND : les éléments interactifs
+          // (cadres, poignées, points, Bézier) font tous stopPropagation,
+          // donc arriver ici = clic hors de toute zone d'édition.
+          if (calib || zoomFactor <= 1) return;
+          setDrag({ kind: 'pan', startX: e.clientX, startY: e.clientY, origin: viewRef.current });
+        }}
         onPointerMove={(e) => {
           if (!tracingMode) return;
           setCursorPos(eventToInner(e));
