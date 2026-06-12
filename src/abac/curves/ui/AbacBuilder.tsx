@@ -14,6 +14,7 @@ import { AbacCurveManager } from '../core/manager';
 import { calculateAutoAxesLimits, calculateGraphAutoLimits, updateAxesWithAutoLimits } from '../core/axesUtils';
 import { analyzeChartImage } from '../../v2/aiChartAnalysisService';
 import { AbacGraphWizard } from './AbacGraphWizard';
+import { GraphIdentityPanel } from './GraphIdentityPanel';
 import { isValidOperationId, OPERATION_CATALOG, getOperation } from '../core/operationCatalog';
 import {
   AxesConfig,
@@ -1313,6 +1314,35 @@ const renderStepContent = () => {
           // On positionne l'index sur le nouveau graphique (length AVANT l'ajout = nouvel index).
           setSubStepGraphIndex(graphs.length);
         };
+
+        // R6 — mise à jour du graphe FOCALISÉ (cadre actif). Hissé du wizard
+        // car le panneau d'identité vit désormais sous le canevas. Auto-sync :
+        // le systemType du set = operationId du graphique primaire courant.
+        const updateCurrentGraph = (partial: Partial<GraphConfig>) => {
+          setGraphs(prev => prev.map(g => g.id === currentGraphForWizard.id ? { ...g, ...partial } : g));
+          const isPrimary = (currentGraphForWizard.role || 'primary') === 'primary';
+          if (isPrimary && partial.operationId !== undefined) {
+            setSystemType(partial.operationId);
+            const op = getOperation(partial.operationId);
+            if (op) setModelNameInput(op.labelFr);
+          }
+        };
+
+        // R6 — suppression du graphe focalisé ET de son cadre : le ✕ d'un cadre
+        // ne fait que dé-cadrer, et la barre de pagination du wizard (qui
+        // portait l'ancien bouton supprimer) n'existe plus en atelier.
+        const removeCurrentGraphAndFrame = () => {
+          if (!window.confirm(`Supprimer le graphique ${subStepGraphIndex + 1} (courbes comprises) et son cadre ? Cette action est irréversible.`)) return;
+          const idToRemove = currentGraphForWizard.id;
+          setWorkshop(prev => ({ ...prev, frames: prev.frames.filter(f => f.graphId !== idToRemove) }));
+          setGraphs(prev => prev.filter(g => g.id !== idToRemove));
+          setBackgroundImages(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+          setCustomAxisTicks(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+          setChartSizes(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
+          setSubStepGraphIndex(i => Math.max(0, i - 1));
+          setSelectedCurveId(null);
+        };
+
         if (!currentGraphForWizard) {
           return (
             <div className={styles.stepContent}>
@@ -1402,11 +1432,37 @@ const renderStepContent = () => {
             />
 
 
+            {/* ─── R6 : IDENTITÉ DU CADRE ACTIF — remontée du wizard (sa
+                sous-étape 1 était masquée dès que l'atelier était actif, rendant
+                rôle + operationId INACCESSIBLES) : sans operationId sur le
+                primaire, le set n'est pas consommé par la préparation de vol. */}
+            {workshop.frames.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <GraphIdentityPanel graph={currentGraphForWizard} onUpdateGraph={updateCurrentGraph} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                  <button
+                    onClick={removeCurrentGraphAndFrame}
+                    title="Supprime le graphique focalisé, ses courbes et son cadre sur l'image"
+                    style={{
+                      padding: '4px 10px', fontSize: 12, cursor: 'pointer',
+                      backgroundColor: 'transparent', color: 'var(--color-red-critical)',
+                      border: '1px solid var(--color-red-critical)', borderRadius: 4
+                    }}
+                  >
+                    🗑 Supprimer ce graphique (et son cadre)
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* ─── P4 : TEST DE CASCADE EN ÉDITION — exécute le calcul complet
                 (méthode des abaques, cascade.ts) sur les graphes EN L'ÉTAT, sans
                 quitter la construction : un chaînage incohérent se voit ICI, pas
                 en préparation de vol. Le CascadeCalculator est le même composant
-                que côté lecture ; il signale lui-même les courbes non interpolées. */}
+                que côté lecture ; il signale lui-même les courbes non interpolées.
+                R6 : n'apparaît qu'une fois les cadres posés (rien sous le canevas
+                tant que l'atelier n'est pas engagé). */}
+            {workshop.frames.length > 0 && (
             <details style={{
               marginBottom: 14,
               border: '1px solid var(--border-subtle)',
@@ -1426,10 +1482,17 @@ const renderStepContent = () => {
                 <CascadeCalculator graphs={graphs} />
               </div>
             </details>
+            )}
 
+            {/* R6 — wizard RÉDUIT : uniquement l'outillage courbes (création,
+                Chart pour le Bézier, table de points repliable) + le bouton
+                Interpoler & Valider. Il n'apparaît qu'une fois au moins UN
+                cadre posé — avant ça, le canevas guide (image puis cadres).
+                Les anciens modèles sans atelier passent par le bandeau compat
+                « Créer un cadre par graphe » (D4, non destructif). */}
+            {workshop.frames.length > 0 && (
             <AbacGraphWizard
-              hideGraphNav
-              hideImageSubSteps={workshopActive}
+              atelierMode
               onEditorModeChange={setWizardEditorMode}
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}
@@ -1438,17 +1501,7 @@ const renderStepContent = () => {
               customAxisTicks={customAxisTicks[currentGraphForWizard.id]}
               chartSize={{ width: getChartWidth(currentGraphForWizard.id), height: getChartHeight(currentGraphForWizard.id) }}
               selectedCurveId={selectedCurveId}
-              onUpdateGraph={(partial) => {
-                setGraphs(prev => prev.map(g => g.id === currentGraphForWizard.id ? { ...g, ...partial } : g));
-                // Auto-sync : le systemType du set = operationId du graphique primaire courant
-                // (si on est en train de modifier l'operationId d'un primaire).
-                const isPrimary = (currentGraphForWizard.role || 'primary') === 'primary';
-                if (isPrimary && partial.operationId !== undefined) {
-                  setSystemType(partial.operationId);
-                  const op = getOperation(partial.operationId);
-                  if (op) setModelNameInput(op.labelFr);
-                }
-              }}
+              onUpdateGraph={updateCurrentGraph}
               onSetBackgroundImage={(img) => {
                 setBackgroundImages(prev => {
                   if (img === null) { const { [currentGraphForWizard.id]: _, ...rest } = prev; return rest; }
@@ -1506,6 +1559,7 @@ const renderStepContent = () => {
                 setCurrentStep('final');
               }}
             />
+            )}
           </div>
         );
       }
