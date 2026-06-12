@@ -720,7 +720,10 @@ function AbacBuilderComponent(
     }
   }, [selectedGraphId, handleUpdateGraph]);
 
-  const handleAddCurve = useCallback((name: string, color: string, windDirection?: WindDirection): string => {
+  // R17 — `familyValue` posé À LA CRÉATION : quand la courbe est créée depuis
+  // la liste déroulante de valeurs (capsule / gestionnaire), la valeur
+  // structurée et le nom naissent ENSEMBLE — plus de divergence possible.
+  const handleAddCurve = useCallback((name: string, color: string, windDirection?: WindDirection, familyValue?: number): string => {
     if (!selectedGraphId) return '';
 
     const newCurve: Curve = {
@@ -728,7 +731,8 @@ function AbacBuilderComponent(
       name,
       color,
       points: [],
-      windDirection
+      windDirection,
+      ...(typeof familyValue === 'number' && isFinite(familyValue) ? { familyValue } : {})
     };
 
     setGraphs(prev => prev.map(g =>
@@ -1593,13 +1597,15 @@ const renderStepContent = () => {
               onPointDelete={handlePointDelete}
               bezierSegments={bezierSegments}
               onBezierHandleDrag={handleBezierHandleDrag}
-              onCreateCurve={(name, color) => {
+              onCreateCurve={(name, color, familyValue) => {
                 // Capsule du canevas — MÊME flux que « Nouvelle courbe » du
                 // wizard : handleAddCurve sélectionne déjà la courbe créée.
+                // R17 : la valeur de famille choisie dans la liste déroulante
+                // arrive ici et naît AVEC la courbe (nom = valeur + unité).
                 // Une session Bézier en cours est abandonnée (elle façonnait
                 // l'ancienne courbe, ses poignées n'ont plus de cible).
                 if (bezierSession) cancelBezierSession();
-                const id = handleAddCurve(name, color);
+                const id = handleAddCurve(name, color, undefined, familyValue);
                 if (!id) return;
                 setWizardModeCommand(c => ({ mode: 'placing-points', nonce: (c?.nonce || 0) + 1 }));
               }}

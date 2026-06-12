@@ -116,24 +116,66 @@ const OUT_CLIMB_GRADIENT: OutputSpec = {
 // ─────────────────────────────────────────────────────────────────────────
 
 export const OPERATION_CATALOG: OperationDefinition[] = [
-  // ─── 1. Distance sol décollage ───
+  // ─── 1. Distance sol décollage (état volets NON PRÉCISÉ — hérité) ───
+  // R17 — deux abaques d'un même avion peuvent différer UNIQUEMENT par les
+  // volets (PA-28 : 0° et 25°). Sans variante, ils portent la même dénomination
+  // et le calcul peut piocher le mauvais tableau (bug du 533 ft, §25 audit).
+  // Préférer les variantes « Flaps UP / Flaps TAKEOFF » ci-dessous.
   {
     id: 'takeoff_ground_roll',
-    labelFr: 'Distance sol décollage',
-    labelEn: 'Takeoff ground roll',
+    labelFr: 'Distance sol décollage (volets non précisés — hérité)',
+    labelEn: 'Takeoff ground roll (flaps unspecified — legacy)',
     phase: 'takeoff',
     acceptedOutputs: [OUT_DISTANCE],
-    description: 'Distance au sol entre le point de départ et la rotation (avant que les roues ne quittent la piste).'
+    description: 'Distance au sol entre le point de départ et la rotation. État des volets non précisé : à n\'utiliser que si le MANEX ne publie qu\'une seule configuration.'
   },
 
-  // ─── 2. Distance décollage passage 15 m ───
+  // ─── 2. Distance décollage passage 15 m (état volets NON PRÉCISÉ — hérité) ───
   {
     id: 'takeoff_50ft',
-    labelFr: 'Distance décollage — passage 15 m (50 ft)',
-    labelEn: 'Takeoff distance over 50 ft (15 m)',
+    labelFr: 'Distance décollage — passage 15 m (volets non précisés — hérité)',
+    labelEn: 'Takeoff distance over 50 ft (flaps unspecified — legacy)',
     phase: 'takeoff',
     acceptedOutputs: [OUT_DISTANCE],
-    description: 'Distance totale depuis le point de départ jusqu\'au franchissement de l\'obstacle théorique 15 m / 50 ft.'
+    description: 'Distance totale jusqu\'au franchissement des 15 m / 50 ft. État des volets non précisé : à n\'utiliser que si le MANEX ne publie qu\'une seule configuration.'
+  },
+
+  // ─── 2b. R17 : variantes VOLETS du décollage ───
+  {
+    id: 'takeoff_ground_roll_flaps_up',
+    labelFr: 'Distance sol décollage — Flaps UP (0°)',
+    labelEn: 'Takeoff ground roll — Flaps UP',
+    phase: 'takeoff',
+    configuration: { flaps: 'UP' },
+    acceptedOutputs: [OUT_DISTANCE],
+    description: 'Distance au sol entre le point de départ et la rotation, volets rentrés (0°).'
+  },
+  {
+    id: 'takeoff_50ft_flaps_up',
+    labelFr: 'Distance décollage — passage 15 m, Flaps UP (0°)',
+    labelEn: 'Takeoff distance over 50 ft — Flaps UP',
+    phase: 'takeoff',
+    configuration: { flaps: 'UP' },
+    acceptedOutputs: [OUT_DISTANCE],
+    description: 'Distance totale jusqu\'au franchissement des 15 m / 50 ft, volets rentrés (0°).'
+  },
+  {
+    id: 'takeoff_ground_roll_flaps_to',
+    labelFr: 'Distance sol décollage — Flaps TAKEOFF (ex. 25°)',
+    labelEn: 'Takeoff ground roll — Flaps TAKEOFF',
+    phase: 'takeoff',
+    configuration: { flaps: 'TAKEOFF' },
+    acceptedOutputs: [OUT_DISTANCE],
+    description: 'Distance au sol entre le point de départ et la rotation, volets en position décollage (ex. 25° sur PA-28).'
+  },
+  {
+    id: 'takeoff_50ft_flaps_to',
+    labelFr: 'Distance décollage — passage 15 m, Flaps TAKEOFF (ex. 25°)',
+    labelEn: 'Takeoff distance over 50 ft — Flaps TAKEOFF',
+    phase: 'takeoff',
+    configuration: { flaps: 'TAKEOFF' },
+    acceptedOutputs: [OUT_DISTANCE],
+    description: 'Distance totale jusqu\'au franchissement des 15 m / 50 ft, volets en position décollage (ex. 25° sur PA-28).'
   },
 
   // ─── 3. Performance de montée au décollage ───
@@ -235,6 +277,10 @@ export const OPERATION_CATALOG: OperationDefinition[] = [
 export type OperationId =
   | 'takeoff_ground_roll'
   | 'takeoff_50ft'
+  | 'takeoff_ground_roll_flaps_up'
+  | 'takeoff_50ft_flaps_up'
+  | 'takeoff_ground_roll_flaps_to'
+  | 'takeoff_50ft_flaps_to'
   | 'climb_takeoff'
   | 'climb_cruise'
   | 'cruise_speed'

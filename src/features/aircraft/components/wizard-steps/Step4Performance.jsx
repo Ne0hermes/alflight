@@ -233,9 +233,30 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     }
 
     if (performanceData.abacCurves) {
-      
-      
-      
+      // 🔒 R17 — GARDE ANTI-AMBIGUÏTÉ : deux modèles du même avion ne doivent
+      // JAMAIS partager la même opération canonique (systemType) — la prépa
+      // vol ne saurait pas lequel utiliser (bug du « 533 ft » : deux abaques
+      // takeoff_50ft, volets 0° et 25°, dénominations identiques). On ne perd
+      // jamais le travail : soit le pilote assume (OK), soit le nom porte un
+      // marqueur DOUBLON bien visible à corriger.
+      let duplicateNameSuffix = '';
+      {
+        const newSystemType = performanceData.abacCurves?.metadata?.systemType;
+        const twinIndex = (data.performanceModels || []).findIndex((m, i) =>
+          i !== performanceData.editingModelIndex &&
+          newSystemType &&
+          m?.data?.metadata?.systemType === newSystemType
+        );
+        if (twinIndex >= 0) {
+          const keepAsIs = window.confirm(
+            `⚠ Un modèle « ${data.performanceModels[twinIndex].name} » existe déjà pour cet avion avec la même opération canonique (${newSystemType}).\n\n` +
+            `Deux abaques identiquement dénommés : le calcul peut piocher le MAUVAIS tableau (état des volets ?).\n\n` +
+            `OK — enregistrer tel quel (à corriger : précise l'état des volets dans l'identité du graphe, listes Phase / Métrique / Volets).\n` +
+            `Annuler — enregistrer avec un marqueur « DOUBLON » bien visible sur le nom.`
+          );
+          if (!keepAsIs) duplicateNameSuffix = ' ⚠ DOUBLON — préciser les volets';
+        }
+      }
 
       // Vérifier si on modifie un abaque existant
       if (performanceData.editingModelIndex !== undefined) {
@@ -243,7 +264,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         const newModels = [...(data.performanceModels || [])];
         newModels[performanceData.editingModelIndex] = {
           ...newModels[performanceData.editingModelIndex],
-          name: performanceData.classification || performanceData.abacCurves.name || newModels[performanceData.editingModelIndex].name,
+          name: (performanceData.classification || performanceData.abacCurves.name || newModels[performanceData.editingModelIndex].name) + duplicateNameSuffix,
           type: performanceData.systemType || newModels[performanceData.editingModelIndex].type || 'abaque',
           classification: performanceData.classification,
           classificationValue: performanceData.classificationValue,
@@ -291,7 +312,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           newModels = [...existing];
           newModels[dupIndex] = {
             ...newModels[dupIndex],
-            name: performanceData.classification || newAbac.name || newModels[dupIndex].name,
+            name: (performanceData.classification || newAbac.name || newModels[dupIndex].name) + duplicateNameSuffix,
             type: performanceData.systemType || newModels[dupIndex].type || 'abaque',
             classification: performanceData.classification,
             classificationValue: performanceData.classificationValue,
@@ -304,7 +325,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             ...existing,
             {
               id: `model_${Date.now()}`,
-              name: performanceData.classification || newAbac.name || 'Nouveau modèle ABAC',
+              name: (performanceData.classification || newAbac.name || 'Nouveau modèle ABAC') + duplicateNameSuffix,
               type: performanceData.systemType || 'abaque',
               classification: performanceData.classification,
               classificationValue: performanceData.classificationValue,

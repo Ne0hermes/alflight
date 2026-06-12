@@ -659,3 +659,41 @@ familyValue 0/4000 → « Interpolé entre Niveau mer et Plafond pratique » =
 visible ; calculateur : (°C)/(kg)/(kt) + « Composante de vent » affichés,
 « ft ou m » disparu ; sélecteur famille rendu ; « Déduire des noms » remplit
 0/1000/2000/3000 depuis les courbes F-GNAM réelles. Build vert.
+
+## 25. R17 — Volets dans la dénomination + création de courbe par valeur (2026-06-12)
+
+**Déclencheurs pilote** : (1) le 533 ft EXPLIQUÉ par le pilote et CONFIRMÉ en
+base — F-GNAM porte DEUX modèles strictement identiques (« Distance décollage
+— passage 15 m (50 ft) », systemType takeoff_50ft, tracés à 08:19 et 08:53)
+qui ne diffèrent que par l'état des volets : le calcul pioche le mauvais.
+(2) Rejet du champ valeur libre de R16b : « je préfère une liste déroulante
+des altitudes disponibles, 0 → 10 000 par 500 ft, et l'élément choisi devient
+le nom de la courbe ».
+
+**Livré** :
+- **Catalogue** : 4 variantes volets au décollage (takeoff_{ground_roll,50ft}_
+  flaps_{up,to}) ; les ids hérités sans volets restent valides mais étiquetés
+  « volets non précisés — hérité ».
+- **Identité du graphe : TROIS listes déroulantes** Phase / Métrique / Volets
+  qui RÉSOLVENT l'operationId (décomposition mécanique du catalogue) ; une
+  opération héritée sans volets s'affiche en rouge « précise les volets ».
+- **Verrou anti-doublon sémantique** (Step4Performance, à l'enregistrement) :
+  deux modèles d'un même avion ne peuvent plus partager silencieusement le
+  même systemType — confirm explicite, et en cas de refus le nom porte le
+  marqueur « ⚠ DOUBLON — préciser les volets » (le travail n'est jamais perdu).
+- **Capsule « Nouvelle courbe » : création par VALEUR** — famille altitude →
+  liste 0..10 000 / 500 ft ; autres familles → saisie numérique avec unité ;
+  graphe vent → direction (Face/Arrière) en plus ; le NOM naît de la valeur
+  (« 2000 ft », « Face 5 kt ») et familyValue est posé À LA CRÉATION
+  (handleAddCurve étendu). Le nom libre ne survit que sans variable de famille.
+
+**Vérification (navigateur)** : identité — 4 selects, legacy signalé rouge,
+choisir Volets TAKEOFF résout `takeoff_50ft_flaps_to` ; capsule altitude —
+21 valeurs, choisir 2000 crée « 2000 ft » avec familyValue 2000 ; capsule
+vent — création « Face 5 kt » fv=5 OK (le harnais synthétique n'a pas réussi
+à piloter le select de direction vers Arrière — code React standard identique
+aux selects voisins qui répondent ; à confirmer d'un clic réel). Build vert.
+
+**Reste à faire PILOTE après merge** : ouvrir chacun des deux modèles F-GNAM
+et préciser les volets (UP pour l'abaque 0°, TAKEOFF pour le 25°) via les
+trois listes — les dénominations divergent alors et le verrou cesse d'alerter.
