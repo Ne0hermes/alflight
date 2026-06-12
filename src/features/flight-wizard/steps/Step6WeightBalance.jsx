@@ -9,6 +9,7 @@ import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { getFuelDensity } from '@utils/fuelDensity';
 import { useUnits } from '@hooks/useUnits';
+import { getWeighingReportAge, WEIGHING_REPORT_REMINDER } from '@utils/weighingReportAge';
 
 // Styles communs
 const commonStyles = {
@@ -57,6 +58,13 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
   // (catégorie normale). Le changement N→U applique les limites utilitaires
   // (MTOW réduit + domaine CG plus restreint).
   const [operationCategory, setOperationCategory] = useState('N');
+
+  // ─── Ancienneté du rapport de pesée (demande pilote) ────────────────────
+  // La date de pesée (certificationDate) vit dans aircraft.weighingReport,
+  // souvent STRIPPÉ de la liste en mémoire (seul le flag hasWeighingReport
+  // survit) : on retombe alors sur le record complet IndexedDB, comme le
+  // bouton « Voir rapport de pesée ». null = date inconnue.
+  const [weighingCertDate, setWeighingCertDate] = useState(null);
 
   // 🔧 FIX: Utiliser selectedAircraft du contexte ET faire le mapping weights immédiatement
   const aircraft = useMemo(() => {
@@ -142,6 +150,29 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
     return mappedAircraft;
   }, [selectedAircraft, flightPlan?.aircraft, operationCategory]);
+
+  // Résolution de la date de pesée : mémoire d'abord, sinon IndexedDB.
+  useEffect(() => {
+    let cancelled = false;
+    const direct = aircraft?.weighingReport?.certificationDate;
+    if (direct) { setWeighingCertDate(direct); return undefined; }
+    if (!aircraft?.id || !(aircraft?.hasWeighingReport || aircraft?.weighingReport)) {
+      setWeighingCertDate(null);
+      return undefined;
+    }
+    (async () => {
+      try {
+        const { default: dbm } = await import('@utils/dataBackupManager');
+        await dbm.initPromise;
+        const full = await dbm.getAircraftData(aircraft.id);
+        if (!cancelled) setWeighingCertDate(full?.weighingReport?.certificationDate || null);
+      } catch (err) {
+        console.warn('[Step6] Lecture date de pesée IndexedDB échouée:', err?.message);
+        if (!cancelled) setWeighingCertDate(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [aircraft?.id, aircraft?.weighingReport?.certificationDate, aircraft?.hasWeighingReport]);
 
   // 🔧 FIX CRITIQUE : Synchroniser l'avion complet avec le contexte
   // TOUJOURS récupérer depuis le store pour avoir les données à jour
@@ -772,6 +803,48 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 </span>
               </div>
             )}
+            {/* ─── Ancienneté du rapport de pesée utilisé dans les calculs ───
+                Demande pilote : indicateur simple de l'âge de la pesée au
+                moment de la préparation de vol ; au-delà de 10 ans,
+                avertissement LÉGER (ambre, non bloquant) rappelant au CdB de
+                vérifier qu'une pesée plus récente n'existe pas et, le cas
+                échéant, de l'importer dans la fiche avion. */}
+            {(aircraft.weighingReport?.hasData || aircraft.weighingReport?.pdfData || aircraft.hasWeighingReport) && (() => {
+              const age = getWeighingReportAge(weighingCertDate);
+              if (!age) {
+                return (
+                  <div style={{
+                    marginTop: 8, padding: '6px 10px', borderRadius: 6, fontSize: 11,
+                    border: '1px solid var(--border-subtle)',
+                    backgroundColor: 'var(--bg-surface)',
+                    color: theme.colors.textSecondary
+                  }}>
+                    Date de pesée non renseignée — ouvrez la fiche de l'avion (module Aéronefs)
+                    pour la compléter et suivre l'ancienneté du rapport.
+                  </div>
+                );
+              }
+              const dateStr = age.date.toLocaleDateString('fr-FR');
+              if (!age.isOld) {
+                return (
+                  <div style={{ marginTop: 8, fontSize: 11, color: theme.colors.textSecondary }}>
+                    Pesée du <strong style={{ color: theme.colors.textPrimary }}>{dateStr}</strong>
+                    {' '}· il y a {age.ageLabel} ✓
+                  </div>
+                );
+              }
+              return (
+                <div style={{
+                  marginTop: 8, padding: '8px 10px', borderRadius: 6, fontSize: 11, lineHeight: 1.5,
+                  border: '1px solid var(--status-warning)',
+                  backgroundColor: 'var(--status-warning-bg)',
+                  color: 'var(--status-warning)'
+                }}>
+                  <strong>⚠ Pesée du {dateStr} · il y a {age.ageLabel}.</strong>{' '}
+                  {WEIGHING_REPORT_REMINDER}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Sièges avant */}
