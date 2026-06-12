@@ -215,7 +215,7 @@ function calculateOutputWithParameterCorrect(
   }
 
   // Trouver les deux courbes qui encadrent le paramètre
-  let curvesWithParams = graph.curves
+  const resolvedCurves = graph.curves
     .map(c => {
       let cleanName = c.name.trim();
 
@@ -229,6 +229,14 @@ function calculateOutputWithParameterCorrect(
         } else if (cleanName.toLowerCase().includes('tailwind')) {
           windType = 'tailwind';
         }
+      }
+
+      // R16b — PRIORITÉ à la valeur STRUCTURÉE (Curve.familyValue, saisie dans
+      // le gestionnaire de courbes / déduite des noms). Le parsing du NOM
+      // n'est plus qu'un REPLI de compatibilité pour les anciens modèles :
+      // le nom redevient un pur libellé d'affichage.
+      if (typeof c.familyValue === 'number' && isFinite(c.familyValue)) {
+        return { curve: c, param: c.familyValue, name: c.name, windType };
       }
 
       // Extraire le paramètre numérique du nom
@@ -247,8 +255,22 @@ function calculateOutputWithParameterCorrect(
 
       // Si pas de nombre trouvé, retourner NaN
       return { curve: c, param: NaN, name: c.name, windType };
-    })
-    .filter(cp => !isNaN(cp.param));
+    });
+
+  // R16b — plus de DROP MUET : une courbe sans familyValue ET au nom non
+  // numérique était silencieusement écartée du calcul (« Niveau mer » →
+  // disparue). On la signale haut et fort.
+  const droppedCurves = resolvedCurves.filter(cp => isNaN(cp.param));
+  if (droppedCurves.length > 0) {
+    console.warn(
+      `⚠️ Graphe "${graph.name}" : ${droppedCurves.length} courbe(s) ÉCARTÉE(S) du calcul — ` +
+      `ni valeur de famille saisie, ni nombre lisible dans le nom : ` +
+      droppedCurves.map(d => `« ${d.name} »`).join(', ') +
+      `. Renseigne la valeur de famille dans le gestionnaire de courbes.`
+    );
+  }
+
+  let curvesWithParams = resolvedCurves.filter(cp => !isNaN(cp.param));
 
   // IMPORTANT: Si c'est un graphique de vent, filtrer selon la direction du vent
   if (graph.isWindRelated && windDirection && curvesWithParams.some(cp => cp.windType)) {
@@ -824,6 +846,11 @@ function calculateOutputWithParameter(
   if (!bestCurve) {
     const curvesWithParams = graph.curves
       .map(c => {
+        // R16b — même priorité que le résolveur paramétrique : la valeur
+        // STRUCTURÉE d'abord, le parsing du nom en repli de compatibilité.
+        if (typeof c.familyValue === 'number' && isFinite(c.familyValue)) {
+          return { curve: c, param: c.familyValue };
+        }
         const cleanName = c.name.trim().replace(/\s*(kt|kg|°C|m|ft)\s*$/i, '');
         return { curve: c, param: parseFloat(cleanName) };
       })
@@ -1002,10 +1029,18 @@ export function performCascadeCalculationWithParameters(
         // Trouver la courbe correspondant à l'altitude
         let selectedCurve: Curve | null = null;
 
+        // R16b — même règle que les autres résolveurs : la valeur STRUCTURÉE
+        // (Curve.familyValue) d'abord, le parsing du nom en repli de compat.
+        const altitudeOf = (curve: Curve): number => {
+          if (typeof curve.familyValue === 'number' && isFinite(curve.familyValue)) {
+            return curve.familyValue;
+          }
+          return parseFloat(curve.name.trim().replace(/\s*(ft|m|FL)\s*$/i, ''));
+        };
+
         // D'abord chercher une correspondance exacte
         for (const curve of graph.curves) {
-          const cleanName = curve.name.trim().replace(/\s*(ft|m|FL)\s*$/i, '');
-          const curveAltitude = parseFloat(cleanName);
+          const curveAltitude = altitudeOf(curve);
 
           if (!isNaN(curveAltitude) && Math.abs(curveAltitude - paramValue) < 100) {
             selectedCurve = curve;
@@ -1017,10 +1052,7 @@ export function performCascadeCalculationWithParameters(
         // Si pas de correspondance exacte, trouver les courbes encadrantes
         if (!selectedCurve) {
           const curvesWithAltitudes = graph.curves
-            .map(c => {
-              const cleanName = c.name.trim().replace(/\s*(ft|m|FL)\s*$/i, '');
-              return { curve: c, altitude: parseFloat(cleanName) };
-            })
+            .map(c => ({ curve: c, altitude: altitudeOf(c) }))
             .filter(ca => !isNaN(ca.altitude))
             .sort((a, b) => a.altitude - b.altitude);
 
@@ -1064,7 +1096,14 @@ export function performCascadeCalculationWithParameters(
               selectedCurve = lowerCurve || upperCurve || graph.curves[0];
             }
           } else {
-            // Pas de valeurs d'altitude, utiliser la première courbe
+            // Pas de valeurs d'altitude : repli sur la première courbe — mais
+            // R16b : PLUS JAMAIS en silence (c'est une lecture sur une courbe
+            // arbitraire). Renseigner familyValue dans le gestionnaire.
+            console.warn(
+              `⚠️ Graphe "${graph.name}" : aucune courbe avec valeur de famille lisible ` +
+              `(ni familyValue, ni nombre dans le nom) — repli sur la PREMIÈRE courbe ` +
+              `« ${graph.curves[0]?.name} », résultat potentiellement faux.`
+            );
             selectedCurve = graph.curves[0];
           }
         }

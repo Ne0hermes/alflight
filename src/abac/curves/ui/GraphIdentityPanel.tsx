@@ -13,6 +13,7 @@
 import React from 'react';
 import { GraphConfig } from '../core/types';
 import { getOperation, getOperationsGroupedByPhase } from '../core/operationCatalog';
+import { getAxisVariable, getAxisVariablesGroupedFor } from '../core/axisVariables';
 
 interface GraphIdentityPanelProps {
   graph: GraphConfig;
@@ -89,6 +90,40 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
             </select>
           </label>
         )}
+      </div>
+
+      {/* R16b — variable de FAMILLE des courbes : le paramètre qui distingue
+          les courbes de CE graphe (altitude pression, masse, vent…). La
+          déclarer débloque la saisie de la VALEUR par courbe dans le
+          gestionnaire — le moteur lit alors cette valeur structurée au lieu
+          d'interpréter les NOMS de courbes (source d'erreurs silencieuses). */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span
+          style={labelStyle}
+          title="Le paramètre qui distingue les courbes entre elles (ex. altitude pression pour le panneau températures). Une fois choisie, chaque courbe porte sa valeur — le nom n'est plus qu'un libellé."
+        >
+          Variable de famille des courbes
+        </span>
+        <select
+          value={graph.familyAxisVariable || ''}
+          onChange={(e) => onUpdateGraph({ familyAxisVariable: e.target.value || undefined })}
+          style={{ ...selectStyle, flex: 1, minWidth: 220 }}
+        >
+          <option value="">— héritée des noms de courbes (fragile) —</option>
+          {getAxisVariablesGroupedFor('x').map(g => (
+            <optgroup key={g.category} label={g.label}>
+              {g.items.map(v => (
+                <option key={v.id} value={v.id}>{v.label}{v.defaultUnit ? ` (${v.defaultUnit})` : ''}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        {(() => {
+          const fam = getAxisVariable(graph.familyAxisVariable);
+          return fam?.defaultUnit
+            ? <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>unité : {fam.defaultUnit}</span>
+            : null;
+        })()}
       </div>
 
       {/* Si PRIMAIRE : opération canonique — détermine la consommation en prépa vol */}

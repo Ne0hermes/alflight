@@ -10,6 +10,7 @@ import {
   GraphParameters
 } from '../core/cascade';
 import { Chart } from './Chart';
+import { getAxisVariable, getAxisVariableLabel } from '../core/axisVariables';
 
 interface CascadeCalculatorProps {
   graphs: GraphConfig[];
@@ -921,8 +922,13 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               <label style={styles.label}>
                 Valeur d'entrée initiale
                 {graphChain.length > 0 && graphChain[0].axes && (
+                  // R16b — libellé HUMAIN + UNITÉ explicite (demande pilote :
+                  // sans unité affichée, l'erreur de saisie est invisible).
                   <span style={{ fontWeight: 'normal' }}>
-                    {' '}({graphChain[0].axes.xAxis.title})
+                    {' '}— {getAxisVariableLabel(graphChain[0].axes.xAxis.title)}
+                    {graphChain[0].axes.xAxis.unit && (
+                      <strong> ({graphChain[0].axes.xAxis.unit})</strong>
+                    )}
                   </span>
                 )}
               </label>
@@ -945,13 +951,27 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       <span style={{ fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
                         {' '}(obligatoire)
                       </span>
+                      {/* R16b — l'altitude s'interpole ENTRE LES COURBES : son
+                          unité est celle de la famille de courbes, affichée
+                          explicitement (fini le « ft ou m » ambigu). */}
+                      <span style={{ fontWeight: 'normal' }}>
+                        {' '}— {(() => {
+                          const fam = getAxisVariable(graph.familyAxisVariable);
+                          if (fam) return <>{fam.label}{fam.defaultUnit && <strong> ({fam.defaultUnit})</strong>}</>;
+                          const names = graph.curves.slice(0, 3).map(c => c.name).join(', ');
+                          return <>même échelle que les courbes : <strong>{names}{graph.curves.length > 3 ? '…' : ''}</strong></>;
+                        })()}
+                      </span>
                     </>
                   ) : (
                     <>
                       Paramètre pour {graph.name}
                       {graph.axes && (
                         <span style={{ fontWeight: 'normal' }}>
-                          {' '}({graph.axes.xAxis.title})
+                          {' '}— {getAxisVariableLabel(graph.axes.xAxis.title)}
+                          {graph.axes.xAxis.unit && (
+                            <strong> ({graph.axes.xAxis.unit})</strong>
+                          )}
                         </span>
                       )}
                     </>
@@ -967,8 +987,8 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   onChange={(e) => handleParameterChange(graph.id, e.target.value)}
                   placeholder={
                     index === 0
-                      ? 'Altitude pression (ft ou m)'
-                      : `Valeur de ${graph.axes?.xAxis.title || 'paramètre'}`
+                      ? 'Valeur sur l\'échelle des courbes du graphe'
+                      : `Valeur en ${graph.axes?.xAxis.unit || '…'}`
                   }
                 />
                 {parameterWarnings[graph.id] && (
