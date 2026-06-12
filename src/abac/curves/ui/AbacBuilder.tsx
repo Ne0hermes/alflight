@@ -28,6 +28,13 @@ import {
   InterpolationMethod,
   WorkshopConfig
 } from '../core/types';
+import {
+  BezierOverrides,
+  BezierSegment,
+  applyBezierOverrides,
+  fitBezierThroughPoints,
+  sampleBezierSegments
+} from '../core/bezier';
 import styles from './styles.module.css';
 
 // R0 : l'étape 'axes' (morte depuis SPRINT B) est retirée du type — séquence réelle : points → final.
@@ -85,6 +92,11 @@ function AbacBuilderComponent(
   // sur le canevas n'est armé qu'en mode « placement » (même verrou que le
   // Chart du wizard contre les clics fantômes).
   const [wizardEditorMode, setWizardEditorMode] = useState<string>('idle');
+
+  // R7 — session de façonnage Bézier SUR LE CANEVAS (le Chart séparé a disparu
+  // du mode atelier : « tout doit se passer sur le graphique », retour pilote).
+  // La session porte la courbe ciblée + les poignées tirées (coords DATA).
+  const [bezierSession, setBezierSession] = useState<{ curveId: string; overrides: BezierOverrides } | null>(null);
 
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
   // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
@@ -750,6 +762,44 @@ function AbacBuilderComponent(
         : g
     ));
   }, [selectedGraphId]);
+
+  // ─── R7 : façonnage Bézier sur le canevas (moteur P2b recyclé du Chart) ───
+  // Segments recalculés en continu : points de la courbe (qui restent
+  // déplaçables pendant la session) + overrides des poignées tirées.
+  // « Appliquer » échantillonne en points ordinaires → le pipeline
+  // (interpolation, cascade, sauvegarde) reste strictement inchangé.
+  const bezierSegments = React.useMemo<BezierSegment[] | null>(() => {
+    if (!bezierSession || !selectedGraphId) return null;
+    const g = graphs.find(x => x.id === selectedGraphId);
+    const curve = g?.curves.find(c => c.id === bezierSession.curveId);
+    if (!curve || curve.points.length < 2) return null;
+    return applyBezierOverrides(fitBezierThroughPoints(curve.points), bezierSession.overrides);
+  }, [bezierSession, selectedGraphId, graphs]);
+
+  const startBezierSession = useCallback(() => {
+    if (selectedCurveId) setBezierSession({ curveId: selectedCurveId, overrides: {} });
+  }, [selectedCurveId]);
+
+  const cancelBezierSession = useCallback(() => setBezierSession(null), []);
+
+  const applyBezierSession = useCallback(() => {
+    if (!bezierSession || !bezierSegments || bezierSegments.length === 0) return;
+    // 6 échantillons par segment — même fidélité que l'ancien flux Chart.
+    const sampled = sampleBezierSegments(bezierSegments, 6).map(p => ({ ...p, id: uuidv4() }));
+    if (sampled.length >= 2) {
+      handleUpdateCurve(bezierSession.curveId, { points: sampled, fitted: undefined });
+    }
+    setBezierSession(null);
+  }, [bezierSession, bezierSegments, handleUpdateCurve]);
+
+  const handleBezierHandleDrag = useCallback((segIdx: number, which: 'cp1' | 'cp2', x: number, y: number) => {
+    setBezierSession(prev => prev
+      ? { ...prev, overrides: { ...prev.overrides, [segIdx]: { ...(prev.overrides[segIdx] || {}), [which]: { x, y } } } }
+      : prev);
+  }, []);
+
+  // Changer de courbe, de cadre (focus) ou d'étape ABANDONNE la session.
+  React.useEffect(() => { setBezierSession(null); }, [selectedCurveId, selectedGraphId, currentStep]);
 
   const handleAutoAdjustAxes = useCallback((graphId?: string) => {
     const graphsToUpdate = graphId
@@ -1429,6 +1479,8 @@ const renderStepContent = () => {
               onPointClick={handlePointClick}
               onPointDrag={handlePointDrag}
               onPointDelete={handlePointDelete}
+              bezierSegments={bezierSegments}
+              onBezierHandleDrag={handleBezierHandleDrag}
             />
 
 
@@ -1493,6 +1545,10 @@ const renderStepContent = () => {
             {workshop.frames.length > 0 && (
             <AbacGraphWizard
               atelierMode
+              bezierActive={!!bezierSession}
+              onStartBezier={startBezierSession}
+              onApplyBezier={applyBezierSession}
+              onCancelBezier={cancelBezierSession}
               onEditorModeChange={setWizardEditorMode}
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}

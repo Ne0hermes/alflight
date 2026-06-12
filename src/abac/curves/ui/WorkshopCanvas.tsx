@@ -21,6 +21,7 @@ import {
   WorkshopImage,
   WorkshopTickCalibration
 } from '../core/types';
+import { BezierSegment } from '../core/bezier';
 
 interface WorkshopCanvasProps {
   workshop: WorkshopConfig;
@@ -42,6 +43,12 @@ interface WorkshopCanvasProps {
   onPointClick?: (x: number, y: number) => void;
   onPointDrag?: (curveId: string, pointId: string, x: number, y: number) => void;
   onPointDelete?: (curveId: string, pointId: string) => void;
+  /** R7 — façonnage Bézier SUR le canevas (le Chart séparé a disparu de
+   *  l'atelier) : segments en coords DATA de la courbe sélectionnée du graphe
+   *  FOCUS pendant une session, sinon null. Les poignées cp1/cp2 se tirent
+   *  par-dessus l'image pour suivre ses traits. */
+  bezierSegments?: BezierSegment[] | null;
+  onBezierHandleDrag?: (segIdx: number, which: 'cp1' | 'cp2', x: number, y: number) => void;
   width?: number;
   height?: number;
 }
@@ -188,6 +195,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   onPointClick,
   onPointDrag,
   onPointDelete,
+  bezierSegments = null,
+  onBezierHandleDrag,
   width = 960,
   height = 560
 }) => {
@@ -212,7 +221,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   type DragState =
     | { kind: 'img-move' | 'img-tl' | 'img-tr' | 'img-bl' | 'img-br'; startX: number; startY: number; origin: WorkshopImage }
     | { kind: 'frame-move' | 'frame-left' | 'frame-right'; graphId: string; startX: number; origin: WorkshopFrame }
-    | { kind: 'point'; graphId: string; curveId: string; pointId: string };
+    | { kind: 'point'; graphId: string; curveId: string; pointId: string }
+    | { kind: 'bezier'; graphId: string; segIdx: number; which: 'cp1' | 'cp2' };
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const clientDeltaToInner = useCallback((dxClient: number, dyClient: number) => {
@@ -248,6 +258,20 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         const dataX = xPixelToValue(pos.x, g.axes.xAxis, frame);
         const dataY = yPixelToValue(pos.y, workshop.sharedY, inner.h, workshop.yTicks);
         onPointDrag(drag.curveId, drag.pointId, dataX, dataY);
+        return;
+      }
+
+      // R7 — poignée Bézier : position ABSOLUE → valeurs data, mêmes mappings
+      // inverses que les points (calibration comprise).
+      if (drag.kind === 'bezier') {
+        if (!onBezierHandleDrag) return;
+        const pos = eventToInner(e);
+        const frame = workshop.frames.find(f => f.graphId === drag.graphId);
+        const g = graphs.find(x => x.id === drag.graphId);
+        if (!pos || !frame || !g?.axes) return;
+        const dataX = xPixelToValue(pos.x, g.axes.xAxis, frame);
+        const dataY = yPixelToValue(pos.y, workshop.sharedY, inner.h, workshop.yTicks);
+        onBezierHandleDrag(drag.segIdx, drag.which, dataX, dataY);
         return;
       }
 
@@ -293,7 +317,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
     };
-  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, eventToInner, graphs, onPointDrag, inner.w, inner.h]);
+  }, [drag, workshop, onWorkshopChange, clientDeltaToInner, eventToInner, graphs, onPointDrag, onBezierHandleDrag, inner.w, inner.h]);
 
   // ─── Import de l'image du set ───
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -553,6 +577,10 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                   const d = pts
                     .map((p, pi) => `${pi === 0 ? 'M' : 'L'} ${xValueToPixel(p.x, g.axes!.xAxis, f).toFixed(1)} ${yValueToPixel(p.y, workshop.sharedY, inner.h, workshop.yTicks).toFixed(1)}`)
                     .join(' ');
+                  // R7 — pendant une session Bézier, l'ANCIEN tracé de la courbe
+                  // façonnée s'estompe en pointillés : la preview Bézier (plus
+                  // bas) montre le nouveau, pas de double trait ambigu.
+                  const inBezier = isFocus && curve.id === selectedCurveId && !!bezierSegments?.length;
                   return (
                     <path
                       key={curve.id}
@@ -560,7 +588,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                       fill="none"
                       stroke={curve.color}
                       strokeWidth={isFocus ? 2 : 1.2}
-                      opacity={curve.id === selectedCurveId ? 1 : 0.85}
+                      strokeDasharray={inBezier ? '5 4' : undefined}
+                      opacity={inBezier ? 0.25 : curve.id === selectedCurveId ? 1 : 0.85}
                     />
                   );
                 })}
@@ -721,6 +750,55 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               );
             });
           })}
+
+          {/* ─── R7 : FAÇONNAGE BÉZIER sur le canevas — preview de la courbe
+              façonnée + poignées cp1/cp2 tirables PAR-DESSUS l'image (suivre
+              les traits). Coords data → pixels via les mappings du cadre actif
+              (calibration comprise) ; le drag passe par le pattern unifié. ─── */}
+          {bezierSegments && bezierSegments.length > 0 && focusedFrame && focusedGraph?.axes && !calib && (() => {
+            const toPx = (p: { x: number; y: number }) => ({
+              x: xValueToPixel(p.x, focusedGraph.axes!.xAxis, focusedFrame),
+              y: yValueToPixel(p.y, workshop.sharedY, inner.h, workshop.yTicks)
+            });
+            const color = focusedGraph.curves.find(c => c.id === selectedCurveId)?.color || 'var(--accent-primary)';
+            const d = bezierSegments.map((s, i) => {
+              const p0 = toPx(s.p0), c1 = toPx(s.cp1), c2 = toPx(s.cp2), p1 = toPx(s.p1);
+              return `${i === 0 ? `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} ` : ''}C ${c1.x.toFixed(1)} ${c1.y.toFixed(1)}, ${c2.x.toFixed(1)} ${c2.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+            }).join(' ');
+            return (
+              <g data-bezier-layer="1">
+                <path d={d} fill="none" stroke={color} strokeWidth={2.5} pointerEvents="none" />
+                {bezierSegments.map((s, i) => {
+                  const p0 = toPx(s.p0), c1 = toPx(s.cp1), c2 = toPx(s.cp2), p1 = toPx(s.p1);
+                  return (
+                    <g key={`bz-${i}`}>
+                      <line x1={p0.x} y1={p0.y} x2={c1.x} y2={c1.y} stroke="var(--text-secondary)" strokeDasharray="3 3" strokeWidth={1} pointerEvents="none" />
+                      <line x1={p1.x} y1={p1.y} x2={c2.x} y2={c2.y} stroke="var(--text-secondary)" strokeDasharray="3 3" strokeWidth={1} pointerEvents="none" />
+                      {(['cp1', 'cp2'] as const).map(which => {
+                        const c = which === 'cp1' ? c1 : c2;
+                        return (
+                          <circle
+                            key={which}
+                            cx={c.x} cy={c.y} r={6}
+                            fill="var(--bg-surface)"
+                            stroke={color}
+                            strokeWidth={2}
+                            style={{ cursor: 'grab' }}
+                            onPointerDown={(e) => {
+                              e.stopPropagation();
+                              setDrag({ kind: 'bezier', graphId: focusedFrame.graphId, segIdx: i, which });
+                            }}
+                          >
+                            <title>Poignée Bézier — tire pour faire suivre le trait de l'image à la courbe</title>
+                          </circle>
+                        );
+                      })}
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })()}
 
           {/* ─── R3 : réticule de tracé (cadre actif, mode placement) ─── */}
           {tracingMode && selectedCurveId && focusedFrame && focusedGraph?.axes && cursorPos &&
