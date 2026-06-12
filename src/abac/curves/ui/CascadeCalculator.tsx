@@ -27,6 +27,8 @@ interface CascadeCalculatorProps {
     parameters: Record<string, number>;
     windDirection?: 'headwind' | 'tailwind';
     computed: number;
+    /** R19 — attendu papier saisi pour la comparaison live, repris tel quel. */
+    expected?: number;
   }) => void;
 }
 
@@ -217,6 +219,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   const [initialValue, setInitialValue] = useState<string>('');
   const [parameters, setParameters] = useState<{[graphId: string]: string}>({});
   const [windDirection, setWindDirection] = useState<'headwind' | 'tailwind' | 'all'>('all');
+  // R19 — valeur ATTENDUE du papier (optionnelle) : comparée EN LIVE au
+  // résultat calculé (écart % coloré) pour corriger les courbes à vue.
+  const [expectedValue, setExpectedValue] = useState<string>('');
   const [selectedSystemId, setSelectedSystemId] = useState<string>('');
   const [result, setResult] = useState<CascadeResult | null>(null);
   const [error, setError] = useState<string>('');
@@ -1068,6 +1073,29 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           </>
         )}
 
+        {/* R19 — valeur attendue du PAPIER (optionnelle) : l'écart % s'affiche
+            en live sur le résultat, pour corriger les courbes à vue. */}
+        {startGraph && chainValidation.valid && (
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>
+              Valeur attendue du papier
+              <span style={{ fontWeight: 'normal' }}>
+                {' '}(optionnel{(() => {
+                  const u = graphChain[graphChain.length - 1]?.axes?.yAxis?.unit;
+                  return u ? <> — <strong>{u}</strong></> : null;
+                })()})
+              </span>
+            </label>
+            <input
+              type="number"
+              style={styles.input}
+              value={expectedValue}
+              onChange={(e) => setExpectedValue(e.target.value)}
+              placeholder="Résultat lu sur l'abaque du MANEX"
+            />
+          </div>
+        )}
+
         {startGraph && initialValue && chainValidation.valid && (
           <button
             style={styles.calculateButton}
@@ -1138,6 +1166,26 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       {lastAxes.yAxis.title}
                     </div>
                   )}
+                  {/* R19 — comparaison LIVE avec la valeur attendue du papier :
+                      écart % signé, vert ≤5 % (tolérance banc), rouge au-delà. */}
+                  {(() => {
+                    const exp = parseFloat(expectedValue);
+                    if (!Number.isFinite(exp) || exp === 0) return null;
+                    const deltaPct = ((result.finalValue - exp) / Math.abs(exp)) * 100;
+                    const ok = Math.abs(deltaPct) <= 5;
+                    return (
+                      <div style={{
+                        display: 'inline-block', marginTop: 10, padding: '6px 14px', borderRadius: 6,
+                        backgroundColor: ok ? 'var(--status-success)' : 'var(--color-red-critical)',
+                        color: 'white', fontSize: 'var(--fs-body)', fontWeight: 600
+                      }}>
+                        Papier : {exp}{unit ? ` ${unit}` : ''} · écart {deltaPct >= 0 ? '+' : ''}{deltaPct.toFixed(1)} %
+                        <span style={{ fontWeight: 400, marginLeft: 8 }}>
+                          {ok ? '✓ dans la tolérance (±5 %)' : deltaPct > 0 ? 'calcul AU-DESSUS du papier' : 'calcul EN DESSOUS du papier'}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   {/* R13 — un clic transforme ce calcul en cas de référence du
                       banc de test : les entrées sont reprises, il ne reste qu'à
                       taper le résultat ATTENDU lu sur le papier. */}
@@ -1149,11 +1197,15 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                           const v = parseFloat(parameters[g.id]);
                           if (!isNaN(v)) parametersNum[g.id] = v;
                         }
+                        // R19 — l'attendu saisi pour la comparaison live part
+                        // avec le snapshot : le cas de référence naît complet.
+                        const exp = parseFloat(expectedValue);
                         onProposeReference({
                           inputValue: parseFloat(initialValue),
                           parameters: parametersNum,
                           ...(windDirection !== 'all' ? { windDirection } : {}),
-                          computed: result.finalValue
+                          computed: result.finalValue,
+                          ...(Number.isFinite(exp) ? { expected: exp } : {})
                         });
                       }}
                       style={{

@@ -17,6 +17,8 @@ export interface ReferencePrefill {
   parameters: Record<string, number>;
   windDirection?: 'headwind' | 'tailwind';
   computed?: number;
+  /** R19 — attendu papier saisi dans le calculateur (comparaison live). */
+  expected?: number;
 }
 
 interface ReferenceCasesPanelProps {
@@ -59,15 +61,16 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
   const [expected, setExpected] = useState('');
   const [tolerance, setTolerance] = useState(String(DEFAULT_TOLERANCE_PCT));
 
-  // Pré-remplissage depuis le calculateur : on garde les ENTRÉES, le pilote
-  // tape le résultat ATTENDU lu sur le papier (jamais le calculé !).
+  // Pré-remplissage depuis le calculateur : on garde les ENTRÉES, et R19 —
+  // l'ATTENDU papier s'il a été saisi pour la comparaison live (jamais le
+  // calculé : le banc doit tester le modèle, pas s'auto-confirmer).
   React.useEffect(() => {
     if (!prefill) return;
     setFormOpen(true);
     setInputValue(String(prefill.inputValue));
     setParamValues(Object.fromEntries(Object.entries(prefill.parameters).map(([k, v]) => [k, String(v)])));
     setWindDirection(prefill.windDirection || '');
-    setExpected('');
+    setExpected(Number.isFinite(prefill.expected) ? String(prefill.expected) : '');
     onPrefillConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);

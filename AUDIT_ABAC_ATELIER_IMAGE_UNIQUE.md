@@ -738,3 +738,24 @@ conservateur (−2,8 %) mais dans la tolérance banc (5 %) — affinable au trac
   des guides DÉCROISSANTS avec la masse sur un axe non inversé (le miroir a
   eu lieu DEUX fois sur deux modèles) ; et afficher côte à côte les deux
   échelles (m/ft) du papier au moment de calibrer Y.
+
+## 27. R19 — Comparaison live avec la valeur papier dans le calculateur (2026-06-12)
+
+**Demande pilote** : « pouvoir ajouter la valeur de sortie pour qu'elle soit
+comparée en live avec la valeur du test — voir le pourcentage d'erreur et
+corriger les courbes si nécessaire. »
+
+**Livré** (CascadeCalculator) :
+- Champ « **Valeur attendue du papier** (optionnel — unité du Y final) »
+  parmi les entrées du test.
+- Sur le résultat : pastille **live** « Papier : 567 m · écart −2,8 % »,
+  verte si |écart| ≤ 5 % (tolérance du banc), rouge sinon, avec le sens
+  explicité (calcul AU-DESSUS / EN DESSOUS du papier). L'écart se recalcule
+  à chaque « Calculer » — on retouche une courbe, on recalcule, on voit.
+- **📌 « En faire un cas de référence » emporte l'attendu** : le cas du banc
+  naît complet (entrées + attendu papier), zéro re-saisie.
+
+**Vérification (modèle volets TAKEOFF réel réparé, navigateur)** : saisie
+21/2000/1089/15/face + attendu 567 → « Papier : 567 m · écart −2.8 % ✓ dans
+la tolérance (±5 %) » en vert ; le snapshot 📌 contient {expected: 567,
+computed: 551}. Build vert.
