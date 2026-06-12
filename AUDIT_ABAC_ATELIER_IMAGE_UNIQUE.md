@@ -424,3 +424,33 @@ repli automatique + résumé « Primaire · Distance décollage — passage 15 m
 (50 ft) » + nom du set auto-synchronisé dans l'en-tête. tsc parse-clean,
 build vert, capture de l'écran complet conforme (l'ordre de lecture suit
 désormais le flux : identité → axes → image/cadres → courbes → validation).
+
+## 18. R10 — Validation finale : graphes repliés, cascade côte à côte, double unité (2026-06-12, retour pilote)
+
+**Déclencheur** : « à l'étape 3 validation finale, réduire les graphiques
+(les mettre en réduction) ; les petits graphiques qui extrapolent les
+résultats doivent être les uns à côté des autres pour suivre les tracés ;
+et dans la valeur finale, transposer systématiquement entre parenthèses
+l'unité opposée (pieds ↔ mètres) pour toujours avoir un comparatif. »
+
+**Livré** :
+- **Aperçus des graphes REPLIÉS par défaut** (étape finale, AbacBuilder) :
+  un `<details>` « Graphiques du set (N) — courbes interpolées » ; dépliés,
+  les cartes se posent côte à côte (flex wrap, max 340 px).
+- **CascadeCalculator — étapes CÔTE À CÔTE** : chaque étape devient une carte
+  de largeur fixe (396 px), posées en ligne gauche → droite avec une **flèche
+  orange entre les cartes** — la lecture suit le tracé d'un graphe au suivant
+  comme sur l'abaque papier ; retour à la ligne auto sur écran étroit.
+  Le `maxWidth: 800px` du conteneur (qui forçait l'empilement) est levé.
+- **Comparatif d'unités systématique** : `formatOppositeUnit(value, unit)`
+  (exporté, testable) — ft↔m, kt↔km/h, km↔NM, ft/min↔m/s, kg↔lb, L↔gal,
+  lookup insensible à la casse. La valeur finale affiche « 1686.67 ft
+  **(514 m)** » ; unité inconnue → pas de parenthèse (pas de fausse conversion).
+
+**Vérification** (CascadeCalculator monté en réel, chaîne 2 graphes liés avec
+courbes interpolées, calcul lancé via l'UI) : conversions exactes (2000 ft →
+610 m ; 813 m → 2667 ft ; 100 kt → 185 km/h ; unité inconnue → null), deux
+cartes sur la MÊME ligne (tops identiques) avec flèche, bandeau final
+« 1686.67 ft (514 m) » (514,1 m exact). Leçon au passage : la 1re passe avait
+validé le flex sans voir que maxWidth 800 forçait le wrap — la CAPTURE a
+montré l'empilement, d'où le fix conteneur. tsc parse-clean, build vert.
