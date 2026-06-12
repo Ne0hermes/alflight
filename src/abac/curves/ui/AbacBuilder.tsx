@@ -97,6 +97,12 @@ function AbacBuilderComponent(
   // Chart du wizard contre les clics fantômes).
   const [wizardEditorMode, setWizardEditorMode] = useState<string>('idle');
 
+  // Capsule « Nouvelle courbe » du canevas : le wizard reste l'UNIQUE
+  // propriétaire de editorMode — la capsule lui envoie des COMMANDES
+  // (nonce incrémenté = appliquer une fois), il continue de refléter son
+  // état via onEditorModeChange. Pas de second lieu de vérité.
+  const [wizardModeCommand, setWizardModeCommand] = useState<{ mode: 'placing-points' | 'idle'; nonce: number } | null>(null);
+
   // R7 — session de façonnage Bézier SUR LE CANEVAS (le Chart séparé a disparu
   // du mode atelier : « tout doit se passer sur le graphique », retour pilote).
   // La session porte la courbe ciblée + les poignées tirées (coords DATA).
@@ -862,7 +868,11 @@ function AbacBuilderComponent(
               ...g,
               curves: g.curves.map(c =>
                 c.id === selectedCurveId
-                  ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x) }
+                  // R14 — toute retouche de points INVALIDE l'interpolation :
+                  // sinon le trait affiché (fitted, prioritaire au rendu) reste
+                  // figé sur l'ancienne courbe pendant que le point bouge.
+                  // La validation ré-interpole tout (onFinish → fitAll).
+                  ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x), fitted: undefined }
                   : c
               )
             }
@@ -907,7 +917,9 @@ function AbacBuilderComponent(
                     ...c,
                     points: c.points.map(p =>
                       p.id === pointId ? { ...p, x, y } : p
-                    ).sort((a, b) => a.x - b.x)
+                    ).sort((a, b) => a.x - b.x),
+                    // R14 — le trait suit le point : interpolation invalidée
+                    fitted: undefined
                   }
                 : c
             )
@@ -925,7 +937,8 @@ function AbacBuilderComponent(
             ...g,
             curves: g.curves.map(c =>
               c.id === curveId
-                ? { ...c, points: c.points.filter(p => p.id !== pointId) }
+                // R14 — suppression de point : interpolation invalidée aussi
+                ? { ...c, points: c.points.filter(p => p.id !== pointId), fitted: undefined }
                 : c
             )
           }
@@ -1580,6 +1593,20 @@ const renderStepContent = () => {
               onPointDelete={handlePointDelete}
               bezierSegments={bezierSegments}
               onBezierHandleDrag={handleBezierHandleDrag}
+              onCreateCurve={(name, color) => {
+                // Capsule du canevas — MÊME flux que « Nouvelle courbe » du
+                // wizard : handleAddCurve sélectionne déjà la courbe créée.
+                // Une session Bézier en cours est abandonnée (elle façonnait
+                // l'ancienne courbe, ses poignées n'ont plus de cible).
+                if (bezierSession) cancelBezierSession();
+                const id = handleAddCurve(name, color);
+                if (!id) return;
+                setWizardModeCommand(c => ({ mode: 'placing-points', nonce: (c?.nonce || 0) + 1 }));
+              }}
+              onFinishCurve={() => {
+                setSelectedCurveId(null);
+                setWizardModeCommand(c => ({ mode: 'idle', nonce: (c?.nonce || 0) + 1 }));
+              }}
             />
 
 
@@ -1629,6 +1656,7 @@ const renderStepContent = () => {
               onApplyBezier={applyBezierSession}
               onCancelBezier={cancelBezierSession}
               onEditorModeChange={setWizardEditorMode}
+              editorModeCommand={wizardModeCommand}
               graph={currentGraphForWizard}
               graphIndex={subStepGraphIndex}
               totalGraphs={graphs.length}
