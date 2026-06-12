@@ -624,3 +624,38 @@ tolérance par défaut du banc de test R13.
 (le composite officiel des contextes) — bannière rendue avec le
 PerformanceModule complet derrière (« rendu OK »), textes exacts vérifiés.
 Build vert.
+
+## 24. R16b — La valeur de famille devient structurée + unités sur le calculateur (2026-06-12)
+
+**Demandes pilote** : (a) « le nom que j'écris ne sert à rien, je préfère une
+liste déroulante… ce qui sécurise les choses » ; (b) « il n'est pas noté
+l'unité » sur les entrées du calculateur en cascade (écart inexpliqué 533 ft
+rapporté — non reproduit moteur : 2210 ft avec les mêmes entrées sur F-GNAM ;
+de plus les deux attendus papier 1860@8kt < 1900@15kt sont physiquement
+contradictoires entre eux → re-vérification papier demandée).
+
+**Livré** :
+- **Moteur (3 résolveurs : paramétrique, encadrement X-pour-Y, altitude du
+  1er graphe)** : priorité à `Curve.familyValue` (valeur STRUCTURÉE), parsing
+  du nom relégué en repli de compatibilité. Plus AUCUN écartement muet :
+  courbe sans valeur résoluble → console.warn nominatif ; repli « première
+  courbe » du résolveur altitude → warning « résultat potentiellement faux ».
+- **GraphIdentityPanel** : « Variable de famille des courbes » — liste
+  déroulante CANONIQUE (catalogue axisVariables, entrées X), avec unité
+  affichée. La déclarer fait apparaître le champ valeur par courbe (déjà
+  présent dans CurveManager, badge « ⚠ requis »).
+- **CurveManager : « Déduire des noms »** — migration douce : pré-remplit
+  familyValue des courbes existantes depuis leurs noms (même regex que le
+  repli moteur), le pilote vérifie les badges.
+- **CascadeCalculator : unités partout** — libellés humains canoniques +
+  unité en gras sur la valeur d'entrée et chaque paramètre (« Composante de
+  vent (kt) », « Masse (kg) ») ; le champ altitude affiche la famille
+  déclarée ou, à défaut, « même échelle que les courbes : 0ft, 1000ft… » ;
+  le placeholder ambigu « ft ou m » est supprimé.
+
+**Vérification (navigateur)** : moteur — 2 courbes aux noms ILLISIBLES avec
+familyValue 0/4000 → « Interpolé entre Niveau mer et Plafond pratique » =
+2500 (exact main-calc) ; sans familyValue → repli premier-courbe AVEC warning
+visible ; calculateur : (°C)/(kg)/(kt) + « Composante de vent » affichés,
+« ft ou m » disparu ; sélecteur famille rendu ; « Déduire des noms » remplit
+0/1000/2000/3000 depuis les courbes F-GNAM réelles. Build vert.

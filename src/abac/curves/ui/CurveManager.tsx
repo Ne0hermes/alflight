@@ -105,6 +105,21 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
     setEditingName('');
   }, []);
 
+  // R16b — MIGRATION DOUCE : pré-remplit familyValue depuis les noms existants
+  // (« 0ft » → 0, « Headwind 2 » → 2…) avec la MÊME regex que le repli moteur,
+  // pour les courbes qui n'ont pas encore de valeur. Le pilote vérifie d'un
+  // coup d'œil les badges puis corrige au besoin.
+  const deduceFamilyFromNames = useCallback(() => {
+    for (const c of curves) {
+      if (typeof c.familyValue === 'number') continue;
+      const clean = c.name.trim();
+      let m = clean.match(/(?:headwind|tailwind)\s*(-?\d+(?:\.\d+)?)/i);
+      if (!m) m = clean.replace(/\s*(kt|kg|°C|m|ft)\s*$/i, '').match(/-?\d+(?:\.\d+)?/);
+      const v = m ? parseFloat(m[m.length === 2 ? 1 : 0]) : NaN;
+      if (Number.isFinite(v)) onUpdateCurve(c.id, { familyValue: v });
+    }
+  }, [curves, onUpdateCurve]);
+
   const handleMoveCurve = useCallback((curveId: string, direction: 'up' | 'down') => {
     if (!onReorderCurves) return;
 
@@ -142,6 +157,21 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
         >
           {showAddForm ? 'Annuler' : 'Ajouter une courbe'}
         </button>
+        {/* R16b — visible quand le graphe a une variable de famille et qu'il
+            reste des courbes sans valeur : un clic remplit depuis les noms. */}
+        {familyAxisVariable && curves.some(c => typeof c.familyValue !== 'number') && (
+          <button
+            onClick={deduceFamilyFromNames}
+            title="Pré-remplit la valeur de famille des courbes qui n'en ont pas, en lisant leur nom (« 0ft » → 0, « Headwind 2 » → 2…). Vérifie ensuite les badges."
+            style={{
+              marginLeft: 8, padding: '8px 12px', fontSize: 'var(--fs-body)',
+              backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)',
+              border: '1px solid var(--accent-primary)', borderRadius: '4px', cursor: 'pointer'
+            }}
+          >
+            Déduire des noms
+          </button>
+        )}
       </div>
 
       {showAddForm && (
