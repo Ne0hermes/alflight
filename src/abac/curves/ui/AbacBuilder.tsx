@@ -35,6 +35,7 @@ import {
   fitBezierThroughPoints,
   sampleBezierSegments
 } from '../core/bezier';
+import { isWindAxisVariable } from '../core/axisVariables';
 import styles from './styles.module.css';
 
 // R0 : l'étape 'axes' (morte depuis SPRINT B) est retirée du type — séquence réelle : points → final.
@@ -1464,9 +1465,14 @@ const renderStepContent = () => {
               onUpdateGraphXAxis={(graphId, xAxis) => {
                 // R2b — l'axe X reste porté par le GRAPHE (pas de nouveau lieu
                 // de vérité) : le panneau Axes du canevas écrit ici.
+                // R8 — auto-détection « graphique vent » quand la variable
+                // canonique choisie est de la famille vent (comme l'ancienne
+                // sous-étape Axes ; jamais désactivé auto pour ne pas perdre
+                // les windDirection déjà saisies sur les courbes).
                 setGraphs(prev => prev.map(g => g.id === graphId
                   ? {
                       ...g,
+                      ...(isWindAxisVariable(xAxis.title) && !g.isWindRelated ? { isWindRelated: true } : {}),
                       axes: {
                         ...(g.axes || { xAxis: { min: 0, max: 100, unit: '', title: '' }, yAxis: { min: 0, max: 100, unit: '', title: '' } }),
                         xAxis

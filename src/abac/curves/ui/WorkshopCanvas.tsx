@@ -22,6 +22,7 @@ import {
   WorkshopTickCalibration
 } from '../core/types';
 import { BezierSegment } from '../core/bezier';
+import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedFor } from '../core/axisVariables';
 
 interface WorkshopCanvasProps {
   workshop: WorkshopConfig;
@@ -181,6 +182,89 @@ const TextFieldMini: React.FC<{ label: string; value: string; onChange: (s: stri
       />
     </label>
   );
+
+// R8 — Sélecteur de VARIABLE CANONIQUE (catalogue axisVariables) : le titre
+// d'axe est la CLÉ qui branche la cascade sur les données vivantes de la
+// préparation de vol (température METAR, masse du devis M&C, vent météo).
+// Texte libre INTERDIT — une saisie hors catalogue ne serait jamais matchée.
+// Les valeurs legacy non canoniques restent affichées avec ⚠ (rétro-compat).
+const VarSelectMini: React.FC<{
+  label: string;
+  axis: 'x' | 'y';
+  value: string;
+  onChange: (variableId: string) => void;
+  width?: number;
+}> = ({ label, axis, value, onChange, width = 200 }) => {
+  const groups = getAxisVariablesGroupedFor(axis);
+  const isKnown = !!getAxisVariable(value);
+  return (
+    <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, fontSize: 10, color: !isKnown && value ? 'var(--color-red-critical)' : 'var(--text-secondary)' }}>
+      {label}{!isKnown && value ? ' — ⚠ non canonique' : ''}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width, padding: '3px 6px', fontSize: 12, borderRadius: 3,
+          border: `1px solid ${!isKnown && value ? 'var(--color-red-critical)' : 'var(--border-regular)'}`,
+          backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)'
+        }}
+      >
+        {!isKnown && value !== '' && <option value={value}>⚠ {value} (legacy)</option>}
+        {value === '' && <option value="">— Choisir la variable —</option>}
+        {groups.map(g => (
+          <optgroup key={g.category} label={g.label}>
+            {g.items.map(v => (
+              <option key={v.id} value={v.id}>
+                {v.label}{v.defaultUnit ? ` (${v.defaultUnit})` : ''}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </label>
+  );
+};
+
+// R8 — Unité VERROUILLÉE sur le catalogue : liste fermée `units[]` de la
+// variable (réutilisable partout dans l'app), badge fixe s'il n'y a qu'une
+// unité. Champ libre UNIQUEMENT pour 'custom' et les valeurs legacy.
+const UnitFieldMini: React.FC<{
+  variableId: string;
+  value: string;
+  onChange: (unit: string) => void;
+}> = ({ variableId, value, onChange }) => {
+  const v = getAxisVariable(variableId);
+  if (v && v.id !== 'custom') {
+    const allowed = v.units && v.units.length > 0 ? v.units : [v.defaultUnit];
+    if (allowed.length > 1) {
+      return (
+        <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, fontSize: 10, color: 'var(--text-secondary)' }}>
+          Unité
+          <select
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            style={{ width: 64, padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)' }}
+          >
+            {value && !allowed.includes(value) && <option value={value}>⚠ {value}</option>}
+            {allowed.map(u => <option key={u} value={u}>{u || '—'}</option>)}
+          </select>
+        </label>
+      );
+    }
+    return (
+      <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, fontSize: 10, color: 'var(--text-secondary)' }}>
+        Unité
+        <span
+          title="Unité fixée par la variable canonique"
+          style={{ minWidth: 36, padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', textAlign: 'center' }}
+        >
+          {v.defaultUnit || '—'}
+        </span>
+      </label>
+    );
+  }
+  return <TextFieldMini label={v?.id === 'custom' ? 'Unité (libre)' : 'Unité ⚠'} value={value} onChange={onChange} width={56} />;
+};
 
 export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   workshop,
@@ -501,6 +585,106 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
       )}
 
       {/* ─── Le canevas ─── */}
+      {/* ─── R2b+R8 : panneau AXES — AU-DESSUS de l'atelier (demande pilote), variables canoniques + unités verrouillées ─── */}
+      <div style={{
+        display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap',
+        marginBottom: 8, padding: '8px 10px', borderRadius: 4,
+        backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)'
+      }}>
+        {/* Y commun */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>Y COMMUN</strong>
+          {/* R8 — variable canonique OBLIGATOIRE : title = id du catalogue
+              (clé de branchement de la cascade), unité verrouillée. */}
+          <VarSelectMini
+            label="Variable"
+            axis="y"
+            value={workshop.sharedY.title}
+            onChange={(id) => {
+              const v = getAxisVariable(id);
+              patchSharedY({ title: id, ...(v && v.id !== 'custom' ? { unit: v.defaultUnit } : {}) });
+            }}
+          />
+          <UnitFieldMini variableId={workshop.sharedY.title} value={workshop.sharedY.unit} onChange={(u) => patchSharedY({ unit: u })} />
+          <NumField label="Min" value={workshop.sharedY.min} onChange={(n) => patchSharedY({ min: n ?? 0 })} />
+          <NumField label="Max" value={workshop.sharedY.max} onChange={(n) => patchSharedY({ max: n ?? 0 })} />
+          <NumField label="Pas" value={workshop.sharedY.step} onChange={(n) => patchSharedY({ step: n })} width={56} />
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}>
+            <input type="checkbox" checked={!!workshop.sharedY.reversed} onChange={(e) => patchSharedY({ reversed: e.target.checked })} />
+            inversé
+          </label>
+          <button
+            onClick={startCalibY}
+            disabled={!!calib}
+            style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: workshop.yTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
+          >
+            🎯 Calibrer Y {workshop.yTicks?.length ? `(${workshop.yTicks.length} pts ✓)` : ''}
+          </button>
+          {workshop.yTicks?.length ? (
+            <button
+              onClick={() => onWorkshopChange({ ...workshop, yTicks: undefined })}
+              disabled={!!calib}
+              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
+            >
+              ↺ Reset Y
+            </button>
+          ) : null}
+        </div>
+
+        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'var(--border-subtle)' }} />
+
+        {/* X du cadre actif */}
+        {focusedFrame && focusedGraph ? (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>
+              X · {focusedGraph.name || 'cadre actif'}
+            </strong>
+            {/* R8 — l'axe X = l'ENTRÉE consommée en prépa vol (OAT METAR,
+                masse M&C, vent météo…) : variable canonique obligatoire. */}
+            <VarSelectMini
+              label="Variable"
+              axis="x"
+              value={focusedX.title}
+              onChange={(id) => {
+                const v = getAxisVariable(id);
+                onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, title: id, ...(v && v.id !== 'custom' ? { unit: v.defaultUnit } : {}) });
+              }}
+            />
+            <UnitFieldMini variableId={focusedX.title} value={focusedX.unit} onChange={(u) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, unit: u })} />
+            <NumField label="Min" value={focusedX.min} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, min: n ?? 0 })} />
+            <NumField label="Max" value={focusedX.max} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, max: n ?? 0 })} />
+            <NumField label="Pas" value={focusedX.step} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, step: n })} width={56} />
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}>
+              <input type="checkbox" checked={!!focusedX.reversed} onChange={(e) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, reversed: e.target.checked })} />
+              inversé (ex. masse décroissante)
+            </label>
+            <button
+              onClick={() => startCalibX(focusedGraph.id)}
+              disabled={!!calib}
+              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: focusedFrame.xTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
+            >
+              🎯 Calibrer X {focusedFrame.xTicks?.length ? `(${focusedFrame.xTicks.length} pts ✓)` : ''}
+            </button>
+            {focusedFrame.xTicks?.length ? (
+              <button
+                onClick={() => onWorkshopChange({
+                  ...workshop,
+                  frames: workshop.frames.map(f => f.graphId === focusedGraph.id ? { ...f, xTicks: undefined } : f)
+                })}
+                disabled={!!calib}
+                style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
+              >
+                ↺ Reset X
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', alignSelf: 'center' }}>
+            Cliquez un cadre pour régler son axe X (le Y est commun à tous).
+          </span>
+        )}
+      </div>
+
       <svg
         ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
@@ -612,7 +796,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             </g>
           ))}
           <text x={-44} y={inner.h / 2} fontSize={10} fill="var(--accent-primary)" transform={`rotate(-90 -44 ${inner.h / 2})`} textAnchor="middle" fontWeight={600}>
-            Y COMMUN {workshop.sharedY.title ? `· ${workshop.sharedY.title}` : ''} {workshop.sharedY.unit ? `(${workshop.sharedY.unit})` : ''}
+            Y COMMUN {workshop.sharedY.title ? `· ${getAxisVariableLabel(workshop.sharedY.title)}` : ''} {workshop.sharedY.unit ? `(${workshop.sharedY.unit})` : ''}
             {workshop.yTicks?.length ? ' — calibré ✓' : ''}
           </text>
 
@@ -698,7 +882,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                   </g>
                 ))}
                 <text x={(f.xLeftPx + f.xRightPx) / 2} y={inner.h + 32} fontSize={9} fill={color} textAnchor="middle" pointerEvents="none">
-                  {xAxis?.title || 'X'} {xAxis?.unit ? `(${xAxis.unit})` : ''}{xAxis?.reversed ? ' ⇐' : ''}{f.xTicks?.length ? ' — calibré ✓' : ''}
+                  {xAxis?.title ? getAxisVariableLabel(xAxis.title) : 'X'} {xAxis?.unit ? `(${xAxis.unit})` : ''}{xAxis?.reversed ? ' ⇐' : ''}{f.xTicks?.length ? ' — calibré ✓' : ''}
                 </text>
 
                 {/* flèche de chaîne vers le cadre suivant */}
@@ -827,85 +1011,6 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         </g>
       </svg>
 
-      {/* ─── R2b : panneau AXES — Y commun (une fois) + X du cadre actif ─── */}
-      <div style={{
-        display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap',
-        marginTop: 8, padding: '8px 10px', borderRadius: 4,
-        backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)'
-      }}>
-        {/* Y commun */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>Y COMMUN</strong>
-          <TextFieldMini label="Titre" value={workshop.sharedY.title} onChange={(s) => patchSharedY({ title: s })} />
-          <TextFieldMini label="Unité" value={workshop.sharedY.unit} onChange={(s) => patchSharedY({ unit: s })} width={56} />
-          <NumField label="Min" value={workshop.sharedY.min} onChange={(n) => patchSharedY({ min: n ?? 0 })} />
-          <NumField label="Max" value={workshop.sharedY.max} onChange={(n) => patchSharedY({ max: n ?? 0 })} />
-          <NumField label="Pas" value={workshop.sharedY.step} onChange={(n) => patchSharedY({ step: n })} width={56} />
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}>
-            <input type="checkbox" checked={!!workshop.sharedY.reversed} onChange={(e) => patchSharedY({ reversed: e.target.checked })} />
-            inversé
-          </label>
-          <button
-            onClick={startCalibY}
-            disabled={!!calib}
-            style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: workshop.yTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
-          >
-            🎯 Calibrer Y {workshop.yTicks?.length ? `(${workshop.yTicks.length} pts ✓)` : ''}
-          </button>
-          {workshop.yTicks?.length ? (
-            <button
-              onClick={() => onWorkshopChange({ ...workshop, yTicks: undefined })}
-              disabled={!!calib}
-              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
-            >
-              ↺ Reset Y
-            </button>
-          ) : null}
-        </div>
-
-        <div style={{ width: 1, alignSelf: 'stretch', backgroundColor: 'var(--border-subtle)' }} />
-
-        {/* X du cadre actif */}
-        {focusedFrame && focusedGraph ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>
-              X · {focusedGraph.name || 'cadre actif'}
-            </strong>
-            <TextFieldMini label="Titre" value={focusedX.title} onChange={(s) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, title: s })} />
-            <TextFieldMini label="Unité" value={focusedX.unit} onChange={(s) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, unit: s })} width={56} />
-            <NumField label="Min" value={focusedX.min} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, min: n ?? 0 })} />
-            <NumField label="Max" value={focusedX.max} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, max: n ?? 0 })} />
-            <NumField label="Pas" value={focusedX.step} onChange={(n) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, step: n })} width={56} />
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}>
-              <input type="checkbox" checked={!!focusedX.reversed} onChange={(e) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, reversed: e.target.checked })} />
-              inversé (ex. masse décroissante)
-            </label>
-            <button
-              onClick={() => startCalibX(focusedGraph.id)}
-              disabled={!!calib}
-              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: focusedFrame.xTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
-            >
-              🎯 Calibrer X {focusedFrame.xTicks?.length ? `(${focusedFrame.xTicks.length} pts ✓)` : ''}
-            </button>
-            {focusedFrame.xTicks?.length ? (
-              <button
-                onClick={() => onWorkshopChange({
-                  ...workshop,
-                  frames: workshop.frames.map(f => f.graphId === focusedGraph.id ? { ...f, xTicks: undefined } : f)
-                })}
-                disabled={!!calib}
-                style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
-              >
-                ↺ Reset X
-              </button>
-            ) : null}
-          </div>
-        ) : (
-          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', alignSelf: 'center' }}>
-            Cliquez un cadre pour régler son axe X (le Y est commun à tous).
-          </span>
-        )}
-      </div>
     </div>
   );
 };
