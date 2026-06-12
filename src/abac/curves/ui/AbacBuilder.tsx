@@ -15,6 +15,8 @@ import { calculateAutoAxesLimits, calculateGraphAutoLimits, updateAxesWithAutoLi
 import { analyzeChartImage } from '../../v2/aiChartAnalysisService';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
+import { ReferenceCasesPanel, ReferencePrefill } from './ReferenceCasesPanel';
+import { runAllReferenceCases } from '../core/referenceBench';
 import { isValidOperationId, OPERATION_CATALOG, getOperation } from '../core/operationCatalog';
 import {
   AxesConfig,
@@ -26,7 +28,8 @@ import {
   GraphConfig,
   WindDirection,
   InterpolationMethod,
-  WorkshopConfig
+  WorkshopConfig,
+  ReferenceCase
 } from '../core/types';
 import {
   BezierOverrides,
@@ -98,6 +101,11 @@ function AbacBuilderComponent(
   // du mode atelier : « tout doit se passer sur le graphique », retour pilote).
   // La session porte la courbe ciblée + les poignées tirées (coords DATA).
   const [bezierSession, setBezierSession] = useState<{ curveId: string; overrides: BezierOverrides } | null>(null);
+
+  // R13 — BANC DE TEST PERMANENT : cas de référence du manuel, persistés dans
+  // metadata.referenceCases et rejoués à la validation (PASS/FAIL ± tolérance).
+  const [referenceCases, setReferenceCases] = useState<ReferenceCase[]>([]);
+  const [referencePrefill, setReferencePrefill] = useState<ReferencePrefill | null>(null);
 
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
   // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
@@ -533,6 +541,11 @@ function AbacBuilderComponent(
       // (mode compat D4 : les cadres seront recréés à l'ouverture du canevas R2).
       if (initialData.metadata?.workshop) {
         setWorkshop(initialData.metadata.workshop);
+      }
+
+      // R13 — restaurer le banc de test du modèle
+      if (initialData.metadata?.referenceCases?.length) {
+        setReferenceCases(initialData.metadata.referenceCases);
       }
 
       if (initialData.graphs) {
@@ -1237,6 +1250,29 @@ function AbacBuilderComponent(
       if (!proceed) return;
     }
 
+    // ─── R13 : BANC DE TEST — rejouer les cas de référence avant d'enregistrer.
+    // Un cas en échec n'est pas bloquant dur (le pilote juge), mais il doit
+    // être IMPOSSIBLE d'enregistrer sans le voir.
+    if (referenceCases.length > 0) {
+      const results = runAllReferenceCases(graphs, referenceCases);
+      const failures = results
+        .map((r, i) => ({ r, rc: referenceCases[i] }))
+        .filter(({ r }) => r.status !== 'pass');
+      if (failures.length > 0) {
+        const lines = failures.map(({ r, rc }) =>
+          `• ${rc.label || `Cas ${rc.expected}`} : ` +
+          (r.status === 'fail'
+            ? `calculé ${r.computed!.toFixed(0)} pour ${rc.expected} attendu (écart ${r.deviationPct!.toFixed(1)} % > ±${rc.tolerancePct ?? 5} %)`
+            : `erreur — ${r.message}`));
+        const proceed = window.confirm(
+          `🧪 Banc de test : ${failures.length} cas de référence en échec :\n\n` +
+          lines.join('\n') +
+          `\n\nEnregistrer quand même ?`
+        );
+        if (!proceed) return;
+      }
+    }
+
     // R1 — Atelier « image unique » : quand le workshop est UTILISÉ, l'axe Y
     // COMMUN est DUPLIQUÉ dans chaque graphe CADRÉ (c'est la définition d'un
     // abaque : même filigrane ⇒ même ordonnée). Les graphes hors cadre (cas
@@ -1263,7 +1299,9 @@ function AbacBuilderComponent(
         description: `${getOperation(systemType)?.labelFr || 'Set'} pour ${aircraftModel || modelNameInput || 'modèle non spécifié'}`,
         // R1 — état de l'atelier pour la ré-édition (absent si non utilisé →
         // exports strictement identiques à avant la refonte).
-        ...(workshopActive ? { workshop } : {})
+        ...(workshopActive ? { workshop } : {}),
+        // R13 — banc de test persisté avec le modèle.
+        ...(referenceCases.length > 0 ? { referenceCases } : {})
       }
     };
 
@@ -1271,7 +1309,7 @@ function AbacBuilderComponent(
     if (onSave) {
       onSave(json, aircraftModel || modelNameInput);
     }
-  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive]);
+  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases]);
 
   const handleImportJSON = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1569,7 +1607,10 @@ const renderStepContent = () => {
                 🧪 Tester la cascade sur les graphes en l'état
               </summary>
               <div style={{ padding: 8 }}>
-                <CascadeCalculator graphs={graphs} />
+                <CascadeCalculator
+                  graphs={graphs}
+                  onProposeReference={(snap) => setReferencePrefill(snap)}
+                />
               </div>
             </details>
             )}
@@ -1932,6 +1973,20 @@ const renderStepContent = () => {
                 </div>
               )}
 
+              {/* ─── R13 : BANC DE TEST PERMANENT — les cas de référence du
+                  manuel sont rejoués sur les graphes EN L'ÉTAT à chaque venue
+                  sur cet écran (PASS/FAIL ± tolérance), et le bouton Valider
+                  re-vérifie une dernière fois avant d'enregistrer. */}
+              <div style={{ marginTop: 16 }}>
+                <ReferenceCasesPanel
+                  graphs={graphs}
+                  cases={referenceCases}
+                  onChange={setReferenceCases}
+                  prefill={referencePrefill}
+                  onPrefillConsumed={() => setReferencePrefill(null)}
+                />
+              </div>
+
               {/* ─── R4 : TEST DE CASCADE intégré à la VALIDATION — vérifier le
                   modèle complet (entrée → G1 → G2 → G3 → résultat) AVANT de
                   l'enregistrer, sur le même écran. Les courbes ont été
@@ -1952,7 +2007,10 @@ const renderStepContent = () => {
                   🧪 Tester le modèle avant validation (cascade complète)
                 </summary>
                 <div style={{ padding: 8 }}>
-                  <CascadeCalculator graphs={graphs} />
+                  <CascadeCalculator
+                    graphs={graphs}
+                    onProposeReference={(snap) => setReferencePrefill(snap)}
+                  />
                 </div>
               </details>
 

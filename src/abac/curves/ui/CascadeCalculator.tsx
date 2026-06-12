@@ -19,6 +19,14 @@ interface CascadeCalculatorProps {
     name: string;
   }[];
   onClose?: () => void;
+  /** R13 — banc de test : propose les ENTRÉES du calcul courant comme futur
+   *  cas de référence (le pilote tape ensuite le résultat ATTENDU du papier). */
+  onProposeReference?: (snapshot: {
+    inputValue: number;
+    parameters: Record<string, number>;
+    windDirection?: 'headwind' | 'tailwind';
+    computed: number;
+  }) => void;
 }
 
 // ─── R10 : comparatif d'unités — la valeur finale est SYSTÉMATIQUEMENT doublée
@@ -202,7 +210,8 @@ const styles = {
 export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   graphs,
   systems,
-  onClose
+  onClose,
+  onProposeReference
 }) => {
   const [initialValue, setInitialValue] = useState<string>('');
   const [parameters, setParameters] = useState<{[graphId: string]: string}>({});
@@ -1108,6 +1117,34 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     <div style={{ fontSize: 'var(--fs-body)', marginTop: '5px' }}>
                       {lastAxes.yAxis.title}
                     </div>
+                  )}
+                  {/* R13 — un clic transforme ce calcul en cas de référence du
+                      banc de test : les entrées sont reprises, il ne reste qu'à
+                      taper le résultat ATTENDU lu sur le papier. */}
+                  {onProposeReference && (
+                    <button
+                      onClick={() => {
+                        const parametersNum: Record<string, number> = {};
+                        for (const g of graphChain) {
+                          const v = parseFloat(parameters[g.id]);
+                          if (!isNaN(v)) parametersNum[g.id] = v;
+                        }
+                        onProposeReference({
+                          inputValue: parseFloat(initialValue),
+                          parameters: parametersNum,
+                          ...(windDirection !== 'all' ? { windDirection } : {}),
+                          computed: result.finalValue
+                        });
+                      }}
+                      style={{
+                        marginTop: 10, padding: '5px 12px', fontSize: 'var(--fs-body)', cursor: 'pointer',
+                        backgroundColor: 'rgba(255,255,255,0.15)', color: 'white',
+                        border: '1px solid white', borderRadius: 4, fontWeight: 500
+                      }}
+                      title="Reprend ces entrées dans le banc de test — tape ensuite le résultat attendu du manuel"
+                    >
+                      📌 En faire un cas de référence
+                    </button>
                   )}
                 </>
               );

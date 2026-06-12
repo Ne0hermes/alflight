@@ -540,3 +540,47 @@ branche above/below — le décalage est maintenu au-delà du bout du guide.
 **Validation** : cas limite 15 kt sous enveloppe = **1307 ft** (≈ calcul
 manuel 1308) avec étiquette correcte ; cas pilote 4 kt inchangé (1579) ;
 non-régression R11 inchangée (1988). Build vert.
+
+## 21. R13 — Banc de test permanent (2026-06-12, décision pilote)
+
+**Déclencheur** : « si je te donne les valeurs de référence d'exemple et le
+résultat attendu, est-ce que ça peut affiner la précision ? » → réponse en 3
+niveaux (banc de test / diagnostic par panneau / ajustement automatique des
+courbes). Décision : « on va implémenter uniquement le banc de test
+permanent » — PAS d'ajustement automatique (avec un seul cas ce serait du
+maquillage du résultat, le genre de bidouille purgée en R11).
+
+**Livré** :
+- **`metadata.referenceCases`** (types.ts) : cas = entrées d'un exemple du
+  manuel (valeur d'entrée + paramètre par graphe + direction de vent) +
+  résultat attendu + tolérance (défaut 5 %). Persisté DANS le modèle.
+- **`core/referenceBench.ts`** : rejoue les cas sur les graphes EN L'ÉTAT
+  (même chaîne que le calculateur, console moteur silencée), verdict
+  pass/fail/error avec écart % ; paramètre manquant (graphes modifiés) →
+  erreur explicite, jamais silencieuse.
+- **`ReferenceCasesPanel`** (écran de validation) : tableau des cas avec
+  badge PASS/FAIL/ERREUR recalculé à chaque venue, écart vs tolérance,
+  double unité (R10) sur le calculé, suppression par cas ; formulaire
+  d'ajout dont les champs suivent la chaîne réelle (labels canoniques R8),
+  direction de vent obligatoire si graphe vent.
+- **Capture en un clic** : après un calcul réussi du CascadeCalculator,
+  « 📌 En faire un cas de référence » reprend les ENTRÉES dans le formulaire
+  du banc — le pilote ne tape que le résultat ATTENDU lu sur le papier
+  (jamais le calculé : le banc doit tester, pas s'auto-confirmer).
+- **Garde à l'enregistrement** : « ✓ Valider et enregistrer » rejoue le banc ;
+  s'il y a des échecs, confirm détaillé (« calculé 1988 pour 1700 attendu,
+  écart 17 % > ±5 % — Enregistrer quand même ? »). Non bloquant dur : le
+  pilote juge, mais il est IMPOSSIBLE d'enregistrer sans le voir.
+
+**Vérification (modèle F-GNAM réel réparé, navigateur)** : moteur du banc —
+cas POH (attendu 1900) = PASS à 4,6 % ; cas serré (1700) = FAIL à 17 % ;
+cas au paramètre manquant = ERREUR avec message ; panneau rendu avec les 3
+badges + résumé « 1/3 OK » ; intégration builder complète — panneau présent
+sur l'écran de validation (« 1/2 OK · 1 en échec »), clic Valider → confirm
+détaillé → annulation = PAS d'enregistrement ; circuit capture : calcul réel
+dans le calculateur → bouton 📌 → formulaire pré-rempli (21/2000/1089/15,
+attendu vide). tsc parse-clean, build vert.
+
+**Différé (si le besoin se confirme)** : diagnostic par panneau assisté
+(niveau 2) et ajustement borné des courbes sur plusieurs cas (niveau 3,
+toujours en proposition à valider courbe par courbe).
