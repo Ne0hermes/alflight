@@ -697,3 +697,44 @@ aux selects voisins qui répondent ; à confirmer d'un clic réel). Build vert.
 **Reste à faire PILOTE après merge** : ouvrir chacun des deux modèles F-GNAM
 et préciser les volets (UP pour l'abaque 0°, TAKEOFF pour le 25°) via les
 trois listes — les dénominations divergent alors et le verrou cesse d'alerter.
+
+## 26. R18 — Modèle volets TAKEOFF : Y en mètres mal étiqueté + miroir masse (2026-06-12)
+
+**Déclencheur** : test pilote sur le 2ᵉ modèle F-GNAM (Flaps TAKEOFF, qu'il a
+déjà différencié via les listes R17 — takeoff_50ft_flaps_to ✓) : 21 °C /
+PA 2000 / 1089 kg / vent de face → attendu 1860 ft (567 m), app : 468 ft.
+
+**Diagnostic (extraction + rejeu du modèle 2 — jamais rejoué jusqu'ici, les
+replays prenaient le premier modèle trouvé)** :
+1. **Axe Y calibré sur l'échelle MÈTRES du papier** (graduations 300 → 1000,
+   yTicks le confirment) **mais déclaré « ft »** : les valeurs du modèle SONT
+   des mètres étiquetés pieds.
+2. **Panneau masse à nouveau tracé en MIROIR** (axe [950..1150] non inversé,
+   guides descendants avec la masse) — même piège que le modèle volets 0° (§19).
+3. Le vent du test (coupé dans la dictée) déduit = **15 kt** : l'état actuel
+   rejoué donne ≈468 à 15 kt (534 à 8 kt) — reproduction exacte.
+4. **La « contradiction » des attendus d'hier N'EN ÉTAIT PAS UNE** : 1900 ft
+   à 15 kt = tableau volets 0°, 1860 ft à 15 kt = tableau volets TAKEOFF.
+   Deux tableaux différents — précisément le défaut de dénomination que R17
+   vient de corriger. Mea culpa au pilote.
+
+**Fix données** : `scripts/fix-fgnam-flapsto-y-m-mass-mirror.js` (dry-run OK,
+--confirm pilote) — étiquettes Y ft → m (valeurs INCHANGÉES, ce sont des
+mètres : 3 graphes + sharedY + outputUnit primaire) + miroir masse
+(x′ = 2100 − x, reversed=true, rendu image identique).
+
+**Validation (rejeu, réparations en mémoire)** : 21°/2000/1089/face 15 →
+**551 m vs 567 m papier (−2,8 %)** ; à 8 kt : 626 m. Légèrement non
+conservateur (−2,8 %) mais dans la tolérance banc (5 %) — affinable au tracé.
+
+**Observations moteur pour plus tard (non corrigées à l'aveugle)** :
+- la « plage X commune » qui sert de référence d'entrée est RÉTRÉCIE par les
+  guides courts (ici « 11 » s'arrête à 1090 kg → référence prise à ~1090 au
+  lieu du bord ~1145). Sur ce cas précis l'effet est neutre/favorable, mais
+  le principe « référence = bord du panneau, guides courts extrapolés »
+  serait plus fidèle au papier — à instruire avec le pilote sur un cas qui
+  discrimine.
+- PISTE DE GARDE atelier : avertir quand un panneau de famille « masse » a
+  des guides DÉCROISSANTS avec la masse sur un axe non inversé (le miroir a
+  eu lieu DEUX fois sur deux modèles) ; et afficher côte à côte les deux
+  échelles (m/ft) du papier au moment de calibrer Y.
