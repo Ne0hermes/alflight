@@ -605,3 +605,22 @@ Le façonnage Bézier invalidait déjà (R7).
 30 traits interpolés avant → 29 après le drag d'un point : EXACTEMENT la
 courbe retouchée devient polyligne et suit le point, les autres restent
 interpolées. tsc parse-clean, build vert.
+
+## 23. R15 — Disclaimer performances en préparation de vol (2026-06-12, demande pilote)
+
+**Demande** : afficher dans l'onglet Performance de la préparation de vol que
+l'application s'autorise une marge d'erreur de 5 % par rapport aux exemples du
+MANEX, et que le commandant de bord reste toujours responsable de la reprise
+des performances en cas de doute.
+
+**Livré** : bandeau ⚠️ en tête de Step5Performance (flight-wizard), charte
+orange : « Marge de précision — … marge d'erreur de ±5 % par rapport aux
+exemples de référence du manuel est assumée. Le commandant de bord reste seul
+responsable de la détermination des performances — en cas de doute, reprenez
+le calcul sur les abaques officiels du MANEX. » Le 5 % fait écho à la
+tolérance par défaut du banc de test R13.
+
+**Vérification** : Step5Performance monté en réel sous FlightSystemProviders
+(le composite officiel des contextes) — bannière rendue avec le
+PerformanceModule complet derrière (« rendu OK »), textes exacts vérifiés.
+Build vert.
