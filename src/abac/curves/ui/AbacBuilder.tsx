@@ -1802,11 +1802,30 @@ const renderStepContent = () => {
 
 
               {/* Affichage des graphiques en colonne */}
+              {/* R10 — aperçus des graphes REPLIÉS par défaut (demande pilote :
+                  l'écran de validation se concentre sur le test de cascade) ;
+                  dépliés, ils se posent côte à côte pour suivre la chaîne. */}
+              <details style={{
+                marginBottom: 20,
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 6,
+                backgroundColor: 'var(--bg-overlay)'
+              }}>
+              <summary style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--accent-primary)'
+              }}>
+                Graphiques du set ({graphs.length}) — courbes interpolées
+              </summary>
               <div style={{
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                marginBottom: '20px'
+                flexWrap: 'wrap',
+                gap: '12px',
+                alignItems: 'flex-start',
+                padding: 8
               }}>
                 {graphs.map(graph => {
                   // Appliquer le filtre vent si le graphique est lié au vent
@@ -1827,7 +1846,7 @@ const renderStepContent = () => {
                   }
 
                   return (
-                    <div key={graph.id} style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '8px', overflow: 'hidden' }}>
+                    <div key={graph.id} style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '8px', overflow: 'hidden', flex: '0 0 auto', maxWidth: 340 }}>
                       <h3 style={{ marginBottom: '8px', fontSize: 'var(--fs-body)' }}>
                         {graph.name}
                         {graph.isWindRelated && (
@@ -1881,6 +1900,7 @@ const renderStepContent = () => {
                   );
                 })}
               </div>
+              </details>
 
               {importSuccess && (
                 <div style={{

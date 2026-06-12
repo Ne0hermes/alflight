@@ -21,13 +21,43 @@ interface CascadeCalculatorProps {
   onClose?: () => void;
 }
 
+// ─── R10 : comparatif d'unités — la valeur finale est SYSTÉMATIQUEMENT doublée
+// de l'unité « opposée » entre parenthèses (ft → m, m → ft, kt → km/h…) pour
+// garder un ordre de grandeur de contrôle pendant le test (demande pilote).
+// Lookup insensible à la casse (les anciens modèles stockent « ft »/« FT »).
+const OPPOSITE_UNITS: Record<string, { to: string; factor: number }> = {
+  'ft': { to: 'm', factor: 0.3048 },
+  'm': { to: 'ft', factor: 1 / 0.3048 },
+  'km': { to: 'NM', factor: 1 / 1.852 },
+  'nm': { to: 'km', factor: 1.852 },
+  'kt': { to: 'km/h', factor: 1.852 },
+  'km/h': { to: 'kt', factor: 1 / 1.852 },
+  'ft/min': { to: 'm/s', factor: 0.00508 },
+  'm/s': { to: 'ft/min', factor: 1 / 0.00508 },
+  'kg': { to: 'lb', factor: 2.20462262 },
+  'lb': { to: 'kg', factor: 0.45359237 },
+  'l': { to: 'gal', factor: 1 / 3.78541 },
+  'gal': { to: 'L', factor: 3.78541 }
+};
+
+export function formatOppositeUnit(value: number, unit: string | undefined | null): string | null {
+  if (!unit || !isFinite(value)) return null;
+  const conv = OPPOSITE_UNITS[unit.trim().toLowerCase()];
+  if (!conv) return null;
+  const v = value * conv.factor;
+  const decimals = Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2;
+  return `${v.toFixed(decimals)} ${conv.to}`;
+}
+
 const styles = {
   container: {
     padding: '20px',
     backgroundColor: 'var(--bg-overlay)',
     borderRadius: '8px',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-    maxWidth: '800px',
+    // R10 — plus de maxWidth 800 : les étapes du calcul se posent CÔTE À CÔTE
+    // (3 cadres ≈ 1 260 px) pour suivre le tracé comme sur l'abaque papier.
+    width: '100%',
     margin: '0 auto'
   },
   header: {
@@ -401,7 +431,10 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     const graph = graphChain[index];
 
     return (
-    <div key={step.graphId} style={{...styles.stepCard, marginBottom: '20px'}}>
+    // R10 — chaque étape est une CARTE de largeur fixe : les mini-graphiques se
+    // posent côte à côte (gauche → droite, comme la lecture de l'abaque papier)
+    // pour suivre le tracé d'un graphe au suivant.
+    <div key={step.graphId} style={{ ...styles.stepCard, margin: 0, flex: '0 0 auto', width: 396, maxWidth: '100%', border: '1px solid var(--border-subtle)' }}>
       <div style={styles.stepName}>
         <span style={styles.stepNumber}>{index + 1}</span>
         {step.graphName}
@@ -1009,21 +1042,47 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             📊 Résultats du calcul
           </h3>
 
-          {result.steps.map((step, index) => renderStep(step, index))}
+          {/* R10 — les étapes se suivent CÔTE À CÔTE (flux gauche → droite avec
+              flèches), comme le tracé sur l'abaque papier ; passage à la ligne
+              automatique sur écran étroit. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'flex-start' }}>
+            {result.steps.map((step, index) => (
+              <React.Fragment key={step.graphId}>
+                {renderStep(step, index)}
+                {index < result.steps.length - 1 && (
+                  <div style={{ alignSelf: 'center', fontSize: 22, color: 'var(--accent-primary)', fontWeight: 700 }} aria-hidden="true">
+                    →
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
 
           <div style={styles.finalResult}>
             <div>Valeur finale</div>
-            <div style={styles.finalValue}>
-              {result.finalValue.toFixed(2)}
-            </div>
-            {graphChain.length > 0 &&
-             graphChain[graphChain.length - 1].axes && (
-              <div style={{ fontSize: 'var(--fs-body)', marginTop: '5px' }}>
-                {graphChain[graphChain.length - 1].axes.yAxis.title}
-                {graphChain[graphChain.length - 1].axes.yAxis.unit &&
-                 ` (${graphChain[graphChain.length - 1].axes.yAxis.unit})`}
-              </div>
-            )}
+            {(() => {
+              const lastAxes = graphChain.length > 0 ? graphChain[graphChain.length - 1].axes : undefined;
+              const unit = lastAxes?.yAxis?.unit || '';
+              // R10 — comparatif systématique dans l'unité opposée (ft ↔ m…)
+              const opposite = formatOppositeUnit(result.finalValue, unit);
+              return (
+                <>
+                  <div style={styles.finalValue}>
+                    {result.finalValue.toFixed(2)}{unit ? ` ${unit}` : ''}
+                    {opposite && (
+                      <span style={{ fontSize: 'var(--fs-body)', fontWeight: 500, marginLeft: 10, opacity: 0.95 }}>
+                        ({opposite})
+                      </span>
+                    )}
+                  </div>
+                  {lastAxes && (
+                    <div style={{ fontSize: 'var(--fs-body)', marginTop: '5px' }}>
+                      {lastAxes.yAxis.title}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
