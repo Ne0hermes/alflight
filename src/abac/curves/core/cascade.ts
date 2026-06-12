@@ -338,18 +338,22 @@ function calculateOutputWithParameterCorrect(
   console.log(`📍 ÉTAPE 2: Analyse de la position Y=${inputY.toFixed(2)} par rapport aux courbes...`);
 
   // Pour chaque X, trouver entre quelles courbes on se trouve
-  // D'abord, trouver un X de référence où toutes les courbes sont définies
-  let xRef = null;
+  // D'abord, déterminer le X de la ligne de référence du panneau
+  let xRef: number | null = null;
 
-  // Trouver la plage X commune à toutes les courbes
+  // Plages X des guides : INTERSECTION (diagnostic) + UNION (repli sans axe)
   let xMinCommon = -Infinity;
   let xMaxCommon = Infinity;
+  let xMinAll = Infinity;
+  let xMaxAll = -Infinity;
 
   for (const cp of curvesWithParams) {
     if (cp.curve.fitted && cp.curve.fitted.points.length > 0) {
       const points = cp.curve.fitted.points;
       xMinCommon = Math.max(xMinCommon, points[0].x);
       xMaxCommon = Math.min(xMaxCommon, points[points.length - 1].x);
+      xMinAll = Math.min(xMinAll, points[0].x);
+      xMaxAll = Math.max(xMaxAll, points[points.length - 1].x);
     }
   }
 
@@ -358,21 +362,51 @@ function calculateOutputWithParameterCorrect(
   // PA-28-181 : « ligne de référence 2550 lb » pour la masse, « ligne de
   // référence vent nul » pour le vent). En DONNÉES : gauche = xMin, SAUF axe
   // inversé (ex. masse décroissante vers la droite) où gauche = xMax.
-  // L'ancienne heuristique « la plage X ressemble à une masse ⇒ entrer à
-  // droite » (calée sur UN modèle historique) entrait par le mauvais bord
-  // dès que le modèle était construit autrement — supprimée.
+  //
+  // R20 — la ligne de référence est une propriété du PANNEAU (bord de son
+  // AXE calibré), PAS de la couverture des tracés. L'ancien calcul prenait
+  // le bord de la plage COMMUNE (intersection) des guides : UN seul guide
+  // tronqué (ex. un guide haut qui sort par le plafond du graphe — cas
+  // normal sur un abaque réel) repliait l'entrée au bout de CE guide, et le
+  // suivi ne parcourait plus qu'un éclat du panneau. Cas réel PA-28 Flaps
+  // TAKEOFF : guide « 11 » tronqué à 1089,9 kg ⇒ entrée à 1089,9 au lieu de
+  // 1150 ⇒ correction de masse −0,2 % au lieu de −9 % ⇒ distance finale
+  // +10 % (626 m au lieu de ~567). Les guides qui n'atteignent pas le bord
+  // d'axe sont PROLONGÉS par leur pente de bord (findYForX extrapolate=true),
+  // symétriquement au bout du suivi (R12) — le geste du crayon sur papier.
+  // Repli si l'axe n'a pas de bornes finies : bord de l'ENVELOPPE (union)
+  // des guides — jamais l'intersection, qui se contracte au moindre tronqué.
   const xAxisReversed = !!graph.axes?.xAxis?.reversed;
-  xRef = xAxisReversed ? xMaxCommon : xMinCommon;
+  const axisEdge = xAxisReversed ? graph.axes?.xAxis?.max : graph.axes?.xAxis?.min;
+  const envelopeEdge = xAxisReversed ? xMaxAll : xMinAll;
+  xRef = (typeof axisEdge === 'number' && isFinite(axisEdge)) ? axisEdge : envelopeEdge;
 
-  console.log(`   X de référence = ligne de référence du panneau (bord visuel gauche${xAxisReversed ? ', axe inversé ⇒ xMax' : ''}): ${xRef.toFixed(2)}`);
-  console.log(`   Plage X commune: [${xMinCommon.toFixed(2)}, ${xMaxCommon.toFixed(2)}]`);
+  if (!isFinite(xRef)) {
+    console.error(`   ❌ Ligne de référence introuvable (axe sans bornes et guides sans points interpolés)`);
+    return null;
+  }
+
+  console.log(`   X de référence = ligne de référence du panneau (bord d'axe visuel gauche${xAxisReversed ? ', axe inversé ⇒ xMax' : ''}): ${xRef.toFixed(2)}`);
+  console.log(`   Plage X des guides — intersection: [${xMinCommon.toFixed(2)}, ${xMaxCommon.toFixed(2)}] · enveloppe: [${xMinAll.toFixed(2)}, ${xMaxAll.toFixed(2)}]`);
+
+  // R20 — signale les guides qui n'atteignent pas la ligne de référence
+  // (ils participent quand même, prolongés par leur pente de bord).
+  const entryExtendedCurves = curvesWithParams.filter(cp => {
+    const pts = cp.curve.fitted?.points;
+    return pts && pts.length >= 2 && (xRef! < pts[0].x || xRef! > pts[pts.length - 1].x);
+  });
+  if (entryExtendedCurves.length > 0) {
+    console.log(`   ✏ ${entryExtendedCurves.length} guide(s) prolongé(s) jusqu'à la ligne de référence : ${entryExtendedCurves.map(cp => `« ${cp.name} »`).join(', ')}`);
+  }
 
   // Évaluer Y pour chaque courbe à X de référence
   // IMPORTANT: Pour le graphique de masse, on doit identifier les courbes par leur paramètre numérique
   // et non par leur position Y, car Y=732 doit être entre les courbes 2 et 3
+  // R20 — extrapolate=true : un guide tronqué avant la ligne de référence
+  // participe à l'encadrement, prolongé par sa pente de bord.
   const curvesAtRef = curvesWithParams
     .map(cp => {
-      const y = findYForX(cp.curve, xRef);
+      const y = findYForX(cp.curve, xRef, true);
       return { ...cp, yAtRef: y };
     })
     .filter(cp => cp.yAtRef !== null);
@@ -553,8 +587,10 @@ function calculateOutputWithParameterCorrect(
     }
   } else {
     // On est entre deux courbes - calculer le ratio de position
-    const yLowerAtRef = findYForX(lowerCurve, xRef);
-    const yUpperAtRef = findYForX(upperCurve, xRef);
+    // R20 — extrapolate=true : la ligne de référence est au bord d'AXE,
+    // possiblement au-delà du tracé des guides (prolongation par la pente).
+    const yLowerAtRef = findYForX(lowerCurve, xRef, true);
+    const yUpperAtRef = findYForX(upperCurve, xRef, true);
 
     if (yLowerAtRef !== null && yUpperAtRef !== null) {
       const range = yUpperAtRef - yLowerAtRef;
@@ -594,8 +630,9 @@ function calculateOutputWithParameterCorrect(
     console.log(`   Étape 2: Tracé vertical à X=${parameterX}`);
 
     // Récupérer les valeurs Y de référence au point X de référence
-    const yLowerAtRef = findYForX(lowerCurve, xRef);
-    const yUpperAtRef = findYForX(upperCurve, xRef);
+    // R20 — extrapolate=true : cohérent avec le calcul du ratio (bord d'axe).
+    const yLowerAtRef = findYForX(lowerCurve, xRef, true);
+    const yUpperAtRef = findYForX(upperCurve, xRef, true);
 
     console.log(`   Courbes de référence au point d'entrée (X=${xRef.toFixed(2)}, Y=${inputY.toFixed(2)}):`);
     console.log(`     - Courbe inférieure "${lowerName}": Y=${yLowerAtRef?.toFixed(2) || 'non trouvé'}`);
@@ -742,8 +779,8 @@ function calculateOutputWithParameterCorrect(
       referenceCurves: lowerCurve && upperCurve ? {
         lowerCurveName: lowerName,
         upperCurveName: upperName,
-        lowerYAtRef: findYForX(lowerCurve, xRef),
-        upperYAtRef: findYForX(upperCurve, xRef)
+        lowerYAtRef: findYForX(lowerCurve, xRef, true),
+        upperYAtRef: findYForX(upperCurve, xRef, true)
       } : undefined
     };
     console.log(`   📊 Résultat final avec courbes de référence:`, result.referenceCurves);
