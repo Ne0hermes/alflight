@@ -274,3 +274,48 @@ test cascade + save en un geste) + finitions compat ; R5 — tunnel amont.
 
 La vision pilote (PA-28-181) est en place de bout en bout : **une image, un Y
 commun, des cadres, des courbes — et un modèle validé sans quitter le canevas.**
+
+## 14. R6 — Suppression du wizard résiduel (2026-06-12, retour pilote post-livraison)
+
+**Déclencheur** : en testant l'atelier, le pilote bute sur le bloc sous le
+canevas (« à quoi sert tout ce bloc ? ») — c'était l'ancien wizard 5
+sous-étapes affiché EN ENTIER sur un nouvel abaque (l'atelier n'étant « actif »
+qu'après import d'image, le filet de sécurité R2a montrait tout le legacy :
+double import d'image, double « ajouter un graphique », 5 étapes redondantes).
+Découverte au passage : la sous-étape 1 (Identité — rôle + operationId) était
+**masquée dès que l'atelier était actif** (R2a) → rôle/opération INACCESSIBLES
+en flux atelier alors que le verrou d'export les exige. R6 corrige les deux.
+
+**Livré** :
+- **`GraphIdentityPanel.tsx` (nouveau)** — l'identité (rôle primaire/
+  intermédiaire, position cascade, opération canonique, nature de sortie)
+  extraite du wizard en composant réutilisable.
+- **Builder** : l'identité du CADRE ACTIF vit sous le canevas (visible dès
+  qu'un cadre existe) + bouton « 🗑 Supprimer ce graphique (et son cadre) »
+  (le ✕ d'un cadre ne fait que dé-cadrer ; l'ancien bouton supprimer vivait
+  dans la barre de pagination disparue). Handler `updateCurrentGraph` hissé
+  (auto-sync systemType conservé).
+- **Wizard : nouveau mode `atelierMode`** — ne rend QUE l'outillage courbes :
+  bandeaux contextuels (placement / Bézier / édition), Chart (surface Bézier),
+  CurveManager, et la table de points en **panneau repliable fermé par défaut**
+  (« 📋 Points (saisie précise) » — D2 enfin au format voulu). Plus de barre
+  « Graphique 1/N », plus de sous-étapes, plus d'import d'image par graphe,
+  plus de « + Ajouter un graphique » (doublon du « ＋ Ajouter un cadre »).
+  Pied réduit au seul geste de sortie « 🪄 Interpoler & Valider → » (unique
+  chemin vers l'étape finale — préservé).
+- **Progressive disclosure** : tant qu'aucun cadre n'est posé, RIEN sous le
+  canevas (ni identité, ni test cascade, ni wizard) — le canevas guide (image
+  puis cadres). Anciens modèles : bandeau compat D4 « Créer un cadre par
+  graphe » = passage obligé (1 clic, non destructif).
+- Import `operationCatalog` du wizard devenu orphelin → retiré.
+
+**Vérification** : tsc parse-clean (0 × TS1xxx) ; build vert (41,5 s) ;
+**rendu réel dans le navigateur** (dev server + montage isolé des composants) :
+identité rendue, titre « Courbes du cadre actif », bouton « Interpoler les 3
+graphiques & Valider » présent, barre de sous-étapes et pagination ABSENTES,
+charte sombre respectée (capture vérifiée).
+
+**Différé** : le flux legacy complet du wizard (5 sous-étapes hors atelier)
+n'est plus monté nulle part mais reste dans le fichier — purge finale quand
+l'atelier aura tourné quelques semaines (avec CurveManager/PointsTable/Chart
+qui, eux, restent vivants en atelierMode).
