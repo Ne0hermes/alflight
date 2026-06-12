@@ -83,6 +83,13 @@ interface AbacGraphWizardProps {
    *  courbes (création/édition, Chart pour le Bézier, table de points en
    *  panneau repliable) + le bouton Interpoler & Valider. */
   atelierMode?: boolean;
+  /** R7 — en atelier le façonnage Bézier vit SUR LE CANEVAS du builder (plus
+   *  de Chart séparé : « il faut suivre les traits de l'image »). Le wizard
+   *  pilote la session via ces callbacks et reflète son état via bezierActive. */
+  bezierActive?: boolean;
+  onStartBezier?: () => void;
+  onApplyBezier?: () => void;
+  onCancelBezier?: () => void;
 }
 
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
@@ -93,7 +100,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onAddCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
     onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish,
-    hideGraphNav, hideImageSubSteps, onEditorModeChange, atelierMode
+    hideGraphNav, hideImageSubSteps, onEditorModeChange, atelierMode,
+    bezierActive, onStartBezier, onApplyBezier, onCancelBezier
   } = props;
 
   // R2a — sous-étapes réellement proposées : sans « Image »/« Position » quand
@@ -846,24 +854,28 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   ✓ Terminer cette courbe
                 </button>
               </div>
-            ) : editorMode === 'bezier-handles' && selectedCurve ? (
-              /* P2b — Mode Bézier : façonnage par poignées de contrôle */
+            ) : (atelierMode ? bezierActive : editorMode === 'bezier-handles') && selectedCurve ? (
+              /* P2b — Mode Bézier : façonnage par poignées de contrôle.
+                 R7 — en atelier la session vit dans le BUILDER et les poignées
+                 se tirent sur le CANEVAS (par-dessus l'image) : cette bannière
+                 ne fait que piloter Appliquer / Annuler. */
               <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>〰 Façonnage Bézier de "{selectedCurve.name}"</strong>
                 <span style={{ fontSize: 13 }}>
-                  Tire les <strong>poignées rondes</strong> pour façonner la courbe entre les points
-                  (les points restent déplaçables). La courbe doit rester une fonction de X.
+                  {atelierMode
+                    ? <>Tire les <strong>poignées rondes</strong> directement sur l'image, dans le cadre actif, pour faire suivre le trait à la courbe (les points restent déplaçables). La courbe doit rester une fonction de X.</>
+                    : <>Tire les <strong>poignées rondes</strong> pour façonner la courbe entre les points (les points restent déplaçables). La courbe doit rester une fonction de X.</>}
                 </span>
                 <span style={{ marginLeft: 'auto' }} />
                 <button
-                  onClick={handleApplyBezier}
+                  onClick={atelierMode && onApplyBezier ? onApplyBezier : handleApplyBezier}
                   style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
                   title="Remplace les points de la courbe par un échantillonnage fidèle du tracé"
                 >
                   ✓ Appliquer le tracé
                 </button>
                 <button
-                  onClick={handleCancelBezier}
+                  onClick={atelierMode && onCancelBezier ? onCancelBezier : handleCancelBezier}
                   style={btnStyle('var(--text-secondary)', true)}
                 >
                   ✕ Annuler
@@ -888,12 +900,14 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   📍 Ajouter des points
                 </button>
                 <button
-                  onClick={handleStartBezier}
+                  onClick={atelierMode && onStartBezier ? onStartBezier : handleStartBezier}
                   disabled={selectedCurve.points.length < 2}
                   style={{ ...btnStyle('var(--accent-primary)', true), opacity: selectedCurve.points.length < 2 ? 0.4 : 1 }}
                   title={selectedCurve.points.length < 2
                     ? 'Place au moins 2 points avant de façonner en Bézier'
-                    : 'Façonner la courbe en tirant des poignées de contrôle (Bézier)'}
+                    : atelierMode
+                      ? 'Façonner la courbe en tirant des poignées directement sur l\'image (Bézier)'
+                      : 'Façonner la courbe en tirant des poignées de contrôle (Bézier)'}
                 >
                   〰 Affiner en Bézier
                 </button>
@@ -938,9 +952,15 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
             )}
 
             <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <div style={{ flex: '0 0 auto' }}>
-                {renderChart(true)}
-              </div>
+              {/* R7 — en atelier, PAS de Chart séparé : le tracé, l'édition des
+                  points ET le façonnage Bézier vivent sur le CANEVAS (il faut
+                  pouvoir suivre les traits de l'image — retour pilote). Le
+                  Chart reste pour le flux legacy hors atelier. */}
+              {!atelierMode && (
+                <div style={{ flex: '0 0 auto' }}>
+                  {renderChart(true)}
+                </div>
+              )}
               <div style={{ flex: '1 1 280px', minWidth: 280 }}>
                 <CurveManager
                   curves={graph.curves}

@@ -319,3 +319,40 @@ charte sombre respectée (capture vérifiée).
 n'est plus monté nulle part mais reste dans le fichier — purge finale quand
 l'atelier aura tourné quelques semaines (avec CurveManager/PointsTable/Chart
 qui, eux, restent vivants en atelierMode).
+
+## 15. R7 — Le Chart séparé disparaît : Bézier sur le canevas (2026-06-12, retour pilote)
+
+**Déclencheur** : « cet élément est inutile… il faut que je puisse poser et
+prendre la courbe directement sur l'atelier… il faut que je puisse suivre les
+traits, donc tout doit se passer sur le graphique avec les 3 zones. » Le Chart
+800×800 du wizard réduit (gardé en R3 comme surface Bézier) montrait la courbe
+SANS l'image — impossible d'y suivre les traits du MANEX. La décision R3
+« Bézier assumé sur le Chart » est CADUQUE : c'est la R3b, exigée par l'usage.
+
+**Livré** :
+- **WorkshopCanvas** : nouvelle couche Bézier — preview de la courbe façonnée
+  (cubiques) + poignées cp1/cp2 tirables PAR-DESSUS l'image dans le cadre
+  actif, lignes guides, ancien trait estompé en pointillés pendant la session
+  (pas de double trait ambigu). Drag par le pattern pointer unifié existant,
+  coords data via les mappings inverses (calibration comprise). Props :
+  `bezierSegments` + `onBezierHandleDrag`.
+- **AbacBuilder** : la session Bézier vit ici (`bezierSession` : courbe +
+  overrides), segments recalculés en continu (les points restent déplaçables
+  pendant la session), `applyBezierSession` échantillonne 6/segment → points
+  ordinaires (pipeline inchangé), abandon auto si changement de courbe/cadre/
+  étape. Moteur core/bezier.ts P2b réutilisé tel quel.
+- **Wizard (atelier)** : le Chart n'est PLUS rendu (il reste pour le flux
+  legacy) ; la bannière Bézier pilote la session du builder (Appliquer/Annuler
+  externes), « Affiner en Bézier » démarre la session sur le canevas, textes
+  adaptés (« directement sur l'image »).
+
+**Vérification** (montage réel navigateur, serveur dev) : couche Bézier rendue
+(2 segments → 4 poignées), preview tracée, ancien trait estompé, **drag de
+poignée simulé → onBezierHandleDrag reçoit des coords DATA correctes**
+(−8.8 °C / 2353 ft) ; wizard : Chart absent (0 svg), « Affiner en Bézier » →
+session builder, bannière atelier, Appliquer/Annuler externes câblés. tsc
+parse-clean, build vert. Capture : poignées sur le cadre actif, charte sombre.
+
+**Le wizard atelier n'est plus qu'une boîte à outils** : bannières d'état,
+CurveManager, table de points repliable, bouton Interpoler & Valider — zéro
+surface de dessin hors canevas. La vision « tout sur le graphique » est tenue.
