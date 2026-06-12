@@ -356,3 +356,39 @@ parse-clean, build vert. Capture : poignées sur le cadre actif, charte sombre.
 **Le wizard atelier n'est plus qu'une boîte à outils** : bannières d'état,
 CurveManager, table de points repliable, bouton Interpoler & Valider — zéro
 surface de dessin hors canevas. La vision « tout sur le graphique » est tenue.
+
+## 16. R8 — Variables canoniques + unités verrouillées + panneau au-dessus (2026-06-12, retour pilote)
+
+**Déclencheur** : « le titre et les unités sont rentrés manuellement, y compris
+pour le Y — dangereux puisque ce sont des éléments paramétrants : la
+température vient des METAR, la masse du module M&C, le vent des données
+météo. Il faut des unités fixes identifiables/réutilisables. » + « mets cet
+élément au-dessus de l'atelier ». Constat aggravant : les saisies réelles du
+pilote (« temperature », « distance ») ne matchaient AUCUN id du catalogue
+`axisVariables` → la cascade n'aurait jamais branché ces axes sur les données
+vivantes. Le danger était réel, pas théorique.
+
+**Livré** :
+- **`VarSelectMini`** (canevas) : le Titre devient un SELECT de variables
+  canoniques (catalogue `core/axisVariables`, groupé par catégorie, filtré
+  X = inputs / Y = outputs — même logique que l'AxisVariableSelect de
+  l'ancienne sous-étape). La valeur stockée est l'`id` stable (clé persistée
+  référencée par les calculs de perf). Valeurs legacy non canoniques :
+  préservées, affichées « ⚠ … (legacy) » avec libellé et bordure rouges.
+- **`UnitFieldMini`** : l'unité est VERROUILLÉE sur le catalogue — select
+  fermé sur `units[]` si plusieurs unités compatibles (°C/°F, m/ft, kt/km/h…),
+  badge fixe sinon ; champ libre uniquement pour 'custom' et legacy. Choisir
+  une variable pré-remplit son `defaultUnit`.
+- **Panneau AXES déplacé AU-DESSUS du canevas** (sous la barre d'outils) :
+  on règle les axes avant de regarder l'image, l'ordre de lecture suit le flux.
+- **Règles graduées** : affichent le LABEL humain (`getAxisVariableLabel`)
+  au lieu de l'id technique.
+- **Builder** : auto-détection « graphique vent » restaurée quand l'X devient
+  une variable famille vent (isWindRelated, comme l'ancienne sous-étape).
+
+**Vérification** (montage réel navigateur) : panneau AVANT le <svg> dans le
+DOM ; Y propose les outputs (distance 50ft…) et PAS l'OAT ; legacy
+« distance » signalé ⚠ ; choisir OAT sur X → `onUpdateGraphXAxis(title:'oat',
+unit:'°C')` automatique ; unités fermées (°C/°F, m/ft) ; zéro champ texte
+libre avec variables canoniques ; labels humains sur les règles. tsc
+parse-clean, build vert, capture conforme charte.
