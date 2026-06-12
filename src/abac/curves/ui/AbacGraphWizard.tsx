@@ -90,6 +90,11 @@ interface AbacGraphWizardProps {
   onStartBezier?: () => void;
   onApplyBezier?: () => void;
   onCancelBezier?: () => void;
+  /** Capsule « Nouvelle courbe » du CANEVAS (la création de courbe vit
+   *  au-dessus de l'atelier en mode atelier — demande pilote) : commande
+   *  externe du mode d'édition. Le wizard reste l'unique propriétaire de
+   *  editorMode ; chaque nonce applique le mode demandé UNE seule fois. */
+  editorModeCommand?: { mode: 'placing-points' | 'idle'; nonce: number } | null;
 }
 
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
@@ -101,7 +106,8 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onPointClick, onPointDrag, onPointDelete,
     onPreviousGraph, onNextGraph, onAddGraph, onRemoveGraph, onFinish,
     hideGraphNav, hideImageSubSteps, onEditorModeChange, atelierMode,
-    bezierActive, onStartBezier, onApplyBezier, onCancelBezier
+    bezierActive, onStartBezier, onApplyBezier, onCancelBezier,
+    editorModeCommand
   } = props;
 
   // R2a — sous-étapes réellement proposées : sans « Image »/« Position » quand
@@ -138,6 +144,17 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
     onEditorModeChange?.(editorMode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorMode]);
+
+  // Capsule « Nouvelle courbe » du canevas : applique chaque COMMANDE une
+  // seule fois (nonce). Le ref initialisé au nonce courant neutralise toute
+  // commande résiduelle si le wizard est démonté/remonté (cadres retirés
+  // puis recréés) — pas de mode placement fantôme au remontage.
+  const lastModeCmdNonce = React.useRef(editorModeCommand?.nonce ?? 0);
+  React.useEffect(() => {
+    if (!editorModeCommand || editorModeCommand.nonce === lastModeCmdNonce.current) return;
+    lastModeCmdNonce.current = editorModeCommand.nonce;
+    setEditorMode(editorModeCommand.mode);
+  }, [editorModeCommand]);
   const [calibrationSession, setCalibrationSession] = useState<null | {
     axis: 'x' | 'y';
     values: number[];
@@ -919,8 +936,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   ✕ Désélectionner
                 </button>
               </div>
-            ) : (
-              /* Aucune courbe sélectionnée : création d'une nouvelle */
+            ) : !atelierMode ? (
+              /* Aucune courbe sélectionnée : création d'une nouvelle.
+                 En ATELIER ce bloc a DÉMÉNAGÉ dans la capsule « Nouvelle
+                 courbe » du canevas (entre le panneau Axes et l'image —
+                 demande pilote) : même flux, handlers du builder. Ici ne
+                 restent que la liste et l'outillage des courbes. */
               <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>Nouvelle courbe :</strong>
                 <input
@@ -949,7 +970,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   💡 Pour modifier une courbe existante, clique son nom dans la liste à droite.
                 </span>
               </div>
-            )}
+            ) : null}
 
             <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               {/* R7 — en atelier, PAS de Chart séparé : le tracé, l'édition des
