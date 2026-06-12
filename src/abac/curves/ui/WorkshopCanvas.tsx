@@ -969,7 +969,11 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                       d={d}
                       fill="none"
                       stroke={curve.color}
-                      strokeWidth={isFocus ? 2 : 1.2}
+                      // R16 — traits FINS (demande pilote) : le tracé ne doit pas
+                      // masquer le trait du MANEX qu'on suit ; non-scaling-stroke
+                      // garde cette finesse à l'écran même zoomé à 800 %.
+                      strokeWidth={isFocus ? 1.1 : 0.8}
+                      vectorEffect="non-scaling-stroke"
                       strokeDasharray={inBezier ? '5 4' : undefined}
                       opacity={inBezier ? 0.25 : curve.id === selectedCurveId ? 1 : 0.85}
                     />
@@ -1149,7 +1153,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             }).join(' ');
             return (
               <g data-bezier-layer="1">
-                <path d={d} fill="none" stroke={color} strokeWidth={2.5} pointerEvents="none" />
+                {/* R16 — preview fine elle aussi (non-scaling : reste fine au zoom) */}
+                <path d={d} fill="none" stroke={color} strokeWidth={1.4} vectorEffect="non-scaling-stroke" pointerEvents="none" />
                 {bezierSegments.map((s, i) => {
                   const p0 = toPx(s.p0), c1 = toPx(s.cp1), c2 = toPx(s.cp2), p1 = toPx(s.p1);
                   return (
