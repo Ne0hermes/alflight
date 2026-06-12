@@ -724,6 +724,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         // ne reposent que sur déclaratif (risque sécurité opérationnelle).
         if (!aircraftData.weighingReport?.hasData) {
           newErrors.weighingReport = "Le rapport de pesée (PDF) est obligatoire. Il justifie la masse à vide et le bras de levier.";
+        } else if (!aircraftData.weighingReport?.certificationDate) {
+          // Date de la pesée OBLIGATOIRE (demande pilote) — elle alimente
+          // l'indicateur d'ancienneté du devis de masse en préparation de
+          // vol (rappel CdB au-delà de 10 ans : vérifier qu'une pesée plus
+          // récente n'existe pas).
+          newErrors.weighingReportDate = "La date de la pesée (date portée sur le rapport) est obligatoire.";
+        } else if (new Date(aircraftData.weighingReport.certificationDate) > new Date()) {
+          newErrors.weighingReportDate = "La date de la pesée ne peut pas être dans le futur.";
         }
         break;
 

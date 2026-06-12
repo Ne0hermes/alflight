@@ -41,6 +41,7 @@ import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
 import { StyledTextField } from './FormFieldStyles';
+import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 
 const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
@@ -2267,6 +2268,53 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               </Button>
             </Box>
           </Box>
+
+          {/* ─── Date de la pesée (certification) — OBLIGATOIRE ──────────────
+              Date portée sur le rapport (≠ date d'import). Elle alimente
+              l'indicateur d'ancienneté en préparation de vol : au-delà de
+              10 ans, rappel CdB de vérifier qu'une pesée plus récente
+              n'existe pas. Le champ n'apparaît qu'une fois le PDF joint
+              (ordre logique : document d'abord, puis sa date) ; le wizard
+              bloque l'étape tant qu'elle n'est pas renseignée. Remplacer le
+              PDF efface la date : un nouveau rapport = une nouvelle date. */}
+          {data.weighingReport?.hasData && (() => {
+            const age = getWeighingReportAge(data.weighingReport?.certificationDate);
+            return (
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'flex-start', gap: 2, flexWrap: 'wrap' }}>
+                <StyledTextField
+                  label="Date de la pesée (certification)"
+                  type="date"
+                  required
+                  size="small"
+                  value={data.weighingReport?.certificationDate || ''}
+                  onChange={(e) => updateData('weighingReport.certificationDate', e.target.value)}
+                  error={!!errors?.weighingReportDate}
+                  helperText={errors?.weighingReportDate || 'Date portée sur le rapport de pesée'}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 220 }}
+                />
+                {age && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: 1,
+                      px: 1.25,
+                      py: 0.5,
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid',
+                      borderColor: age.isOld ? 'warning.main' : 'divider',
+                      color: age.isOld ? 'warning.main' : 'text.secondary',
+                      fontWeight: age.isOld ? 600 : 400
+                    }}
+                  >
+                    {age.isOld
+                      ? `⚠ Pesée d'il y a ${age.ageLabel} (> ${WEIGHING_REPORT_WARN_YEARS} ans) — vérifiez qu'un rapport plus récent n'existe pas.`
+                      : `Pesée d'il y a ${age.ageLabel}.`}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })()}
         </Paper>
       </Box>
 
