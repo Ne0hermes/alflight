@@ -219,7 +219,29 @@ export interface AbacCurvesJSON {
     /** R1 — état de l'atelier « image unique » (ré-édition). Absent sur les
      *  modèles construits avant la refonte → ouverture en mode compat (D4). */
     workshop?: WorkshopConfig;
+    /** R13 — banc de test permanent : cas de référence MANEX rejoués
+     *  automatiquement à la validation (PASS/FAIL ± tolérance). */
+    referenceCases?: ReferenceCase[];
   };
+}
+
+/** R13 — un cas de référence du manuel : les entrées d'un exemple + le
+ *  résultat attendu. Stocké DANS le modèle, rejoué à chaque validation —
+ *  c'est le filet qui attrape un panneau retracé de travers AVANT
+ *  l'enregistrement (cf. miroir masse F-GNAM, §19 de l'audit atelier). */
+export interface ReferenceCase {
+  id: string;
+  /** Libellé libre (ex. « Exemple POH p.5-9 »). */
+  label?: string;
+  /** Valeur d'entrée du PREMIER graphe de la chaîne (ex. OAT en °C). */
+  inputValue: number;
+  /** Paramètre par graphe (graphId → valeur) : altitude, masse, vent… */
+  parameters: Record<string, number>;
+  windDirection?: 'headwind' | 'tailwind';
+  /** Résultat attendu (papier), dans l'unité du Y du dernier graphe. */
+  expected: number;
+  /** Tolérance en % (défaut 5). */
+  tolerancePct?: number;
 }
 
 export interface ChartRef {
