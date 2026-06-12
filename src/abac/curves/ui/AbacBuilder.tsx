@@ -1426,6 +1426,61 @@ const renderStepContent = () => {
               )}
             </div>
 
+            {/* ─── R6+R9 : IDENTITÉ DU CADRE ACTIF — zone REPLIABLE au-dessus de
+                l'atelier (demande pilote). Ouverte tant que l'opération canonique
+                du primaire manque (sans elle le set n'est pas consommé par la
+                préparation de vol), repliée une fois complète ; remontée du
+                wizard dont la sous-étape 1 était masquée en atelier. La clé par
+                graphe ré-évalue l'ouverture à chaque changement de cadre. */}
+            {workshop.frames.length > 0 && (() => {
+              const g = currentGraphForWizard;
+              const gIsPrimary = (g.role || 'primary') === 'primary';
+              const gOp = g.operationId ? getOperation(g.operationId) : undefined;
+              const needsAttention = gIsPrimary && !gOp;
+              return (
+                <details
+                  key={`identity-${g.id}`}
+                  {...(needsAttention ? { open: true } : {})}
+                  style={{
+                    marginBottom: 10,
+                    border: `1px solid ${needsAttention ? 'var(--color-red-critical)' : 'var(--border-subtle)'}`,
+                    borderRadius: 6,
+                    backgroundColor: 'var(--bg-overlay)'
+                  }}
+                >
+                  <summary style={{ padding: '7px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)' }}>
+                    Identité du graphique {subStepGraphIndex + 1}
+                    <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 8, fontSize: 12 }}>
+                      {gIsPrimary
+                        ? (gOp ? `Primaire · ${gOp.labelFr}` : 'Primaire')
+                        : `Intermédiaire${g.cascadeOrder ? ` · tableau ${g.cascadeOrder}` : ''}`}
+                    </span>
+                    {needsAttention && (
+                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: 'var(--color-red-critical)' }}>
+                        opération canonique à choisir
+                      </span>
+                    )}
+                  </summary>
+                  <div style={{ padding: '4px 12px 10px' }}>
+                    <GraphIdentityPanel graph={g} onUpdateGraph={updateCurrentGraph} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                      <button
+                        onClick={removeCurrentGraphAndFrame}
+                        title="Supprime le graphique focalisé, ses courbes et son cadre sur l'image"
+                        style={{
+                          padding: '3px 10px', fontSize: 11, cursor: 'pointer',
+                          backgroundColor: 'transparent', color: 'var(--color-red-critical)',
+                          border: '1px solid var(--color-red-critical)', borderRadius: 4
+                        }}
+                      >
+                        Supprimer ce graphique (et son cadre)
+                      </button>
+                    </div>
+                  </div>
+                </details>
+              );
+            })()}
+
             {/* ─── R2a — CANEVAS DE L'ATELIER « IMAGE UNIQUE » ───
                 Remplace le bandeau de cartes (P2a) : UNE image MANEX pour tout le
                 set, des CADRES tirés dessus (un par graphe), focus au clic,
@@ -1489,29 +1544,6 @@ const renderStepContent = () => {
               onBezierHandleDrag={handleBezierHandleDrag}
             />
 
-
-            {/* ─── R6 : IDENTITÉ DU CADRE ACTIF — remontée du wizard (sa
-                sous-étape 1 était masquée dès que l'atelier était actif, rendant
-                rôle + operationId INACCESSIBLES) : sans operationId sur le
-                primaire, le set n'est pas consommé par la préparation de vol. */}
-            {workshop.frames.length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <GraphIdentityPanel graph={currentGraphForWizard} onUpdateGraph={updateCurrentGraph} />
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-                  <button
-                    onClick={removeCurrentGraphAndFrame}
-                    title="Supprime le graphique focalisé, ses courbes et son cadre sur l'image"
-                    style={{
-                      padding: '4px 10px', fontSize: 12, cursor: 'pointer',
-                      backgroundColor: 'transparent', color: 'var(--color-red-critical)',
-                      border: '1px solid var(--color-red-critical)', borderRadius: 4
-                    }}
-                  >
-                    🗑 Supprimer ce graphique (et son cadre)
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* ─── P4 : TEST DE CASCADE EN ÉDITION — exécute le calcul complet
                 (méthode des abaques, cascade.ts) sur les graphes EN L'ÉTAT, sans

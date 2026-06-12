@@ -2,12 +2,13 @@
 //
 // R6 — Identité d'un graphique d'abaque : rôle dans le set (primaire /
 // intermédiaire), opération canonique (operationId) et nature de sortie.
-// Extrait de la sous-étape 1 du wizard (AbacGraphWizard) car cette sous-étape
-// est masquée quand l'atelier « image unique » est actif — l'identité doit
-// rester accessible : sans operationId sur le primaire, le set n'est PAS
-// consommé par la préparation de vol (verrou de handleExportJSON).
-// Monté : (1) par le builder sous le canevas pour le cadre actif,
-//         (2) par le wizard en sous-étape 1 (flux historique hors atelier).
+// Extrait de la sous-étape 1 du wizard car cette sous-étape est masquée quand
+// l'atelier « image unique » est actif — l'identité doit rester accessible :
+// sans operationId sur le primaire, le set n'est PAS consommé par la
+// préparation de vol (verrou de handleExportJSON).
+// R9 — version COMPACTE (demande pilote) : sans icônes, descriptions en
+// infobulles, lignes denses. Monté par le builder dans une zone repliable
+// AU-DESSUS de l'atelier (et par la sous-étape 1 du flux legacy).
 
 import React from 'react';
 import { GraphConfig } from '../core/types';
@@ -18,166 +19,128 @@ interface GraphIdentityPanelProps {
   onUpdateGraph: (partial: Partial<GraphConfig>) => void;
 }
 
-export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, onUpdateGraph }) => (
-  <div style={{
-    padding: 12,
-    backgroundColor: 'rgba(242, 105, 33, 0.06)', border: '1px solid var(--border-regular)', borderRadius: 6
-  }}>
-    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)', marginBottom: 8 }}>
-      🏷 Identité du graphique
-    </div>
+const selectStyle: React.CSSProperties = {
+  padding: '4px 8px', fontSize: 12, borderRadius: 3,
+  border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)'
+};
 
-    {/* === Sélecteur de rôle : primaire (= produit valeur finale) ou intermédiaire (= étape de correction) === */}
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
-        Rôle de ce graphique dans le set
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <label style={{
-          flex: 1, minWidth: 220, padding: '8px 10px',
-          border: `2px solid ${(graph.role || 'primary') === 'primary' ? 'var(--status-success)' : 'var(--border-subtle)'}`,
-          borderRadius: 4, cursor: 'pointer',
-          backgroundColor: (graph.role || 'primary') === 'primary' ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)',
-          display: 'flex', alignItems: 'flex-start', gap: 8
-        }}>
-          <input
-            type="radio"
-            name={`role-${graph.id}`}
-            checked={(graph.role || 'primary') === 'primary'}
-            onChange={() => onUpdateGraph({ role: 'primary', cascadeOrder: undefined })}
-            style={{ marginTop: 2 }}
-          />
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 13 }}>⭐ Primaire</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-              Produit la valeur finale du set. Reçoit l'output du dernier intermédiaire et donne le résultat final.
-            </div>
-          </div>
-        </label>
-        <label style={{
-          flex: 1, minWidth: 220, padding: '8px 10px',
-          border: `2px solid ${graph.role === 'intermediate' ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-          borderRadius: 4, cursor: 'pointer',
-          backgroundColor: graph.role === 'intermediate' ? 'rgba(242, 105, 33, 0.10)' : 'var(--bg-surface)',
-          display: 'flex', alignItems: 'flex-start', gap: 8
-        }}>
-          <input
-            type="radio"
-            name={`role-${graph.id}`}
-            checked={graph.role === 'intermediate'}
-            onChange={() => onUpdateGraph({ role: 'intermediate', operationId: undefined, outputKind: undefined, outputUnit: undefined })}
-            style={{ marginTop: 2 }}
-          />
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 13 }}>🔗 Intermédiaire</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-              Étape de correction (température, masse, vent…). Son output alimente le tableau suivant dans la cascade.
-            </div>
-          </div>
-        </label>
-      </div>
-    </div>
+const labelStyle: React.CSSProperties = {
+  fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap'
+};
 
-    {/* === Si INTERMÉDIAIRE : position dans la cascade === */}
-    {graph.role === 'intermediate' && (
-      <label style={{ display: 'block', marginBottom: 10 }}>
-        <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
-          🔗 Position de ce tableau dans la cascade de calcul
-        </div>
-        <select
-          value={graph.cascadeOrder ?? ''}
-          onChange={(e) => {
-            const v = e.target.value;
-            onUpdateGraph({ cascadeOrder: v === '' ? undefined : Number(v) });
-          }}
+export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, onUpdateGraph }) => {
+  const isPrimary = (graph.role || 'primary') === 'primary';
+  const op = graph.operationId ? getOperation(graph.operationId) : undefined;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
+      {/* Rôle — ligne unique, descriptions en infobulle */}
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={labelStyle}>Rôle</span>
+        <label
+          title="Produit la valeur finale du set. Reçoit l'output du dernier intermédiaire et donne le résultat final."
           style={{
-            width: '100%', padding: '6px 8px',
-            border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
+            display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer',
+            color: isPrimary ? 'var(--status-success)' : 'var(--text-primary)', fontWeight: isPrimary ? 600 : 400
           }}
         >
-          <option value="">— Choisir la position —</option>
-          {[1, 2, 3, 4, 5, 6].map(n => (
-            <option key={n} value={n}>
-              Tableau intermédiaire {n}{n === 1 ? ' (premier de la cascade)' : ''}
-            </option>
-          ))}
-        </select>
-        <div style={{ fontSize: 11, color: 'var(--accent-primary)', marginTop: 4, fontStyle: 'italic' }}>
-          L'output de ce tableau servira d'entrée au tableau de position {(graph.cascadeOrder || 0) + 1} (ou au primaire si c'est le dernier intermédiaire).
-        </div>
-      </label>
-    )}
+          <input
+            type="radio"
+            name={`role-${graph.id}`}
+            checked={isPrimary}
+            onChange={() => onUpdateGraph({ role: 'primary', cascadeOrder: undefined })}
+          />
+          Primaire — valeur finale
+        </label>
+        <label
+          title="Étape de correction (température, masse, vent…). Son output alimente le tableau suivant dans la cascade."
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer',
+            color: !isPrimary ? 'var(--accent-primary)' : 'var(--text-primary)', fontWeight: !isPrimary ? 600 : 400
+          }}
+        >
+          <input
+            type="radio"
+            name={`role-${graph.id}`}
+            checked={!isPrimary}
+            onChange={() => onUpdateGraph({ role: 'intermediate', operationId: undefined, outputKind: undefined, outputUnit: undefined })}
+          />
+          Intermédiaire — correction
+        </label>
 
-    {/* === Si PRIMAIRE : dropdown opération canonique === */}
-    {(graph.role || 'primary') === 'primary' && (
-    <label style={{ display: 'block', marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
-        🔒 Opération canonique (Operation ID) — détermine comment cet abaque sera consommé par la préparation de vol
+        {/* Si INTERMÉDIAIRE : position dans la cascade, sur la même ligne */}
+        {!isPrimary && (
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={labelStyle} title="L'output de ce tableau sert d'entrée au tableau suivant (ou au primaire si c'est le dernier intermédiaire).">
+              Position dans la cascade
+            </span>
+            <select
+              value={graph.cascadeOrder ?? ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                onUpdateGraph({ cascadeOrder: v === '' ? undefined : Number(v) });
+              }}
+              style={selectStyle}
+            >
+              <option value="">—</option>
+              {[1, 2, 3, 4, 5, 6].map(n => (
+                <option key={n} value={n}>Tableau {n}{n === 1 ? ' (premier)' : ''}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
-      <select
-        value={graph.operationId || ''}
-        onChange={(e) => {
-          const newOpId = e.target.value;
-          const op = getOperation(newOpId);
-          const onlyOutput = op?.acceptedOutputs.length === 1 ? op.acceptedOutputs[0] : null;
-          // Plus de mise à jour de graph.name : l'identification visuelle
-          // se fait via le titre de l'axe X (cf. barre du haut).
-          onUpdateGraph({
-            operationId: newOpId,
-            ...(onlyOutput ? { outputKind: onlyOutput.kind, outputUnit: onlyOutput.defaultUnit } : {})
-          });
-        }}
-        style={{
-          width: '100%', padding: '6px 8px',
-          border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
-        }}
-      >
-        <option value="">— Choisir l'opération —</option>
-        {getOperationsGroupedByPhase().map(g => (
-          <optgroup key={g.phase} label={g.labelFr}>
-            {g.items.map(op => (
-              <option key={op.id} value={op.id}>
-                {op.labelFr}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
-      {graph.operationId && (() => {
-        const op = getOperation(graph.operationId);
-        if (!op) {
-          return (
-            <div style={{ fontSize: 11, color: 'var(--color-red-critical)', marginTop: 4, fontWeight: 600 }}>
-              ⚠ operationId inconnu — vérifier le catalogue
-            </div>
-          );
-        }
-        return (
-          <>
-            {op.description && (
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4, fontStyle: 'italic' }}>
-                {op.description}
-              </div>
-            )}
-            <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 4 }}>
-              ID : <code>{op.id}</code> · Phase : {op.phase}
-              {op.configuration?.flaps && ` · Flaps : ${op.configuration.flaps}`}
-            </div>
-          </>
-        );
-      })()}
-    </label>
-    )}
 
-    {/* === Si PRIMAIRE : nature de sortie quand plusieurs acceptées (climb_takeoff/climb_cruise) === */}
-    {(graph.role || 'primary') === 'primary' && graph.operationId && (() => {
-      const op = getOperation(graph.operationId);
-      if (!op || op.acceptedOutputs.length <= 1) return null;
-      return (
-        <label style={{ display: 'block', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 2 }}>
-            Nature de la sortie de CET abaque (que mesure-t-il exactement ?)
-          </div>
+      {/* Si PRIMAIRE : opération canonique — détermine la consommation en prépa vol */}
+      {isPrimary && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span
+            style={labelStyle}
+            title="Operation ID — détermine comment cet abaque sera consommé par la préparation de vol. Obligatoire sur le primaire."
+          >
+            Opération canonique
+          </span>
+          <select
+            value={graph.operationId || ''}
+            onChange={(e) => {
+              const newOpId = e.target.value;
+              const nextOp = getOperation(newOpId);
+              const onlyOutput = nextOp?.acceptedOutputs.length === 1 ? nextOp.acceptedOutputs[0] : null;
+              onUpdateGraph({
+                operationId: newOpId,
+                ...(onlyOutput ? { outputKind: onlyOutput.kind, outputUnit: onlyOutput.defaultUnit } : {})
+              });
+            }}
+            style={{ ...selectStyle, flex: 1, minWidth: 240 }}
+          >
+            <option value="">— Choisir l'opération —</option>
+            {getOperationsGroupedByPhase().map(g => (
+              <optgroup key={g.phase} label={g.labelFr}>
+                {g.items.map(o => (
+                  <option key={o.id} value={o.id}>{o.labelFr}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {isPrimary && graph.operationId && !op && (
+        <div style={{ fontSize: 11, color: 'var(--color-red-critical)', fontWeight: 600 }}>
+          operationId inconnu — vérifier le catalogue
+        </div>
+      )}
+      {isPrimary && op && (
+        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }} title={op.description || undefined}>
+          ID : <code>{op.id}</code> · Phase : {op.phase}
+          {op.configuration?.flaps && ` · Flaps : ${op.configuration.flaps}`}
+        </div>
+      )}
+
+      {/* Si PRIMAIRE : nature de sortie quand plusieurs acceptées (climb_takeoff/climb_cruise) */}
+      {isPrimary && op && op.acceptedOutputs.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={labelStyle} title="Que mesure exactement CET abaque ?">Sortie mesurée</span>
           <select
             value={graph.outputKind || ''}
             onChange={(e) => {
@@ -188,10 +151,7 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
                 outputUnit: spec?.defaultUnit ?? graph.outputUnit
               });
             }}
-            style={{
-              width: '100%', padding: '6px 8px',
-              border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'
-            }}
+            style={{ ...selectStyle, flex: 1, minWidth: 200 }}
           >
             <option value="">— Choisir la nature de sortie —</option>
             {op.acceptedOutputs.map(o => (
@@ -201,12 +161,12 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
             ))}
           </select>
           {graph.outputKind && (
-            <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>
-              Cet abaque produit : <strong>{graph.outputKind}</strong> en <strong>{graph.outputUnit}</strong>
-            </div>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+              produit <strong>{graph.outputKind}</strong> en <strong>{graph.outputUnit}</strong>
+            </span>
           )}
-        </label>
-      );
-    })()}
-  </div>
-);
+        </div>
+      )}
+    </div>
+  );
+};
