@@ -584,3 +584,24 @@ attendu vide). tsc parse-clean, build vert.
 **Différé (si le besoin se confirme)** : diagnostic par panneau assisté
 (niveau 2) et ajustement borné des courbes sur plusieurs cas (niveau 3,
 toujours en proposition à valider courbe par courbe).
+
+## 22. R14 — Le trait suit le point : interpolation invalidée à la retouche (2026-06-12)
+
+**Déclencheur** : « quand je rouvre un abaque déjà pointé et que je bouge un
+point, le point rouge bouge mais la courbe reste figée — normal ? » Non :
+le rendu du canevas dessine en PRIORITÉ l'interpolation (`curve.fitted`,
+calculée à la dernière validation), et les trois handlers de points
+(ajout/déplacement/suppression) modifiaient `points` SANS invalider
+`fitted` → trait fantôme figé sur l'ancienne forme.
+
+**Fix** : toute retouche de point pose `fitted: undefined` sur la courbe
+touchée (les 3 handlers, partagés par le canevas, le Chart legacy et la
+table de points). Le trait retombe sur la polyligne VIVANTE des points
+(suit le drag en direct) ; la validation ré-interpole tout (onFinish →
+fitAll) et le banc de test R13 re-vérifie derrière — boucle cohérente.
+Le façonnage Bézier invalidait déjà (R7).
+
+**Vérification (builder réel monté, modèle F-GNAM, drag au pointeur)** :
+30 traits interpolés avant → 29 après le drag d'un point : EXACTEMENT la
+courbe retouchée devient polyligne et suit le point, les autres restent
+interpolées. tsc parse-clean, build vert.
