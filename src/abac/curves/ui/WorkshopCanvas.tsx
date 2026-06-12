@@ -54,7 +54,7 @@ interface WorkshopCanvasProps {
    *  création extraite du bloc « Courbes du cadre actif » — qui RESTE sous
    *  l'atelier (liste, édition, Bézier, points). Connexion fonctionnelle
    *  inchangée : ces callbacks rejoignent les mêmes handlers du builder. */
-  onCreateCurve?: (name: string, color: string) => void;
+  onCreateCurve?: (name: string, color: string, familyValue?: number, windDirection?: 'headwind' | 'tailwind') => void;
   onFinishCurve?: () => void;
   width?: number;
   height?: number;
@@ -352,6 +352,13 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   // ─── Capsule « Nouvelle courbe » : saisie locale (nom + couleur) ───
   const [newCurveName, setNewCurveName] = useState('');
   const [newCurveColor, setNewCurveColor] = useState('#F26921');
+  // R17 — création par VALEUR (demande pilote) : quand le graphe a une variable
+  // de famille, on choisit la valeur (liste 0→10 000 ft / 500 pour l'altitude,
+  // saisie numérique sinon) et le NOM naît de la valeur — fini le nom libre.
+  const [newCurveValue, setNewCurveValue] = useState('');
+  const [newCurveWindDir, setNewCurveWindDir] = useState<'headwind' | 'tailwind'>('headwind');
+  const ALTITUDE_FAMILIES = ['pressure_altitude', 'density_altitude', 'altitude'];
+  const ALTITUDE_STEPS = Array.from({ length: 21 }, (_, i) => i * 500); // 0 → 10 000 ft / 500
 
   // ─── R2b : session de calibration par clics sur le canevas ───
   // Y commun (une fois) ou X d'un cadre. Les valeurs à cliquer viennent du
@@ -832,25 +839,88 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             </div>
           );
         }
+        // R17 — création par VALEUR quand le graphe a une variable de famille :
+        // altitude → liste 0..10 000 / 500 ; autres familles → saisie numérique ;
+        // graphe vent → direction en plus. Le NOM naît de la valeur choisie
+        // (« 2000 ft », « Face 5 kt ») : nom et valeur d'appel ne divergent plus.
+        const famId = focusedGraph?.familyAxisVariable;
+        const fam = famId ? getAxisVariable(famId) : undefined;
+        const famUnit = fam?.defaultUnit || '';
+        const isAltitudeFam = !!famId && ALTITUDE_FAMILIES.includes(famId);
+        const isWindGraph = !!focusedGraph?.isWindRelated;
+        const valueNum = parseFloat(newCurveValue);
+        const valueOk = Number.isFinite(valueNum);
+        const autoName = valueOk
+          ? `${isWindGraph ? (newCurveWindDir === 'headwind' ? 'Face ' : 'Arrière ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
+          : '';
+        const createByValue = () => {
+          if (!valueOk || !focusedFrame) return;
+          onCreateCurve(autoName, newCurveColor, valueNum, isWindGraph ? newCurveWindDir : undefined);
+          setNewCurveValue('');
+        };
         return (
           <div style={{ ...pill, border: '1px solid var(--border-regular)' }}>
             <strong style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>➕ Nouvelle courbe</strong>
-            <input
-              type="text"
-              placeholder={focusedGraph
-                ? `Nom (ex: "0 ft", "20°C") — sur ${focusedGraph.name || 'le cadre actif'}`
-                : 'Clique d\'abord un cadre sur l\'image'}
-              value={newCurveName}
-              disabled={!focusedFrame}
-              onChange={(e) => setNewCurveName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newCurveName.trim() && focusedFrame) {
-                  onCreateCurve(newCurveName.trim(), newCurveColor);
-                  setNewCurveName('');
-                }
-              }}
-              style={{ flex: 1, minWidth: 170, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
-            />
+            {fam ? (
+              <>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  {fam.label}{famUnit ? ` (${famUnit})` : ''} :
+                </span>
+                {isAltitudeFam ? (
+                  <select
+                    value={newCurveValue}
+                    disabled={!focusedFrame}
+                    onChange={(e) => setNewCurveValue(e.target.value)}
+                    style={{ minWidth: 110, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="">— valeur —</option>
+                    {ALTITUDE_STEPS.map(v => <option key={v} value={v}>{v}{famUnit ? ` ${famUnit}` : ''}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="number"
+                    placeholder={`valeur en ${famUnit || '…'}`}
+                    value={newCurveValue}
+                    disabled={!focusedFrame}
+                    onChange={(e) => setNewCurveValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') createByValue(); }}
+                    style={{ width: 110, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                  />
+                )}
+                {isWindGraph && (
+                  <select
+                    value={newCurveWindDir}
+                    onChange={(e) => setNewCurveWindDir(e.target.value as 'headwind' | 'tailwind')}
+                    style={{ padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="headwind">Vent de face</option>
+                    <option value="tailwind">Vent arrière</option>
+                  </select>
+                )}
+                {valueOk && (
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    → « {autoName} »
+                  </span>
+                )}
+              </>
+            ) : (
+              <input
+                type="text"
+                placeholder={focusedGraph
+                  ? `Nom (ex: "0 ft", "20°C") — déclare une variable de famille pour créer par valeur`
+                  : 'Clique d\'abord un cadre sur l\'image'}
+                value={newCurveName}
+                disabled={!focusedFrame}
+                onChange={(e) => setNewCurveName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newCurveName.trim() && focusedFrame) {
+                    onCreateCurve(newCurveName.trim(), newCurveColor);
+                    setNewCurveName('');
+                  }
+                }}
+                style={{ flex: 1, minWidth: 170, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+              />
+            )}
             <input
               type="color"
               value={newCurveColor}
@@ -860,12 +930,13 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             />
             <button
               onClick={() => {
+                if (fam) { createByValue(); return; }
                 if (!newCurveName.trim() || !focusedFrame) return;
                 onCreateCurve(newCurveName.trim(), newCurveColor);
                 setNewCurveName('');
               }}
-              disabled={!newCurveName.trim() || !focusedFrame}
-              style={{ padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: (!newCurveName.trim() || !focusedFrame) ? 0.45 : 1 }}
+              disabled={(fam ? !valueOk : !newCurveName.trim()) || !focusedFrame}
+              style={{ padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: ((fam ? !valueOk : !newCurveName.trim()) || !focusedFrame) ? 0.45 : 1 }}
             >
               Créer & tracer
             </button>
