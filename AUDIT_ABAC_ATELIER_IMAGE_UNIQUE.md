@@ -392,3 +392,35 @@ DOM ; Y propose les outputs (distance 50ft…) et PAS l'OAT ; legacy
 unit:'°C')` automatique ; unités fermées (°C/°F, m/ft) ; zéro champ texte
 libre avec variables canoniques ; labels humains sur les règles. tsc
 parse-clean, build vert, capture conforme charte.
+
+## 17. R9 — Identité compacte, sans icônes, repliable, au-dessus de l'atelier (2026-06-12, retour pilote)
+
+**Déclencheur** : « travaille cet élément graphique pour le rendre plus
+compact, retirer les icônes et mets-le au-dessus de l'atelier. Rends la zone
+réductible. »
+
+**Livré** :
+- **GraphIdentityPanel réécrit en version dense** : rôle sur UNE ligne
+  (radios inline « Primaire — valeur finale » / « Intermédiaire — correction »,
+  descriptions passées en infobulles), position cascade sur la même ligne pour
+  les intermédiaires, opération canonique sur une ligne (label court + select),
+  ligne d'info ID/Phase/Flaps réduite. AUCUNE icône (🏷⭐🔗🔒🗑 supprimées,
+  bouton supprimer inclus).
+- **Zone repliable `<details>` AU-DESSUS de l'atelier** (avant le canevas,
+  après l'en-tête avion/set). Résumé d'une ligne toujours visible :
+  « Identité du graphique N — Primaire · {opération} » ou « Intermédiaire ·
+  tableau K ».
+- **Ouverture intelligente** : bordure et mention rouges « opération canonique
+  à choisir » + zone OUVERTE tant que le primaire n'a pas d'operationId ;
+  **se replie automatiquement au choix de l'opération** (transition du prop
+  `open` géré par React) ; clé par graphe → l'état se réévalue à chaque
+  changement de cadre. Le bouton « Supprimer ce graphique (et son cadre) »
+  vit dans le contenu replié.
+
+**Vérification** (AbacBuilder COMPLET monté en navigateur avec initialData
+workshop) : zone présente avant « Atelier — image unique » dans le DOM,
+ouverte sans opération avec l'alerte, AUCUNE icône, choix de l'opération →
+repli automatique + résumé « Primaire · Distance décollage — passage 15 m
+(50 ft) » + nom du set auto-synchronisé dans l'en-tête. tsc parse-clean,
+build vert, capture de l'écran complet conforme (l'ordre de lecture suit
+désormais le flux : identité → axes → image/cadres → courbes → validation).
