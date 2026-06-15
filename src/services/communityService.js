@@ -13,6 +13,9 @@ import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
 // ça, aircraft_data atteignait 9 Mo et l'UPDATE dépassait le statement_timeout
 // Postgres (code 57014). fitted est régénéré à la lecture (fittedRuntime).
 import { stripFittedFromAircraftData } from '../abac/curves/core/fittedRuntime';
+// R20/B — externalise les gros blobs base64 (PDF de pesée, images d'abaque)
+// vers Storage avant écriture : aircraft_data ne garde qu'une URL courte.
+import { externalizeAircraftBlobs } from './blobStorage';
 
 // 🛡️ ANTI-ÉCRASEMENT (data-safety). Une valeur "vide" = null / undefined / '' / [].
 const isEmptyish = (v) => v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
@@ -528,8 +531,11 @@ class CommunityService {
       delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
       // R20 — retire fitted.points des abaques (donnée dérivée régénérée à la
-      // lecture) : évite le gonflement de aircraft_data / statement_timeout.
-      const leanData = stripFittedFromAircraftData(cleanedData);
+      // lecture) + R20/B externalise les gros blobs base64 (PDF de pesée,
+      // images d'abaque) vers Storage : évite le gonflement de aircraft_data /
+      // statement_timeout. Non destructif (base64 conservé si upload échoue).
+      let leanData = stripFittedFromAircraftData(cleanedData);
+      leanData = await externalizeAircraftBlobs(leanData, { registration: presetData.registration });
 
       // 5. Créer le preset
       const { data, error } = await supabase
@@ -827,6 +833,13 @@ class CommunityService {
       // encore porter de gros fitted (legacy) que deepMergeKeepExisting
       // ré-introduirait. On garantit ici que ce qui PART en base est allégé.
       mergedAircraftData = stripFittedFromAircraftData(mergedAircraftData);
+      // R20/B — externalise les gros blobs base64 vers Storage (PDF de pesée,
+      // images d'abaque) : c'est ce qui fait réellement passer sous le timeout
+      // (le fitted seul ne suffit pas). Non destructif (base64 conservé si
+      // l'upload échoue). Le base64 fusionné depuis l'ancienne fiche est aussi
+      // externalisé ici → la ligne réécrite est légère même pour les avions
+      // historiques.
+      mergedAircraftData = await externalizeAircraftBlobs(mergedAircraftData, { registration: updatedData.registration });
 
       // 3. Mettre à jour le preset dans Supabase
       const updatePayload = {

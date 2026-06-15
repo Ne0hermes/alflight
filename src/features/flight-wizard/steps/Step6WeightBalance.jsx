@@ -756,7 +756,9 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
                   onClick={async () => {
-                    let pdfData = aircraft.weighingReport?.pdfData;
+                    // R20/B — préfère l'URL Storage (pdfUrl, fiche externalisée) ;
+                    // sinon base64 inline ; sinon relecture IndexedDB par id.
+                    let pdfData = aircraft.weighingReport?.pdfUrl || aircraft.weighingReport?.pdfData;
                     let fileName = aircraft.weighingReport?.fileName;
                     if (!pdfData && aircraft.id) {
                       // PDF non chargé en mémoire → relecture du record complet IndexedDB
@@ -764,7 +766,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                         const { default: dbm } = await import('@utils/dataBackupManager');
                         await dbm.initPromise;
                         const full = await dbm.getAircraftData(aircraft.id);
-                        pdfData = full?.weighingReport?.pdfData;
+                        pdfData = full?.weighingReport?.pdfUrl || full?.weighingReport?.pdfData;
                         fileName = fileName || full?.weighingReport?.fileName;
                       } catch (err) {
                         console.warn('[Step6] Lecture fiche de pesée IndexedDB échouée:', err?.message);

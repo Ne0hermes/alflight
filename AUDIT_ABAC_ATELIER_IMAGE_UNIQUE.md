@@ -800,3 +800,35 @@ doivent aller dans Supabase Storage (motif MANEX déjà en place : bucket
 
 **Déblocage immédiat non destructif** : remonter le statement_timeout du rôle
 (SQL à lancer par le pilote dans l'éditeur Supabase) — voir réponse.
+
+### R20/B — Externalisation des blobs vers Storage (2026-06-15)
+
+Le strip `fitted` (−1,5 Mo) ne suffisait pas : le PDF de pesée (4,6 Mo) et les
+images d'abaque (2,7 Mo) base64 dominaient. B les sort du JSONB vers Storage
+(motif MANEX), aircraft_data ne garde qu'une URL courte.
+
+- `scripts/setup-blob-buckets.sql` (PILOTE lance, comme manex-files) : buckets
+  publics `weighing-reports` (PDF) + `abaque-images` (PNG/JPEG/WebP) + policies
+  authenticated. Inclut (commenté) le ALTER ROLE statement_timeout de R20/A.
+- `src/services/blobStorage.js` : `externalizeAircraftBlobs(aircraftData,
+  {registration})` — uploade les data-URL base64, remplace par l'URL publique
+  (`weighingReport.pdfUrl` ; `workshop.image.url` = URL https). NON DESTRUCTIF
+  (base64 conservé si l'upload échoue), idempotent (URL https non re-uploadée).
+- `communityService` submit + update : externalise APRÈS strip fitted / fusion
+  → la ligne réécrite est légère, même pour les avions historiques (le base64
+  fusionné depuis l'ancienne fiche est externalisé au passage). C'est ce qui
+  fait réellement passer sous le timeout (write ~500 Ko au lieu de 9 Mo).
+- Lecture : viewers pesée (Step3 + Step6) préfèrent `pdfUrl` puis base64 puis
+  IndexedDB ; le canevas `<image href={workshop.image.url}>` accepte l'URL
+  https tel quel (aucun changement). Copie locale IndexedDB inchangée (garde
+  le base64 → lazy-load owner toujours OK).
+- Migration : pas de script séparé — ré-ouvrir+sauver chaque avion
+  l'externalise (l'externalisation se fait AVANT l'écriture → 1ʳᵉ sauvegarde
+  déjà légère). R20/A (timeout) couvre le SELECT de la grosse ligne d'ici là.
+
+Vérifié (navigateur, storage mocké) : succès → pdfData retiré/pdfUrl posé,
+image.url en https, layout conservé, taille 1486→500 ; échec → base64 conservé
+(non destructif) ; idempotent → URLs inchangées au rejeu. Build vert.
+
+**ACTION PILOTE** : (1) lancer `scripts/setup-blob-buckets.sql` dans l'éditeur
+SQL Supabase ; (2) ouvrir l'avion qui échouait et le sauver → il s'allège.
