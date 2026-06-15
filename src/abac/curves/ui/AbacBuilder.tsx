@@ -17,6 +17,7 @@ import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
 import { ReferenceCasesPanel, ReferencePrefill } from './ReferenceCasesPanel';
 import { runAllReferenceCases } from '../core/referenceBench';
+import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
 import { isValidOperationId, OPERATION_CATALOG, getOperation } from '../core/operationCatalog';
 import {
   AxesConfig,
@@ -557,10 +558,13 @@ function AbacBuilderComponent(
       if (initialData.graphs) {
         // Nouveau format multi-graphiques
         // Vérifier et mettre à jour la propriété isWindRelated si nécessaire
-        const updatedGraphs = initialData.graphs.map(graph => ({
+        // R20 — régénère fitted si le modèle a été persité sans (donnée dérivée
+        // retirée pour la taille) : le Chart/canevas et le test in-builder en
+        // ont besoin pour l'affichage.
+        const updatedGraphs = ensureFittedGraphs(initialData.graphs.map(graph => ({
           ...graph,
           isWindRelated: graph.isWindRelated !== undefined ? graph.isWindRelated : isWindRelatedGraph(graph)
-        }));
+        })));
         setGraphs(updatedGraphs);
         if (updatedGraphs.length > 0) {
           setSelectedGraphId(updatedGraphs[0].id);
@@ -1302,10 +1306,13 @@ function AbacBuilderComponent(
           : g)
       : graphs;
 
-    // Préparer les données au nouveau format multi-graphiques
+    // Préparer les données au nouveau format multi-graphiques.
+    // R20 — on N'EXPORTE PLUS `fitted.points` (donnée dérivée régénérée à la
+    // lecture) : c'était la cause du gonflement de aircraft_data (9 Mo /
+    // statement_timeout Postgres à l'écriture). Équivalence régen prouvée.
     const json: AbacCurvesJSON = {
       version: '2.0',
-      graphs: exportedGraphs,
+      graphs: stripFittedGraphs(exportedGraphs),
       metadata: {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

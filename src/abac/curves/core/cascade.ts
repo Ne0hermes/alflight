@@ -1,4 +1,5 @@
 import { GraphConfig, Curve, XYPoint } from './types';
+import { ensureFittedGraphs } from './fittedRuntime';
 
 /**
  * Paramètres pour un graphique dans le calcul en cascade
@@ -1026,6 +1027,12 @@ export function performCascadeCalculationWithParameters(
   initialValue: number,
   parameters: GraphParameters[] = []
 ): CascadeResult {
+  // R20 — filet de sécurité : les modèles persistés n'embarquent plus
+  // `fitted.points` (donnée dérivée, retirée pour ne pas gonfler la DB).
+  // On le régénère ICI, au point d'entrée de TOUT calcul (prép. vol via
+  // atelierCascadeAdapter, test in-builder, banc de référence). Idempotent :
+  // coût nul quand fitted est déjà présent (édition live).
+  graphs = ensureFittedGraphs(graphs);
   console.log('🔄 === Début du calcul en cascade avec paramètres ===');
   console.log('📊 Graphiques:', graphs.map(g => g.name).join(' → '));
   console.log('📥 Valeur initiale:', initialValue);
@@ -1290,6 +1297,7 @@ export function performCascadeCalculation(
   graphs: GraphConfig[],
   initialValue: number
 ): CascadeResult {
+  graphs = ensureFittedGraphs(graphs); // R20 — régénère fitted si strippé (cf. supra)
   console.log('🔄 === Début du calcul en cascade ===');
   console.log('📊 Graphiques:', graphs.map(g => g.name).join(' → '));
   console.log('📥 Valeur initiale:', initialValue);
