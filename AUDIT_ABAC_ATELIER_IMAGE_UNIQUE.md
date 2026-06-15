@@ -759,3 +759,44 @@ corriger les courbes si nécessaire. »
 21/2000/1089/15/face + attendu 567 → « Papier : 567 m · écart −2.8 % ✓ dans
 la tolérance (±5 %) » en vert ; le snapshot 📌 contient {expected: 567,
 computed: 551}. Build vert.
+
+## 28. R20 — statement_timeout à l'enregistrement : aircraft_data obèse (2026-06-15)
+
+**Déclencheur** : `addAircraft` → `submitPreset` → `updateCommunityPreset`
+échoue avec Postgres `57014 canceling statement due to statement timeout`.
+
+**Diagnostic (mesure des 7 presets réels)** : la ligne F-GNAM pèse **9,07 Mo**
+dans une seule cellule JSONB. Décomposition :
+- `weighingReport.pdfData` : **4,6 Mo** — un PDF (Fiche de pesée) en base64
+  inline (`data:application/pdf;base64,…`). Donnée réelle.
+- `workshop.image.url` : **2,7 Mo** — les images d'abaque rasterisées (MANEX)
+  en base64, une par modèle (la variante Flaps TAKEOFF : 1 Mo à elle seule).
+  Aide de construction, ré-importable.
+- `fitted` : **1,5 Mo** — 33 600 points dérivés (200/courbe × 168). DÉRIVÉ.
+
+Postgres TOAST/réécrit toute la valeur (+ index) à chaque UPDATE ; combiné au
+cycle lire-fusionner-réécrire de `updateCommunityPreset`, ça dépasse les ~8 s.
+
+**Livré (partie SÛRE, non destructive)** :
+- `core/fittedRuntime.ts` : `stripFittedGraphs` / `stripFittedFromAircraftData`
+  (retire `fitted.points`, garde method+rmse) + `ensureFittedGraphs`
+  (régénère à la lecture). **Équivalence prouvée bit-à-bit** sur les 168
+  courbes réelles (écart max 0,000000) ET en round-trip cascade : strip→régen
+  donne le MÊME résultat de perf (1922.4994 = 1922.4994, etc.).
+- Écriture allégée : `handleExportJSON` (source) + `communityService`
+  submit/update (APRÈS la fusion, sinon `deepMergeKeepExisting` ré-introduit
+  le gros fitted de la ligne actuelle).
+- Lecture : `ensureFittedGraphs` au point d'entrée des 2 fonctions cascade
+  (couvre prép. vol via atelierCascadeAdapter, test in-builder, banc) + au
+  chargement AbacBuilder (affichage Chart/canevas).
+- Gain fitted : −1,5 Mo. **Ne suffit PAS seul** (reste 7,5 Mo à cause des 2
+  blobs base64 → le PDF de pesée domine).
+
+**Reste (décision pilote — données réelles)** : le keystone est le **PDF de
+pesée (4,6 Mo)** + les **images d'abaque (2,7 Mo)**, stockés inline. Ils
+doivent aller dans Supabase Storage (motif MANEX déjà en place : bucket
+`manex-files` + `manex_file_id`), PAS dans le JSONB. Externalisation à scoper
+(upload au save, référence, lazy-load, RLS, migration des 7 lignes).
+
+**Déblocage immédiat non destructif** : remonter le statement_timeout du rôle
+(SQL à lancer par le pilote dans l'éditeur Supabase) — voir réponse.

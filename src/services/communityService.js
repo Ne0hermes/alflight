@@ -9,6 +9,10 @@
 
 import { supabase } from '../lib/supabaseClient';
 import { normalizeAircraftImport } from '@utils/aircraftNormalizer';
+// R20 — retire fitted.points (donnée d'abaque dérivée) avant écriture : sans
+// ça, aircraft_data atteignait 9 Mo et l'UPDATE dépassait le statement_timeout
+// Postgres (code 57014). fitted est régénéré à la lecture (fittedRuntime).
+import { stripFittedFromAircraftData } from '../abac/curves/core/fittedRuntime';
 
 // 🛡️ ANTI-ÉCRASEMENT (data-safety). Une valeur "vide" = null / undefined / '' / [].
 const isEmptyish = (v) => v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
@@ -523,6 +527,10 @@ class CommunityService {
       delete cleanedData.hasWeighingReport;
       delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
+      // R20 — retire fitted.points des abaques (donnée dérivée régénérée à la
+      // lecture) : évite le gonflement de aircraft_data / statement_timeout.
+      const leanData = stripFittedFromAircraftData(cleanedData);
+
       // 5. Créer le preset
       const { data, error } = await supabase
         .from('community_presets')
@@ -532,7 +540,7 @@ class CommunityService {
           manufacturer: presetData.manufacturer,
           aircraft_type: presetData.aircraftType || presetData.type,
           category: presetData.category,
-          aircraft_data: cleanedData, // Données nettoyées
+          aircraft_data: leanData, // Données nettoyées + fitted strippé (R20)
           submitted_by: userId,
           description: presetData.description || '',
           manex_file_id: manexFileId,
@@ -814,6 +822,11 @@ class CommunityService {
       } catch (mergeErr) {
         console.warn('[updateCommunityPreset] Lecture aircraft_data actuelle impossible — écriture directe:', mergeErr?.message);
       }
+
+      // R20 — strip APRÈS la fusion : la fiche actuelle (cur.aircraft_data) peut
+      // encore porter de gros fitted (legacy) que deepMergeKeepExisting
+      // ré-introduirait. On garantit ici que ce qui PART en base est allégé.
+      mergedAircraftData = stripFittedFromAircraftData(mergedAircraftData);
 
       // 3. Mettre à jour le preset dans Supabase
       const updatePayload = {
