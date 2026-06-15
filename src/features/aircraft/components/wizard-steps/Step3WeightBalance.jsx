@@ -2200,11 +2200,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     variant="outlined"
                     size="small"
                     onClick={() => {
-                      if (data.weighingReport?.pdfData) {
+                      // R20/B — préfère l'URL Storage (pdfUrl) au base64 inline.
+                      const src = data.weighingReport?.pdfUrl || data.weighingReport?.pdfData;
+                      if (src) {
                         const w = window.open();
                         if (w) {
                           w.document.write(
-                            `<iframe src="${data.weighingReport.pdfData}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
+                            `<iframe src="${src}" style="width:100%;height:100vh;border:none;" title="Rapport de pesée"></iframe>`
                           );
                         }
                       }
