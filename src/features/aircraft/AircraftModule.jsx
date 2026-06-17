@@ -433,6 +433,25 @@ export const AircraftModule = memo(() => {
     }, 100);
   };
 
+  // R22 — bascule « non applicable » d'une table de performance attendue.
+  // On charge le record COMPLET depuis IndexedDB (la liste est « light » :
+  // la sauver telle quelle perdrait les blobs), on patche bypassedFields, puis
+  // on persiste via le chemin unique updateAircraft (IDB + Supabase).
+  const handleTogglePerfBypass = async (aircraft, bypassKey) => {
+    try {
+      const full = await dataBackupManager.getAircraftData(aircraft.id);
+      const base = full || aircraft;
+      const current = Array.isArray(base.bypassedFields) ? base.bypassedFields : [];
+      const next = current.includes(bypassKey)
+        ? current.filter((k) => k !== bypassKey)
+        : [...current, bypassKey];
+      await updateAircraft({ ...base, id: aircraft.id, bypassedFields: next });
+    } catch (err) {
+      console.error('[AircraftModule] Toggle bypass perf échoué:', err?.message);
+      alert('Impossible de mettre à jour la fiche : ' + (err?.message || 'erreur inconnue'));
+    }
+  };
+
   const handleEdit = async (aircraft) => {
     console.log('✏️ AircraftModule - Editing aircraft:', aircraft);
     // Récupérer l'avion le plus récent depuis la liste pour avoir les dernières modifications
@@ -2414,7 +2433,10 @@ export const AircraftModule = memo(() => {
                         À compléter
                       </TechLabel>
                       {['CRITICAL', 'REQUIRED', 'OPTIONAL'].map((sev) => {
-                        const items = missing.filter((m) => m.severity === sev);
+                        // R22 — les tables de performance ont leur propre bloc
+                        // « Performances » (plus bas) : on les exclut des
+                        // groupes génériques par criticité.
+                        const items = missing.filter((m) => m.severity === sev && m.group !== 'PERFORMANCE');
                         if (items.length === 0) return null;
                         const labelMap = { CRITICAL: 'Critiques', REQUIRED: 'Obligatoires', OPTIONAL: 'Optionnels' };
                         // Palette unifiée — plus de rouge critique parasite.
@@ -2458,6 +2480,64 @@ export const AircraftModule = memo(() => {
                           </div>
                         );
                       })}
+
+                      {/* R22 — bloc dédié « Performances » : liste NOMINATIVE des
+                          tables manquantes (décollage/atterrissage × volets),
+                          chacune marquable « non applicable » (bypass). */}
+                      {(() => {
+                        const perfItems = missing.filter((m) => m.group === 'PERFORMANCE');
+                        if (perfItems.length === 0) return null;
+                        return (
+                          <div style={{ marginBottom: tokens.spacing[3] }}>
+                            <div
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: 'var(--fs-caption)',
+                                letterSpacing: '0.18em',
+                                textTransform: 'uppercase',
+                                color: 'var(--accent-primary)',
+                                fontWeight: 600,
+                                marginBottom: '4px'
+                              }}
+                            >
+                              Performances — tables manquantes · {perfItems.length}
+                            </div>
+                            {perfItems.map((item) => (
+                              <div
+                                key={item.path}
+                                style={{
+                                  display: 'flex',
+                                  gap: tokens.spacing[2],
+                                  alignItems: 'center',
+                                  paddingLeft: tokens.spacing[3],
+                                  color: 'var(--text-secondary)',
+                                  fontSize: 'var(--fs-body)',
+                                  lineHeight: 1.5
+                                }}
+                              >
+                                <span style={{ color: 'var(--accent-primary)' }}>·</span>
+                                <span style={{ flex: 1 }}>{item.label}</span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleTogglePerfBypass(aircraft, item.path); }}
+                                  title="Marquer cette table comme non applicable à cet avion (ex. pas de cran volets concerné)"
+                                  style={{
+                                    padding: '1px 8px',
+                                    fontSize: 'var(--fs-caption)',
+                                    cursor: 'pointer',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--text-tertiary)',
+                                    border: '1px solid var(--border-subtle)',
+                                    borderRadius: tokens.radius.sm,
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  non applicable
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

@@ -864,3 +864,29 @@ IDB COMPLET (getAircraftData) par avion.
 
 Build vert. Même racine que R20 (blobs base64 dans aircraft_data) : la liste
 mémoire et l'écriture DB souffraient du même mal ; R21 traite le volet mémoire.
+
+## 30. R22 — Couverture des tables de performance dans la fiche avion (2026-06-17)
+
+Remplace le contrôle binaire « Tables de performance : présent/absent » par une
+liste NOMINATIVE des tables manquantes, contre un minimum de 8 (décollage +
+atterrissage, roulage + franchissement, × volets). Décisions pilote : att.
+LANDING + lisse ; groupe à poids FIXE (6) ; chaque table ignorable via bypass ;
+remplace le booléen.
+
+- `operationCatalog.ts` : `getExpectedPerformanceOperations()` (les 8 ids, ordre
+  d'affichage). Source de vérité unique.
+- `performanceCoverage.js` (nouveau) : `computeMissingPerformanceTables(aircraft,
+  bypassedSet)` — présent = systemType + operationId du primaire de chaque
+  modèle ; manquant = attendu − présent − ignoré. + `getFlapsUnspecifiedModels`
+  (legacy sans volets, synergie R17).
+- `aircraftCompleteness.js` : champ booléen retiré ; groupe « Performances »
+  poids fixe 6 (gagné si 0 manquante), tables manquantes poussées dans `missing`
+  (poids 0, group:'PERFORMANCE') + exposées via `missingPerformanceTables`.
+- `AircraftModule.jsx` : bloc dédié « Performances — tables manquantes » dans le
+  panneau À compléter (exclu des groupes par criticité), chaque table avec un
+  bouton « non applicable » → `handleTogglePerfBypass` (charge le record COMPLET,
+  patche bypassedFields, persiste via updateAircraft).
+
+Vérifié (navigateur, presets réels) : 8 attendues ; avion vide → 8 manquantes ;
+F-GNAM (takeoff TO+UP + landing LANDING) → manque exactement les 2 landing-lisse
+(« Flaps UP ») ; bypass des 2 → couvert, % 85→91. Build vert.
