@@ -832,3 +832,35 @@ image.url en https, layout conservé, taille 1486→500 ; échec → base64 cons
 
 **ACTION PILOTE** : (1) lancer `scripts/setup-blob-buckets.sql` dans l'éditeur
 SQL Supabase ; (2) ouvrir l'avion qui échouait et le sauver → il s'allège.
+
+## 29. R21 — Crash OOM « Mes avions » : la liste « légère » ne l'était plus (2026-06-17)
+
+**Déclencheur** : « Render process gone, out of memory » ~quelques secondes
+après l'ouverture de « Mes avions », sans autre erreur console. Le pilote
+soupçonnait la taille des photos.
+
+**Diagnostic (mesuré)** : les photos NE sont PAS la cause (redimensionnées à
+≤1200 px à l'import, ≤4 Mo décodés, ~24 Mo total — sous le seuil OOM). La vraie
+cause : le mapping `lightAircraft` (contexts/index.jsx) qui construit la liste
+en mémoire ne strippait que les ANCIENS gros champs (`photo`, `manex`,
+`sourceImage`). Il ignorait les blobs accumulés depuis (R20) :
+`fitted` (200 pts/courbe), `workshop.image.url` base64 (~2,7 Mo),
+`weighingReport.pdfData` base64 (~4,6 Mo). **Mesure : la liste pesait 31,2 Mo
+en state** (F-GIEA 13 Mo, F-GNAM 9 Mo) pour TOUS les avions à la fois →
+saturation du renderer. Aggravé par l'effet photo qui charge en plus le record
+IDB COMPLET (getAircraftData) par avion.
+
+**Fix** :
+- `contexts/index.jsx` (mapping light) : strip aussi `fitted.points`,
+  `workshop.image` (base64) et `weighingReport.pdfData`. **Mesuré : 31,2 Mo →
+  4,1 Mo (−87 %)**. Vérifié : structure préservée (registration, systemType /
+  operationId des modèles, courbes, méta pesée hasData/fileName/cert) ; seuls
+  les octets lourds partent. Sûr : l'édition recharge le record COMPLET depuis
+  IndexedDB (handleEdit → getAircraftData), le moteur cascade régénère `fitted`
+  (ensureFittedGraphs, R20), la visionneuse pesée recharge via URL/IDB.
+- `Step1BasicInfo` (demande pilote) : alerte explicite sur le TYPE d'image
+  (refus JPEG/PNG/WebP only — HEIC/TIFF/BMP/GIF rejetés avec message) + alerte
+  taille chiffrée. Avant : retour silencieux sur type non-image.
+
+Build vert. Même racine que R20 (blobs base64 dans aircraft_data) : la liste
+mémoire et l'écriture DB souffraient du même mal ; R21 traite le volet mémoire.

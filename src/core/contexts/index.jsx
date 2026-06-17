@@ -125,17 +125,48 @@ export const AircraftProvider = memo(({ children }) => {
               };
             }
 
+            // 🛡️ FIX OOM (2026-06) — la liste « légère » ne strippait QUE
+            // l'ancien champ `sourceImage` + photo/manex. Les NOUVEAUX gros
+            // blobs accumulés depuis (R20) restaient en mémoire pour TOUS les
+            // avions : `fitted` (200 pts/courbe × ~160 courbes), images
+            // d'abaque base64 (`workshop.image.url`, ~2,7 Mo), PDF de pesée
+            // base64 (~4,6 Mo). Mesuré : la liste pesait 31 Mo en state (F-GIEA
+            // 13 Mo, F-GNAM 9 Mo) → le renderer Chrome mourait (« Render process
+            // gone, out of memory ») quelques secondes après l'ouverture de
+            // « Mes avions ». On les retire ici : la liste sert à l'AFFICHAGE
+            // (les cartes n'ont besoin ni des courbes interpolées, ni de l'image
+            // d'abaque, ni du PDF de pesée). L'ÉDITION recharge le record COMPLET
+            // depuis IndexedDB (handleEdit → getAircraftData) et le moteur de
+            // cascade RÉGÉNÈRE `fitted` à la volée (ensureFittedGraphs, R20).
             if (light.performanceModels) {
               light.performanceModels = light.performanceModels.map((model) => {
                 if (!model.data?.graphs) return model;
+                const meta = model.data.metadata;
+                const strippedMeta = meta?.workshop?.image?.url
+                  ? { ...meta, workshop: { ...meta.workshop, image: null } }
+                  : meta;
                 return {
                   ...model,
                   data: {
                     ...model.data,
-                    graphs: model.data.graphs.map(({ sourceImage, ...g }) => g)
+                    metadata: strippedMeta,
+                    graphs: model.data.graphs.map(({ sourceImage, ...g }) => ({
+                      ...g,
+                      curves: (g.curves || []).map((c) =>
+                        c.fitted?.points?.length ? { ...c, fitted: { ...c.fitted, points: [] } } : c
+                      )
+                    }))
                   }
                 };
               });
+            }
+
+            // PDF de pesée base64 (~4,6 Mo) : on garde les métadonnées (le badge
+            // « fiche présente », la date), pas le blob. La visionneuse recharge
+            // depuis l'URL Storage (R20/B) ou IndexedDB à la demande.
+            if (light.weighingReport?.pdfData) {
+              const { pdfData, ...wrRest } = light.weighingReport;
+              light.weighingReport = { ...wrRest, hasData: true };
             }
 
             // 🔧 FIX CRITIQUE: Mapper weights.emptyWeight → emptyWeight pour les anciens avions
