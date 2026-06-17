@@ -336,12 +336,29 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     });
   };
 
+  // Types d'image acceptés pour la photo d'avion. On REFUSE explicitement les
+  // formats que le navigateur décode mal / lourdement (HEIC iPhone, TIFF, BMP,
+  // GIF animé) qui contribuaient aux saturations mémoire.
+  const ACCEPTED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+
+    // R21 — alerte explicite sur le TYPE (avant : retour silencieux) + la
+    // TAILLE. Évite les images exotiques/énormes qui faisaient saturer la
+    // mémoire du renderer.
+    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+      alert(
+        `Format d'image non supporté : ${file.type || 'inconnu'}.\n\n` +
+        `Utilise une photo JPEG, PNG ou WebP. ` +
+        `(Les photos iPhone en HEIC doivent être converties en JPEG d'abord.)`
+      );
+      return;
+    }
 
     if (file.size > 20 * 1024 * 1024) {
-      alert('La photo source est trop volumineuse (> 20 MB). Choisis une image plus légère.');
+      alert(`La photo source est trop volumineuse (${(file.size / 1024 / 1024).toFixed(1)} Mo > 20 Mo). Choisis une image plus légère.`);
       return;
     }
 
