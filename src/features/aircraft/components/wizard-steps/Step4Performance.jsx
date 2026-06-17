@@ -10,6 +10,11 @@ import {
 } from '@mui/icons-material';
 import { exportPerformanceModelsToExcel } from '../../../../utils/performanceExcelExport';
 import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../../../utils/performanceExcelImport';
+// R24 — re-classification des tableaux DÉJÀ convertis : même classifieur
+// partagé que les abaques et l'extraction (R23), pour uniformiser les avions
+// existants dont la classification était jusqu'ici figée.
+import { OperationClassifier } from '../../../../abac/curves/ui/OperationClassifier';
+import { getOperation } from '../../../../abac/curves/core/operationCatalog';
 
 const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav }) => {
   // État local pour stocker les données de performance temporaires
@@ -535,6 +540,38 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     });
   };
 
+  // R24 — re-classifie TOUS les tableaux d'un groupe (ancienne classification →
+  // nouvel operationId canonique). Met à jour operationId + classification sur
+  // chaque tableau, puis persiste (updateData + setSavedPerformanceData, comme
+  // la suppression — la sauvegarde de la fiche écrit le tout). Permet de
+  // reprendre les avions existants et d'uniformiser la classification.
+  const reclassifyTableGroup = (oldClassification, newOperationId) => {
+    if (!newOperationId || newOperationId === oldClassification) return;
+    const ap = savedPerformanceData?.advancedPerformance || data.advancedPerformance;
+    if (!ap?.tables) return;
+    const updatedTables = ap.tables.map(t =>
+      (t.classification || 'non-classified') === oldClassification
+        ? { ...t, operationId: newOperationId, classification: newOperationId }
+        : t
+    );
+    const updatedPerformance = {
+      ...ap,
+      tables: updatedTables,
+      extractionMetadata: {
+        ...ap.extractionMetadata,
+        lastModified: new Date().toISOString()
+      }
+    };
+    updateData('advancedPerformance', updatedPerformance);
+    setSavedPerformanceData(prev => ({ ...(prev || {}), advancedPerformance: updatedPerformance }));
+    // Suivre la sélection d'export : l'ancienne clé devient la nouvelle.
+    setSelectedClassifications(prev => {
+      const next = new Set(prev);
+      if (next.has(oldClassification)) { next.delete(oldClassification); next.add(newOperationId); }
+      return next;
+    });
+  };
+
   const selectAllModels = () => {
     setSelectedModelIds(new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx))));
     setSelectedClassifications(new Set(availableClassifications));
@@ -885,18 +922,13 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 Tableaux de performance ({classificationsCount})
               </h4>
               {Object.entries(groupedByClassification).map(([classification, tables], index) => {
-                // Trouver le label de la classification
-                const performanceTypes = [
-                  { value: '', label: 'Non classifié' },
-                  { value: 'takeoff-normal', label: 'Distance de décollage' },
-                  { value: 'takeoff-climb', label: 'Montée au décollage' },
-                  { value: 'cruise-climb', label: 'Montée en croisière' },
-                  { value: 'landing-normal', label: 'Distance d\'atterrissage' },
-                  { value: 'landing-abnormal', label: 'Atterrissage en position anormale' }
-                ];
-
-                const typeInfo = performanceTypes.find(t => t.value === classification);
-                const displayName = typeInfo?.label || classification;
+                // R24 — libellé via le catalogue canonique (l'ancienne liste
+                // codée en dur — takeoff-normal, landing-normal… — ne
+                // correspondait plus aux operationId réellement stockés, d'où
+                // un affichage brut « takeoff_ground_roll » et aucune édition).
+                const op = getOperation(classification);
+                const displayName = op?.labelFr
+                  || (classification === 'non-classified' ? 'Non classifié' : classification);
 
                 // Utiliser le nom du premier tableau comme titre principal
                 const mainTableName = tables[0]?.table_name || displayName;
@@ -935,6 +967,20 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         </div>
                       </div>
                     </div>
+
+                    {/* R24 — RE-CLASSIFICATION (uniformisation) : même classifieur
+                        partagé que les abaques et l'extraction. Change
+                        l'operationId de tous les tableaux du groupe. */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                        Classer :
+                      </span>
+                      <OperationClassifier
+                        value={classification === 'non-classified' ? '' : classification}
+                        onChange={(newOpId) => reclassifyTableGroup(classification, newOpId)}
+                      />
+                    </div>
+
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         onClick={() => {

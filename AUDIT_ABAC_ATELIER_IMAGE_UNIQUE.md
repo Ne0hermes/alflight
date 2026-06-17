@@ -919,3 +919,36 @@ aucune régression. Build vert.
 
 Synergie R22 : à terme, performanceCoverage devrait aussi compter les tableaux
 (advancedPerformance.tables) ainsi classés — note de suite.
+
+## 32. R24 — Re-classification des tableaux DÉJÀ convertis (uniformisation) (2026-06-17)
+
+**Déclencheur** : sur un avion existant dont les tableaux MANEX ont déjà été
+convertis, la classification est FIGÉE — impossible de la modifier. Le pilote
+veut reprendre tous les avions et uniformiser.
+
+**Constat** : un tableau converti stocke `operationId` + `classification` (=
+operationId, ex. « takeoff_ground_roll »). Le récap (Step4Performance) groupe
+par classification mais (a) affichait le libellé via une liste codée en dur
+OBSOLÈTE (takeoff-normal, landing-normal…) qui ne matchait plus les vrais ids
+→ id brut affiché ; (b) n'offrait aucune édition de la classification (juste
+Modifier les données / Supprimer).
+
+**Livré** (Step4Performance) :
+- Libellé via `getOperation(classification).labelFr` (catalogue canonique) au
+  lieu de la liste codée en dur.
+- Sur chaque groupe : `OperationClassifier` (R23, partagé) pré-rempli avec la
+  classification courante → le pilote re-choisit Phase/Métrique/Volets.
+- `reclassifyTableGroup(old, newOpId)` : ré-étiquette TOUS les tableaux du
+  groupe (operationId + classification), updateData + setSavedPerformanceData
+  (mêmes persistance que Supprimer ; écrit à la sauvegarde de la fiche). Suit
+  la sélection d'export (ancienne clé → nouvelle).
+
+**Synergie** : les tableaux hérités sans volets (takeoff_ground_roll,
+takeoff_50ft) s'affichent « volets non précisés — hérité » + le classifieur
+montre « précise les volets » (rouge) → le pilote est guidé pour uniformiser.
+
+**Vérifié (navigateur)** : label legacy = « Distance sol décollage (volets non
+précisés — hérité) » ; classifieur sur valeur héritée → phase=takeoff +
+avertissement « précise les volets » ; choix Flaps UP → émet
+`takeoff_ground_roll_flaps_up` ; le transform ré-étiquette le bon groupe et
+laisse les autres intacts. Build vert.
