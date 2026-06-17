@@ -4,6 +4,9 @@ import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterO
 import AdvancedPerformanceAnalyzer from './AdvancedPerformanceAnalyzer';
 import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
 import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
+// R23 — classifieur d'opération PARTAGÉ avec les abaques (3 listes
+// Phase/Métrique/Volets) : classification unifiée des deux méthodes de saisie.
+import { OperationClassifier } from '../../../abac/curves/ui/OperationClassifier';
 
 // Styles de base
 const styles = {
@@ -908,45 +911,34 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     {/* Menu de classification de performance */}
                     {selectedPages.includes(index) && (
                       <>
-                        {/* Classification de performance */}
-                        <select
+                        {/* R23 — classifieur PARTAGÉ (Phase / Métrique / Volets) :
+                            même tri et même taxonomie que les abaques. Remplace
+                            l'ancienne liste plate de ~16 opérations. */}
+                        <div
                           style={{
                             position: 'absolute',
                             bottom: '8px',
                             left: '4px',
                             right: '4px',
-                            padding: '8px 6px',
-                            fontSize: 'var(--fs-body)',
+                            padding: '6px',
                             borderRadius: 'var(--radius-sm)',
                             border: '2px solid var(--text-primary)',
                             backgroundColor: 'var(--bg-overlay)',
-                            color: 'var(--text-primary)',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
                             zIndex: 10,
                             boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                           }}
-                          value={pageClassifications[index] || ''}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setPageClassifications(prev => ({
-                              ...prev,
-                              [index]: e.target.value
-                            }));
-                            // Définir automatiquement le type de système à 'table'
-                            setPageSystemTypes(prev => ({
-                              ...prev,
-                              [index]: 'table'
-                            }));
-                          }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {performanceTypes.map(type => (
-                            <option key={type.value} value={type.value}>
-                              {type.label}
-                            </option>
-                          ))}
-                        </select>
+                          <OperationClassifier
+                            compact
+                            direction="column"
+                            value={pageClassifications[index] || ''}
+                            onChange={(opId) => {
+                              setPageClassifications(prev => ({ ...prev, [index]: opId }));
+                              setPageSystemTypes(prev => ({ ...prev, [index]: 'table' }));
+                            }}
+                          />
+                        </div>
 
                         {/* Indicateur visuel pour attirer l'attention */}
                         {!pageClassifications[index] && (
