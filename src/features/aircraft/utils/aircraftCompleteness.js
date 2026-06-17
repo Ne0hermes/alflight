@@ -13,6 +13,14 @@
  *  - OPTIONAL : confort / complétude (photo, MANEX, équipement). Pondération faible.
  */
 
+import { computeMissingPerformanceTables } from './performanceCoverage';
+
+// R22 — poids FIXE du groupe « Performances » (décision pilote : la liste des
+// tables manquantes est informative et ne doit pas diluer le % avec 8 lignes).
+// Le groupe est « rempli » quand toutes les tables attendues sont présentes OU
+// marquées non applicables (bypass) ; sinon il ne compte pas dans le score.
+const PERFORMANCE_GROUP_WEIGHT = 6;
+
 // Helper : lit une valeur potentiellement imbriquée ("speeds.vne") sur l'avion.
 // Supporte également des chemins MULTIPLES séparés par « | » (logique OR) :
 //   "cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints"
@@ -149,25 +157,10 @@ export const FIELD_DEFINITIONS = [
   { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
 
   // === CRITICAL — performance ===
-  // Les tables/abaques de performance peuvent être stockées à plusieurs
-  // emplacements selon l'origine (saisie manuelle / extraction MANEX /
-  // CentrogramReader / Sprint B abaque v2). On les couvre toutes.
-  {
-    path: [
-      'performanceTables',
-      'performanceModels',
-      'advancedPerformance.tables',
-      'advancedPerformance.performanceModels',
-      'advancedPerformance.performanceTables',
-      'data.advancedPerformance.tables',
-      'data.performanceTables',
-      'data.performanceModels',
-      'hasPerformance'
-    ].join(' | '),
-    label: 'Tables de performance',
-    severity: 'CRITICAL',
-    weight: 6
-  },
+  // R22 — l'ancien contrôle binaire « Tables de performance : présent/absent »
+  // est REMPLACÉ par un contrôle de COUVERTURE par table (groupe à poids fixe,
+  // cf. la section performance de evaluateAircraft). Le minimum attendu et la
+  // liste nominative des tables manquantes vivent dans performanceCoverage.js.
 
   // === OPTIONAL ===
   // MANEX : on accepte le flag hasManex (avion light loaded) OU l'objet manex.
@@ -200,6 +193,7 @@ export function evaluateAircraft(aircraft) {
       missing: FIELD_DEFINITIONS,
       criticalMissing: FIELD_DEFINITIONS.filter(f => f.severity === 'CRITICAL'),
       requiredMissing: FIELD_DEFINITIONS.filter(f => f.severity === 'REQUIRED'),
+      missingPerformanceTables: computeMissingPerformanceTables(null),
       hasCriticalGaps: true,
       bypassedFields: []
     };
@@ -224,6 +218,31 @@ export function evaluateAircraft(aircraft) {
     }
   }
 
+  // === R22 — GROUPE « Performances » (couverture par table, poids fixe) ===
+  // Remplace l'ancien booléen. Le groupe vaut PERFORMANCE_GROUP_WEIGHT, gagné
+  // entièrement si toutes les tables attendues sont présentes ou ignorées.
+  // Les tables manquantes sont poussées dans `missing` (poids 0 → n'affectent
+  // pas le score, seulement l'affichage) avec le marqueur group:'PERFORMANCE'
+  // pour un rendu dédié et un toggle « non applicable ».
+  const missingPerformanceTables = computeMissingPerformanceTables(aircraft, bypassedSet);
+  totalWeight += PERFORMANCE_GROUP_WEIGHT;
+  if (missingPerformanceTables.length === 0) {
+    filledWeight += PERFORMANCE_GROUP_WEIGHT;
+  } else {
+    for (const t of missingPerformanceTables) {
+      missing.push({
+        path: t.bypassKey,
+        label: t.label,
+        severity: 'CRITICAL',
+        weight: 0,
+        group: 'PERFORMANCE',
+        phase: t.phase,
+        flaps: t.flaps,
+        operationId: t.operationId
+      });
+    }
+  }
+
   const criticalMissing = missing.filter(f => f.severity === 'CRITICAL');
   const requiredMissing = missing.filter(f => f.severity === 'REQUIRED');
   const percentage = totalWeight === 0 ? 0 : Math.round((filledWeight / totalWeight) * 100);
@@ -235,6 +254,7 @@ export function evaluateAircraft(aircraft) {
     missing,
     criticalMissing,
     requiredMissing,
+    missingPerformanceTables,
     hasCriticalGaps: criticalMissing.length > 0,
     bypassedFields
   };

@@ -340,6 +340,33 @@ export function getOperationsGroupedByPhase(): Array<{
     .filter(g => g.items.length > 0);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// R22 — MINIMUM ATTENDU de tables de performance (couverture fiche avion)
+// ─────────────────────────────────────────────────────────────────────────
+// Le « minimum à avoir » par avion (décision pilote 2026-06-17) : décollage et
+// atterrissage, chacun roulage (sol) + franchissement 15 m, répartis par
+// volets — décollage TAKEOFF/lisse, atterrissage LANDING/lisse. 8 tables.
+// L'ordre ci-dessous = ordre d'affichage dans la fiche.
+const MINIMUM_EXPECTED_OPERATION_IDS: OperationId[] = [
+  'takeoff_ground_roll_flaps_to',
+  'takeoff_50ft_flaps_to',
+  'takeoff_ground_roll_flaps_up',
+  'takeoff_50ft_flaps_up',
+  'landing_ground_roll_flaps_landing',
+  'landing_50ft_flaps_landing',
+  'landing_ground_roll_flaps_up',
+  'landing_50ft_flaps_up'
+];
+
+/** Les opérations du minimum attendu (ordre d'affichage), filtrées si un id
+ *  venait à manquer du catalogue. Source de vérité unique du contrôle de
+ *  couverture (cf. performanceCoverage.js). */
+export function getExpectedPerformanceOperations(): OperationDefinition[] {
+  return MINIMUM_EXPECTED_OPERATION_IDS
+    .map(id => getOperation(id))
+    .filter((op): op is OperationDefinition => !!op);
+}
+
 /** Vérifie qu'une OutputKind est admise par une opération. */
 export function isOutputKindValidFor(opId: string, kind: OutputKind): boolean {
   const op = getOperation(opId);
