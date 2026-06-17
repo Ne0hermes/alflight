@@ -890,3 +890,32 @@ remplace le booléen.
 Vérifié (navigateur, presets réels) : 8 attendues ; avion vide → 8 manquantes ;
 F-GNAM (takeoff TO+UP + landing LANDING) → manque exactement les 2 landing-lisse
 (« Flaps UP ») ; bypass des 2 → couvert, % 85→91. Build vert.
+
+## 31. R23 — Classification UNIFIÉE abaques ↔ extraction par tableau (2026-06-17)
+
+**Déclencheur** : le pilote remarque que la classification 3-listes (Phase /
+Métrique / Volets → operationId), présente côté ABAQUES (R17), MANQUE côté
+extraction de performances par TABLEAU (2ᵉ méthode), qui n'avait qu'une liste
+PLATE de ~16 opérations. Demande : exporter cette capacité de tri/classification
+vers l'extraction par tableau pour unifier la classification.
+
+**Livré** :
+- `OperationClassifier.tsx` (nouveau) : le classifieur 3-listes EXTRAIT de
+  GraphIdentityPanel (R17) en composant partagé. Émet l'operationId via
+  onChange ; props `direction` (row/column) + `compact` pour s'adapter au
+  panneau abaque comme à l'overlay de vignette MANEX.
+- `GraphIdentityPanel.tsx` : refactor — utilise le composant partagé (helpers
+  inline + imports morts retirés). Comportement identique (outputKind/outputUnit
+  préservés).
+- `PerformanceWizard.jsx` : la liste plate sur la vignette de page est remplacée
+  par `<OperationClassifier compact direction="column">`. Même taxonomie, même
+  tri Phase→Métrique→Volets ; la valeur stockée (pageClassifications) reste un
+  operationId du catalogue (compat inchangée).
+
+**Vérifié (navigateur)** : le classifieur partagé résout correctement
+(Atterrissage → Roulage → Flaps UP = `landing_ground_roll_flaps_up`, contrôlé) ;
+GraphIdentityPanel rend toujours le classifieur (phase=takeoff pour un preset),
+aucune régression. Build vert.
+
+Synergie R22 : à terme, performanceCoverage devrait aussi compter les tableaux
+(advancedPerformance.tables) ainsi classés — note de suite.
