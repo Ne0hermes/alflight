@@ -952,3 +952,30 @@ précisés — hérité) » ; classifieur sur valeur héritée → phase=takeoff
 avertissement « précise les volets » ; choix Flaps UP → émet
 `takeoff_ground_roll_flaps_up` ; le transform ré-étiquette le bon groupe et
 laisse les autres intacts. Build vert.
+
+## 33. R25 — Re-classification des MODÈLES D'ABAQUE existants (2026-06-17)
+
+Suite de R24 (tableaux) : même besoin pour les abaques d'avions créés AVANT la
+dernière version de classification (operationId hérité/ancien).
+
+**Constat** : la classification d'un abaque vit à 3 endroits — `metadata.systemType`,
+l'`operationId` du graphe PRIMAIRE, et `classification`/`classificationValue` (champs
+du récap). Le récap Step4Performance listait les modèles avec leur libellé mais
+sans contrôle de re-classification (juste Modifier → AbacBuilder / Supprimer).
+
+**Livré** (Step4Performance) :
+- libellé du modèle via `getOperation(currentOpId).labelFr` (currentOpId =
+  systemType ‖ classificationValue ‖ operationId du primaire) ;
+- `OperationClassifier` (partagé R23) par modèle, pré-rempli ;
+- `reclassifyAbaqueModel(index, newOpId)` : met en phase les 3 sources
+  (systemType + systemName, operationId+outputKind/outputUnit du primaire,
+  classification+classificationValue), persiste comme R24 (updateData +
+  setSavedPerformanceData, écrit à la sauvegarde de la fiche).
+
+**Vérifié (navigateur, F-GNAM réel)** : re-classif modèle[0]
+takeoff_50ft_flaps_up → takeoff_50ft_flaps_to : les 3 sources passent à
+takeoff_50ft_flaps_to, libellé/systemName = « …Flaps TAKEOFF (25°) », autre
+modèle intact, courbes/points préservés. Build vert.
+
+→ Les deux méthodes (abaque ET tableau) sont désormais re-classifiables à
+l'identique dans le récap, pour reprendre/uniformiser tous les avions.

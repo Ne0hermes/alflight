@@ -572,6 +572,43 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     });
   };
 
+  // R25 — re-classifie un MODÈLE D'ABAQUE existant (avions créés avant la
+  // dernière version de classification). La classification d'un abaque vit à
+  // 3 endroits qu'on garde en phase : metadata.systemType, l'operationId du
+  // graphe PRIMAIRE, et classification/classificationValue (champs du récap).
+  // Persiste comme la re-classification des tableaux (écrit à la sauvegarde).
+  const reclassifyAbaqueModel = (index, newOperationId) => {
+    if (!newOperationId) return;
+    const models = savedPerformanceData?.performanceModels || data.performanceModels;
+    if (!models?.[index]) return;
+    const op = getOperation(newOperationId);
+    const onlyOutput = op && op.acceptedOutputs.length === 1 ? op.acceptedOutputs[0] : null;
+    const updated = models.map((m, i) => {
+      if (i !== index) return m;
+      const graphs = (m.data?.graphs || []).map(g =>
+        (g.role || 'primary') === 'primary'
+          ? { ...g, operationId: newOperationId, ...(onlyOutput ? { outputKind: onlyOutput.kind, outputUnit: onlyOutput.defaultUnit } : {}) }
+          : g
+      );
+      return {
+        ...m,
+        classification: op?.labelFr || newOperationId,
+        classificationValue: newOperationId,
+        data: {
+          ...m.data,
+          metadata: {
+            ...(m.data?.metadata || {}),
+            systemType: newOperationId,
+            systemName: op?.labelFr || m.data?.metadata?.systemName
+          },
+          graphs
+        }
+      };
+    });
+    updateData('performanceModels', updated);
+    setSavedPerformanceData(prev => ({ ...(prev || {}), performanceModels: updated }));
+  };
+
   const selectAllModels = () => {
     setSelectedModelIds(new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx))));
     setSelectedClassifications(new Set(availableClassifications));
@@ -784,6 +821,11 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
               // id synthétique basé sur l'index pour permettre la sélection.
               const modelId = model.id || `__legacy_idx_${index}`;
               const isSelectedForExport = selectedModelIds.has(modelId);
+              // R25 — operationId courant du modèle (3 sources gardées en phase ;
+              // priorité à systemType / classificationValue / graphe primaire).
+              const primaryOpId = model.data?.graphs?.find?.(g => (g.role || 'primary') === 'primary')?.operationId;
+              const currentOpId = model.data?.metadata?.systemType || model.classificationValue || primaryOpId || '';
+              const modelLabel = getOperation(currentOpId)?.labelFr || model.classification || model.name || `Abaque ${index + 1}`;
               return (
               <div key={modelId} style={{
                 backgroundColor: isSelectedForExport ? 'var(--bg-overlay)' : 'var(--bg-overlay)',
@@ -810,7 +852,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                   />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: '600', marginBottom: '4px' }}>
-                      {model.classification || model.name || `Abaque ${index + 1}`}
+                      {modelLabel}
                     </div>
                     {model.data?.graphs && (
                       <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
@@ -819,6 +861,20 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     )}
                   </div>
                 </div>
+
+                {/* R25 — RE-CLASSIFICATION d'un abaque existant : même classifieur
+                    partagé que les tableaux (R24). Met à jour systemType +
+                    operationId du graphe primaire + classification du modèle. */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    Classer :
+                  </span>
+                  <OperationClassifier
+                    value={currentOpId}
+                    onChange={(newOpId) => reclassifyAbaqueModel(index, newOpId)}
+                  />
+                </div>
+
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={() => {
