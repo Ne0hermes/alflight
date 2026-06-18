@@ -1374,11 +1374,49 @@ export const AircraftModule = memo(() => {
         console.warn(`⚠️ Échec rechargement ${field} depuis IndexedDB :`, err.message);
       }
     }
+
+    // R28 — Fallback SUPABASE STORAGE pour le MANEX. La liste « Mes avions »
+    // utilise l'avion ALLÉGÉ (IndexedDB) qui ne porte ni le base64 ni la
+    // référence Supabase (manexAvailableInSupabase, posée seulement au
+    // chargement depuis Supabase). Le PDF vit pourtant dans le bucket
+    // manex-files — c'est pourquoi le wizard SAIT le télécharger mais pas la
+    // carte. On tente donc Storage avant de déclarer « indisponible ».
+    if (!pdfData && field === 'manex' && (aircraft.hasManex || aircraft.manex || aircraft.manexAvailableInSupabase)) {
+      try {
+        const reg = aircraft.registration || '';
+        // Chemin EXACT (manex_files.file_path) en priorité — gère l'ancienne
+        // convention (dossier modèle) ; sinon la convention par immatriculation.
+        const exactPath = await communityService.getManexFilePathByRegistration(reg).catch(() => null);
+        const filePath = aircraft.manexAvailableInSupabase?.filePath
+          || aircraft.manex?.filePath
+          || exactPath
+          || (reg ? `${reg}/${reg} - manex.pdf` : null);
+        if (filePath) {
+          const blob = await communityService.downloadManex(filePath);
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName || `${defaultPrefix}_${reg || aircraft.id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Échec téléchargement MANEX depuis Supabase Storage :', err?.message);
+      }
+    }
+
     if (!pdfData) {
       setOpError({
         severity: 'warn',
         title: 'Fichier indisponible',
-        description: `Aucun PDF stocké localement pour cet avion (${field}). Réimporte-le via le wizard.`
+        description: field === 'manex'
+          ? 'MANEX introuvable en local ET sur le serveur. Ré-importe le PDF via le wizard (étape MANEX), puis enregistre l\'avion.'
+          : `Aucun PDF stocké localement pour cet avion (${field}). Réimporte-le via le wizard.`
       });
       return;
     }
