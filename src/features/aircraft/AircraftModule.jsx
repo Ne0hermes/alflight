@@ -1440,6 +1440,25 @@ export const AircraftModule = memo(() => {
     });
   }, [safeList, searchQuery]);
 
+  // R26 — masque dans la liste déroulante de la base communautaire les avions
+  // DÉJÀ présents en local (anti-doublon VISUEL : on masque, on ne supprime
+  // rien). Clé de dédoublonnage = immatriculation NORMALISÉE (casse / espaces /
+  // tirets ignorés, ex. « F-GNAM » = « f gnam » = « FGNAM »).
+  const localRegistrationsNorm = useMemo(
+    () => new Set(
+      safeList
+        .map((a) => String(a?.registration || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
+        .filter(Boolean)
+    ),
+    [safeList]
+  );
+  const communityPresetsNotLocal = useMemo(
+    () => allPresets.filter(
+      (p) => !localRegistrationsNorm.has(String(p?.registration || '').toUpperCase().replace(/[^A-Z0-9]/g, ''))
+    ),
+    [allPresets, localRegistrationsNorm]
+  );
+
   // KPI flotte — réévalués à chaque rendu (peu d'avions, OK)
   const fleetKPI = useMemo(() => {
     const total = safeList.length;
@@ -1725,7 +1744,7 @@ export const AircraftModule = memo(() => {
             const found = allPresets.find((p) => p.registration === newValue);
             setSelectedPreset(found || null);
           }}
-          options={[...allPresets.map((p) => p.registration), CREATE_FROM_MANEX_OPTION]}
+          options={[...communityPresetsNotLocal.map((p) => p.registration), CREATE_FROM_MANEX_OPTION]}
           filterOptions={(options, state) => {
             const input = (state.inputValue || '').trim().toUpperCase();
             const matches = options.filter(
