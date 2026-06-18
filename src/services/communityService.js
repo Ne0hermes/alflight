@@ -621,6 +621,26 @@ class CommunityService {
    * @param {string} filePath
    * @returns {Promise<Blob>}
    */
+  // R28 — chemin EXACT du MANEX (manex_files.file_path) par immatriculation,
+  // requête LÉGÈRE (pas de aircraft_data). Permet à la carte « Mes avions » de
+  // télécharger même les MANEX rangés sous l'ancienne convention (dossier
+  // modèle), que la déduction par immatriculation de downloadManex ne trouve pas.
+  async getManexFilePathByRegistration(registration) {
+    if (!registration) return null;
+    try {
+      const { data } = await supabase
+        .from('community_presets')
+        .select('manex_files(file_path)')
+        .eq('registration', registration)
+        .eq('has_manex', true)
+        .limit(1)
+        .maybeSingle();
+      return data?.manex_files?.file_path || null;
+    } catch {
+      return null;
+    }
+  }
+
   async downloadManex(filePath) {
     if (!filePath) {
       throw new Error('downloadManex appelé sans filePath — impossible de continuer');

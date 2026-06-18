@@ -1009,3 +1009,31 @@ trou « note de suite » de R24 frappait.
 4 UP bypassées (non applicable), 1 réellement manquante
 (landing_ground_roll_flaps_landing non classée) → 3+4+1=8 cohérent. Les
 classifications du pilote sont enfin reconnues. Build vert.
+
+## 36. R28 — MANEX « non disponible » sur la carte avion (mais OK dans le wizard) (2026-06-17)
+
+**Bug pilote** : le MANEX se télécharge depuis le wizard mais la carte « Mes
+avions » dit « non disponible ».
+
+**Cause** : la carte utilise l'avion ALLÉGÉ (IndexedDB) — pas le base64 du
+MANEX (strippé), pas la référence Supabase `manexAvailableInSupabase` (posée
+seulement au chargement DEPUIS Supabase, cf. getPresetById). Or
+`downloadAircraftPdf` ne tentait QUE le local (pdfData + IndexedDB), jamais le
+bucket Storage `manex-files` où vit réellement le PDF. Le wizard, lui, a la
+référence Supabase → il sait télécharger.
+
+**Fix** :
+- `downloadAircraftPdf` (AircraftModule) : fallback SUPABASE STORAGE pour le
+  champ `manex` quand le local échoue — chemin exact (nouvelle méthode légère
+  `getManexFilePathByRegistration`) sinon convention `${reg}/${reg} - manex.pdf`,
+  puis `communityService.downloadManex` (robuste : exact → convention immat →
+  listing dossiers). Message d'échec clarifié (« introuvable en local ET sur
+  le serveur → ré-importe »).
+- `communityService.getManexFilePathByRegistration(reg)` : requête LÉGÈRE
+  (manex_files.file_path seul, pas d'aircraft_data) — gère l'ancienne
+  convention (dossier modèle).
+
+**Vérifié (navigateur, bucket réel)** : F-GUVV/F-GNAM/F-GOVE/F-GOFP →
+téléchargement OK (2,4–7,9 Mo, application/pdf). H-HDIM = pointeur MORT
+(fichier purgé du bucket, ancienne convention) → « indisponible » LÉGITIME
+avec message de ré-import. Build vert.
