@@ -20,6 +20,8 @@ export const PERF_BYPASS_PREFIX = 'performance.';
 export function getPresentOperationIds(aircraft) {
   const present = new Set();
   if (!aircraft) return present;
+
+  // ── ABAQUES (performanceModels) : systemType + operationId du primaire ──
   const models =
     aircraft.performanceModels ||
     aircraft.advancedPerformance?.performanceModels ||
@@ -33,6 +35,24 @@ export function getPresentOperationIds(aircraft) {
       if ((g.role || 'primary') === 'primary' && g.operationId) present.add(g.operationId);
     }
   }
+
+  // ── TABLEAUX (advancedPerformance.tables / performanceTables) ──
+  // R27 — MÊME taxonomie operationId que les abaques (R23/R24). Sans cette
+  // lecture, un avion dont les perfs sont 100 % des TABLEAUX (ex. F-GOVE, 0
+  // abaque) affichait TOUTES les tables comme manquantes, même après
+  // re-classification. La prépa vol, elle, les consommait déjà (resolver →
+  // fallback tableaux par t.operationId).
+  const tables = [
+    ...(Array.isArray(aircraft.advancedPerformance?.tables) ? aircraft.advancedPerformance.tables : []),
+    ...(Array.isArray(aircraft.performanceTables) ? aircraft.performanceTables : []),
+    ...(Array.isArray(aircraft.data?.advancedPerformance?.tables) ? aircraft.data.advancedPerformance.tables : []),
+    ...(Array.isArray(aircraft.data?.performanceTables) ? aircraft.data.performanceTables : [])
+  ];
+  for (const t of tables) {
+    const op = t?.operationId || t?.classification;
+    if (op) present.add(op);
+  }
+
   return present;
 }
 
