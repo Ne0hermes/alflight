@@ -979,3 +979,33 @@ modèle intact, courbes/points préservés. Build vert.
 
 → Les deux méthodes (abaque ET tableau) sont désormais re-classifiables à
 l'identique dans le récap, pour reprendre/uniformiser tous les avions.
+
+## 34. R26 — Liste « base communautaire » : masquer les avions déjà en local (2026-06-17)
+
+Demande pilote : éviter les doublons visuels. Le dropdown MUI Autocomplete
+(AircraftModule) listait TOUS les presets ; on masque ceux dont
+l'immatriculation est déjà en local. Filtre VISUEL (rien n'est supprimé).
+- `communityPresetsNotLocal` = allPresets filtrés par un Set
+  `localRegistrationsNorm` (immat normalisée : MAJ + suppression
+  casse/espaces/tirets → « F-GNAM » = « f gnam » = « FGNAM »).
+- L'option d'action « Mon avion n'est pas dans la liste » reste toujours en bas.
+
+## 35. R27 — Couverture : lire AUSSI les tableaux (bug F-GOVE) (2026-06-17)
+
+**Bug pilote** : F-GOVE — après re-classification de ses TABLEAUX (takeoff TO
+×2, landing 15m LANDING), le contrôle de couverture (R22) les montrait
+TOUJOURS manquants. Cause : `performanceCoverage.getPresentOperationIds` ne
+lisait que `performanceModels` (ABAQUES) — F-GOVE a 0 abaque, 8 tableaux. Le
+trou « note de suite » de R24 frappait.
+
+**Fix** : `getPresentOperationIds` lit aussi `advancedPerformance.tables` +
+`performanceTables` (+ variantes `data.*`) et ajoute `t.operationId`/
+`t.classification`. Même taxonomie (R23/R24). La prépa vol les consommait DÉJÀ
+(resolver → fallback tableaux par t.operationId, vérifié) ; seule la couverture
+était aveugle aux tableaux.
+
+**Vérifié (F-GOVE réel)** : avant = 8 manquantes (tout) ; après = présents
+{takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_50ft_flaps_landing},
+4 UP bypassées (non applicable), 1 réellement manquante
+(landing_ground_roll_flaps_landing non classée) → 3+4+1=8 cohérent. Les
+classifications du pilote sont enfin reconnues. Build vert.
