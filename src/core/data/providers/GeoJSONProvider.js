@@ -428,28 +428,38 @@ export class GeoJSONProvider extends AeroDataProvider {
    * Récupère les points de report VFR pour un aérodrome
    */
   async getReportingPoints(icao) {
-    await this.ensureDataLoaded();
+    // ⚡ PERF/ROBUSTESSE : on charge UNIQUEMENT les 2 couches nécessaires
+    // (aérodromes + points désignés) via le cache par-couche de geoJSONDataService,
+    // au lieu de `ensureDataLoaded()` qui déclenche le full loadData() — incl.
+    // obstacles (8 Mo) + espaces aériens (5 Mo) + navaids, totalement inutiles ici.
+    // Sous pression mémoire (avions avec photos/MANEX/abaques), ce chargement
+    // massif est le point de blocage le plus probable du module Info & Météo.
+    const code = (icao || '').toUpperCase();
+    const [adFeatures, dpFeatures] = await Promise.all([
+      geoJSONDataService.getAerodromes(),
+      geoJSONDataService.getDesignatedPoints()
+    ]);
 
-    const airport = this.data.airports.find(a => a.icao === icao);
-    if (!airport) return [];
+    const adFeature = adFeatures.find(f => (f.properties?.icao || '').toUpperCase() === code);
+    const [adLon, adLat] = adFeature?.geometry?.coordinates || [];
+    if (adLat == null || adLon == null) return [];
 
-    const nearbyWaypoints = this.data.waypoints.filter(wp => {
-      const distance = this.calculateDistance(
-        airport.coordinates.lat,
-        airport.coordinates.lon,
-        wp.coordinates.lat,
-        wp.coordinates.lon
-      );
-      return distance <= 15; // 15 km de rayon
-    });
-
-    return nearbyWaypoints.map(wp => ({
-      code: wp.id,
-      name: wp.name,
-      type: wp.type === 'VFR-RP' ? 'mandatory' : 'optional',
-      mandatory: wp.type === 'VFR-RP',
-      coordinates: wp.coordinates
-    }));
+    const points = [];
+    for (const f of dpFeatures) {
+      const [wLon, wLat] = f.geometry?.coordinates || [];
+      if (wLat == null || wLon == null) continue;
+      if (this.calculateDistance(adLat, adLon, wLat, wLon) <= 15) { // 15 km de rayon
+        const type = f.properties?.type;
+        points.push({
+          code: f.properties?.code || f.properties?.id,
+          name: f.properties?.name,
+          type: type === 'VFR-RP' ? 'mandatory' : 'optional',
+          mandatory: type === 'VFR-RP',
+          coordinates: { lat: wLat, lon: wLon }
+        });
+      }
+    }
+    return points;
   }
 
   /**
@@ -498,18 +508,31 @@ export class GeoJSONProvider extends AeroDataProvider {
    */
   async getVACDetail(icao) {
     if (!icao || typeof icao !== 'string') return null;
-    await this.ensureDataLoaded();
+    // ⚡ Ne PAS appeler ensureDataLoaded() ici : cette méthode lit directement les
+    // couches dont elle a besoin (aérodromes, pistes, ILS, services, points VFR) via
+    // le cache par-couche de geoJSONDataService. Le full loadData() (obstacles 8 Mo +
+    // espaces 5 Mo + navaids) était chargé pour rien et bloquait le module sous
+    // pression mémoire. cf. getReportingPoints.
     const code = icao.toUpperCase();
 
-    // Features brutes (cache géré par geoJSONDataService, déjà chaud après loadData) :
-    // on lit les propriétés complètes — les convert*() du provider sont volontairement
-    // « lossy » (perdent iata / magnetic_variation / transition_altitude, aplatissent
-    // elevation) ; ici on a besoin de la fidélité maximale.
+    // Features brutes (cache géré par geoJSONDataService) : on lit les propriétés
+    // complètes — les convert*() du provider sont volontairement « lossy » (perdent
+    // iata / magnetic_variation / transition_altitude, aplatissent elevation) ; ici
+    // on a besoin de la fidélité maximale.
     const adFeatures = await geoJSONDataService.getAerodromes();
     const feature = adFeatures.find(
       f => (f.properties?.icao || '').toUpperCase() === code
     );
     if (!feature) return null;
+
+    // Métadonnées AIRAC (label de fraîcheur) — dérivées à bas coût des aérodromes
+    // déjà chargés, sans imposer le full loadData(). Best-effort : null si absent.
+    if (!this.dataInfo) {
+      this.dataInfo = {
+        airac: adFeatures.find((f) => f?.properties?.airac)?.properties?.airac || null,
+        source: adFeatures.find((f) => f?.properties?.source)?.properties?.source || 'SIA',
+      };
+    }
 
     // ILS (indexés par id de piste) + services (mappés en flags) de cet AD.
     const ilsByRunway = this.indexILSByRunway(
