@@ -184,34 +184,34 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
                 {data.items.map((item, index) => (
                   <tr key={index} style={{ borderBottom: index === data.items.length - 1 ? `1px solid ${color}` : 'none' }}>
                     <td style={{ padding: '3px 2px', textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }} title={item.label}>{item.label}</td>
-                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{parseFloat(item.value || 0).toFixed(1)} kg</td>
+                    <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>{parseFloat(item.value || 0).toFixed(3)} kg</td>
                     <td style={{ padding: '3px 2px', textAlign: 'right', whiteSpace: 'nowrap', color: 'var(--text-secondary)' }}>
-                      {item.arm !== null && item.arm !== undefined ? `${parseFloat(item.arm).toFixed(2)} m` : 'N/A'}
+                      {item.arm !== null && item.arm !== undefined ? `${parseFloat(item.arm).toFixed(3)} m` : 'N/A'}
                     </td>
                     <td style={{ padding: '3px 2px', textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap', color: 'var(--text-primary)' }}>
-                      {item.moment !== null && item.moment !== undefined ? `${parseFloat(item.moment).toFixed(1)}` : 'N/A'}
+                      {item.moment !== null && item.moment !== undefined ? `${parseFloat(item.moment).toFixed(3)}` : 'N/A'}
                     </td>
                   </tr>
                 ))}
                 {/* Ligne de total */}
                 <tr style={{ fontWeight: '700', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
                   <td style={{ padding: '4px 2px', textAlign: 'left', whiteSpace: 'nowrap' }}>TOTAL</td>
-                  <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>{parseFloat(data.w || 0).toFixed(1)} kg</td>
+                  <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>{parseFloat(data.w || 0).toFixed(3)} kg</td>
                   <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>-</td>
                   <td style={{ padding: '4px 2px', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)}
+                    {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(3)}
                   </td>
                 </tr>
               </tbody>
             </table>
             <p style={{ marginTop: '6px', fontSize: 'var(--fs-caption)', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
-              CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(1)} ÷ {parseFloat(data.w || 0).toFixed(1)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
+              CG = {data.items.reduce((sum, item) => sum + parseFloat(item.moment || 0), 0).toFixed(3)} ÷ {parseFloat(data.w || 0).toFixed(3)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.cg || 0).toFixed(3)} m</strong>
             </p>
 
             {/* FIX H : dérivation du carburant restant à l'atterrissage (carte « atterrissage » uniquement) */}
             {data.fuelDerivation && (
               <p style={{ marginTop: '4px', fontSize: 'var(--fs-caption)', fontStyle: 'italic', color: 'var(--text-tertiary)' }}>
-                Carburant restant = FOB {parseFloat(data.fuelDerivation.fobL || 0).toFixed(1)} L − brûlé (roulage+trip) {parseFloat(data.fuelDerivation.burnedL || 0).toFixed(1)} L = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingL || 0).toFixed(1)} L</strong> × {parseFloat(data.fuelDerivation.density || 0).toFixed(2)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingKg || 0).toFixed(1)} kg</strong>
+                Carburant restant = FOB {parseFloat(data.fuelDerivation.fobL || 0).toFixed(3)} L − brûlé (roulage+trip) {parseFloat(data.fuelDerivation.burnedL || 0).toFixed(3)} L = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingL || 0).toFixed(3)} L</strong> × {parseFloat(data.fuelDerivation.density || 0).toFixed(3)} = <strong style={{ color: 'var(--text-primary)' }}>{parseFloat(data.fuelDerivation.remainingKg || 0).toFixed(3)} kg</strong>
                 <br />
                 <span style={{ color: 'var(--text-tertiary)' }}>réserve / dégagement / contingence restent à bord à l'atterrissage</span>
               </p>
@@ -230,12 +230,12 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
               }}>
                 <strong>MZFW DÉPASSÉ</strong>
                 <br />
-                Masse sans carburant : {parseFloat(data.w || 0).toFixed(1)} kg
+                Masse sans carburant : {parseFloat(data.w || 0).toFixed(3)} kg
                 <br />
-                Limite MZFW : {parseFloat(data.maxZfm || 0).toFixed(1)} kg
+                Limite MZFW : {parseFloat(data.maxZfm || 0).toFixed(3)} kg
                 <br />
                 <span style={{ fontSize: 'var(--fs-caption)', fontStyle: 'italic' }}>
-                  Surcharge : +{(parseFloat(data.w || 0) - parseFloat(data.maxZfm || 0)).toFixed(1)} kg
+                  Surcharge : +{(parseFloat(data.w || 0) - parseFloat(data.maxZfm || 0)).toFixed(3)} kg
                 </span>
               </div>
             )}

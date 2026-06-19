@@ -339,8 +339,8 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
                     <tspan x="0" y="-8">{label}</tspan>
                   </text>
                   <text textAnchor="middle" fontSize="7.5" fill="var(--text-secondary)" fontWeight="500">
-                    <tspan x="0" y="2">Masse: {scenario.w.toFixed(1)} kg</tspan>
-                    <tspan x="0" y="11">Moment: {(scenario.w * scenario.cg).toFixed(1)} kg.m</tspan>
+                    <tspan x="0" y="2">Masse: {scenario.w.toFixed(3)} kg</tspan>
+                    <tspan x="0" y="11">Moment: {(scenario.w * scenario.cg).toFixed(3)} kg.m</tspan>
                     <tspan x="0" y="20">CG: {scenario.cg.toFixed(3)} m ({(scenario.cg * 1000).toFixed(0)} mm)</tspan>
                   </text>
                   {!isInLimits && (
