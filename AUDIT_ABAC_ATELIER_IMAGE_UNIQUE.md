@@ -1037,3 +1037,24 @@ référence Supabase → il sait télécharger.
 téléchargement OK (2,4–7,9 Mo, application/pdf). H-HDIM = pointeur MORT
 (fichier purgé du bucket, ancienne convention) → « indisponible » LÉGITIME
 avec message de ré-import. Build vert.
+
+## 37. R29 — M&C prépa vol : tous les chiffres à 3 décimales (2026-06-17)
+
+Demande pilote : dans le module Masse & centrage de la prépa vol, l'intégralité
+des chiffres (masses, moments, bras de levier, résultats) toujours à 3 décimales.
+
+- `Step6WeightBalance.jsx` : 33 `.toFixed(0|1|2)` d'AFFICHAGE → `.toFixed(3)`
+  (masses kg, moments kg.m, bras m, carburant). ÉPARGNÉ : le seul toFixed
+  COMPUTATIONNEL (stockage gal : `parseFloat((ltr/3.78541).toFixed(2))`).
+- `ScenarioCards.jsx` (table détaillée M&C, partagée) : 15 `.toFixed(1|2)` →
+  `.toFixed(3)` (tous en affichage JSX, parseFloat de sûreté).
+- `WeightBalanceChart.jsx` (centrogramme, partagé) : labels scénario Masse +
+  Moment → 3 décimales (CG déjà à 3). LAISSÉ : mm (alt-unité du CG, 3 déc.
+  absurde) + labels de sommets d'enveloppe (annotations de référence).
+
+NB : ScenarioCards et WeightBalanceChart sont PARTAGÉS avec le module avion
+(weight-balance) → l'affichage y passe aussi à 3 décimales (cohérent).
+
+Vérifié (navigateur, ScenarioCards monté avec scénario réaliste) : Masse
+700.123 kg, Bras 0.216 m, Moment 150.947 — 0 nombre à < 3 décimales restant.
+Build vert.
