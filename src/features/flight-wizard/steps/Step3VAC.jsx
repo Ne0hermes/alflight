@@ -24,6 +24,8 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
   const [aerodromeData, setAerodromeData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [expandedAerodrome, setExpandedAerodrome] = useState(null);
   const [expandedSection, setExpandedSection] = useState({});
   const [hasAutoOpened, setHasAutoOpened] = useState(false);
@@ -76,14 +78,26 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
 
   // Récupérer les aérodromes depuis les waypoints
   useEffect(() => {
+    let cancelled = false;
+
+    // Watchdog : empêche le spinner infini si un fetch GeoJSON se bloque sans
+    // lever d'erreur (réseau lent, pression mémoire). Au-delà du délai, on
+    // bascule sur un état d'erreur explicite + bouton « Réessayer ».
+    const withTimeout = (promise, ms) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), ms))
+    ]);
+
     const loadAerodromeData = async () => {
       if (!waypoints || waypoints.length === 0) {
         setAerodromeData([]);
+        setLoadError(null);
         setLoading(false);
         return;
       }
 
       setLoading(true);
+      setLoadError(null);
       try {
         // Récupérer uniquement les aérodromes (départ, arrivée, alternates)
         const aerodromeIcaos = waypoints
@@ -116,9 +130,11 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
         console.log('🔍 [Step3VAC] Final aerodromeIcaos array:', aerodromeIcaos);
 
         // Charger les données VAC (provider GeoJSON) pour ces aérodromes uniquement.
-        const filteredData = (await Promise.all(
-          aerodromeIcaos.map(ic => aeroDataProvider.getVACDetail(ic))
+        const filteredData = (await withTimeout(
+          Promise.all(aerodromeIcaos.map(ic => aeroDataProvider.getVACDetail(ic))),
+          25000
         )).filter(Boolean);
+        if (cancelled) return;
         console.log('🔍 [Step3VAC] Aérodromes chargés:', filteredData.length);
         // TODO: circuitAltitude must be extracted from official AIXM XML files
         // For now, it will be undefined
@@ -127,15 +143,22 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
         setAerodromeData(filteredData);
         console.log('✅ Données aérodromes chargées pour Step3VAC:', filteredData.length);
       } catch (error) {
-        console.error('❌ Erreur chargement données VAC:', error);
+        if (cancelled) return;
+        console.error('❌ Erreur/timeout chargement données VAC:', error);
         setAerodromeData([]);
+        setLoadError(
+          error?.message === 'TIMEOUT'
+            ? 'Le chargement des données aérodrome a expiré (réseau lent ou données indisponibles). Vérifiez votre connexion puis réessayez.'
+            : 'Erreur lors du chargement des données aérodrome.'
+        );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadAerodromeData();
-  }, [waypoints, flightPlan?.alternates]);
+    return () => { cancelled = true; };
+  }, [waypoints, flightPlan?.alternates, reloadKey]);
 
   // Fonction pour enrichir un aérodrome avec les données extraites du vacStore
   const getEnrichedAerodrome = (aerodrome) => {
@@ -252,6 +275,23 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
       <div style={styles.container}>
         <div style={styles.loading}>
           <p>Chargement des aérodromes...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.emptyState}>
+          <AlertCircle size={48} style={{ color: 'var(--accent-primary)', marginBottom: '16px' }} />
+          <p style={styles.emptyText}>{loadError}</p>
+          <button
+            style={{ ...styles.viewButtonFull, width: 'auto', marginTop: '16px' }}
+            onClick={() => setReloadKey(k => k + 1)}
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     );
@@ -421,7 +461,10 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                       <h4 style={styles.meteoHeaderTitle}>Météo</h4>
                     </div>
 
-                    {weatherData?.[aerodrome.icao] ? (
+                    {/* On exige un METAR OU un TAF réel : un objet météo « vide »
+                        (metar/taf null, ex. station sans METAR ou échec AVWX) ne
+                        doit PAS produire un bloc blanc — on affiche « non disponible ». */}
+                    {(weatherData?.[aerodrome.icao]?.metar || weatherData?.[aerodrome.icao]?.taf) ? (
                       <div style={styles.meteoContainer}>
                         {/* METAR */}
                         {weatherData[aerodrome.icao].metar && (
