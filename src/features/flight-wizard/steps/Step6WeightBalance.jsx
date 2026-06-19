@@ -628,6 +628,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             fobFuel={fobFuel}
             fuelData={fuelData}
             flightPlan={flightPlan}
+            weighingCertDate={weighingCertDate}
           />
 
           {scenarios && (
@@ -648,7 +649,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     });
 
   // Composant pour la section de chargement
-  const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan }) => {
+  const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan, weighingCertDate }) => {
     const { convert, getSymbol, getUnit } = useUnits();
 
     // ⚠️ SÉCURITÉ CRITIQUE : PAS DE VALEURS PAR DÉFAUT POUR LES BRAS
