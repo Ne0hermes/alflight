@@ -143,11 +143,14 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
 
   // Vérification des données avant affichage
   if (!data || typeof data.w !== 'number' || typeof data.cg !== 'number' || typeof data.fuel !== 'number') {
-    // 🔒 P0 (densité) : distinguer « densité carburant inconnue » (scénario
-    // volontairement indisponible, fail-closed) d'un simple « en cours de calcul ».
-    const message = data?.unavailableReason === 'fuelDensity'
-      ? 'Densité carburant inconnue — renseignez le type de carburant'
-      : 'Données en cours de calcul…';
+    // Scénario volontairement INDISPONIBLE (fail-closed) — jamais un chiffre
+    // faux. On distingue chaque cause pour guider la correction.
+    const REASONS = {
+      fuelDensity: 'Densité carburant inconnue — renseignez le type de carburant',
+      fuelArm: 'Bras de levier manquant sur un réservoir — renseignez le bras de chaque réservoir (fiche avion)',
+      distribution: 'Réservoirs à bras différents — répartissez le carburant par réservoir ci-dessus',
+    };
+    const message = REASONS[data?.unavailableReason] || 'Données en cours de calcul…';
     return (
       <div style={cardStyle}>
         <h5 style={titleStyle}>

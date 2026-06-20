@@ -1071,6 +1071,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                               updateFuelTankFields(tank.id, fields);
                             }}
                             placeholder="CG"
+                            required
+                            error={!!errors[`additionalFuelTanks[${index}].arm`]}
+                            helperText={errors[`additionalFuelTanks[${index}].arm`] || 'Obligatoire — bras propre du réservoir'}
                             InputProps={{
                               endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                             }}

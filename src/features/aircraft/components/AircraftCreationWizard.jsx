@@ -733,6 +733,25 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         } else if (new Date(aircraftData.weighingReport.certificationDate) > new Date()) {
           newErrors.weighingReportDate = "La date de la pesée ne peut pas être dans le futur.";
         }
+        // 🔧 RÈGLE STRICTE carburant (décision pilote 2026-06) : TOUT réservoir
+        // ayant une capacité DOIT avoir un bras de levier. Sans bras, le moment
+        // carburant est incalculable → on REFUSE l'avion (en aval, plus aucune
+        // moyenne ni bras inventé : le centrage serait faux). cf. src/utils/fuelArm.js
+        {
+          const tanks = Array.isArray(aircraftData.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
+          const sansBras = [];
+          tanks.forEach((t, i) => {
+            const cap = parseFloat(t?.capacity);
+            const arm = parseFloat(t?.arm);
+            if (Number.isFinite(cap) && cap > 0 && (!Number.isFinite(arm) || arm === 0)) {
+              newErrors[`additionalFuelTanks[${i}].arm`] = 'Bras de levier requis';
+              sansBras.push(t?.name || `Réservoir ${i + 1}`);
+            }
+          });
+          if (sansBras.length > 0) {
+            newErrors.fuelTankArms = `Bras de levier manquant pour : ${sansBras.join(', ')}. Chaque réservoir doit avoir son propre bras (aucune moyenne ni valeur par défaut n'est appliquée).`;
+          }
+        }
         break;
 
       case 3: // Vitesses
