@@ -78,7 +78,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     const criticalScenarios = ['toCrm', 'landing'];
     return criticalScenarios.every(key => {
       const scenario = scenarios[key];
-      if (!scenario || isNaN(scenario.w) || isNaN(scenario.cg)) return false;
+      // Number.isFinite : un scénario INDISPONIBLE (w/cg null) est écarté —
+      // isNaN(null) vaut false et laisserait passer un point fantôme (crash .toFixed).
+      if (!scenario || !Number.isFinite(scenario.w) || !Number.isFinite(scenario.cg)) return false;
       return isPointWithinEnvelope(scenario.w, scenario.cg);
     });
   }, [scenarios]);
@@ -88,7 +90,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     const nonCriticalScenarios = ['zfw', 'fulltank'];
     return nonCriticalScenarios.some(key => {
       const scenario = scenarios[key];
-      if (!scenario || isNaN(scenario.w) || isNaN(scenario.cg)) return false;
+      // Number.isFinite : un scénario INDISPONIBLE (w/cg null) est écarté —
+      // isNaN(null) vaut false et laisserait passer un point fantôme (crash .toFixed).
+      if (!scenario || !Number.isFinite(scenario.w) || !Number.isFinite(scenario.cg)) return false;
       return !isPointWithinEnvelope(scenario.w, scenario.cg);
     });
   }, [scenarios]);
@@ -198,7 +202,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     const scenarioPath = (() => {
       const pts = ['fulltank', 'toCrm', 'landing', 'zfw']
         .map(key => scenarios[key])
-        .filter(s => s && !isNaN(s.cg) && !isNaN(s.w))
+        .filter(s => s && Number.isFinite(s.cg) && Number.isFinite(s.w))
         .map(s => `${toX(xOf(s.w, s.cg))},${toSvgY(s.w)}`);
       return pts.length > 1 ? `M ${pts.join(' L ')}` : '';
     })();
@@ -303,7 +307,9 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           {/* Points des scénarios + cartouches (masse / moment / CG — IDENTIQUES sur les 2 graphes) */}
           {scenarioConfig.map(({ key, label, color }) => {
             const scenario = scenarios[key];
-            if (!scenario || isNaN(scenario.cg) || isNaN(scenario.w)) return null;
+            // Number.isFinite : scénario INDISPONIBLE (w/cg null) non tracé —
+            // isNaN(null)===false laisserait passer un point fantôme → crash .toFixed.
+            if (!scenario || !Number.isFinite(scenario.cg) || !Number.isFinite(scenario.w)) return null;
 
             const x = toX(xOf(scenario.w, scenario.cg));
             const y = toSvgY(scenario.w);

@@ -4,6 +4,7 @@ import { immer } from 'zustand/middleware/immer';
 import { getFuelDensity } from '@utils/fuelDensity';
 import { cgLimitsAtMass } from '@utils/cgEnvelope';
 import { normalizeAircraftArmsToMeters, normalizeAircraftCgEnvelopeToMeters } from '@utils/armUnits';
+import { singleFuelArm } from '@utils/fuelArm';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
@@ -216,11 +217,17 @@ export const useWeightBalanceStore = create(
           fuelMoment += w * (Number.isFinite(arm) ? arm : 0);
         });
       } else {
-        // Repli : bloc carburant unique (loads.fuel en kg = FOB×densité), bras unique.
+        // Repli : bloc carburant unique (loads.fuel en kg = FOB×densité), sans
+        // répartition par réservoir. 🔧 STRICT (cf. src/utils/fuelArm.js) :
+        // on n'utilise un bras unique QUE s'il est non ambigu (1 réservoir, ou
+        // tous au MÊME bras, ou legacy). Bras manquant OU bras DIFFÉRENTS sans
+        // répartition ⇒ fuelArmMissing (centrage non vérifiable). JAMAIS de
+        // moyenne, jamais de × bras absent : le pilote doit répartir par
+        // réservoir (branche usePerTankFuel ci-dessus) pour lever l'ambiguïté.
         fuelWeight = loads.fuel || 0;
-        const fArm = parseFloat(wb.fuelArm);
-        if (fuelWeight > 0 && !Number.isFinite(fArm)) fuelArmMissing = true;
-        fuelMoment = fuelWeight * (Number.isFinite(fArm) ? fArm : 0);
+        const fa = singleFuelArm(aircraft, wb);
+        if (fuelWeight > 0 && fa.error) fuelArmMissing = true;
+        fuelMoment = fa.arm != null ? fuelWeight * fa.arm : 0;
       }
 
       const totalWeight =

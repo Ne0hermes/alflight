@@ -1,6 +1,7 @@
 // src/features/weight-balance/utils/calculations.js
 import { getFuelDensity } from '@utils/fuelDensity';
 import { normalizeAircraftArmsToMeters } from '@utils/armUnits';
+import { computeScenarioFuel } from '@utils/fuelArm';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
 const getFuelLiters = (fobFuel) => {
@@ -43,11 +44,12 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const safeFuel = loads.fuel || 0;
   const safeCG = calculations.cg || 0;
 
-  // S'assurer que fuelArm existe
-  const fuelArm = wb.fuelArm || 0;
-  if (fuelArm === 0) {
-    console.warn('⚠️ wb.fuelArm is 0 or undefined - using 0 for calculations');
-  }
+  // 🔧 CARBURANT STRICT PAR RÉSERVOIR (cf. src/utils/fuelArm.js) :
+  // le moment carburant de chaque scénario est calculé réservoir par réservoir,
+  // avec le bras PROPRE de chacun. Aucune moyenne de bras, aucune multiplication
+  // par un bras absent, aucun bras de repli. Un réservoir chargé sans bras, ou
+  // des réservoirs à bras différents sans répartition, rendent le scénario
+  // INDISPONIBLE (unavailableReason) plutôt que de produire un chiffre faux.
 
   // Calcul du carburant restant À L'ATTERRISSAGE (FIX bug H).
   // ⚠️ AVANT : remaining = FOB − somme de TOUT fuelData (roulage+trip+contingency+alternate+réserve).
@@ -69,20 +71,18 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     return { totalWeight, totalMoment, cg };
   };
 
-  // Scénario 1: FULLTANK
-  // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
-  // Pas besoin de conversion selon fuelUnit, c'est déjà en litres !
-  const fuelCapacityLtr = aircraft.fuelCapacity || 0;
-  const fulltankFuelKg = fuelCapacityLtr * fuelDensityForCalc;
+  // 🔧 Carburant PAR RÉSERVOIR pour chaque scénario (poids + moment exacts,
+  // bras propre de chaque réservoir). Renvoie { ok:false, reason } si un bras
+  // manque ('fuelArm') ou si des bras différents exigent une répartition non
+  // fournie ('distribution') → le scénario devient indisponible (jamais faux).
+  const fuelArgs = { aircraft, density: fuelDensityForCalc, fobLiters: fobFuelLiters, loads, wb };
+  const fuelFull = computeScenarioFuel({ ...fuelArgs, scenario: 'full' });
+  const fuelFob = computeScenarioFuel({ ...fuelArgs, scenario: 'fob' });
+  const fuelLanding = computeScenarioFuel({ ...fuelArgs, scenario: 'landing', burnedLiters: burnedFuelL });
 
-  // Scénario 2: T/O FOB (actuel)
-  const toCrmFuel = safeFuel;
-
-  // Scénario 3: LANDING
-  const landingFuelKg = fobFuelLiters > 0 ? remainingFuelKg : 0;
-
-  // Construire les listes détaillées de masses pour chaque scénario
-  const buildMassDetails = (fuelKg) => {
+  // Construire les listes détaillées de masses pour chaque scénario.
+  // `fuelRows` = lignes carburant (une par réservoir, ou une seule mono-bras).
+  const buildMassDetails = (fuelRows = []) => {
     const items = [];
 
     // Masse à vide (toujours présente) - Utiliser weights.emptyWeight en priorité
@@ -170,31 +170,19 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
       }
     }
 
-    // Carburant (variable selon scénario)
-    if (fuelKg > 0) {
-      items.push({
-        label: 'Carburant',
-        value: fuelKg,
-        arm: fuelArm,
-        moment: fuelKg * (fuelArm || 0)
-      });
+    // Carburant : une ligne PAR RÉSERVOIR (bras propre de chacun), ou une seule
+    // ligne pour un avion mono-bras. Produit par computeScenarioFuel — jamais de
+    // moyenne ni de multiplication par un bras absent.
+    for (const r of fuelRows) {
+      items.push({ label: r.label, value: r.value, arm: r.arm, moment: r.moment });
     }
 
     return items;
   };
 
   // ✅ CALCUL UNIFIÉ : Tous les scénarios calculés depuis buildMassDetails
-  // Construire les items d'abord, puis calculer poids/CG depuis items
-  const fulltankItems = buildMassDetails(fulltankFuelKg);
-  const fulltankCalc = calculateFromItems(fulltankItems);
-
-  const toCrmItems = buildMassDetails(toCrmFuel);
-  const toCrmCalc = calculateFromItems(toCrmItems);
-
-  const landingItems = buildMassDetails(landingFuelKg);
-  const landingCalc = calculateFromItems(landingItems);
-
-  const zfwItems = buildMassDetails(0);
+  // ZFW (sans carburant) — toujours calculable, seul scénario garanti.
+  const zfwItems = buildMassDetails([]);
   const zfwCalc = calculateFromItems(zfwItems);
 
   // ⚠️ VÉRIFICATION MZFW : Masse sans carburant ne doit pas dépasser MZFW
@@ -206,30 +194,25 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     console.warn(`⚠️ MZFW DÉPASSÉ : ${zfwCalc.totalWeight.toFixed(1)} kg > ${maxZeroFuelMass.toFixed(1)} kg (limite MZFW)`);
   }
 
-  // 🔒 P0 (densité) : scénario carburant non calculable (type inconnu) ⇒
-  // indisponible. Jamais une masse inventée ; seul ZFW reste fiable.
-  const fuelUnavailable = { w: null, cg: null, fuel: null, items: [], unavailableReason: 'fuelDensity' };
+  // Construit un scénario CONTENANT du carburant à partir du résultat par
+  // réservoir. INDISPONIBLE (jamais un chiffre faux) si :
+  //   • densité inconnue        → 'fuelDensity'
+  //   • un réservoir chargé sans bras → 'fuelArm'
+  //   • bras différents sans répartition saisie → 'distribution'
+  const buildFuelScenario = (fuelRes, extra = {}) => {
+    if (fuelDensityMissing) return { w: null, cg: null, fuel: null, items: [], unavailableReason: 'fuelDensity', ...extra };
+    if (!fuelRes.ok) return { w: null, cg: null, fuel: null, items: [], unavailableReason: fuelRes.reason, ...extra };
+    const items = buildMassDetails(fuelRes.rows);
+    const c = calculateFromItems(items);
+    return { w: c.totalWeight, cg: c.cg, fuel: fuelRes.weight, items, ...extra };
+  };
 
   return {
     fuelDensityMissing,
-    fulltank: fuelDensityMissing ? fuelUnavailable : {
-      w: fulltankCalc.totalWeight,
-      cg: fulltankCalc.cg,
-      fuel: fulltankFuelKg || 0,
-      items: fulltankItems
-    },
-    toCrm: fuelDensityMissing ? fuelUnavailable : {
-      w: toCrmCalc.totalWeight,
-      cg: toCrmCalc.cg,
-      fuel: toCrmFuel || 0,
-      items: toCrmItems
-    },
-    landing: fuelDensityMissing ? fuelUnavailable : {
-      w: landingCalc.totalWeight,
-      cg: landingCalc.cg,
-      fuel: landingFuelKg || 0,
-      items: landingItems,
-      // FIX H : dérivation explicite du carburant restant à l'atterrissage (affichage vérifiable).
+    fulltank: buildFuelScenario(fuelFull),
+    toCrm: buildFuelScenario(fuelFob),
+    landing: buildFuelScenario(fuelLanding, {
+      // FIX H : dérivation explicite du carburant restant à l'atterrissage (total, affichage vérifiable).
       fuelDerivation: {
         fobL: fobFuelLiters,
         burnedL: burnedFuelL,
@@ -237,7 +220,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
         remainingKg: remainingFuelKg,
         density: fuelDensity
       }
-    },
+    }),
     zfw: {
       w: zfwCalc.totalWeight,
       cg: zfwCalc.cg,
