@@ -119,36 +119,36 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   // Cela permet aux modules (Performance, etc.) d'accéder à l'avion même si le wizard
   // a été restauré depuis localStorage sans passer par Step1
   useEffect(() => {
-    if (flightPlan.aircraft?.registration && aircraftList.length > 0) {
-      const aircraftFromStore = aircraftList.find(ac => ac.registration === flightPlan.aircraft.registration);
+    if (!flightPlan.aircraft?.registration || aircraftList.length === 0) return;
 
-      if (aircraftFromStore) {
-        // 🔧 IMPORTANT: Fusionner l'avion du store avec celui du flightPlan
-        // L'avion du flightPlan contient potentiellement weightBalance/arms/etc. qui ne sont pas dans le store
-        // L'avion du store contient les dernières données techniques
-        const mergedAircraft = {
-          ...aircraftFromStore, // Données du store (base)
-          ...flightPlan.aircraft, // Données du flightPlan (priorité)
-          // S'assurer que les propriétés essentielles ne sont pas écrasées par undefined
-          registration: flightPlan.aircraft.registration,
-        };
+    // ⛔ ANTI-BOUCLE INFINIE (étape 7 Performances) : si l'avion déjà sélectionné
+    // correspond à celui du plan de vol, NE PAS ré-appliquer. Sinon
+    // setSelectedAircraft (nouvel objet à chaque run) + flightPlan.updateAircraft
+    // (qui force un re-render) re-déclenchent cet effet via une dépendance instable
+    // (setSelectedAircraft / aircraftList recréés à chaque rendu) → le wizard se
+    // remonte en boucle. Le garde rend l'effet idempotent.
+    if (selectedAircraft?.registration === flightPlan.aircraft.registration) return;
 
-        console.log('🔄 [Wizard] Restauration de l\'avion (fusionné):', mergedAircraft.registration);
-        console.log('🔍 [Wizard] weightBalance présent?', !!mergedAircraft.weightBalance);
-        console.log('🔍 [Wizard] arms présent?', !!mergedAircraft.arms);
+    const aircraftFromStore = aircraftList.find(ac => ac.registration === flightPlan.aircraft.registration);
 
-        setSelectedAircraft(mergedAircraft);
-
-        // 🔧 AUSSI mettre à jour flightPlan.aircraft avec l'avion fusionné
-        flightPlan.updateAircraft(mergedAircraft);
-      } else {
-        console.warn('⚠️ [Wizard] Avion non trouvé dans aircraftList:', flightPlan.aircraft.registration);
-        // Même si l'avion n'est pas dans le store, utiliser celui du flightPlan
-        console.log('ℹ️ [Wizard] Utilisation de l\'avion depuis flightPlan');
-        setSelectedAircraft(flightPlan.aircraft);
-      }
+    if (aircraftFromStore) {
+      // 🔧 Fusionner l'avion du store (dernières données techniques) avec celui du
+      // flightPlan (weightBalance/arms/etc.). La registration reste prioritaire.
+      const mergedAircraft = {
+        ...aircraftFromStore,
+        ...flightPlan.aircraft,
+        registration: flightPlan.aircraft.registration,
+      };
+      console.log('🔄 [Wizard] Restauration de l\'avion (fusionné):', mergedAircraft.registration);
+      setSelectedAircraft(mergedAircraft);
+      flightPlan.updateAircraft(mergedAircraft);
+    } else {
+      console.warn('⚠️ [Wizard] Avion non trouvé dans aircraftList:', flightPlan.aircraft.registration);
+      setSelectedAircraft(flightPlan.aircraft);
     }
-  }, [flightPlan.aircraft?.registration, aircraftList, setSelectedAircraft, flightPlan]);
+    // `flightPlan` est une instance STABLE (useState) ; `setSelectedAircraft` est
+    // VOLONTAIREMENT hors deps (potentiellement recréé à chaque rendu → reboucle).
+  }, [flightPlan.aircraft?.registration, aircraftList, selectedAircraft?.registration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 🔧 NOUVEAU : Restaurer TOUS les contextes au montage depuis flightPlan
   useEffect(() => {
