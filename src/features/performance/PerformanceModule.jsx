@@ -61,9 +61,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const loadWeather = async () => {
       const icaosToLoad = [];
 
+      // 🔧 FIX boucle infinie : on lit le store météo EN DIRECT (getState) au
+      // lieu de passer par `weatherData` dans les deps de l'effet. Sinon
+      // fetchWeather met à jour weatherData → l'effet se redéclenche → boucle
+      // sans fin (d'autant plus que le METAR revient `undefined`, donc le
+      // garde-fou `!metar` reste toujours vrai).
+      const currentWeather = useWeatherStore.getState().weatherData || {};
+
       // Vérifier si météo départ existe et est valide
       if (departureIcao) {
-        const depWeather = weatherData[departureIcao];
+        const depWeather = currentWeather[departureIcao];
 
         // Charger si pas de METAR ou météo trop ancienne (> 30 min)
         if (!depWeather?.metar || (Date.now() - (depWeather.timestamp || 0) > 30 * 60 * 1000)) {
@@ -74,7 +81,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
       // Vérifier si météo arrivée existe et est valide
       if (arrivalIcao && arrivalIcao !== departureIcao) {
-        const arrWeather = weatherData[arrivalIcao];
+        const arrWeather = currentWeather[arrivalIcao];
 
         if (!arrWeather?.metar || (Date.now() - (arrWeather.timestamp || 0) > 30 * 60 * 1000)) {
           icaosToLoad.push(arrivalIcao);
@@ -87,7 +94,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         selectedAlternates.forEach(alternate => {
           if (alternate.icao) {
             const altIcao = alternate.icao.toUpperCase();
-            const altWeather = weatherData[altIcao];
+            const altWeather = currentWeather[altIcao];
 
             if (!altWeather?.metar || (Date.now() - (altWeather.timestamp || 0) > 30 * 60 * 1000)) {
               icaosToLoad.push(altIcao);
@@ -105,7 +112,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     };
 
     loadWeather();
-  }, [departureIcao, arrivalIcao, selectedAlternates, fetchWeather, weatherData]);
+    // ⚠️ `weatherData` VOLONTAIREMENT absent des deps : l'effet le PRODUIT
+    // (via fetchWeather) ; l'inclure créait une boucle de rendu infinie.
+    // La fraîcheur est vérifiée en direct via useWeatherStore.getState().
+  }, [departureIcao, arrivalIcao, selectedAlternates, fetchWeather]);
 
   // 🔧 Charger les performanceTables depuis IndexedDB quand l'avion change
   useEffect(() => {
