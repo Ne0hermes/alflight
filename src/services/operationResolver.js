@@ -381,6 +381,23 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     ? `Moteur atelier — cascade ${cascade.steps.length} graphes (chaîne de l'atelier)`
     : 'Moteur atelier — graphe unique';
   const warnings = Array.isArray(cascade.warnings) ? [...cascade.warnings] : [];
+  // Unité réellement DÉCLARÉE par l'abaque : axe Y du dernier graphe (remontée
+  // par l'adaptateur) ou outputUnit du primaire. Le repli sur le défaut du
+  // catalogue n'est PAS une déclaration de l'abaque.
+  const abacDeclaredUnit = cascade.outputUnit || graph.outputUnit || null;
+  const unit = abacDeclaredUnit || opDef.acceptedOutputs[0]?.defaultUnit || '';
+  // ── K2 (AUDIT_CONVERSION_PERF_VOL.md) — GARDE D'UNITÉ ──
+  // Ne jamais faire passer le défaut catalogue pour une vérité : une opération
+  // « distance » dont l'abaque ne déclare AUCUNE unité est FLAGUÉE (au lieu de
+  // retomber silencieusement sur « m »). Le warning dégrade aussi la confiance
+  // et signale à l'UI une étiquette d'unité non fiable (conversion d'affichage
+  // potentiellement trompeuse).
+  if (outputKind === 'distance' && !abacDeclaredUnit) {
+    warnings.push(
+      `⚠ Unité non déclarée par l'abaque — valeur affichée en « ${unit} » par ` +
+      `défaut (catalogue). Déclarez l'unité de l'axe Y du modèle pour une conversion fiable.`
+    );
+  }
   // Même moteur que le banc de référence de l'atelier : confiance élevée,
   // dégradée si des guides ont été prolongés/extrapolés hors tracé.
   const finalConfidence = warnings.length > 0 ? '85%' : '95%';
@@ -391,7 +408,7 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     operationLabel: opDef.labelFr,
     status: ResultStatus.COMPUTED,
     value: finalValue,
-    unit: cascade.outputUnit || graph.outputUnit || opDef.acceptedOutputs[0]?.defaultUnit || '',
+    unit,
     outputKind,
     source: {
       kind: 'abac',
