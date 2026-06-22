@@ -16,6 +16,8 @@ import React, { useMemo, useState } from 'react';
 import { generatePerformanceState, ResultStatus } from '../../../services/operationResolver';
 import { OPERATION_CATALOG, isLegacyOperation } from '../../../abac/curves/core/operationCatalog';
 import { applySafetyFactor, isDistanceOperation, DEFAULT_SAFETY_FACTOR } from '../../../utils/performanceSafetyFactor';
+import { useUnitsStore } from '../../../core/stores/unitsStore';
+import { convertValue, getUnitSymbol } from '../../../utils/unitConversions';
 
 const PHASE_ICONS = {
   takeoff:  '🛫',
@@ -65,6 +67,10 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
   const [expandedOp, setExpandedOp] = useState(null);
   // Repli de la matrice. null = défaut intelligent (replié si tout est non-implémenté).
   const [collapsed, setCollapsed] = useState(null);
+  // Préférence pilote pour les distances de perf — décision pilote 2026-06-22 :
+  // les distances décollage/atterrissage suivent la préférence « piste » (runway,
+  // m/ft). Stockage natif, conversion UNIQUEMENT à l'affichage (cf. toPilotDistance).
+  const runwayUnit = useUnitsStore(s => s.units.runway);
 
   // Matrices de couverture (décollage / atterrissage) : on RETIRE les opérations
   // héritées « volets non précisés » (takeoff_ground_roll, takeoff_50ft). Elles
@@ -209,17 +215,29 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                       {(() => {
                         const isDist = isDistanceOperation(op.id);
                         const factorApplies = isDist && safetyFactor && safetyFactor.value > 1;
-                        const displayedValue = factorApplies
+                        const rawAfterFactor = factorApplies
                           ? applySafetyFactor(result.value, op.id, safetyFactor.value)
                           : result.value;
+                        // Distances → préférence pilote (piste). Autres sorties
+                        // (vitesse, taux de montée…) : on garde l'unité native.
+                        const disp = isDist
+                          ? toPilotDistance(rawAfterFactor, result.unit, runwayUnit)
+                          : { value: rawAfterFactor, unit: result.unit, converted: false };
+                        const brut = isDist ? toPilotDistance(result.value, result.unit, runwayUnit) : { value: result.value };
                         return (
                           <>
                             <div style={{ fontSize: 16, fontWeight: 700 }}>
-                              {formatValue(displayedValue)} <span style={{ fontSize: 12, fontWeight: 500 }}>{result.unit}</span>
+                              {formatValue(disp.value)} <span style={{ fontSize: 12, fontWeight: 500 }}>{getUnitSymbol(disp.unit) || disp.unit}</span>
                             </div>
+                            {/* Valeur native de l'abaque (transparence) quand on a converti. */}
+                            {disp.converted && (
+                              <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 1 }}>
+                                abaque : {formatValue(disp.native)} {getUnitSymbol(disp.nativeUnit) || disp.nativeUnit}
+                              </div>
+                            )}
                             {factorApplies && (
                               <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 1, fontStyle: 'italic' }}>
-                                brut : {formatValue(result.value)} × {safetyFactor.value}
+                                brut : {formatValue(brut.value)} × {safetyFactor.value}
                               </div>
                             )}
                           </>
@@ -489,6 +507,28 @@ function formatValue(v) {
   if (Math.abs(v) >= 100) return v.toFixed(0);
   if (Math.abs(v) >= 10)  return v.toFixed(1);
   return v.toFixed(2);
+}
+
+/**
+ * Convertit une distance de perf de son unité NATIVE (celle de l'abaque) vers
+ * l'unité préférée du pilote (catégorie 'runway' : m/ft). Décision pilote
+ * 2026-06-22 : stockage natif, conversion UNIQUEMENT à l'affichage.
+ *
+ * Garde-fou : si l'unité native n'est ni 'm' ni 'ft' (inconnue/absente), on
+ * N'invente PAS de conversion — on garde la valeur native telle quelle, jamais
+ * une fausse étiquette (le bug F-GNAM venait d'une étiquette fausse).
+ *
+ * @returns {{ value, unit, converted, native?, nativeUnit? }}
+ */
+function toPilotDistance(value, nativeUnit, prefUnit) {
+  const u = (nativeUnit || '').toString().toLowerCase();
+  if (!Number.isFinite(value) || (u !== 'm' && u !== 'ft')) {
+    return { value, unit: nativeUnit, converted: false };
+  }
+  if (u === prefUnit) return { value, unit: u, converted: false };
+  const conv = convertValue(value, u, prefUnit, 'runway');
+  if (!Number.isFinite(conv)) return { value, unit: nativeUnit, converted: false };
+  return { value: conv, unit: prefUnit, converted: true, native: value, nativeUnit: u };
 }
 
 export default PerformanceStateMatrix;
