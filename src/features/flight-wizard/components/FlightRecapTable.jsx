@@ -8,16 +8,17 @@ import { normalizeElevationToFeet } from '@utils/elevationUtils';
    Ce composant est la SOURCE du PDF de plan de vol : il est capturé À L'ÉCRAN
    par html2canvas (FlightPlanWizard), donc le rendu doit rester CLAIR
    (fond blanc, texte sombre) INDÉPENDAMMENT du thème sombre de l'app.
-   var(--text-*) donnerait de l'ivoire invisible sur blanc → les couleurs
-   d'impression sont volontairement hardcodées et centralisées dans PRINT.
-   Charte respectée : accent = orange ALFlight, rouge = #C04534 (NO-GO). */
+   SUPERSEDED : html2canvas force data-theme="day-cockpit" (thème CLAIR) avant
+   la capture, donc les var(--*) canoniques résolvent SOMBRE à l'écran et CLAIR
+   dans le PDF automatiquement. Les couleurs sont désormais des var(--*).
+   Charte respectée : accent = orange ALFlight, rouge = NO-GO (var canonique). */
 
 // Palette d'IMPRESSION (feuille PDF) — source unique des couleurs de ce composant.
 const PRINT = {
-  accent: '#f26921',   // accent ALFlight — remplace les bleu/vert/violet/ambre décoratifs
-  accentBg: '#fff3ec', // tint orange clair — remplace les fonds pastel bleu/vert/violet
-  ok: '#059669',       // vert OK FONCTIONNEL (adéquation piste/perf) — sécurité, conservé
-  nogo: '#c04534',     // rouge NO-GO / dépassement de limite (charte) — hardcodé (artefact PDF)
+  accent: 'var(--accent-primary)',
+  accentBg: 'var(--accent-soft)',
+  ok: '#059669',   // vert GO/NO-GO sécurité — exception délibérée (couverte par l'eslint-disable du fichier)
+  nogo: 'var(--color-red-critical)',
 };
 
 /**
@@ -127,15 +128,15 @@ export const FlightRecapTable = ({
       <div style={{
         marginBottom: '12px',
         pageBreakInside: 'avoid',
-        border: '2px solid #e5e7eb',
+        border: '2px solid var(--border-subtle)',
         borderRadius: '8px',
         overflow: 'hidden',
-        backgroundColor: 'white'
+        backgroundColor: 'var(--bg-surface)'
       }}>
         {/* En-tête aérodrome */}
         <div style={{
           backgroundColor: titleColor,
-          color: 'white',
+          color: 'var(--color-white-soft)',
           padding: '6px 10px',
           fontWeight: '700',
           fontSize: '12px',
@@ -155,30 +156,30 @@ export const FlightRecapTable = ({
             gap: '6px',
             marginBottom: '8px',
             fontSize: '9px',
-            backgroundColor: '#f9fafb',
+            backgroundColor: 'var(--bg-overlay)',
             padding: '6px',
             borderRadius: '4px'
           }}>
             {/* ATIS */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>ATIS:</span>
-              <span style={{ fontWeight: '700', color: atisFreq ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>ATIS:</span>
+              <span style={{ fontWeight: '700', color: atisFreq ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {atisFreq ? `${atisFreq} MHz` : 'N/A'}
               </span>
             </div>
 
             {/* Tel tours */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>Tel tours:</span>
-              <span style={{ fontWeight: '700', color: phone ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Tel tours:</span>
+              <span style={{ fontWeight: '700', color: phone ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {phone || 'N/A'}
               </span>
             </div>
 
             {/* Freq Utile */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>Freq Utile:</span>
-              <span style={{ fontWeight: '600', color: '#111827', fontSize: '8px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Freq Utile:</span>
+              <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '8px' }}>
                 {[
                   twrFreq ? `TWR: ${twrFreq}` : null,
                   afisFreq ? `AFIS: ${afisFreq}` : null,
@@ -190,32 +191,32 @@ export const FlightRecapTable = ({
 
             {/* Altitude (terrain - élévation) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>Altitude:</span>
-              <span style={{ fontWeight: '700', color: elevation ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Altitude:</span>
+              <span style={{ fontWeight: '700', color: elevation ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {elevation ? `${Math.round(elevation)} ft` : 'N/A'}
               </span>
             </div>
 
             {/* TdP (Tour de piste - altitude AMSL) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>TdP:</span>
-              <span style={{ fontWeight: '700', color: tdpAlt ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>TdP:</span>
+              <span style={{ fontWeight: '700', color: tdpAlt ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {tdpAlt && elevation ? `${Math.round(elevation + tdpAlt)} ft` : 'N/A'}
               </span>
             </div>
 
             {/* Alt Sec (Altitude de sécurité = Alt + 300ft) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>Alt Sec:</span>
-              <span style={{ fontWeight: '700', color: altSec ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Alt Sec:</span>
+              <span style={{ fontWeight: '700', color: altSec ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {altSec ? `${Math.round(altSec)} ft` : 'N/A'}
               </span>
             </div>
 
             {/* Vert T (Vertical Terrain - altitude AMSL) */}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280', fontWeight: '600' }}>Vert T:</span>
-              <span style={{ fontWeight: '700', color: vertT ? '#111827' : '#9ca3af' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Vert T:</span>
+              <span style={{ fontWeight: '700', color: vertT ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                 {vertT && elevation ? `${Math.round(elevation + vertT)} ft` : 'N/A'}
               </span>
             </div>
@@ -242,19 +243,19 @@ export const FlightRecapTable = ({
 
               return (
                 <div key={idx} style={{
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-regular)',
                   borderRadius: '4px',
                   overflow: 'hidden',
-                  backgroundColor: '#fefefe'
+                  backgroundColor: 'var(--bg-surface)'
                 }}>
                   {/* En-tête piste */}
                   <div style={{
-                    backgroundColor: '#e5e7eb',
+                    backgroundColor: 'var(--bg-raised)',
                     padding: '4px 6px',
-                    borderBottom: '1px solid #d1d5db',
+                    borderBottom: '1px solid var(--border-regular)',
                     fontWeight: '700',
                     fontSize: '10px',
-                    color: '#111827',
+                    color: 'var(--text-primary)',
                     textAlign: 'center'
                   }}>
                     {qfu}
@@ -264,49 +265,49 @@ export const FlightRecapTable = ({
                   <div style={{ padding: '6px', fontSize: '9px' }}>
                     {/* QFU (degré exact) */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>QFU:</span>
-                      <span style={{ fontWeight: '700', color: qfuDegrees !== 'N/A' ? '#111827' : '#9ca3af' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>QFU:</span>
+                      <span style={{ fontWeight: '700', color: qfuDegrees !== 'N/A' ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
                         {qfuDegrees}
                       </span>
                     </div>
 
                     {/* ILS */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>ILS:</span>
-                      <span style={{ fontWeight: '600', color: ilsDisplay === 'N/A' ? '#9ca3af' : '#111827', fontSize: '8px' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>ILS:</span>
+                      <span style={{ fontWeight: '600', color: ilsDisplay === 'N/A' ? 'var(--text-tertiary)' : 'var(--text-primary)', fontSize: '8px' }}>
                         {ilsDisplay}
                       </span>
                     </div>
 
                     {/* TODA */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>TODA:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>{toda}m</span>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>TODA:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{toda}m</span>
                     </div>
 
                     {/* TORA - Affiché ici uniquement pour ARRIVÉE */}
                     {type === 'arrival' && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                        <span style={{ color: '#6b7280', fontWeight: '600' }}>TORA:</span>
-                        <span style={{ fontWeight: '700', color: '#111827' }}>{tora}m</span>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>TORA:</span>
+                        <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{tora}m</span>
                       </div>
                     )}
 
                     {/* LDA - Affiché ici pour DÉPART et ARRIVÉE */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>LDA:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>{lda}m</span>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>LDA:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{lda}m</span>
                     </div>
 
                     {/* ASDA */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>ASDA:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>{asda}m</span>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>ASDA:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{asda}m</span>
                     </div>
 
                     {/* Séparateur avant TORA + performances */}
                     <div style={{
-                      borderTop: '2px solid #d1d5db',
+                      borderTop: '2px solid var(--border-regular)',
                       margin: '6px 0',
                       paddingTop: '6px'
                     }}>
@@ -318,8 +319,8 @@ export const FlightRecapTable = ({
                             justifyContent: 'space-between',
                             marginBottom: '3px'
                           }}>
-                            <span style={{ color: '#6b7280', fontWeight: '600' }}>TORA:</span>
-                            <span style={{ fontWeight: '700', color: '#111827' }}>{tora}m</span>
+                            <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>TORA:</span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{tora}m</span>
                           </div>
 
                           {/* Performances de décollage (abaques) */}
@@ -336,7 +337,7 @@ export const FlightRecapTable = ({
                               </div>
                               {performanceData.takeoff.abaques.map((abaque, aIdx) => (
                                 <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                  <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>{abaque.name}:</span>
                                   <span style={{
                                     fontWeight: '700',
                                     color: tora >= abaque.distance ? PRINT.ok : PRINT.nogo,
@@ -362,13 +363,13 @@ export const FlightRecapTable = ({
                                 📊 Calculé
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Roulement:</span>
-                                <span style={{ fontWeight: '700', color: '#111827', fontSize: '8px' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Roulement:</span>
+                                <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '8px' }}>
                                   {Math.round(performanceData.takeoff.groundRoll)}m
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
                                   color: tora >= performanceData.takeoff.toda50ft ? PRINT.ok : PRINT.nogo,
@@ -390,8 +391,8 @@ export const FlightRecapTable = ({
                             justifyContent: 'space-between',
                             marginBottom: '3px'
                           }}>
-                            <span style={{ color: '#6b7280', fontWeight: '600' }}>LDA:</span>
-                            <span style={{ fontWeight: '700', color: '#111827' }}>{lda}m</span>
+                            <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>LDA:</span>
+                            <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{lda}m</span>
                           </div>
 
                           {/* Performances d'atterrissage (abaques) */}
@@ -408,7 +409,7 @@ export const FlightRecapTable = ({
                               </div>
                               {performanceData.landing.abaques.map((abaque, aIdx) => (
                                 <div key={aIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                  <span style={{ color: '#6b7280', fontSize: '8px' }}>{abaque.name}:</span>
+                                  <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>{abaque.name}:</span>
                                   <span style={{
                                     fontWeight: '700',
                                     color: lda >= abaque.distance ? PRINT.ok : PRINT.nogo,
@@ -434,13 +435,13 @@ export const FlightRecapTable = ({
                                 📊 Calculé
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Roulement:</span>
-                                <span style={{ fontWeight: '700', color: '#111827', fontSize: '8px' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Roulement:</span>
+                                <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '8px' }}>
                                   {Math.round(performanceData.landing.groundRoll)}m
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                                <span style={{ color: '#6b7280', fontSize: '8px' }}>Passage 50ft:</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
                                   color: lda >= performanceData.landing.lda50ft ? PRINT.ok : PRINT.nogo,
@@ -477,15 +478,15 @@ export const FlightRecapTable = ({
       <div style={{
         marginBottom: '12px',
         pageBreakInside: 'avoid',
-        border: '2px solid #e5e7eb',
+        border: '2px solid var(--border-subtle)',
         borderRadius: '8px',
         overflow: 'hidden',
-        backgroundColor: 'white'
+        backgroundColor: 'var(--bg-surface)'
       }}>
         {/* En-tête tableau navigation - style identique aux aérodromes */}
         <div style={{
           backgroundColor: PRINT.accent,
-          color: 'white',
+          color: 'var(--color-white-soft)',
           padding: '6px 10px',
           fontWeight: '700',
           fontSize: '12px',
@@ -511,20 +512,20 @@ export const FlightRecapTable = ({
               padding: 4px 6px !important;
               font-size: 9px !important;
               font-weight: 600 !important;
-              background-color: #f9fafb !important;
-              border-bottom: 1px solid #d1d5db !important;
-              color: #6b7280 !important;
+              background-color: var(--bg-overlay) !important;
+              border-bottom: 1px solid var(--border-regular) !important;
+              color: var(--text-secondary) !important;
             }
             .vfr-table-pdf-style td {
               padding: 3px 6px !important;
               font-size: 9px !important;
-              border-bottom: 1px solid #e5e7eb !important;
+              border-bottom: 1px solid var(--border-subtle) !important;
             }
             .vfr-table-pdf-style tr:nth-child(even) {
-              background-color: #f9fafb !important;
+              background-color: var(--bg-overlay) !important;
             }
             .vfr-table-pdf-style tr:nth-child(odd) {
-              background-color: white !important;
+              background-color: var(--bg-surface) !important;
             }
             .vfr-table-pdf-style .total-row {
               background-color: ${PRINT.accentBg} !important;
@@ -594,7 +595,7 @@ export const FlightRecapTable = ({
       `}</style>
 
       <div className="flight-recap-table-container" style={{
-        backgroundColor: 'white',
+        backgroundColor: 'var(--bg-surface)',
         padding: '8px',
         borderRadius: '8px',
         border: `2px solid ${theme.colors.primary}`,
@@ -669,11 +670,11 @@ export const FlightRecapTable = ({
               border: `2px solid ${PRINT.accent}`,
               borderRadius: '8px',
               overflow: 'hidden',
-              backgroundColor: 'white'
+              backgroundColor: 'var(--bg-surface)'
             }}>
               <div style={{
                 backgroundColor: PRINT.accent,
-                color: 'white',
+                color: 'var(--color-white-soft)',
                 padding: '6px 10px',
                 fontWeight: '700',
                 fontSize: '12px',
@@ -695,7 +696,7 @@ export const FlightRecapTable = ({
                 }}>
                   {/* Label + Input temps de départ */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#6b7280', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontWeight: '600', whiteSpace: 'nowrap' }}>
                       ⏰ Départ théorique:
                     </span>
                     <input
@@ -708,7 +709,7 @@ export const FlightRecapTable = ({
                         borderRadius: '3px',
                         fontSize: '9px',
                         fontWeight: '600',
-                        backgroundColor: 'white',
+                        backgroundColor: 'var(--bg-surface)',
                         width: '70px'
                       }}
                     />
@@ -720,7 +721,7 @@ export const FlightRecapTable = ({
                       display: 'flex',
                       gap: '8px',
                       fontSize: '8px',
-                      color: '#78350f',
+                      color: 'var(--text-primary)',
                       backgroundColor: 'rgba(242, 105, 33, 0.10)',
                       padding: '3px 8px',
                       borderRadius: '3px',
@@ -750,15 +751,15 @@ export const FlightRecapTable = ({
               <div style={{
                 marginBottom: '12px',
                 pageBreakInside: 'avoid',
-                border: '2px solid #e5e7eb',
+                border: '2px solid var(--border-subtle)',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                backgroundColor: 'white'
+                backgroundColor: 'var(--bg-surface)'
               }}>
                 {/* En-tête TOD */}
                 <div style={{
                   backgroundColor: PRINT.accent,
-                  color: 'white',
+                  color: 'var(--color-white-soft)',
                   padding: '6px 10px',
                   fontWeight: '700',
                   fontSize: '12px',
@@ -773,7 +774,7 @@ export const FlightRecapTable = ({
                 <div style={{ padding: '8px' }}>
                   {/* Input modifiable pour le taux de descente */}
                   <div style={{ marginBottom: '8px' }}>
-                    <label style={{ fontSize: '9px', color: '#6b7280', display: 'block', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '9px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
                       Taux de descente (ft/min)
                     </label>
                     <input
@@ -784,9 +785,9 @@ export const FlightRecapTable = ({
                         width: '100%',
                         padding: '4px 6px',
                         fontSize: '9px',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: '4px',
-                        backgroundColor: 'white'
+                        backgroundColor: 'var(--bg-surface)'
                       }}
                     />
                   </div>
@@ -796,54 +797,54 @@ export const FlightRecapTable = ({
                     gridTemplateColumns: '1fr 1fr',
                     gap: '6px',
                     fontSize: '9px',
-                    backgroundColor: '#f9fafb',
+                    backgroundColor: 'var(--bg-overlay)',
                     padding: '6px',
                     borderRadius: '4px'
                   }}>
                     {/* Distance TOD */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Distance TOD:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Distance TOD:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.distanceToTod} NM
                       </span>
                     </div>
 
                     {/* Descente totale */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Descente:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Descente:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.altitudeToDescent} ft
                       </span>
                     </div>
 
                     {/* Taux descente */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Taux:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Taux:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.descentRate} ft/min
                       </span>
                     </div>
 
                     {/* Temps descente */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Temps:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Temps:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.descentTime} min
                       </span>
                     </div>
 
                     {/* Altitude croisière */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Alt. croisière:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Alt. croisière:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.cruiseAltitude} ft
                       </span>
                     </div>
 
                     {/* Altitude pattern */}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#6b7280', fontWeight: '600' }}>Alt. pattern:</span>
-                      <span style={{ fontWeight: '700', color: '#111827' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>Alt. pattern:</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
                         {todCalculation.patternAltitude} ft
                       </span>
                     </div>
@@ -874,20 +875,20 @@ export const FlightRecapTable = ({
                 gap: '8px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>B. On:</span>
-                  <span style={{ borderBottom: '1px solid #9ca3af', flex: 1 }}>&nbsp;</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. On:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>T/O B.:</span>
-                  <span style={{ borderBottom: '1px solid #9ca3af', flex: 1 }}>&nbsp;</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>T/O B.:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>LDG B.:</span>
-                  <span style={{ borderBottom: '1px solid #9ca3af', flex: 1 }}>&nbsp;</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>LDG B.:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: '#6b7280', whiteSpace: 'nowrap' }}>B. OFF:</span>
-                  <span style={{ borderBottom: '1px solid #9ca3af', flex: 1 }}>&nbsp;</span>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. OFF:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
                 </div>
               </div>
             </div>
@@ -920,7 +921,7 @@ export const FlightRecapTable = ({
                   fontFamily: 'inherit',
                   resize: 'vertical',
                   backgroundColor: PRINT.accentBg,
-                  color: '#1e293b',
+                  color: 'var(--text-primary)',
                   lineHeight: '1.5'
                 }}
               />
