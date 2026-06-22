@@ -238,6 +238,42 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
   }
   const opDef = getOperation(operationId);
 
+  // ── 1b. VENT VARIABLE (direction indéterminée, magnitude connue) ──
+  // Décision pilote 2026-06-22 : un vent « Variable » (METAR VRBxxKT) n'est ni
+  // de face ni arrière. Pour une opération DISTANCE, on retourne la MOYENNE des
+  // distances « vent de face » et « vent arrière » à la même magnitude. On
+  // calcule les deux (récursivement, drapeau baissé pour éviter la récursion
+  // infinie) puis on moyenne. Si l'un des deux n'aboutit pas (ex. abaque sans
+  // courbes arrière), on retombe sur le calcul normal (vent neutre fourni en
+  // entrée — historiquement 0/conservateur).
+  const windMag = Number(inputs.windMagnitude);
+  const isDistanceOp = (opDef?.acceptedOutputs?.[0]?.kind) === 'distance';
+  if (inputs.windVariable && isDistanceOp && Number.isFinite(windMag) && windMag > 0) {
+    const head = resolveOperation(aircraft, operationId, {
+      ...inputs, windVariable: false, windMagnitude: undefined,
+      windComponent: windMag, headwind: windMag, tailwind: -windMag
+    });
+    const tail = resolveOperation(aircraft, operationId, {
+      ...inputs, windVariable: false, windMagnitude: undefined,
+      windComponent: -windMag, headwind: -windMag, tailwind: windMag
+    });
+    if (head.status === ResultStatus.COMPUTED && tail.status === ResultStatus.COMPUTED &&
+        Number.isFinite(head.value) && Number.isFinite(tail.value)) {
+      const r0 = (x) => (Math.abs(x) >= 100 ? Math.round(x) : Math.round(x * 10) / 10);
+      return {
+        ...head,                 // unité, source, outputKind, inputs… (calcul « face »)
+        value: (head.value + tail.value) / 2,
+        windAveraged: true,      // l'UI signale « moyenne face/arrière »
+        warnings: [
+          ...(head.warnings || []),
+          `🪁 Vent variable ${r0(windMag)} kt : distance = moyenne face/arrière ` +
+          `(face ${r0(head.value)} / arrière ${r0(tail.value)} ${head.unit || ''}).`
+        ]
+      };
+    }
+    // sinon : on laisse le flux normal calculer (vent neutre des inputs).
+  }
+
   // ── 2. Recherche des sources de données portant cet operationId ──
   // Priorité d'évaluation : abaque > tableau (P1 — branchement tableaux).
   // Le pilote n'a normalement qu'UNE source par operationId (abaque OU tableau,

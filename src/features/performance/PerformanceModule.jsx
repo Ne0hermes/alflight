@@ -482,6 +482,13 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // Vitesse brute du vent — AFFICHAGE seulement (jamais utilisée pour la perf).
   const takeoffWindSpeed = departureWeather?.metar?.decoded?.wind?.speed ?? 0;
   const landingWindSpeed = arrivalWeather?.metar?.decoded?.wind?.speed ?? 0;
+  // Vent VARIABLE (METAR VRBxxKT) : direction indéterminée mais magnitude connue
+  // (≠ calme, où la vitesse = 0). Décision pilote 2026-06-22 : pour ces cas la
+  // perf renvoie la MOYENNE des distances vent de face et vent arrière à la
+  // magnitude (cf. resolveOperation windVariable). Détecté ici, transmis à la
+  // matrice via windVariable + windMagnitude.
+  const takeoffWindVariable = departureWeather?.metar?.decoded?.wind?.direction === 'Variable' && takeoffWindSpeed > 0;
+  const landingWindVariable = arrivalWeather?.metar?.decoded?.wind?.direction === 'Variable' && landingWindSpeed > 0;
 
   // Pour les inputs de la matrice : on injecte la composante SIGNÉE.
   // Le résolveur d'abaque détectera le signe pour filtrer les courbes
@@ -494,6 +501,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     headwind: takeoffWindComponent,           // signé : >0 face, <0 arrière
     windComponent: takeoffWindComponent,      // signé
     tailwind: -takeoffWindComponent,          // signe inversé (cohérent avec headwind)
+    windVariable: takeoffWindVariable,        // vent variable ⇒ moyenne face/arrière
+    windMagnitude: takeoffWindVariable ? takeoffWindSpeed : undefined,
     runwaySlope: 0
   };
   const landingInputsForMatrix = {
@@ -504,6 +513,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     headwind: landingWindComponent,
     windComponent: landingWindComponent,
     tailwind: -landingWindComponent,
+    windVariable: landingWindVariable,
+    windMagnitude: landingWindVariable ? landingWindSpeed : undefined,
     runwaySlope: 0
   };
   // Helpers par phase : on les rend séparément pour les regrouper dans chaque section.
@@ -800,10 +811,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               {takeoffWindSpeed} kt
               {departureWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
-                  / {departureWeather.metar.decoded.wind.direction}°
+                  / {departureWeather.metar.decoded.wind.direction}{typeof departureWeather.metar.decoded.wind.direction === 'number' ? '°' : ''}
                 </span>
               )}
             </p>
+            {/* Vent variable : la distance affichée est la moyenne face/arrière. */}
+            {takeoffWindVariable && (
+              <p style={{ fontSize: 11, color: 'var(--accent-primary)', margin: '2px 0 0 0', fontStyle: 'italic' }}>
+                (Calcul des distances : moyenne des vents arrière et de face)
+              </p>
+            )}
             {departureRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 Piste <strong>{departureRunwayWind.bestRunway.ident}</strong> :{' '}
@@ -900,10 +917,16 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               {landingWindSpeed} kt
               {arrivalWeather?.metar?.decoded?.wind?.direction !== undefined && (
                 <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 4, fontWeight: 500 }}>
-                  / {arrivalWeather.metar.decoded.wind.direction}°
+                  / {arrivalWeather.metar.decoded.wind.direction}{typeof arrivalWeather.metar.decoded.wind.direction === 'number' ? '°' : ''}
                 </span>
               )}
             </p>
+            {/* Vent variable : la distance affichée est la moyenne face/arrière. */}
+            {landingWindVariable && (
+              <p style={{ fontSize: 11, color: 'var(--accent-primary)', margin: '2px 0 0 0', fontStyle: 'italic' }}>
+                (Calcul des distances : moyenne des vents arrière et de face)
+              </p>
+            )}
             {arrivalRunwayWind.bestRunway && (
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '4px 0 0 0' }}>
                 Piste <strong>{arrivalRunwayWind.bestRunway.ident}</strong> :{' '}
