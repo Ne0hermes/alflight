@@ -14,7 +14,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { generatePerformanceState, ResultStatus } from '../../../services/operationResolver';
-import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
+import { OPERATION_CATALOG, isLegacyOperation } from '../../../abac/curves/core/operationCatalog';
 import { applySafetyFactor, isDistanceOperation, DEFAULT_SAFETY_FACTOR } from '../../../utils/performanceSafetyFactor';
 
 const PHASE_ICONS = {
@@ -66,10 +66,16 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
   // Repli de la matrice. null = défaut intelligent (replié si tout est non-implémenté).
   const [collapsed, setCollapsed] = useState(null);
 
-  // Filtrage par phases si fourni — on ne montre que les opérations dont la phase est dans la liste.
+  // Matrices de couverture (décollage / atterrissage) : on RETIRE les opérations
+  // héritées « volets non précisés » (takeoff_ground_roll, takeoff_50ft). Elles
+  // restent dans le catalogue pour la rétro-compat des fiches enregistrées, mais
+  // le nouveau système ne raisonne plus qu'en variantes volets — décision pilote.
+  // Puis filtrage par phases si fourni (même composant réutilisé pour le décollage
+  // et l'atterrissage via la prop `phases`).
   const filteredOps = useMemo(() => {
-    if (!Array.isArray(phases) || phases.length === 0) return OPERATION_CATALOG;
-    return OPERATION_CATALOG.filter(op => phases.includes(op.phase));
+    const base = OPERATION_CATALOG.filter(op => !isLegacyOperation(op.id));
+    if (!Array.isArray(phases) || phases.length === 0) return base;
+    return base.filter(op => phases.includes(op.phase));
   }, [phases]);
 
   // Recalcul de la couverture sur le sous-ensemble filtré.

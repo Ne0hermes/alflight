@@ -765,6 +765,20 @@ export function slopeFollowInterpolateGraph(graph, entryY, targetX, conditions =
 }
 
 /**
+ * ⛔ DÉPRÉCIÉ — NE PLUS UTILISER POUR LA PRÉPARATION DE VOL.
+ *
+ * P0 (AUDIT_MOTEUR_PERF_VOL.md, 2026-06-12) : `operationResolver` évalue
+ * désormais les abaques via `atelierCascadeAdapter` → `cascade.ts` (le moteur
+ * de l'atelier et du banc de référence). Cette fonction appliquait une
+ * convention de lecture incompatible avec les abaques multi-panneaux POH :
+ *   - primaire évalué en DERNIER (alors qu'il est l'ENTRÉE de la chaîne),
+ *   - premier intermédiaire interrogé en bracket sur la mauvaise dimension
+ *     (ex. altitude comme famille du panneau masse),
+ *   - conditions pilote écrasées par les sorties intermédiaires,
+ *   → −7363 m en COMPUTED sur le cas réel PA-28 F-GNAM.
+ * Conservée temporairement pour référence ; suppression prévue avec le reste
+ * des interpolateurs internes une fois la bascule validée en exploitation.
+ *
  * Évalue un abaque en CASCADE :
  *   - Trie les graphes intermédiaires par `cascadeOrder` (T1, T2, …),
  *     suivis du graphe primaire en dernier.
@@ -773,6 +787,7 @@ export function slopeFollowInterpolateGraph(graph, entryY, targetX, conditions =
  *   - Pour les graphes après le premier : l'output du précédent devient
  *     le nouvel X (override de la valeur de conditions sur l'axe X).
  *
+ * @deprecated Utiliser evaluateAbacWithAtelierEngine (atelierCascadeAdapter).
  * @param {object} abaqueData       Le `model.data` (AbacCurvesJSON)
  * @param {object} initialConditions {temperature, pressure_altitude, mass, wind}
  * @returns {{ steps: Array<object>, finalValue: number|null, error?: string }}

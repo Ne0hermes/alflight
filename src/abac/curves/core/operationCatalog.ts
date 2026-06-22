@@ -367,6 +367,25 @@ export function getExpectedPerformanceOperations(): OperationDefinition[] {
     .filter((op): op is OperationDefinition => !!op);
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// OPÉRATIONS HÉRITÉES (« volets non précisés ») — SSOT
+// ─────────────────────────────────────────────────────────────────────────
+// Conservées dans le catalogue pour la rétro-compat des fiches déjà
+// enregistrées (id persisté en DB — NE JAMAIS SUPPRIMER), mais EXCLUES des
+// matrices de couverture : le nouveau système ne raisonne plus qu'en variantes
+// volets (Flaps UP / TAKEOFF / LANDING). Décision pilote 2026-06-22.
+// Source unique : à réutiliser partout (matrice, couverture fiche) plutôt que
+// de redéclarer la liste (cf. LEGACY_UNSPECIFIED_FLAPS dans performanceCoverage.js).
+export const LEGACY_OPERATION_IDS: ReadonlySet<string> = new Set<OperationId>([
+  'takeoff_ground_roll',
+  'takeoff_50ft'
+]);
+
+/** Vrai si l'opération est une variante héritée (volets non précisés). */
+export function isLegacyOperation(id: string | undefined | null): boolean {
+  return !!id && LEGACY_OPERATION_IDS.has(id);
+}
+
 /** Vérifie qu'une OutputKind est admise par une opération. */
 export function isOutputKindValidFor(opId: string, kind: OutputKind): boolean {
   const op = getOperation(opId);

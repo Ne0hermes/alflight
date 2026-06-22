@@ -30,7 +30,8 @@ import {
   getOperation,
   isValidOperationId
 } from '../abac/curves/core/operationCatalog';
-import { inspectAbacByGraph, evaluateAbacCascade, inputsToConditions } from './abacInterpolation';
+import { inputsToConditions } from './abacInterpolation';
+import { evaluateAbacWithAtelierEngine } from './atelierCascadeAdapter';
 import { resolveOperationFromTables } from './tableInterpolationAdapter';
 
 /** Statuts possibles d'un résultat d'opération. */
@@ -320,12 +321,28 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     };
   }
 
-  const cascade = evaluateAbacCascade(abaqueData, conditions);
+  // P0 (AUDIT_MOTEUR_PERF_VOL.md) — UN SEUL MOTEUR : la préparation de vol
+  // évalue les abaques avec le moteur de l'ATELIER (cascade.ts), via
+  // l'adaptateur. L'ancien evaluateAbacCascade (abacInterpolation.js)
+  // évaluait les graphes dans le mauvais ordre et sortait des valeurs
+  // aberrantes (−7363 m en COMPUTED sur le cas réel PA-28 F-GNAM).
+  const cascade = evaluateAbacWithAtelierEngine(abaqueData, conditions);
+
+  // ── 3.4. Entrée de panneau manquante (détectée par l'adaptateur) ──
+  if (Array.isArray(cascade.missing) && cascade.missing.length > 0) {
+    return {
+      operationId,
+      operationLabel: opDef.labelFr,
+      status: ResultStatus.MISSING_INPUT,
+      missingInputs: cascade.missing,
+      reason: cascade.error || `Donnée(s) requise(s) manquante(s) : ${cascade.missing.join(', ')}.`,
+      source: { kind: 'abac', modelId: model?.id, modelName: model?.name, graphId: graph?.id, graphName: graph?.name }
+    };
+  }
 
   // ── 3.5. Détection d'erreur dans la cascade ──
-  // En mode strict (interpolationMode déclaré), une étape qui échoue produit
-  // step.error + step.used === null. On remonte cette erreur au lieu d'un
-  // faux calcul issu d'un fallback.
+  // Une étape qui échoue interrompt la chaîne : on remonte l'erreur au lieu
+  // d'un faux calcul issu d'un fallback.
   const failedStep = cascade.steps.find(s => s.used === null);
   if (failedStep || (cascade.error && cascade.finalValue === null)) {
     const errReason = failedStep
@@ -338,67 +355,44 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
       reason: errReason,
       source: { kind: 'abac', modelId: model?.id, modelName: model?.name, graphId: graph?.id, graphName: graph?.name },
       cascadeSteps: cascade.steps,
-      debug: { perGraph: inspectAbacByGraph(abaqueData, conditions, cascade.steps).graphs }
+      debug: { perGraph: [] }
     };
   }
 
   const finalValue = cascade.finalValue;
-  // Méthode = la méthode du DERNIER graphe (primaire)
-  const lastStep = cascade.steps[cascade.steps.length - 1];
-  const methodLabel = (used) => {
-    switch (used) {
-      case 'bracket':       return 'Bracket 2D';
-      case 'slope-follow':  return 'Slope-follow';
-      case 'idw':           return 'IDW 4D';
-      default:              return 'inconnu';
-    }
-  };
+  const outputKind = graph.outputKind || opDef.acceptedOutputs[0]?.kind || null;
+
+  // ── 3.6. P1 — GARDE DE PLAUSIBILITÉ (AUDIT_MOTEUR_PERF_VOL.md) ──
+  // Une distance doit être FINIE et STRICTEMENT POSITIVE. Avant cette garde,
+  // une valeur aberrante (ex. négative) partait en COMPUTED vers la matrice.
+  if (!Number.isFinite(finalValue) || (outputKind === 'distance' && finalValue <= 0)) {
+    return {
+      operationId,
+      operationLabel: opDef.labelFr,
+      status: ResultStatus.ERROR,
+      reason: `Valeur calculée implausible (${Number.isFinite(finalValue) ? `${finalValue.toFixed(1)} — une distance doit être > 0` : 'non finie'}). Vérifie la calibration des axes et des guides de l'abaque.`,
+      source: { kind: 'abac', modelId: model?.id, modelName: model?.name, graphId: graph?.id, graphName: graph?.name },
+      cascadeSteps: cascade.steps,
+      debug: { perGraph: [] }
+    };
+  }
+
   const finalMethod = cascade.steps.length > 1
-    ? `Cascade ${cascade.steps.length} graphes (final: ${methodLabel(lastStep?.used)})`
-    : methodLabel(lastStep?.used);
-  // Confidence agrégée
-  const allBracket      = cascade.steps.every(s => s.used === 'bracket');
-  const allSlopeFollow  = cascade.steps.every(s => s.used === 'slope-follow');
-  const allDeclared     = cascade.steps.every(s => s.modeDeclared && s.used !== 'idw');
-  const anyIDW          = cascade.steps.some(s => s.used === 'idw');
-  const finalConfidence = anyIDW ? '70%' : (allDeclared ? '95%' : (allBracket || allSlopeFollow) ? '90%' : '85%');
-  const bracketDetails = lastStep?.bracketResult || null;
-  const interpFallback = null;
-
-  // ── 4. Construction du résultat ──
-  const warnings = [];
-  // Avertissements d'extrapolation pour chaque maillon de la cascade
-  cascade.steps.forEach(step => {
-    const br = step.bracketResult;
-    const sr = step.slopeResult;
-    if (br?.extrapolated && br.availableFamilyValues) {
-      warnings.push(
-        br.extrapolated === 'below'
-          ? `⚠ [${step.graphName}] Extrapolation BAS : ${br.familyDim} = ${Number(br.queryFamily).toFixed(1)} est sous la courbe la plus basse (${Math.min(...br.availableFamilyValues)})`
-          : `⚠ [${step.graphName}] Extrapolation HAUT : ${br.familyDim} = ${Number(br.queryFamily).toFixed(1)} est au-delà de la courbe la plus haute (${Math.max(...br.availableFamilyValues)})`
-      );
-    }
-    if (sr?.extrapolated && sr.availableEntryYs) {
-      warnings.push(
-        sr.extrapolated === 'below'
-          ? `⚠ [${step.graphName}] Suivi de pente extrapolé BAS : Y_in = ${Number(sr.entryY).toFixed(1)} est sous la courbe la plus basse au bord gauche (${Math.min(...sr.availableEntryYs).toFixed(1)})`
-          : `⚠ [${step.graphName}] Suivi de pente extrapolé HAUT : Y_in = ${Number(sr.entryY).toFixed(1)} est au-delà de la courbe la plus haute au bord gauche (${Math.max(...sr.availableEntryYs).toFixed(1)})`
-      );
-    }
-  });
+    ? `Moteur atelier — cascade ${cascade.steps.length} graphes (chaîne de l'atelier)`
+    : 'Moteur atelier — graphe unique';
+  const warnings = Array.isArray(cascade.warnings) ? [...cascade.warnings] : [];
+  // Même moteur que le banc de référence de l'atelier : confiance élevée,
+  // dégradée si des guides ont été prolongés/extrapolés hors tracé.
+  const finalConfidence = warnings.length > 0 ? '85%' : '95%';
   const curves = Array.isArray(graph.curves) ? graph.curves : [];
-
-  // Inspection détaillée par sous-graphique (pour debug visuel comparatif avec MANEX)
-  // On passe les cascadeSteps pour que slope-follow puisse récupérer le vrai Y_in
-  const perGraphDebug = inspectAbacByGraph(abaqueData, conditions, cascade.steps);
 
   return {
     operationId,
     operationLabel: opDef.labelFr,
     status: ResultStatus.COMPUTED,
     value: finalValue,
-    unit: graph.outputUnit || opDef.acceptedOutputs[0]?.defaultUnit || '',
-    outputKind: graph.outputKind || opDef.acceptedOutputs[0]?.kind || null,
+    unit: cascade.outputUnit || graph.outputUnit || opDef.acceptedOutputs[0]?.defaultUnit || '',
+    outputKind,
     source: {
       kind: 'abac',
       modelId: model?.id,
@@ -406,7 +400,6 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
       graphId: graph?.id,
       graphName: graph?.name,
       curveCount: curves.length,
-      pointsUsed: interpFallback?.totalPoints,
       method: finalMethod
     },
     inputs: {
@@ -416,12 +409,11 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
       wind: conditions.wind
     },
     confidence: finalConfidence,
-    bracketDetails,
-    nearestPoints: interpFallback?.nearestPoints,
-    cascadeSteps: cascade.steps, // ← Phase 3.7 : chaîne d'évaluation
+    bracketDetails: null,
+    cascadeSteps: cascade.steps, // chaîne d'évaluation (contrat matrice)
     warnings,
     debug: {
-      perGraph: perGraphDebug.graphs
+      perGraph: []
     }
   };
 }
