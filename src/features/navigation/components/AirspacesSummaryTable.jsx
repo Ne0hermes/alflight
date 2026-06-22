@@ -2,6 +2,7 @@
 import React, { memo, useMemo } from 'react';
 import { AlertTriangle, Shield, Info, Radio, Plane, FileText } from 'lucide-react';
 import { useAirspaceAnalysis } from '../hooks/useAirspaceAnalysis';
+import { tokens } from '../../../shared/styles/designSystem';
 
 /**
  * Tableau récapitulatif des espaces aériens et zones traversés
@@ -92,40 +93,48 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   };
 
   const thStyle = {
-    padding: '10px 8px',
+    padding: `${tokens.spacing[3]} ${tokens.spacing[2]}`,
     textAlign: 'left',
     backgroundColor: 'var(--bg-overlay)',
     borderBottom: '2px solid var(--border-subtle)',
-    fontWeight: '600',
+    fontWeight: 600,
     color: 'var(--text-secondary)'
   };
 
   const tdStyle = {
-    padding: '8px',
+    padding: tokens.spacing[2],
     borderBottom: '1px solid var(--border-subtle)',
     verticalAlign: 'top'
   };
 
+  // Texte du badge contrastant : SOMBRE (--app-bg) sur un fond CLAIR
+  // (--text-primary/secondary/tertiary), CLAIR (--text-primary) sinon. Évite le
+  // blanc-sur-blanc (classe E) et le faible contraste (classe C/D) tout en
+  // gardant les couleurs sémantiques — 100 % tokens canoniques.
+  const badgeTextColor = (bg) =>
+    (bg === 'var(--text-primary)' || bg === 'var(--text-secondary)' || bg === 'var(--text-tertiary)')
+      ? 'var(--app-bg)' : 'var(--text-primary)';
+
   const badgeStyle = (color) => ({
     display: 'inline-block',
-    padding: '2px 8px',
+    padding: `${tokens.spacing[1]} ${tokens.spacing[2]}`,
     borderRadius: 'var(--radius-sm)',
     fontSize: 'var(--fs-caption)',
-    fontWeight: '600',
+    fontWeight: 600,
     backgroundColor: color,
-    color: 'var(--text-primary)',
-    marginRight: '4px'
+    color: badgeTextColor(color),
+    marginRight: tokens.spacing[1]
   });
 
   const sectionTitleStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: tokens.spacing[2],
     fontSize: 'var(--fs-body)',
-    fontWeight: '600',
+    fontWeight: 600,
     color: 'var(--text-primary)',
-    marginBottom: '12px',
-    marginTop: '16px'
+    marginBottom: tokens.spacing[3],
+    marginTop: tokens.spacing[4]
   };
 
   // Fonction pour formater l'altitude
@@ -137,27 +146,30 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   };
 
   // Fonction pour obtenir la couleur selon le type de zone
+  // Couleurs de badge — 100 % tokens canoniques (charte noir/blanc/orange + rouge
+  // critique). La sévérité est portée par la lettre du badge ; la couleur reste
+  // dans la palette de la charte (pas de bleu/vert/violet hors-charte).
   const getTypeColor = (type, airspaceClass) => {
-    if (['R', 'RESTRICTED'].includes(type)) return 'var(--color-red-critical)'; // Rouge
-    if (['P', 'PROHIBITED'].includes(type)) return 'var(--accent-primary)'; // Violet
-    if (['D', 'DANGER'].includes(type)) return 'var(--accent-primary)'; // Orange
-    if (['A', 'B'].includes(airspaceClass)) return 'var(--color-red-critical)'; // Rouge
-    if (['C', 'D'].includes(airspaceClass)) return 'var(--text-secondary)'; // Bleu
-    if (airspaceClass === 'E') return 'var(--text-primary)'; // Vert
-    return 'var(--text-secondary)'; // Gris
+    if (['R', 'RESTRICTED'].includes(type)) return 'var(--color-red-critical)'; // rouge critique
+    if (['P', 'PROHIBITED'].includes(type)) return 'var(--accent-primary)';     // accent orange
+    if (['D', 'DANGER'].includes(type)) return 'var(--accent-primary)';         // accent orange
+    if (['A', 'B'].includes(airspaceClass)) return 'var(--color-red-critical)'; // rouge critique
+    if (['C', 'D'].includes(airspaceClass)) return 'var(--text-secondary)';     // neutre clair
+    if (airspaceClass === 'E') return 'var(--text-primary)';                    // blanc cassé
+    return 'var(--text-secondary)';                                            // neutre par défaut
   };
 
   // Si pas de waypoints
   if (!waypoints || waypoints.length < 2) {
     return (
       <div style={{
-        padding: '20px',
+        padding: tokens.spacing[5],
         textAlign: 'center',
         color: 'var(--text-secondary)',
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)'
       }}>
-        <Plane size={24} style={{ marginBottom: '8px', opacity: 0.5 }} />
+        <Plane size={24} style={{ marginBottom: tokens.spacing[2], opacity: 0.5 }} />
         <p>Ajoutez au moins 2 waypoints pour voir les espaces aériens traversés</p>
       </div>
     );
@@ -167,11 +179,11 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   if (loading) {
     return (
       <div style={{
-        padding: '20px',
+        padding: tokens.spacing[5],
         textAlign: 'center',
         color: 'var(--text-secondary)'
       }}>
-        <div className="spinner" style={{ marginBottom: '8px' }}>Chargement...</div>
+        <div className="spinner" style={{ marginBottom: tokens.spacing[2] }}>Chargement...</div>
         <p>Analyse des espaces aériens en cours...</p>
       </div>
     );
@@ -185,16 +197,16 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
   if (!hasAnyData) {
     return (
       <div style={{
-        padding: '20px',
+        padding: tokens.spacing[5],
         textAlign: 'center',
         color: 'var(--text-primary)',
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        border: '1px solid #a7f3d0'
+        border: '1px solid var(--border-subtle)'
       }}>
-        <Shield size={24} style={{ marginBottom: '8px' }} />
-        <p style={{ fontWeight: '500' }}>Aucun espace aérien spécifique détecté à {plannedAltitude} ft</p>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: '4px' }}>
+        <Shield size={24} style={{ marginBottom: tokens.spacing[2] }} />
+        <p style={{ fontWeight: 500 }}>Aucun espace aérien spécifique détecté à {plannedAltitude} ft</p>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginTop: tokens.spacing[1] }}>
           La route est en espace aérien non contrôlé (classe G)
         </p>
       </div>
@@ -207,15 +219,15 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        padding: '12px',
+        gap: tokens.spacing[2],
+        padding: tokens.spacing[3],
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        marginBottom: '16px',
+        marginBottom: tokens.spacing[4],
         border: '1px solid var(--border-subtle)'
       }}>
         <Plane size={18} color="var(--text-secondary)" />
-        <span style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
+        <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
           Analyse à l'altitude : {plannedAltitude} ft
         </span>
       </div>
@@ -238,13 +250,13 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
             </thead>
             <tbody>
               {aggregatedData.restrictedZones.map((zone, idx) => (
-                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'white' : 'var(--bg-overlay)' }}>
+                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-overlay)' }}>
                   <td style={tdStyle}>
                     <span style={badgeStyle(getTypeColor(zone.type))}>
                       {zone.type}
                     </span>
                   </td>
-                  <td style={{ ...tdStyle, fontWeight: '500' }}>{zone.name}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500 }}>{zone.name}</td>
                   <td style={tdStyle}>
                     {formatAltitude(zone.floor, zone.ceiling, zone.floor_raw, zone.ceiling_raw)}
                   </td>
@@ -277,13 +289,13 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
             </thead>
             <tbody>
               {aggregatedData.controlledAirspaces.map((airspace, idx) => (
-                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'white' : 'var(--bg-overlay)' }}>
+                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-overlay)' }}>
                   <td style={tdStyle}>
                     <span style={badgeStyle(getTypeColor(airspace.type, airspace.class))}>
                       {airspace.class}
                     </span>
                   </td>
-                  <td style={{ ...tdStyle, fontWeight: '500' }}>{airspace.name}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500 }}>{airspace.name}</td>
                   <td style={tdStyle}>{airspace.type}</td>
                   <td style={tdStyle}>
                     {formatAltitude(airspace.floor, airspace.ceiling, airspace.floor_raw, airspace.ceiling_raw)}
@@ -291,7 +303,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                   <td style={{ ...tdStyle, fontSize: 'var(--fs-body)' }}>
                     {airspace.frequencies && airspace.frequencies.length > 0 ? (
                       airspace.frequencies.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing[1] }}>
                           <Radio size={12} color="var(--text-secondary)" />
                           <span>{f.frequency} MHz</span>
                           {f.type && <span style={{ color: 'var(--text-tertiary)' }}>({f.type})</span>}
@@ -326,7 +338,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
             </thead>
             <tbody>
               {aggregatedData.informationalAirspaces.map((airspace, idx) => (
-                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'white' : 'var(--bg-overlay)' }}>
+                <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-overlay)' }}>
                   <td style={tdStyle}>
                     <span style={{
                       ...badgeStyle('var(--text-tertiary)'),
@@ -336,7 +348,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
                       {airspace.type}
                     </span>
                   </td>
-                  <td style={{ ...tdStyle, fontWeight: '500' }}>{airspace.name}</td>
+                  <td style={{ ...tdStyle, fontWeight: 500 }}>{airspace.name}</td>
                   <td style={tdStyle}>{airspace.class || 'N/A'}</td>
                   <td style={tdStyle}>
                     {formatAltitude(airspace.floor, airspace.ceiling, airspace.floor_raw, airspace.ceiling_raw)}
@@ -350,20 +362,20 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
 
       {/* Compléments aux cartes (SUP AIP) */}
       <div style={{
-        marginTop: '16px',
-        padding: '12px',
+        marginTop: tokens.spacing[4],
+        padding: tokens.spacing[3],
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
-        border: '1px solid #f26921'
+        border: '1px solid var(--accent-primary)'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          marginBottom: '8px'
+          gap: tokens.spacing[2],
+          marginBottom: tokens.spacing[2]
         }}>
           <FileText size={18} color="var(--accent-primary)" />
-          <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
+          <span style={{ fontWeight: 600, color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
             Compléments aux cartes (SUP AIP)
           </span>
         </div>
@@ -378,7 +390,7 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
         <p style={{
           fontSize: 'var(--fs-caption)',
           color: 'var(--accent-primary)',
-          margin: '6px 0 0 0'
+          margin: `${tokens.spacing[2]} ${tokens.spacing[0]} ${tokens.spacing[0]} ${tokens.spacing[0]}`
         }}>
           Les SUP AIP et NOTAM ne sont pas encore intégrés. Consultez le site du SIA pour les informations à jour.
         </p>
@@ -386,15 +398,15 @@ const AirspacesSummaryTable = memo(({ waypoints, segmentAltitudes, plannedAltitu
 
       {/* Légende */}
       <div style={{
-        marginTop: '16px',
-        padding: '12px',
+        marginTop: tokens.spacing[4],
+        padding: tokens.spacing[3],
         backgroundColor: 'var(--bg-overlay)',
         borderRadius: 'var(--radius-sm)',
         fontSize: 'var(--fs-caption)',
         color: 'var(--text-secondary)'
       }}>
         <strong>Légende :</strong>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: tokens.spacing[3], marginTop: tokens.spacing[2] }}>
           <span><span style={badgeStyle('var(--color-red-critical)')}>R</span> Zone Réglementée</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>P</span> Zone Interdite</span>
           <span><span style={badgeStyle('var(--accent-primary)')}>D</span> Zone Dangereuse</span>
