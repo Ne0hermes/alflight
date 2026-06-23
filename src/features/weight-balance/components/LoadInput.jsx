@@ -1,41 +1,45 @@
 // src/features/weight-balance/components/LoadInput.jsx
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
+import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
 
 export const LoadInput = memo(({ label, value, onChange, max, highlight = false }) => {
-  const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
-  const units = useUnitsWatcher(); // Force re-render on units change
-  
-  // Mémoriser l'unité actuelle pour éviter les dépendances instables
+  const { convert, getSymbol, toStorage, getUnit } = useUnits();
+  useUnitsWatcher(); // Force re-render on units change
   const currentUnit = getUnit('weight');
-  
-  // Convertir la valeur de stockage (kg) vers l'unité préférée pour l'affichage
-  const displayValue = currentUnit !== 'kg' 
-    ? convert(value || 0, 'weight', 'kg', { toUnit: currentUnit })
-    : value || 0;
-  
-  // État local pour gérer la valeur pendant la saisie
-  const [localValue, setLocalValue] = useState(displayValue?.toString() || '0');
-  
-  // Synchroniser avec la prop value quand elle change de l'extérieur ou les unités changent
-  useEffect(() => {
-    // Uniquement recalculer si nécessaire
-    const newDisplayValue = currentUnit !== 'kg' 
-      ? convert(value || 0, 'weight', 'kg', { toUnit: currentUnit })
-      : value || 0;
-    
-    // Éviter de mettre à jour si la valeur n'a pas vraiment changé
-    const newLocalValue = newDisplayValue?.toString() || '0';
-    if (newLocalValue !== localValue) {
-      console.log(`LoadInput ${label} - value/units changed, display:`, newDisplayValue);
-      setLocalValue(newLocalValue);
-    }
-  }, [value, currentUnit, convert]); // Ne pas inclure localValue et label dans les dépendances
 
-  // Vérifier si la valeur dépasse le maximum autorisé
-  const currentValue = parseFloat(localValue) || 0;
+  // Valeur de STOCKAGE (kg) → nombre dans l'unité d'AFFICHAGE (préférence pilote).
+  const toDisplayNum = (storageVal) => {
+    const v = Number(storageVal) || 0;
+    return currentUnit !== 'kg' ? convert(v, 'weight', 'kg', { toUnit: currentUnit }) : v;
+  };
+  // Texte affiché : VIDE quand 0 (placeholder « 0 »), sinon le nombre arrondi.
+  const fmt = (storageVal) => {
+    const d = toDisplayNum(storageVal);
+    if (!Number.isFinite(d) || d === 0) return '';
+    return String(Math.round(d * 1000) / 1000);
+  };
+
+  // État local = source de vérité PENDANT la saisie (tolère '', '4,', '4.').
+  const [localValue, setLocalValue] = useState(() => fmt(value));
+  const focusedRef = useRef(false);
+
+  // Synchroniser depuis la prop UNIQUEMENT hors focus ET si l'écart est RÉEL
+  // (numérique). On ne réécrit jamais la saisie en cours / un état transitoire —
+  // c'était la cause du « ça repasse à 0 / on ne peut pas éditer ».
+  useEffect(() => {
+    if (focusedRef.current) return;
+    const propNum = toDisplayNum(value);
+    const localNum = parseDecimalInput(localValue) ?? 0;
+    if (!numbersClose(propNum, localNum)) {
+      setLocalValue(fmt(value));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, currentUnit]);
+
+  const currentValue = parseDecimalInput(localValue) ?? 0;
   const exceedsMax = max && currentValue > max;
 
   const inputStyle = sx.combine(
@@ -51,33 +55,29 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
   );
 
   const handleChange = (e) => {
-    const val = e.target.value;
-    console.log(`LoadInput ${label} - input changed to:`, val);
-    setLocalValue(val);
-    
-    // Convertir vers l'unité de stockage (kg) avant de propager
-    const num = val === '' ? 0 : parseFloat(val);
-    if (!isNaN(num)) {
-      const storageValue = currentUnit !== 'kg'
-        ? toStorage(num, 'weight')
-        : num;
-      console.log(`LoadInput ${label} - calling onChange with (in kg):`, storageValue);
-      onChange(storageValue);
+    const raw = e.target.value;
+    // États transitoires tolérés ('', '4', '4,', '4.', '4,5') ; caractère
+    // invalide → on IGNORE la frappe SANS rien réinitialiser.
+    if (!DECIMAL_INPUT_RE.test(raw)) return;
+    setLocalValue(raw);
+
+    if (raw === '') {
+      // Champ vidé = 0 dans le modèle, mais l'affichage RESTE vide (éditable).
+      onChange(0);
+      return;
     }
+    const num = parseDecimalInput(raw); // '4,5' → 4.5 ; '4,' → null (transitoire)
+    if (num !== null) {
+      onChange(currentUnit !== 'kg' ? toStorage(num, 'weight') : num);
+    }
+    // num === null (ex. '4,' en cours) → on NE propage PAS, on garde la saisie.
   };
 
+  const handleFocus = () => { focusedRef.current = true; };
   const handleBlur = () => {
-    // S'assurer que la valeur finale est bien propagée
-    const finalValue = localValue === '' ? 0 : parseFloat(localValue);
-    if (!isNaN(finalValue)) {
-      const storageValue = currentUnit !== 'kg'
-        ? toStorage(finalValue, 'weight')
-        : finalValue;
-      if (storageValue !== value) {
-        console.log(`LoadInput ${label} - onBlur calling onChange with (in kg):`, storageValue);
-        onChange(storageValue);
-      }
-    }
+    focusedRef.current = false;
+    // Normalise l'affichage sur la valeur réellement stockée ('4,' → '4', etc.).
+    setLocalValue(fmt(value));
   };
 
   return (
@@ -86,14 +86,14 @@ export const LoadInput = memo(({ label, value, onChange, max, highlight = false 
         {label} {currentUnit !== 'kg' && `(${getSymbol('weight')})`}
       </label>
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         value={localValue}
         onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={handleBlur}
-        max={max}
+        placeholder="0"
         style={inputStyle}
-        step="1"
-        min="0"
       />
       {exceedsMax && (
         <div style={{

@@ -1,7 +1,8 @@
 // src/features/flight-wizard/steps/Step6WeightBalance.jsx
-import React, { memo, useMemo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useMemo, useCallback, useEffect, useState, useRef } from 'react';
 import { useAircraft, useFuel, useWeightBalance } from '@core/contexts';
 import { LoadInput } from '@features/weight-balance/components/LoadInput';
+import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
@@ -1174,18 +1175,40 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     const weight = L * density;
     const moment = Number.isFinite(arm) ? weight * arm : null;
     const exceeds = Number.isFinite(cap) && cap > 0 && L > cap;
+
+    // Saisie tolérante (virgule, suppression, états transitoires) — même correctif
+    // que LoadInput : l'état local pilote l'affichage, on ne réinitialise jamais
+    // sur une saisie incomplète. cf. utils/numericInput.
+    const fmtL = (v) => { const n = Number(v); return (!Number.isFinite(n) || n === 0) ? '' : String(n); };
+    const [rawL, setRawL] = useState(() => fmtL(liters));
+    const fuelFocusedRef = useRef(false);
+    useEffect(() => {
+      if (fuelFocusedRef.current) return;
+      if (!numbersClose(Number(liters) || 0, parseDecimalInput(rawL) ?? 0)) setRawL(fmtL(liters));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [liters]);
+    const handleLitersChange = (e) => {
+      const v = e.target.value;
+      if (!DECIMAL_INPUT_RE.test(v)) return;        // refuse l'invalide sans reset
+      setRawL(v);
+      if (v === '') { onChange(0); return; }        // vide = 0, affichage reste vide
+      const n = parseDecimalInput(v);               // '40,5' → 40.5 ; '40,' → null
+      if (n !== null) onChange(n);
+    };
+
     return (
       <div style={{ ...commonStyles.card, padding: '12px' }}>
         <label style={{ ...commonStyles.label, marginBottom: '6px' }}>
           {tank.name || 'Réservoir'}{tank.type ? ` · ${tank.type}` : ''} (L)
         </label>
         <input
-          type="number"
-          min="0"
-          step="1"
-          max={Number.isFinite(cap) ? cap : undefined}
-          value={liters ?? ''}
-          onChange={(e) => onChange(e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0))}
+          type="text"
+          inputMode="decimal"
+          value={rawL}
+          onChange={handleLitersChange}
+          onFocus={() => { fuelFocusedRef.current = true; }}
+          onBlur={() => { fuelFocusedRef.current = false; setRawL(fmtL(liters)); }}
+          placeholder="0"
           style={{
             width: '100%',
             padding: '8px 12px',
