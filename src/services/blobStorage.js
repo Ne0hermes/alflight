@@ -56,6 +56,26 @@ async function uploadDataUrl(bucket, path, dataUrl) {
   }
 }
 
+/** true si la valeur est déjà une URL Storage (https) — donc externalisée. */
+function isHttpUrl(s) {
+  return typeof s === 'string' && /^https?:\/\//.test(s);
+}
+
+/**
+ * Upload IMMÉDIAT d'un rapport de pesée (data URL base64) vers le bucket
+ * weighing-reports, au chemin stable `<immat>/<immat> - pesee.pdf` (même motif
+ * que le MANEX). À appeler dès que le pilote joint le PDF, pour que la fiche
+ * suive l'avion sur Supabase quel que soit le flux de sauvegarde — sans attendre
+ * une sauvegarde communautaire. Renvoie l'URL publique, ou null en cas d'échec
+ * (session non authentifiée, réseau…) : le caller CONSERVE alors le base64
+ * (non destructif — la fiche reste accessible en local).
+ */
+export async function uploadWeighingReportPdf(registration, dataUrl) {
+  if (!isBase64DataUrl(dataUrl)) return null;
+  const reg = slug(registration || 'aircraft');
+  return uploadDataUrl(WEIGHING_BUCKET, `${reg}/${reg} - pesee.pdf`, dataUrl);
+}
+
 /**
  * Externalise les blobs base64 d'un aircraft_data vers Storage.
  * Renvoie un NOUVEL objet aircraft_data allégé (URLs au lieu de base64).
@@ -75,7 +95,11 @@ export async function externalizeAircraftBlobs(aircraftData, { registration } = 
   // 1) Fiche de pesée (le plus gros blob)
   const wr = aircraftData.weighingReport;
   if (wr && isBase64DataUrl(wr.pdfData)) {
-    const url = await uploadDataUrl(WEIGHING_BUCKET, `${reg}/${reg} - pesee.pdf`, wr.pdfData);
+    // Déjà uploadée à l'attache (pdfUrl https présent) ? On ne ré-uploade PAS,
+    // on retire juste le base64 inline. Sinon on l'externalise maintenant.
+    const url = isHttpUrl(wr.pdfUrl)
+      ? wr.pdfUrl
+      : await uploadDataUrl(WEIGHING_BUCKET, `${reg}/${reg} - pesee.pdf`, wr.pdfData);
     if (url) {
       cloneOnce();
       // On RETIRE le base64 (pdfData) et on garde une URL + les métadonnées.

@@ -42,6 +42,7 @@ import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
+import { uploadWeighingReportPdf } from '@services/blobStorage';
 
 const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
@@ -2256,10 +2257,21 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         reader.onerror = () => reject(new Error('Lecture base64 échouée'));
                         reader.readAsDataURL(file);
                       });
+                      // Upload IMMÉDIAT vers Supabase (motif MANEX) : la fiche suit
+                      // l'avion partout, sans attendre une sauvegarde communautaire.
+                      // Non bloquant / non destructif — si l'upload échoue (réseau,
+                      // session non authentifiée), on garde le base64 en local.
+                      let pdfUrl = null;
+                      try {
+                        pdfUrl = await uploadWeighingReportPdf(data.registration, base64);
+                      } catch (upErr) {
+                        console.warn('[Step3] Upload Supabase rapport de pesée échoué (conservé en local):', upErr?.message);
+                      }
                       updateData('weighingReport', {
                         fileName: file.name,
                         fileSize: file.size,
-                        pdfData: base64,
+                        pdfData: base64,                 // accès local immédiat (hors ligne)
+                        ...(pdfUrl ? { pdfUrl } : {}),   // URL Supabase → suit l'avion (si upload OK)
                         uploadDate: new Date().toISOString(),
                         hasData: true
                       });
