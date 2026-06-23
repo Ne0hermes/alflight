@@ -19,34 +19,58 @@ const AVWX_CONFIG = {
 export const weatherAPI = {
   // Récupérer le METAR
   async fetchMETAR(icao) {
+    // 🔑 Garde-fou clé : VITE_AVWX_API_KEY est inlinée AU BUILD. Si elle est
+    // absente du bundle exécuté, c'est qu'il a été construit sans clé →
+    // renseigner .env.local PUIS reconstruire (npm run build).
+    if (!AVWX_CONFIG.apiKey) {
+      console.error(
+        `❌ [weatherAPI] METAR ${icao} : VITE_AVWX_API_KEY absente du bundle. ` +
+        `Renseignez .env.local PUIS reconstruisez (npm run build) — la clé est inlinée au build.`
+      );
+      return null /* A5 : plus de météo fabriquée — indisponible */;
+    }
     try {
-            
       const response = await fetch(
         `${AVWX_CONFIG.baseUrl}/metar/${icao}?token=${AVWX_CONFIG.apiKey}`
       );
 
       if (!response.ok) {
+        // 401/403 = clé invalide ou RÉVOQUÉE. Cas le plus courant : le bundle
+        // embarque une ancienne clé rotée. On le crie fort — sinon l'échec est
+        // muet et l'UI affiche « Météo non disponible » sans cause visible.
+        if (response.status === 401 || response.status === 403) {
+          console.error(
+            `❌ [weatherAPI] METAR ${icao} : AVWX refuse la clé (HTTP ${response.status}). ` +
+            `Clé VITE_AVWX_API_KEY invalide/révoquée OU bundle construit avec une ancienne clé. ` +
+            `Mettez à jour .env.local et RECONSTRUISEZ (npm run build).`
+          );
+          return null /* A5 : plus de météo fabriquée — indisponible */;
+        }
+        if (response.status === 429) {
+          console.warn(`⚠️ [weatherAPI] METAR ${icao} : quota AVWX dépassé (HTTP 429).`);
+          return null /* A5 : plus de météo fabriquée — indisponible */;
+        }
         if (response.status === 404) {
-
+          // Normal pour beaucoup de petits aérodromes sans station METAR.
+          console.info(`ℹ️ [weatherAPI] METAR ${icao} : aucune station (HTTP 404).`);
           return null /* A5 : plus de météo fabriquée — indisponible */;
         }
-        if (response.status === 400) {
-
-          return null /* A5 : plus de météo fabriquée — indisponible */;
-        }
-                return null /* A5 : plus de météo fabriquée — indisponible */;
+        console.warn(`⚠️ [weatherAPI] METAR ${icao} indisponible (HTTP ${response.status}).`);
+        return null /* A5 : plus de météo fabriquée — indisponible */;
       }
 
       // Vérifier que la réponse n'est pas vide
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-                return null /* A5 : plus de météo fabriquée — indisponible */;
+        console.warn(`⚠️ [weatherAPI] METAR ${icao} : réponse non-JSON (content-type: ${contentType}).`);
+        return null /* A5 : plus de météo fabriquée — indisponible */;
       }
 
       // Vérifier la taille de la réponse
       const text = await response.text();
       if (!text || text.trim() === '') {
-                return null /* A5 : plus de météo fabriquée — indisponible */;
+        console.warn(`⚠️ [weatherAPI] METAR ${icao} : réponse vide.`);
+        return null /* A5 : plus de météo fabriquée — indisponible */;
       }
 
       // Parser le JSON
@@ -98,12 +122,12 @@ export const weatherAPI = {
           }
         };
       } catch (parseError) {
-                return null /* A5 : plus de météo fabriquée — indisponible */;
+        console.warn(`⚠️ [weatherAPI] METAR ${icao} : JSON illisible`, parseError);
+        return null /* A5 : plus de météo fabriquée — indisponible */;
       }
     } catch (error) {
-      console.error(`❌ Erreur METAR ${icao}:`, error);
-      
-      // Retour de données simulées en cas d'erreur
+      console.error(`❌ [weatherAPI] METAR ${icao} : échec réseau (fetch). ` +
+        `Vérifiez la connexion / un éventuel blocage CORS.`, error);
       return null /* A5 : plus de météo fabriquée — indisponible */;
     }
   },
