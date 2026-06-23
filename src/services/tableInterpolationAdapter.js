@@ -173,13 +173,9 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   const minAlt = altitudes[0], maxAlt = altitudes[altitudes.length - 1];
   const minTemp = temperatures[0], maxTemp = temperatures[temperatures.length - 1];
   const massInRange = targetMass >= minMass && targetMass <= maxMass;
-  if (!massInRange) {
-    warnings.push(
-      targetMass < minMass
-        ? `⚠ Masse ${targetMass} kg sous la plage du tableau (min ${minMass} kg) — extrapolation linéaire`
-        : `⚠ Masse ${targetMass} kg au-delà de la plage (max ${maxMass} kg) — extrapolation linéaire`
-    );
-  }
+  // Le warning « masse hors plage » est poussé APRÈS le calcul (plus bas) pour
+  // refléter le mode réellement utilisé : extrapolation linéaire OU repli
+  // « tableau le plus proche » (masse clampée).
   if (targetAlt < minAlt || targetAlt > maxAlt) {
     warnings.push(
       targetAlt < minAlt
@@ -198,12 +194,46 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   // 4. Interpolation
   let value;
   let method;
+  let usedNearest = false;
   if (massInRange) {
     value = trilinearInterpolate(masses, altitudes, temperatures, values, targetMass, targetAlt, targetTemp);
     method = 'Trilinéaire (masse × alt × temp)';
   } else {
+    // Hors plage masse : on tente d'abord une extrapolation linéaire (≥ 2 masses).
     value = extrapolateForMass(lookup, targetMass, targetAlt, targetTemp);
     method = 'Trilinéaire + extrapolation masse';
+    // Repli « TABLEAU LE PLUS PROCHE » (décision pilote 2026-06-23) : si
+    // l'extrapolation est IMPOSSIBLE (ex. tableau fourni à UNE seule masse, la
+    // masse maxi) ou non finie, on CLAMPE la masse à la borne la plus proche et
+    // on renvoie cette valeur — pour une masse réelle SOUS le min (avion plus
+    // léger) c'est CONSERVATEUR (la distance au min ≥ la distance réelle).
+    // L'alerte hors-couverture est CONSERVÉE (cf. warning ci-dessous).
+    if (value === null || !Number.isFinite(value)) {
+      const clampedMass = targetMass < minMass ? minMass : maxMass;
+      value = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, targetTemp);
+      method = `Tableau le plus proche (masse ${clampedMass} kg)`;
+      usedNearest = true;
+    }
+  }
+
+  // Warning « masse hors plage » — reflète le mode RÉEL (extrapolation vs plus proche).
+  if (!massInRange) {
+    const below = targetMass < minMass;
+    const bound = below ? `min ${minMass}` : `max ${maxMass}`;
+    if (usedNearest) {
+      const clampedMass = below ? minMass : maxMass;
+      const conservatism = below
+        ? ' — conservateur (distance ≥ réelle pour un avion plus léger)'
+        : ' — ⚠ NON conservateur (masse réelle > max → distance réelle plus longue)';
+      warnings.push(
+        `⚠ Masse ${targetMass} kg hors plage du tableau (${bound} kg) — extrapolation impossible : ` +
+        `affichage de la valeur du TABLEAU LE PLUS PROCHE (masse ${clampedMass} kg)${conservatism}`
+      );
+    } else {
+      warnings.push(
+        `⚠ Masse ${targetMass} kg ${below ? 'sous' : 'au-delà de'} la plage du tableau (${bound} kg) — extrapolation linéaire`
+      );
+    }
   }
 
   if (value === null || !Number.isFinite(value)) {
