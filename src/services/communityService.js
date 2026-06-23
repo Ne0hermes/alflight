@@ -17,6 +17,37 @@ import { stripFittedFromAircraftData } from '../abac/curves/core/fittedRuntime';
 // vers Storage avant écriture : aircraft_data ne garde qu'une URL courte.
 import { externalizeAircraftBlobs } from './blobStorage';
 
+/**
+ * UNE SEULE ligne `manex_files` par `file_path` (chemin STABLE par
+ * immatriculation `<immat>/<immat> - manex.pdf`). À chaque (ré)import de MANEX,
+ * le fichier Storage est déjà écrasé (upsert) ; côté table on RÉUTILISE la ligne
+ * canonique (UPDATE) au lieu d'en insérer une nouvelle, et on PURGE les doublons
+ * résiduels pour ce chemin → « la version précédente est effacée », fini les
+ * doublons (constat : 49 lignes pour 18 avions, dont F-GIEA ×15). Renvoie l'id
+ * canonique. Repli sur insert simple si la lecture échoue (comportement legacy).
+ */
+async function upsertManexFileRow(fields) {
+  const filePath = fields.file_path;
+  const { data: rows, error: selErr } = await supabase
+    .from('manex_files').select('id').eq('file_path', filePath).order('id', { ascending: true });
+  if (selErr || !Array.isArray(rows) || rows.length === 0) {
+    const { data, error } = await supabase.from('manex_files').insert(fields).select('id').single();
+    if (error) throw error;
+    return data.id;
+  }
+  const keepId = rows[0].id;
+  const { error: updErr } = await supabase.from('manex_files').update(fields).eq('id', keepId);
+  if (updErr) throw updErr;
+  const extra = rows.slice(1).map(r => r.id);
+  if (extra.length) {
+    // Purge best-effort : si un doublon est encore référencé par un preset
+    // (FK), la suppression échoue → non bloquant, nettoyé au prochain passage.
+    const { error: delErr } = await supabase.from('manex_files').delete().in('id', extra);
+    if (delErr) console.warn('[communityService] purge doublons manex_files:', delErr.message);
+  }
+  return keepId;
+}
+
 // 🛡️ ANTI-ÉCRASEMENT (data-safety). Une valeur "vide" = null / undefined / '' / [].
 const isEmptyish = (v) => v === null || v === undefined || v === '' || (Array.isArray(v) && v.length === 0);
 
@@ -475,22 +506,14 @@ class CommunityService {
 
         if (uploadError) throw uploadError;
 
-        // Enregistrer les métadonnées du fichier
-        const { data: fileData, error: fileError } = await supabase
-          .from('manex_files')
-          .insert({
-            filename: fileName,
-            file_path: filePath,
-            file_size: manexFile.size,
-            uploaded_by: userId,
-            aircraft_model: presetData.model
-          })
-          .select()
-          .single();
-
-        if (fileError) throw fileError;
-
-        manexFileId = fileData.id;
+        // Métadonnées : UNE seule ligne par file_path (réutilise + purge doublons).
+        manexFileId = await upsertManexFileRow({
+          filename: fileName,
+          file_path: filePath,
+          file_size: manexFile.size,
+          uploaded_by: userId,
+          aircraft_model: presetData.model
+        });
       }
 
       // 4. Préparer aircraft_data SANS les fichiers volumineux (MANEX, photo volumineuse)
@@ -781,22 +804,14 @@ class CommunityService {
 
         if (uploadError) throw uploadError;
 
-        // Enregistrer les métadonnées du fichier
-        const { data: fileData, error: fileError } = await supabase
-          .from('manex_files')
-          .insert({
-            filename: fileName,
-            file_path: filePath,
-            file_size: manexFile.size,
-            uploaded_by: userId,
-            aircraft_model: updatedData.model
-          })
-          .select()
-          .single();
-
-        if (fileError) throw fileError;
-
-        manexFileId = fileData.id;
+        // Métadonnées : UNE seule ligne par file_path (réutilise + purge doublons).
+        manexFileId = await upsertManexFileRow({
+          filename: fileName,
+          file_path: filePath,
+          file_size: manexFile.size,
+          uploaded_by: userId,
+          aircraft_model: updatedData.model
+        });
               }
 
       // 2. Préparer aircraft_data SANS les fichiers volumineux (MANEX, photo volumineuse)
@@ -989,19 +1004,14 @@ class CommunityService {
         .from('manex-files')
         .upload(filePath, manexFile, { cacheControl: '3600', upsert: true });
       if (uploadError) throw uploadError;
-      const { data: fileData, error: fileError } = await supabase
-        .from('manex_files')
-        .insert({
-          filename: fileName,
-          file_path: filePath,
-          file_size: manexFile.size,
-          uploaded_by: userId,
-          aircraft_model: updatedData.model
-        })
-        .select()
-        .single();
-      if (fileError) throw fileError;
-      manexFileId = fileData.id;
+      // Métadonnées : UNE seule ligne par file_path (réutilise + purge doublons).
+      manexFileId = await upsertManexFileRow({
+        filename: fileName,
+        file_path: filePath,
+        file_size: manexFile.size,
+        uploaded_by: userId,
+        aircraft_model: updatedData.model
+      });
     } else if (updatedData.hasManex && (updatedData.communityPresetId || updatedData.id)) {
       try {
         const srcId = updatedData.communityPresetId || updatedData.id;
