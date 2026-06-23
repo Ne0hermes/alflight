@@ -10,6 +10,7 @@
 // ============================================================================
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
+import { tokens } from '@shared/styles/designSystem';
 import { SCENARIO_COLORS } from '../scenarioColors';
 import { isWithinEnvelope } from '@utils/cgEnvelope';
 
@@ -164,7 +165,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             Veuillez configurer l'enveloppe de centrage dans l'onglet <strong>"Gestion des avions"</strong> →
             Section <strong>"CENTER OF GRAVITY - Enveloppe de centrage"</strong>
           </p>
-          <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+          <ul style={{ marginTop: tokens.spacing[2], paddingLeft: tokens.spacing[5] }}>
             <li>Ajoutez au moins un point CG avant (Most Forward CG)</li>
             <li>Définissez les limites CG arrière (Most Rearward CG)</li>
           </ul>
@@ -208,7 +209,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     })();
 
     return (
-      <div style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: tokens.spacing[2] }}>
         <svg viewBox="0 0 600 420" style={{ width: '100%', maxWidth: '760px', height: 'auto', margin: '0 auto', display: 'block' }}>
           <defs>
             <pattern id={gridId} width="50" height="50" patternUnits="userSpaceOnUse">
@@ -259,25 +260,39 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
           <text x="300" y="385" textAnchor="middle" fontSize="10" fill="var(--text-secondary)">{xAxisLabel}</text>
           <text x="15" y="200" textAnchor="middle" fontSize="10" fill="var(--text-secondary)" transform="rotate(-90 15 200)">Masse (kg)</text>
 
-          {/* Limites opérationnelles (horizontales) */}
-          {!isNaN(minTakeoffWeight) && (
-            <g>
-              <line x1="50" y1={toSvgY(minTakeoffWeight)} x2="550" y2={toSvgY(minTakeoffWeight)} stroke="var(--color-red-critical)" strokeWidth="2" strokeDasharray="8,4" />
-              <text x="555" y={toSvgY(minTakeoffWeight) + 4} fontSize="9" fill="var(--color-red-critical)" fontWeight="600">Masse min: {minTakeoffWeight} kg</text>
-            </g>
-          )}
-          {!isNaN(maxTakeoffWeight) && (
-            <g>
-              <line x1="50" y1={toSvgY(maxTakeoffWeight)} x2="550" y2={toSvgY(maxTakeoffWeight)} stroke="var(--color-red-critical)" strokeWidth="2" strokeDasharray="8,4" />
-              <text x="555" y={toSvgY(maxTakeoffWeight) + 4} fontSize="9" fill="var(--color-red-critical)" fontWeight="600">MTOW: {maxTakeoffWeight} kg</text>
-            </g>
-          )}
-          {!isNaN(maxLandingWeight) && (
-            <g>
-              <line x1="50" y1={toSvgY(maxLandingWeight)} x2="550" y2={toSvgY(maxLandingWeight)} stroke="var(--accent-primary)" strokeWidth="2" strokeDasharray="4,4" />
-              <text x="555" y={toSvgY(maxLandingWeight) + 4} fontSize="9" fill="var(--accent-primary)" fontWeight="600">MLW: {maxLandingWeight} kg</text>
-            </g>
-          )}
+          {/* Limites opérationnelles (horizontales). Les ÉTIQUETTES sont
+              dé-superposées verticalement quand deux limites ont une masse
+              identique/proche (ex. MTOW = MLW aux limites hautes) — sinon les
+              textes se chevauchaient et devenaient illisibles. Les LIGNES
+              restent à leur masse réelle ; un fin trait de rappel relie chaque
+              étiquette décalée à sa ligne. */}
+          {(() => {
+            const items = [
+              !isNaN(minTakeoffWeight) && { text: `Masse min: ${minTakeoffWeight} kg`, w: minTakeoffWeight, color: 'var(--color-red-critical)', dash: '8,4' },
+              !isNaN(maxTakeoffWeight) && { text: `MTOW: ${maxTakeoffWeight} kg`, w: maxTakeoffWeight, color: 'var(--color-red-critical)', dash: '8,4' },
+              !isNaN(maxLandingWeight) && { text: `MLW: ${maxLandingWeight} kg`, w: maxLandingWeight, color: 'var(--accent-primary)', dash: '4,4' }
+            ].filter(Boolean).map(it => ({ ...it, lineY: toSvgY(it.w) }));
+
+            // Dé-collision : on trie par y et on écarte les étiquettes trop
+            // proches d'un gap mini (~ hauteur d'une ligne de texte).
+            const MIN_GAP = 11;
+            [...items].sort((a, b) => a.lineY - b.lineY).reduce((lastY, it) => {
+              let y = it.lineY + 3;
+              if (y - lastY < MIN_GAP) y = lastY + MIN_GAP;
+              it.labelY = y;
+              return y;
+            }, -Infinity);
+
+            return items.map((it, i) => (
+              <g key={`limit-${i}`}>
+                <line x1="50" y1={it.lineY} x2="550" y2={it.lineY} stroke={it.color} strokeWidth="2" strokeDasharray={it.dash} />
+                {Math.abs(it.labelY - (it.lineY + 3)) > 0.5 && (
+                  <line x1="550" y1={it.lineY} x2="555" y2={it.labelY - 3} stroke={it.color} strokeWidth="0.5" opacity="0.6" />
+                )}
+                <text x="557" y={it.labelY} fontSize="9" fill={it.color} fontWeight="600">{it.text}</text>
+              </g>
+            ));
+          })()}
 
           {/* Enveloppe */}
           <polygon points={envelopePoints} fill="var(--accent-soft)" fillOpacity="0.5" stroke="var(--accent-primary)" strokeWidth="2" />
