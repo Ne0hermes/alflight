@@ -246,6 +246,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   // Récupérer les données météo depuis le store
   const weatherData = useWeatherStore(state => state.weatherData || {});
 
+  // Distances de performance calculées à l'étape Performance — chiffre opérationnel
+  // (valeur majorée par le facteur de sécurité si présente, sinon valeur brute).
+  // Affichées entre parenthèses sur les lignes TODA / LDA de chaque piste de TOUS les
+  // aérodromes pour comparaison visuelle avec les distances déclarées.
+  const takeoffPerfDist = flightPlan?.performance?.departure?.takeoff?.toda50ftFactored
+    || flightPlan?.performance?.departure?.takeoff?.toda50ft || null;
+  const landingPerfDist = flightPlan?.performance?.arrival?.landing?.lda50ftFactored
+    || flightPlan?.performance?.arrival?.landing?.lda50ft || null;
+
   // Données pour le tableau de navigation VFR (provenant de l'étape 2)
   const flightType = flightPlan.generalInfo.flightType || 'VFR';
   const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
@@ -1638,7 +1647,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       </div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>TODA:</span>
-                                        <span style={{ fontWeight: '600' }}>{toda1}m</span>
+                                        <span style={{ fontWeight: '600' }}>
+                                          {toda1}m
+                                          {takeoffPerfDist && (
+                                            <span style={{ color: toda1 >= takeoffPerfDist ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
+                                              {' '}(T/O: {Math.round(takeoffPerfDist)}m)
+                                            </span>
+                                          )}
+                                        </span>
                                       </div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>ASDA:</span>
@@ -1646,7 +1662,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                       </div>
                                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ color: 'var(--text-secondary)' }}>LDA:</span>
-                                        <span style={{ fontWeight: '600' }}>{lda1}m</span>
+                                        <span style={{ fontWeight: '600' }}>
+                                          {lda1}m
+                                          {landingPerfDist && (
+                                            <span style={{ color: lda1 >= landingPerfDist ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
+                                              {' '}(LDG: {Math.round(landingPerfDist)}m)
+                                            </span>
+                                          )}
+                                        </span>
                                       </div>
 
                                       {/* Distances de performance calculées */}
@@ -1706,7 +1729,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                           <span style={{ color: 'var(--text-secondary)' }}>TODA:</span>
-                                          <span style={{ fontWeight: '600' }}>{toda2}m</span>
+                                          <span style={{ fontWeight: '600' }}>
+                                            {toda2}m
+                                            {takeoffPerfDist && (
+                                              <span style={{ color: toda2 >= takeoffPerfDist ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
+                                                {' '}(T/O: {Math.round(takeoffPerfDist)}m)
+                                              </span>
+                                            )}
+                                          </span>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                           <span style={{ color: 'var(--text-secondary)' }}>ASDA:</span>
@@ -1714,7 +1744,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                           <span style={{ color: 'var(--text-secondary)' }}>LDA:</span>
-                                          <span style={{ fontWeight: '600' }}>{lda2}m</span>
+                                          <span style={{ fontWeight: '600' }}>
+                                            {lda2}m
+                                            {landingPerfDist && (
+                                              <span style={{ color: lda2 >= landingPerfDist ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
+                                                {' '}(LDG: {Math.round(landingPerfDist)}m)
+                                              </span>
+                                            )}
+                                          </span>
                                         </div>
 
                                         {/* Distances de performance calculées */}

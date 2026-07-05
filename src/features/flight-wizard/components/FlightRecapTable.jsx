@@ -49,13 +49,25 @@ export const FlightRecapTable = ({
   const departurePerf = flightPlan?.performance?.departure;
   const arrivalPerf = flightPlan?.performance?.arrival;
 
-  // Récupérer les aérodromes départ/arrivée depuis waypoints
+  // Récupérer les aérodromes départ/arrivée depuis waypoints.
+  // Les waypoints créés dans le module navigation portent le code OACI dans
+  // `name` (sans champ `icao`) — accepter les deux, sinon les sections
+  // DÉPART/ARRIVÉE disparaissent alors que les DÉROUTEMENTS restent affichés.
   const departureWaypoint = waypoints?.find(wp => wp.type === 'departure');
   const arrivalWaypoint = waypoints?.find(wp => wp.type === 'arrival');
+  const departureIcao = departureWaypoint?.icao || departureWaypoint?.name;
+  const arrivalIcao = arrivalWaypoint?.icao || arrivalWaypoint?.name;
 
   // Récupérer les données AIXM pour départ et arrivée
-  const departureAerodrome = aerodromeData?.find(ad => ad.icao === departureWaypoint?.icao);
-  const arrivalAerodrome = aerodromeData?.find(ad => ad.icao === arrivalWaypoint?.icao);
+  const departureAerodrome = aerodromeData?.find(ad => ad.icao === departureIcao);
+  const arrivalAerodrome = aerodromeData?.find(ad => ad.icao === arrivalIcao);
+
+  // Distances de performance calculées à l'étape Performance — chiffre opérationnel
+  // (valeur majorée par le facteur de sécurité si présente, sinon valeur brute).
+  // Affichées entre parenthèses sur les lignes TODA (décollage) et LDA (atterrissage)
+  // de CHAQUE piste pour comparaison visuelle avec les distances déclarées.
+  const takeoffPerfDist = departurePerf?.takeoff?.toda50ftFactored || departurePerf?.takeoff?.toda50ft || null;
+  const landingPerfDist = arrivalPerf?.landing?.lda50ftFactored || arrivalPerf?.landing?.lda50ft || null;
 
   // Récupérer les alternates
   const alternates = flightPlan?.alternates || [];
@@ -279,10 +291,17 @@ export const FlightRecapTable = ({
                       </span>
                     </div>
 
-                    {/* TODA */}
+                    {/* TODA (+ distance de décollage calculée entre parenthèses) */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>TODA:</span>
-                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{toda}m</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                        {toda}m
+                        {takeoffPerfDist && (
+                          <span style={{ color: toda >= takeoffPerfDist ? PRINT.ok : PRINT.nogo }}>
+                            {' '}(T/O: {Math.round(takeoffPerfDist)}m)
+                          </span>
+                        )}
+                      </span>
                     </div>
 
                     {/* TORA - Affiché ici uniquement pour ARRIVÉE */}
@@ -293,10 +312,17 @@ export const FlightRecapTable = ({
                       </div>
                     )}
 
-                    {/* LDA - Affiché ici pour DÉPART et ARRIVÉE */}
+                    {/* LDA - Affiché ici pour DÉPART et ARRIVÉE (+ distance d'atterrissage calculée) */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                       <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>LDA:</span>
-                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{lda}m</span>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                        {lda}m
+                        {landingPerfDist && (
+                          <span style={{ color: lda >= landingPerfDist ? PRINT.ok : PRINT.nogo }}>
+                            {' '}(LDG: {Math.round(landingPerfDist)}m)
+                          </span>
+                        )}
+                      </span>
                     </div>
 
                     {/* ASDA */}
@@ -627,42 +653,8 @@ export const FlightRecapTable = ({
           </div>
         </div>
 
-        {/* Grille principale : Aérodromes à gauche, Navigation à droite */}
-        <div className="recap-grid-2col recap-main-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: '35% 65%',
-          gap: '8px'
-        }}>
-          {/* Colonne gauche : Aérodromes */}
-          <div>
-            {/* Départ */}
-            {departureAerodrome && renderAerodromeSection(
-              departureAerodrome,
-              departurePerf,
-              'departure'
-            )}
-
-            {/* Arrivée */}
-            {arrivalAerodrome && renderAerodromeSection(
-              arrivalAerodrome,
-              arrivalPerf,
-              'arrival'
-            )}
-
-            {/* Déroutements */}
-            {alternateAerodromes.map((altAerodrome, idx) => (
-              <div key={idx}>
-                {renderAerodromeSection(
-                  altAerodrome,
-                  null,
-                  'alternate'
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Colonne droite : Navigation */}
-          <div>
+        {/* Navigation en pleine largeur — les aérodromes sont déplacés EN BAS, sous le tableau */}
+        <div>
             {/* Temps de départ théorique + Heures nuit aéronautique */}
             <div style={{
               marginBottom: '12px',
@@ -926,7 +918,39 @@ export const FlightRecapTable = ({
                 }}
               />
             </div>
-          </div>
+        </div>
+
+        {/* Aérodromes : DÉPART / ARRIVÉE / DÉROUTEMENTS — en bas, sous le tableau de navigation */}
+        <div className="recap-grid-2col recap-main-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '8px',
+          marginTop: '8px'
+        }}>
+          {/* Départ */}
+          {departureAerodrome && renderAerodromeSection(
+            departureAerodrome,
+            departurePerf,
+            'departure'
+          )}
+
+          {/* Arrivée */}
+          {arrivalAerodrome && renderAerodromeSection(
+            arrivalAerodrome,
+            arrivalPerf,
+            'arrival'
+          )}
+
+          {/* Déroutements */}
+          {alternateAerodromes.map((altAerodrome, idx) => (
+            <div key={idx}>
+              {renderAerodromeSection(
+                altAerodrome,
+                null,
+                'alternate'
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </>
