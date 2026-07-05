@@ -63,6 +63,9 @@ logs/
 *.csv
 tracking_local.json
 
+# Cache disque du proxy VAC (PDF téléchargés depuis le SIA, ré-obtensibles)
+server/vac-cache/
+
 # Données XML AIXM/SIA brutes (source réglementaire, ~68 Mo) — NON versionnées.
 # Emplacement UNIQUE : public/data/ (servi au runtime ET lu par l'ETL).
 # Pour régénérer : déposer le cycle AIRAC du SIA (DGAC) dans public/data/,
