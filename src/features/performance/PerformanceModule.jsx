@@ -10,6 +10,8 @@ import { useAlternatesStore } from '../../core/stores/alternatesStore';
 import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCalculations';
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
 import { groupTablesByBaseName, filterGroupsByType } from '../../services/performanceTableGrouping';
+import { generatePerformanceState, ResultStatus } from '../../services/operationResolver';
+import { convertValue } from '../../utils/unitConversions';
 import dataBackupManager from '../../utils/dataBackupManager';
 import { resolveWindComponent } from '../../utils/windComponent';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
@@ -349,7 +351,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.departure = {
       ...flightPlan.performance.departure,
-      icao: departureAirport.icao,
+      icao: departureIcao,
       name: departureAirport.name,
       takeoff: {
         groundRoll: result.groundRoll,
@@ -397,7 +399,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     flightPlan.performance.safetyFactor = { id: safetyFactor.id, value: safetyFactor.value, label: safetyFactor.label };
     flightPlan.performance.arrival = {
       ...flightPlan.performance.arrival,
-      icao: arrivalAirport.icao,
+      icao: arrivalIcao,
       name: arrivalAirport.name,
       landing: {
         groundRoll: result.groundRoll,
@@ -517,6 +519,74 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     windMagnitude: landingWindVariable ? landingWindSpeed : undefined,
     runwaySlope: 0
   };
+  // ── SAUVEGARDE DES DISTANCES POUR LA SYNTHÈSE (Step7Summary / FlightRecapTable) ──
+  // Depuis le remplacement de PerformanceTableCalculator par PerformanceStateMatrix
+  // (affichage pur, commit db84a9b6), plus personne n'appelait handleTakeoffResults /
+  // handleLandingResults : flightPlan.performance.departure.takeoff et arrival.landing
+  // restaient vides et la synthèse n'affichait aucune distance de perf. Cet effet
+  // recalcule via le MÊME résolveur que la matrice et persiste les distances retenues
+  // (préférence aux variantes volets explicites ; valeurs en mètres — unité de la synthèse).
+  useEffect(() => {
+    if (!wizardMode || !flightPlan || !selectedAircraft) return;
+
+    // Le résolveur lit aircraft.performanceModels ; si les abaques ont été chargés
+    // depuis IndexedDB (état local), on les greffe sur une copie de l'avion.
+    const hasModels = (selectedAircraft.performanceModels?.length || selectedAircraft.performanceTables?.length);
+    const aircraftForResolver = !hasModels && loadedPerformanceTables?.length
+      ? { ...selectedAircraft, performanceModels: loadedPerformanceTables }
+      : selectedAircraft;
+
+    // Première distance COMPUTED de la liste d'opérations, convertie en mètres.
+    const pickDistanceMeters = (state, opIds) => {
+      for (const opId of opIds) {
+        const r = state.results?.[opId];
+        if (r?.status !== ResultStatus.COMPUTED || !Number.isFinite(r.value) || r.value <= 0) continue;
+        const unit = String(r.unit || 'm').toLowerCase();
+        if (unit === 'm') return r.value;
+        if (unit === 'ft') {
+          const conv = convertValue(r.value, 'ft', 'm', 'runway');
+          if (Number.isFinite(conv)) return conv;
+        }
+        return r.value; // unité non déclarée/inconnue : valeur native (même repli que la matrice)
+      }
+      return null;
+    };
+
+    const takeoffState = generatePerformanceState(aircraftForResolver, takeoffInputsForMatrix);
+    const landingState = generatePerformanceState(aircraftForResolver, landingInputsForMatrix);
+
+    const takeoffRoll = pickDistanceMeters(takeoffState, ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']);
+    const takeoff50 = pickDistanceMeters(takeoffState, ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']);
+    const landingRoll = pickDistanceMeters(landingState, ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up']);
+    const landing50 = pickDistanceMeters(landingState, ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up']);
+
+    // Garde anti-boucle : handleTakeoffResults/handleLandingResults appellent onUpdate
+    // (re-render du wizard) — ne re-sauvegarder que si les valeurs utiles ont changé.
+    const sfChanged = flightPlan.performance?.safetyFactor?.id !== safetyFactor.id;
+    const prevTakeoff = flightPlan.performance?.departure?.takeoff;
+    if (takeoff50 !== null && (sfChanged || prevTakeoff?.toda50ft !== takeoff50 || prevTakeoff?.groundRoll !== takeoffRoll)) {
+      handleTakeoffResults(
+        { groundRoll: takeoffRoll, distance50ft: takeoff50, outOfRange: false },
+        { conditions: { temperature: takeoffTemp, pressureAltitude: takeoffPa, weight: takeoffMass, windComponent: takeoffWindComponent } }
+      );
+    }
+    const prevLanding = flightPlan.performance?.arrival?.landing;
+    if (landing50 !== null && (sfChanged || prevLanding?.lda50ft !== landing50 || prevLanding?.groundRoll !== landingRoll)) {
+      handleLandingResults(
+        { groundRoll: landingRoll, distance50ft: landing50, outOfRange: false },
+        { conditions: { temperature: landingTemp, pressureAltitude: landingPa, weight: landingMass, windComponent: landingWindComponent } }
+      );
+    }
+    // Deps SCALAIRES uniquement (+ instances stables flightPlan/selectedAircraft/tables) :
+    // les objets inputs sont recréés à chaque rendu, les lister relancerait l'effet en boucle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    wizardMode, flightPlan, selectedAircraft, loadedPerformanceTables,
+    takeoffMass, landingMass, takeoffTemp, landingTemp, takeoffPa, landingPa,
+    takeoffWindComponent, landingWindComponent, takeoffWindVariable, landingWindVariable,
+    takeoffWindSpeed, landingWindSpeed, safetyFactor.id
+  ]);
+
   // Helpers par phase : on les rend séparément pour les regrouper dans chaque section.
   const renderTakeoffMatrix = () => (
     <PerformanceStateMatrix

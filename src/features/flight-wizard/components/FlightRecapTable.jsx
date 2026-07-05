@@ -735,6 +735,46 @@ export const FlightRecapTable = ({
               </div>
             </div>
 
+            {/* Briefings — positionnés entre les horaires de vol et le tableau de navigation */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                color: PRINT.accent,
+                marginBottom: '6px'
+              }}>
+                ✈️ BRIEFINGS
+              </div>
+
+              <div style={{
+                border: `2px solid ${PRINT.accent}`,
+                borderRadius: '6px',
+                padding: '6px 8px',
+                backgroundColor: PRINT.accentBg,
+                fontSize: '9px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. On:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>T/O B.:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>LDG B.:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
+                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. OFF:</span>
+                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
+                </div>
+              </div>
+            </div>
+
             {/* Tableau de navigation VFR */}
             {renderNavigationTable()}
 
@@ -844,46 +884,6 @@ export const FlightRecapTable = ({
                 </div>
               </div>
             )}
-
-            {/* Briefings */}
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{
-                fontSize: '11px',
-                fontWeight: '700',
-                color: PRINT.accent,
-                marginBottom: '6px'
-              }}>
-                ✈️ BRIEFINGS
-              </div>
-
-              <div style={{
-                border: `2px solid ${PRINT.accent}`,
-                borderRadius: '6px',
-                padding: '6px 8px',
-                backgroundColor: PRINT.accentBg,
-                fontSize: '9px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. On:</span>
-                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>T/O B.:</span>
-                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>LDG B.:</span>
-                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1 }}>
-                  <span style={{ fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>B. OFF:</span>
-                  <span style={{ borderBottom: '1px solid var(--text-tertiary)', flex: 1 }}>&nbsp;</span>
-                </div>
-              </div>
-            </div>
 
             {/* Notes du Pilote - Éditable */}
             <div>
