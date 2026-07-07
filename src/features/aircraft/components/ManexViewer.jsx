@@ -99,7 +99,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           padding: '24px',
           textAlign: 'center'
         }}>
-          <p>Chargement des données MANEX...</p>
+          <p>Chargement des données du manuel de vol...</p>
         </div>
       </div>
     );
@@ -118,13 +118,13 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         // Le pdfData est en base64
         const link = document.createElement('a');
         link.href = manex.pdfData;
-        link.download = manex.fileName || `MANEX_${aircraft.registration}.pdf`;
+        link.download = manex.fileName || `Manuel_de_vol_${aircraft.registration}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
         showNotification(
-          `📥 Téléchargement du MANEX ${aircraft.registration} démarré`,
+          `📥 Téléchargement du manuel de vol ${aircraft.registration} démarré`,
           'success',
           3000
         );
@@ -173,14 +173,14 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = `MANEX_DATA_${aircraft.registration || aircraft.id}.json`;
+      link.download = `Manuel_de_vol_donnees_${aircraft.registration || aircraft.id}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       showNotification(
-        `📊 Données MANEX exportées pour ${aircraft.registration}`,
+        `📊 Données du manuel de vol exportées pour ${aircraft.registration}`,
         'success',
         3000
       );
@@ -222,7 +222,7 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
             <FileText size={24} style={{ marginRight: '8px' }} />
-            MANEX - {aircraft.registration}
+            Manuel de vol - {aircraft.registration}
           </h3>
           <button
             onClick={onClose}
@@ -251,9 +251,9 @@ export const ManexViewer = memo(({ aircraft, onClose }) => {
           }}>
             <AlertTriangle size={20} color="var(--accent-primary)" />
             <div style={{ fontSize: 13, color: 'var(--accent-primary)' }}>
-              <strong>Aucune donnée MANEX trouvée pour cet avion.</strong>
+              <strong>Aucune donnée de manuel de vol trouvée pour cet avion.</strong>
               <div style={{ marginTop: 4 }}>
-                Le flag <code>hasManex</code> indique qu'un MANEX existe, mais ni
+                Le flag <code>hasManex</code> indique qu'un manuel de vol existe, mais ni
                 IndexedDB ni le store local n'ont retrouvé les données. Le PDF
                 peut avoir été effacé du cache local. Réimportez-le depuis le
                 wizard si nécessaire.

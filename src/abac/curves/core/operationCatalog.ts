@@ -127,7 +127,7 @@ export const OPERATION_CATALOG: OperationDefinition[] = [
     labelEn: 'Takeoff ground roll (flaps unspecified — legacy)',
     phase: 'takeoff',
     acceptedOutputs: [OUT_DISTANCE],
-    description: 'Distance au sol entre le point de départ et la rotation. État des volets non précisé : à n\'utiliser que si le MANEX ne publie qu\'une seule configuration.'
+    description: 'Distance au sol entre le point de départ et la rotation. État des volets non précisé : à n\'utiliser que si le manuel de vol ne publie qu\'une seule configuration.'
   },
 
   // ─── 2. Distance décollage passage 15 m (état volets NON PRÉCISÉ — hérité) ───
@@ -137,7 +137,7 @@ export const OPERATION_CATALOG: OperationDefinition[] = [
     labelEn: 'Takeoff distance over 50 ft (flaps unspecified — legacy)',
     phase: 'takeoff',
     acceptedOutputs: [OUT_DISTANCE],
-    description: 'Distance totale jusqu\'au franchissement des 15 m / 50 ft. État des volets non précisé : à n\'utiliser que si le MANEX ne publie qu\'une seule configuration.'
+    description: 'Distance totale jusqu\'au franchissement des 15 m / 50 ft. État des volets non précisé : à n\'utiliser que si le manuel de vol ne publie qu\'une seule configuration.'
   },
 
   // ─── 2b. R17 : variantes VOLETS du décollage ───

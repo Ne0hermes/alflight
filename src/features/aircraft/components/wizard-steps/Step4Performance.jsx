@@ -1201,7 +1201,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
             width: '100%'
           }}
         >
-          Ajouter des données de performance (tableaux MANEX / mixte)
+          Ajouter des données de performance (tableaux du manuel de vol / mixte)
         </button>
 
         {/* Boutons de navigation */}

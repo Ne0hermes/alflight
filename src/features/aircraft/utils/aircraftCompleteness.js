@@ -164,7 +164,7 @@ export const FIELD_DEFINITIONS = [
 
   // === OPTIONAL ===
   // MANEX : on accepte le flag hasManex (avion light loaded) OU l'objet manex.
-  { path: 'hasManex | manex',     label: 'MANEX (PDF)',               severity: 'OPTIONAL', weight: 2 },
+  { path: 'hasManex | manex',     label: 'Manuel de vol (PDF)',       severity: 'OPTIONAL', weight: 2 },
   // Photo : flag hasPhoto suffit (la photo elle-même est dans IndexedDB hors aircraft).
   { path: 'hasPhoto | photo | profilePhoto', label: 'Photo',          severity: 'OPTIONAL', weight: 1 },
   { path: 'manufacturer',         label: 'Constructeur',              severity: 'OPTIONAL', weight: 1 },

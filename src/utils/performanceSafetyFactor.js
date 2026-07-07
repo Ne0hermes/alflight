@@ -23,8 +23,8 @@ export const SAFETY_FACTOR_PRESETS = [
   {
     id: 'raw',
     value: 1.0,
-    label: 'Brut MANEX (sans marge)',
-    description: 'Valeurs strictement issues du MANEX. Aucun facteur appliqué.'
+    label: 'Brut manuel de vol (sans marge)',
+    description: 'Valeurs strictement issues du manuel de vol. Aucun facteur appliqué.'
   },
   {
     id: 'vfr_private',

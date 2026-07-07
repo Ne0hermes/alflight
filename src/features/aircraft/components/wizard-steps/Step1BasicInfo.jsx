@@ -90,7 +90,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') {
       if (file.size > 50 * 1024 * 1024) {
-        alert('Le fichier MANEX est trop volumineux. Veuillez choisir un fichier de moins de 50MB.');
+        alert('Le fichier du manuel de vol est trop volumineux. Veuillez choisir un fichier de moins de 50MB.');
         return;
       }
 
@@ -142,7 +142,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
     const fileSource = manexFile || data.manex;
 
     if (!fileSource) {
-      alert('Aucun fichier MANEX à uploader');
+      alert('Aucun fichier de manuel de vol à uploader');
       console.error('❌ Aucune source de fichier trouvée');
       return;
     }
@@ -178,7 +178,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
           
         } catch (downloadError) {
           console.error('❌ Erreur téléchargement depuis Supabase:', downloadError);
-          throw new Error(`Impossible de télécharger le MANEX depuis Supabase: ${downloadError.message}`);
+          throw new Error(`Impossible de télécharger le manuel de vol depuis Supabase: ${downloadError.message}`);
         }
       }
       // CAS 2: Le fichier est en base64 local
@@ -231,7 +231,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
       setManexFile(updatedManexData);
       updateData('manex', updatedManexData);
 
-      alert(`✅ MANEX uploadé sur Supabase!\nURL: ${result.publicUrl}`);
+      alert(`✅ Manuel de vol uploadé sur Supabase!\nURL: ${result.publicUrl}`);
       
     } catch (error) {
       console.error('❌ Erreur upload Supabase:', error);
@@ -468,7 +468,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 value={data.manufacturer || ''}
                 onChange={(e) => updateData('manufacturer', e.target.value)}
                 placeholder="Ex: Cessna, Robin, Diamond, Piper, Cirrus…"
-                helperText="Constructeur de l'avion (extrait du MANEX si présent)"
+                helperText="Constructeur de l'avion (extrait du manuel de vol si présent)"
               />
             </Box>
 
@@ -936,7 +936,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
         >
           <DescriptionIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Manuel d'exploitation (MANEX)
+            Manuel de vol
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
@@ -945,17 +945,17 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
             {!manexFile && (
               <Alert severity="warning" sx={{ width: '100%', maxWidth: 500 }}>
                 <Typography variant="body2" fontWeight="600" gutterBottom>
-                  ⚠️ MANEX requis pour les données de performance
+                  ⚠️ Manuel de vol requis pour les données de performance
                 </Typography>
                 <Typography variant="caption">
                   Pour extraire automatiquement les tableaux et abaques de performance à l'étape suivante,
-                  vous devez d'abord importer le manuel d'exploitation (MANEX) en PDF.
+                  vous devez d'abord importer le manuel de vol en PDF.
                 </Typography>
               </Alert>
             )}
 
             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', maxWidth: 500 }}>
-              Le MANEX sera stocké avec l'avion pour référence future. Vous pourrez le consulter ou le télécharger à tout moment depuis la fiche de l'avion.
+              Le manuel de vol sera stocké avec l'avion pour référence future. Vous pourrez le consulter ou le télécharger à tout moment depuis la fiche de l'avion.
             </Typography>
 
             {manexFile ? (
@@ -1003,7 +1003,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         // PDF déjà en local (base64) → téléchargement direct
                         const link = document.createElement('a');
                         link.href = fileData;
-                        link.download = manexFile.fileName || 'MANEX.pdf';
+                        link.download = manexFile.fileName || 'Manuel_de_vol.pdf';
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
@@ -1019,15 +1019,15 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                           window.open(objUrl, '_blank');
                           setTimeout(() => URL.revokeObjectURL(objUrl), 60000);
                         } catch (err) {
-                          if (String(err?.message || '').includes('MANEX introuvable')) {
+                          if (String(err?.message || '').includes('Manuel de vol introuvable')) {
                             // Pointeur mort : le PDF n'existe plus dans le bucket.
-                            alert('❌ Ce MANEX n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Cliquez sur « Supprimer », ré-importez le PDF, puis enregistrez l\'avion : le lien sera réparé automatiquement.');
+                            alert('❌ Ce manuel de vol n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Cliquez sur « Supprimer », ré-importez le PDF, puis enregistrez l\'avion : le lien sera réparé automatiquement.');
                           } else {
-                            alert(`Impossible de télécharger le MANEX depuis Supabase : ${err.message}`);
+                            alert(`Impossible de télécharger le manuel de vol depuis Supabase : ${err.message}`);
                           }
                         }
                       } else {
-                        alert('Impossible de télécharger le MANEX');
+                        alert('Impossible de télécharger le manuel de vol');
                       }
                     }}
                     sx={{ flex: { sm: 1 } }}
@@ -1047,7 +1047,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 </Box>
                 {!manexFile.uploadedToSupabase && (
                   <Typography variant="caption" color="info.main" display="block" sx={{ mt: 1 }}>
-                    ℹ️ Le MANEX pourra être uploadé sur Supabase à la fin du récapitulatif
+                    ℹ️ Le manuel de vol pourra être uploadé sur Supabase à la fin du récapitulatif
                   </Typography>
                 )}
               </Paper>
@@ -1068,7 +1068,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   <CloudIcon color="info" sx={{ fontSize: 40, mt: 0.5 }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                      MANEX disponible sur Supabase
+                      Manuel de vol disponible sur Supabase
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
                       {data.manexAvailableInSupabase.fileName}
@@ -1112,12 +1112,12 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       reader.readAsDataURL(blob);
                     } catch (error) {
                       console.error('❌ Erreur téléchargement MANEX:', error);
-                      if (String(error?.message || '').includes('MANEX introuvable')) {
+                      if (String(error?.message || '').includes('Manuel de vol introuvable')) {
                         // Pointeur mort (fichier absent du bucket) : on retire la référence
                         // locale pour débloquer le bouton « Importer le MANEX (PDF) » —
                         // le ré-import + enregistrement répareront le lien en base.
                         updateData('manexAvailableInSupabase', null);
-                        alert('❌ Ce MANEX n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Ré-importez le PDF via « Importer le MANEX (PDF) » puis enregistrez l\'avion : le lien sera réparé automatiquement.');
+                        alert('❌ Ce manuel de vol n\'existe plus sur le serveur (fichier absent du stockage).\n\n→ Ré-importez le PDF via « Importer le manuel de vol (PDF) » puis enregistrez l\'avion : le lien sera réparé automatiquement.');
                       } else {
                         alert(`❌ Erreur: ${error.message}`);
                       }
@@ -1136,7 +1136,7 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                 startIcon={<CloudUploadIcon />}
                 size="large"
               >
-                Importer le MANEX (PDF)
+                Importer le manuel de vol (PDF)
                 <input
                   type="file"
                   accept="application/pdf"

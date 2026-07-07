@@ -320,7 +320,7 @@ export const AircraftDuplicator = ({ onSuccess }) => {
               <div><strong>Modèle:</strong> {selectedSource.model}</div>
               <div><strong>Constructeur:</strong> {selectedSource.manufacturer}</div>
               <div><strong>Catégorie:</strong> {selectedSource.category}</div>
-              <div><strong>MANEX:</strong> {selectedSource.hasManex ? '✅ Oui' : '❌ Non'}</div>
+              <div><strong>Manuel de vol:</strong> {selectedSource.hasManex ? '✅ Oui' : '❌ Non'}</div>
             </div>
           </div>
         )}

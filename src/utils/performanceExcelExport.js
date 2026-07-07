@@ -217,7 +217,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
 
     tables.forEach((t, idx) => {
       rows.push([`▼ Tableau ${idx + 1} : ${safeCell(t.table_name || t.title || '(sans nom)')}`]);
-      if (t.pageNumber) rows.push(['Page MANEX', t.pageNumber]);
+      if (t.pageNumber) rows.push(['Page manuel de vol', t.pageNumber]);
       if (t.operationId) rows.push(['Operation ID', safeCell(t.operationId)]);
       if (t.outputUnit) rows.push(['Output Unit', safeCell(t.outputUnit)]);
       if (t.conditions && typeof t.conditions === 'object') {
@@ -332,7 +332,7 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
       rows.push(['System Type', m.data.metadata.systemType]);
     }
     if (m.data?.metadata?.sourcePage) {
-      rows.push(['Page source MANEX', m.data.metadata.sourcePage]);
+      rows.push(['Page source manuel de vol', m.data.metadata.sourcePage]);
     }
     rows.push([]);
 

@@ -90,7 +90,7 @@ export const ManexImporter = memo(({
         await dataBackupManager.saveAircraftData(updatedAircraft);
 
         setManexData(updatedManexData);
-                showNotification('✅ MANEX téléchargé avec succès', 'success', 3000);
+                showNotification('✅ Manuel de vol téléchargé avec succès', 'success', 3000);
         setLoading(false);
       };
       reader.onerror = () => {
@@ -135,7 +135,7 @@ export const ManexImporter = memo(({
                 await onManexUpdate(aircraft.id, manexData);
         
         showNotification(
-          `✅ MANEX "${file.name}" enregistré pour ${aircraft.registration}`,
+          `✅ Manuel de vol "${file.name}" enregistré pour ${aircraft.registration}`,
           'success',
           5000
         );
@@ -161,11 +161,11 @@ export const ManexImporter = memo(({
   };
 
   const handleRemoveManex = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer le MANEX ?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer le manuel de vol ?')) {
       try {
         onManexUpdate(aircraft.id, null);
         showNotification(
-          `🗑️ MANEX supprimé pour ${aircraft.registration}`,
+          `🗑️ Manuel de vol supprimé pour ${aircraft.registration}`,
           'info',
           4000
         );
@@ -173,7 +173,7 @@ export const ManexImporter = memo(({
       } catch (error) {
         console.error('Erreur lors de la suppression du MANEX:', error);
         showNotification(
-          `❌ Erreur lors de la suppression du MANEX`,
+          `❌ Erreur lors de la suppression du manuel de vol`,
           'error',
           5000
         );
@@ -211,7 +211,7 @@ export const ManexImporter = memo(({
               newWindow.document.write(
                 `<!DOCTYPE html>
                 <html style="height: 100%; margin: 0;">
-                <head><title>MANEX - ${aircraft.registration}</title></head>
+                <head><title>Manuel de vol - ${aircraft.registration}</title></head>
                 <body style="height: 100%; margin: 0;">
                   <embed src="${dataUrl}" type="application/pdf" style="width:100%; height:100%;" />
                 </body>
@@ -244,7 +244,7 @@ export const ManexImporter = memo(({
           newWindow.document.write(
             `<!DOCTYPE html>
             <html style="height: 100%; margin: 0;">
-            <head><title>MANEX - ${aircraft.registration}</title></head>
+            <head><title>Manuel de vol - ${aircraft.registration}</title></head>
             <body style="height: 100%; margin: 0;">
               <embed src="${pdfDataToView}" type="application/pdf" style="width:100%; height:100%;" />
             </body>
@@ -287,7 +287,7 @@ export const ManexImporter = memo(({
           reader.onload = function(e) {
             const link = document.createElement('a');
             link.href = e.target.result;
-            link.download = manexData?.fileName || aircraft.manex?.fileName || `MANEX_${aircraft.registration}.pdf`;
+            link.download = manexData?.fileName || aircraft.manex?.fileName || `Manuel_de_vol_${aircraft.registration}.pdf`;
             link.click();
           };
           reader.readAsDataURL(pdfDataToDownload);
@@ -300,7 +300,7 @@ export const ManexImporter = memo(({
           }
           const link = document.createElement('a');
           link.href = pdfDataToDownload;
-          link.download = manexData?.fileName || aircraft.manex?.fileName || `MANEX_${aircraft.registration}.pdf`;
+          link.download = manexData?.fileName || aircraft.manex?.fileName || `Manuel_de_vol_${aircraft.registration}.pdf`;
           link.click();
         }
       } else {
@@ -358,7 +358,7 @@ export const ManexImporter = memo(({
       };
       await dataBackupManager.saveAircraftData(updatedAircraft);
 
-      showNotification('✅ MANEX uploadé sur Supabase!', 'success', 3000);
+      showNotification('✅ Manuel de vol uploadé sur Supabase!', 'success', 3000);
           } catch (error) {
       console.error('❌ Erreur upload Supabase:', error);
       showNotification(`❌ Erreur: ${error.message}`, 'error', 5000);
@@ -393,7 +393,7 @@ export const ManexImporter = memo(({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h3 style={{ fontSize: 'var(--fs-title)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
             <FileText size={24} style={{ marginRight: '8px', color: 'var(--text-secondary)' }} />
-            Manuel de Vol (MANEX)
+            Manuel de vol
           </h3>
           <button
             onClick={onClose}
@@ -421,7 +421,7 @@ export const ManexImporter = memo(({
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
               <FileText size={20} style={{ marginRight: '8px', color: manexData?.pdfData ? 'var(--text-secondary)' : 'var(--accent-primary)' }} />
               <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{manexData?.fileName || aircraft.manex?.fileName || 'MANEX'}</p>
+                <p style={{ fontWeight: '600', marginBottom: '4px' }}>{manexData?.fileName || aircraft.manex?.fileName || 'Manuel de vol'}</p>
                 <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                   {manexData?.fileSize || aircraft.manex?.fileSize} • Importé le {new Date(manexData?.uploadDate || aircraft.manex?.uploadDate || Date.now()).toLocaleDateString('fr-FR')}
                 </p>
@@ -439,7 +439,7 @@ export const ManexImporter = memo(({
                     <p style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)', margin: '4px 0 0 0' }}>
                       {(manexData?.remoteUrl || aircraft.manex?.remoteUrl)
                         ? '→ Cliquez sur "Récupérer le PDF" pour le télécharger, puis vous pourrez l\'uploader sur Supabase'
-                        : '→ Cliquez sur "Remplacer le MANEX" pour réimporter le PDF, puis vous pourrez l\'uploader sur Supabase'
+                        : '→ Cliquez sur "Remplacer le manuel de vol" pour réimporter le PDF, puis vous pourrez l\'uploader sur Supabase'
                       }
                     </p>
                   </div>
@@ -456,14 +456,14 @@ export const ManexImporter = memo(({
                       📤 Prêt pour l'upload
                     </p>
                     <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)', margin: '4px 0 0 0' }}>
-                      → Cliquez sur "Uploader sur Supabase" ci-dessous pour partager ce MANEX avec la communauté
+                      → Cliquez sur "Uploader sur Supabase" ci-dessous pour partager ce manuel de vol avec la communauté
                     </p>
                   </div>
                 )}
                 {manexData?.uploadedToSupabase && (
                   <div>
                     <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-primary)', marginTop: '4px', fontWeight: '500' }}>
-                      ✅ MANEX disponible sur Supabase
+                      ✅ Manuel de vol disponible sur Supabase
                     </p>
                   </div>
                 )}
@@ -548,10 +548,10 @@ export const ManexImporter = memo(({
             textAlign: 'center'
           }}>
             <p style={{ color: 'var(--accent-primary)', fontWeight: '500', marginBottom: '8px' }}>
-              ⚠️ Aucun MANEX importé pour cet avion
+              ⚠️ Aucun manuel de vol importé pour cet avion
             </p>
             <p style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)', margin: 0 }}>
-              → Utilisez le wizard de création/édition d'avion pour importer un MANEX
+              → Utilisez le wizard de création/édition d'avion pour importer un manuel de vol
             </p>
           </div>
         )}

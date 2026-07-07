@@ -64,7 +64,7 @@ const APIConfiguration = ({ onClose }) => {
         <div>
           <p style={sx.text.sm}>
             L'analyse IA permet d'extraire automatiquement les tableaux de performance
-            depuis les pages du MANEX. <strong>Claude (Anthropic)</strong> est plus précis
+            depuis les pages du manuel de vol. <strong>Claude (Anthropic)</strong> est plus précis
             sur les tableaux numériques structurés et est le choix recommandé.
           </p>
         </div>
@@ -115,7 +115,7 @@ const APIConfiguration = ({ onClose }) => {
           <li>Copiez la clé (format <code>sk-ant-...</code>) et collez-la ci-dessus</li>
         </ol>
         <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(2))}>
-          💰 Coût estimé : ~0.01–0.02 €/page MANEX (Claude 3.5+ Sonnet Vision)
+          💰 Coût estimé : ~0.01–0.02 €/page du manuel de vol (Claude 3.5+ Sonnet Vision)
         </p>
       </div>
 

@@ -762,12 +762,12 @@ class CommunityService {
 
     // Échec complet : message explicite et actionnable.
     throw new Error(
-      `MANEX introuvable (file_path enregistré: "${filePath}"). ` +
+      `Manuel de vol introuvable (file_path enregistré: "${filePath}"). ` +
       `Aucun objet correspondant dans le bucket "manex-files" — ni au chemin exact, ` +
       `ni via la convention immatriculation${registration ? ` ("${registration}/…")` : ''}, ` +
       `ni par listing des dossiers. ` +
       `→ Soit le 'file_path' en base est erroné (le fichier existe sous un autre chemin), ` +
-      `soit le MANEX n'a jamais été uploadé → ré-importez-le. ` +
+      `soit le manuel de vol n'a jamais été uploadé → ré-importez-le. ` +
       (lastDownloadError ? `Détail .download(): ${lastDownloadError.message || lastDownloadError}. ` : '') +
       `(Vérifiez aussi que le bucket "manex-files" est public ou qu'une policy SELECT autorise l'utilisateur.)`
     );

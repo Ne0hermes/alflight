@@ -168,7 +168,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // has_manex + manex_file_id (le lien n'est pas écrasé).
     manex: existingAircraft?.manex
       || (existingAircraft?.manexAvailableInSupabase ? {
-          fileName: existingAircraft.manexAvailableInSupabase.fileName || `${existingAircraft?.registration || 'MANEX'}.pdf`,
+          fileName: existingAircraft.manexAvailableInSupabase.fileName || `${existingAircraft?.registration || 'Manuel_de_vol'}.pdf`,
           fileSize: existingAircraft.manexAvailableInSupabase.fileSize
             ? (existingAircraft.manexAvailableInSupabase.fileSize / 1024 / 1024).toFixed(1) + ' MB'
             : '—',
@@ -937,7 +937,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       if (dataToSave.flightManual?.file) {
         console.log('🔄 Conversion flightManual → manex:', dataToSave.flightManual.file.name);
         dataToSave.manex = {
-          fileName: dataToSave.flightManual.file.name || 'MANEX.pdf',
+          fileName: dataToSave.flightManual.file.name || 'Manuel_de_vol.pdf',
           fileSize: dataToSave.flightManual.file.size ?
             (dataToSave.flightManual.file.size / 1024 / 1024).toFixed(2) + ' MB' :
             'Taille inconnue',
@@ -1256,7 +1256,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       const dataToSave = { ...aircraftData };
       if (aircraftData.flightManual?.file) {
         dataToSave.manex = {
-          fileName: aircraftData.flightManual.file.name || 'MANEX.pdf',
+          fileName: aircraftData.flightManual.file.name || 'Manuel_de_vol.pdf',
           fileSize: aircraftData.flightManual.file.size ?
             (aircraftData.flightManual.file.size / 1024 / 1024).toFixed(2) + ' MB' :
             'Taille inconnue',
@@ -1502,7 +1502,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
                 mb: 0.5,
               }}
             >
-              MANEX · EXTRACTION DISPONIBLE
+              MANUEL DE VOL · EXTRACTION DISPONIBLE
             </Box>
             <Typography
               variant="body2"

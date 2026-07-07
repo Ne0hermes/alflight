@@ -1415,7 +1415,7 @@ export const AircraftModule = memo(() => {
         severity: 'warn',
         title: 'Fichier indisponible',
         description: field === 'manex'
-          ? 'MANEX introuvable en local ET sur le serveur. Ré-importe le PDF via le wizard (étape MANEX), puis enregistre l\'avion.'
+          ? 'Manuel de vol introuvable en local ET sur le serveur. Ré-importe le PDF via le wizard (étape Manuel de vol), puis enregistre l\'avion.'
           : `Aucun PDF stocké localement pour cet avion (${field}). Réimporte-le via le wizard.`
       });
       return;
@@ -1428,7 +1428,7 @@ export const AircraftModule = memo(() => {
     document.body.removeChild(link);
   };
 
-  const handleDownloadManex = (aircraft) => downloadAircraftPdf(aircraft, 'manex', 'MANEX');
+  const handleDownloadManex = (aircraft) => downloadAircraftPdf(aircraft, 'manex', 'Manuel_de_vol');
   const handleDownloadWeighingReport = (aircraft) => downloadAircraftPdf(aircraft, 'weighingReport', 'Pesee');
 
   // Demande de suppression : ouvre le dialogue de confirmation éditorial
@@ -1816,7 +1816,7 @@ export const AircraftModule = memo(() => {
                       Mon avion n'est pas dans la liste
                     </span>
                     <span style={{ display: 'block', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
-                      Créer la fiche en important le MANEX (PDF)
+                      Créer la fiche en important le manuel de vol (PDF)
                     </span>
                   </span>
                 </li>
@@ -1924,7 +1924,7 @@ export const AircraftModule = memo(() => {
                 <span style={{ whiteSpace: 'nowrap' }}>{selectedPreset.votes?.up ?? 0} ✓ / {selectedPreset.votes?.down ?? 0} ✗</span>
               </div>
               <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-                <strong style={{ color: 'var(--text-primary)' }}>MANEX :</strong> {selectedPreset.hasManex ? 'Oui' : 'Non'}
+                <strong style={{ color: 'var(--text-primary)' }}>Manuel de vol :</strong> {selectedPreset.hasManex ? 'Oui' : 'Non'}
               </div>
             </div>
 
@@ -2167,7 +2167,7 @@ export const AircraftModule = memo(() => {
                       >
                         {/* MANEX */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <TechLabel>MANEX</TechLabel>
+                          <TechLabel>MANUEL DE VOL</TechLabel>
                           <div
                             style={{
                               fontFamily: tokens.fontFamily.mono,
@@ -2381,8 +2381,8 @@ export const AircraftModule = memo(() => {
                             e.stopPropagation();
                             handleDownloadManex(aircraft);
                           }}
-                          title={manexLoaded ? 'Télécharger le MANEX (manuel de vol)' : 'Aucun MANEX disponible'}
-                          aria-label="Télécharger le MANEX"
+                          title={manexLoaded ? 'Télécharger le manuel de vol' : 'Aucun manuel de vol disponible'}
+                          aria-label="Télécharger le manuel de vol"
                           disabled={!manexLoaded}
                           style={{
                             ...baseBtn,
@@ -2396,7 +2396,7 @@ export const AircraftModule = memo(() => {
                           onMouseLeave={manexLoaded ? hoverOut : undefined}
                         >
                           <BookOpen size={16} aria-hidden="true" />
-                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: 'var(--fs-caption)', letterSpacing: '0.08em' }}>MANEX</span>
+                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: 'var(--fs-caption)', letterSpacing: '0.08em' }}>MANUEL DE VOL</span>
                         </button>
 
                         {/* 2. Fiche de pesée — icône Scale = balance, sémantique aviation */}

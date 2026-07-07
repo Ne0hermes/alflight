@@ -604,7 +604,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           onClick={() => fileInputRef.current?.click()}
           style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--accent-primary)', borderRadius: 3, fontSize: 12 }}
         >
-          📷 {workshop.image ? 'Changer l\'image' : 'Importer l\'image du MANEX'}
+          📷 {workshop.image ? 'Changer l\'image' : 'Importer l\'image du manuel de vol'}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleImageUpload} />
         {workshop.image && (
@@ -1010,7 +1010,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             </>
           ) : (
             <text x={inner.w / 2} y={inner.h / 2} textAnchor="middle" fontSize={13} fill="var(--text-tertiary)">
-              📷 Importez l'image de l'abaque (page du MANEX) — elle servira de filigrane aux {Math.max(graphs.length, 1)} cadre(s)
+              📷 Importez l'image de l'abaque (page du manuel de vol) — elle servira de filigrane aux {Math.max(graphs.length, 1)} cadre(s)
             </text>
           )}
 

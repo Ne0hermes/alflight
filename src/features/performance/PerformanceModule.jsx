@@ -658,7 +658,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       <div style={{ flexBasis: '100%', fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.4 }}>
         Cette marge est appliquée aux distances affichées <strong>et enregistrée avec le plan de vol</strong> (synthèse/PDF).
         {' '}⚠ Ces distances n'intègrent <strong>pas</strong> de facteur de dégradation propre à l'avion
-        (<em>K-factor</em> : usure moteur/cellule, traînée réelle d'une immatriculation donnée) ; elles supposent un appareil conforme au MANEX.
+        (<em>K-factor</em> : usure moteur/cellule, traînée réelle d'une immatriculation donnée) ; elles supposent un appareil conforme au manuel de vol.
       </div>
     </div>
   );
@@ -681,7 +681,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         {' '}Les distances affichées <strong>ne tiennent pas compte</strong> des facteurs
         multiplicatifs liés à <strong>l'état du sol</strong> (sèche, humide, contaminée,
         enneigée) ni au <strong>type de revêtement</strong> (asphalte, herbe, gravier).
-        À ajouter manuellement selon ton MANEX et la réglementation applicable.
+        À ajouter manuellement selon ton manuel de vol et la réglementation applicable.
       </div>
     </div>
   );

@@ -723,7 +723,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           Masse & Centrage — Choisis ta méthode de saisie
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 4 }}>
-          Tu peux soit lire les bras de levier par clic sur le centrogramme du MANEX,
+          Tu peux soit lire les bras de levier par clic sur le centrogramme du manuel de vol,
           soit les saisir manuellement au clavier. Les deux modes remplissent les mêmes
           données — tu peux passer de l'un à l'autre à tout moment.
         </Typography>
@@ -754,7 +754,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               <AutoGraphIcon sx={{ fontSize: 64, color: 'success.main' }} />
               <Typography variant="h6">Lecture graphique du centrogramme</Typography>
               <Typography variant="body2" color="text.secondary">
-                Charge une image du centrogramme MANEX, calibre les axes par clic,
+                Charge une image du centrogramme du manuel de vol, calibre les axes par clic,
                 puis lis chaque bras de levier (sièges, carburant, bagages) avec
                 régression linéaire automatique.
               </Typography>
@@ -797,7 +797,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               <Typography variant="h6">Saisie manuelle</Typography>
               <Typography variant="body2" color="text.secondary">
                 Saisis directement au clavier les bras de levier, masses limites
-                et points de l'enveloppe à partir du rapport M&C de ton MANEX.
+                et points de l'enveloppe à partir du rapport M&C de ton manuel de vol.
                 Calcul dynamique masse × bras = moment partout.
               </Typography>
               <Button
@@ -895,7 +895,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               <StyledTextField
                 fullWidth
                 size="small"
-                label="Capacité totale carburant (importée du MANEX)"
+                label="Capacité totale carburant (importée du manuel de vol)"
                 type="number"
                 value={
                   data.fuelCapacity
@@ -1155,7 +1155,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                         </strong>
                       </div>
                       <div>
-                        <strong>Capacité totale (MANEX) :</strong>{' '}
+                        <strong>Capacité totale (manuel de vol) :</strong>{' '}
                         <strong>{toDisp(total).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                       </div>
                       {!isMatch && (
@@ -1614,7 +1614,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 if (count === 0) {
                   return (
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                      💡 Récupère l'information dans le rapport de masse et centrage joint au MANEX.
+                      💡 Récupère l'information dans le rapport de masse et centrage joint au manuel de vol.
                       Tu peux saisir <strong>2 des 3 champs</strong> ci-dessus, le 3e sera calculé automatiquement
                       (relation : moment = masse × bras).
                     </Typography>
@@ -1770,7 +1770,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       setMacLength(c);
                       updateData('cgEnvelope.macLength', c === '' ? null : c);
                     }}
-                    helperText="Mean Aerodynamic Chord (MANEX)"
+                    helperText="Mean Aerodynamic Chord (manuel de vol)"
                     InputProps={{
                       endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                     }}

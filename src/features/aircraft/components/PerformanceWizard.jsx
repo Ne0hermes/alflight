@@ -442,7 +442,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
 
         if (!pdfFile) {
 
-          setError('Impossible de récupérer le fichier PDF du MANEX');
+          setError('Impossible de récupérer le fichier PDF du manuel de vol');
           setIsProcessing(false);
           return;
         }
@@ -522,9 +522,9 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 <div style={{ ...styles.alert, ...styles.alertWarning }}>
                   <AlertCircle size={16} />
                   <div>
-                    <strong>Téléchargement du MANEX en cours...</strong>
+                    <strong>Téléchargement du manuel de vol en cours...</strong>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
-                      Le MANEX est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
+                      Le manuel de vol est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
                     </p>
                   </div>
                 </div>
@@ -535,9 +535,9 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 <div style={{ ...styles.alert, ...styles.alertError }}>
                   <AlertCircle size={16} />
                   <div>
-                    <strong>MANEX requis</strong>
+                    <strong>Manuel de vol requis</strong>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
-                      Vous devez d'abord ajouter un manuel de vol (MANEX) dans l'étape "Informations générales"
+                      Vous devez d'abord ajouter un manuel de vol dans l'étape "Informations générales"
                       avant de pouvoir extraire des données de performance.
                     </p>
                   </div>
@@ -552,7 +552,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               )}
 
               <p style={{ ...styles.text.sm, ...styles.text.muted, marginBottom: '24px' }}>
-                Choisissez le type de données que vous souhaitez extraire du MANEX :
+                Choisissez le type de données que vous souhaitez extraire du manuel de vol :
               </p>
 
               <div style={{
@@ -780,7 +780,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   <div>
                     <strong>Extraction en cours...</strong>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
-                      {loadingMessage || 'Extraction des pages du MANEX...'}
+                      {loadingMessage || 'Extraction des pages du manuel de vol...'}
                     </p>
                   </div>
                   <style>{`

@@ -430,7 +430,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
       // 4. Importer avec le MANEX s'il est disponible
       const willDownloadManex = communityData.hasManex && communityData.manexAvailableInSupabase?.filePath;
-      setDownloadStatus(communityData.manex ? 'Préparation des données avec MANEX...' : 'Préparation des données...');
+      setDownloadStatus(communityData.manex ? 'Préparation des données avec manuel de vol...' : 'Préparation des données...');
       setDownloadProgress(willDownloadManex ? 85 : 90);
 
 
@@ -626,7 +626,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           setDownloadProgress(100);
         } catch (error) {
           console.error('❌ Erreur téléchargement MANEX:', error);
-          setDownloadStatus('⚠️ Échec téléchargement manuel - L\'avion sera importé sans MANEX');
+          setDownloadStatus('⚠️ Échec téléchargement manuel - L\'avion sera importé sans manuel de vol');
           setDownloadProgress(100);
           // Continuer même en cas d'erreur - l'avion sera importé sans MANEX
         }
@@ -825,7 +825,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                       Mon avion n'est pas dans la liste
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Créer la fiche en important le MANEX (PDF)
+                      Créer la fiche en important le manuel de vol (PDF)
                     </Typography>
                   </Box>
                 </Box>
@@ -1040,7 +1040,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             onClick={() => manexFileInputRef.current?.click()}
             sx={{ flex: { sm: 1.5 } }}
           >
-            Importer depuis un MANEX (PDF)
+            Importer depuis un manuel de vol (PDF)
           </Button>
           <input
             ref={manexFileInputRef}
@@ -1057,7 +1057,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             }}
             sx={{ flex: { sm: 1 } }}
           >
-            Envoyer le MANEX
+            Envoyer le manuel de vol
           </Button>
         </Box>
         {extractionError && (
@@ -1085,10 +1085,10 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               <AutoAwesomeIcon color="success" />
               <Box sx={{ flex: 1, minWidth: 200 }}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  Extraction MANEX disponible
+                  Extraction du manuel de vol disponible
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {data.manexExtraction.fileName || 'MANEX'} •{' '}
+                  {data.manexExtraction.fileName || 'Manuel de vol'} •{' '}
                   {data.manexExtraction.items.length} champ
                   {data.manexExtraction.items.length > 1 ? 's' : ''} •{' '}
                   {data.manexExtraction.extractedAt

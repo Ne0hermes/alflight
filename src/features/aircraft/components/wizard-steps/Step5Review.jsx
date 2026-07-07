@@ -118,8 +118,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       'engineModel': 'Modèle moteur',
       'minimumRunwayLength': 'Longueur piste minimale (m)',
       'photo': 'Photo de l\'avion',
-      'manex': 'Manuel d\'exploitation (MANEX)',
-      'hasManex': 'Présence du MANEX',
+      'manex': 'Manuel de vol',
+      'hasManex': 'Présence du manuel de vol',
       // Sous-objets weights
       'weights.emptyWeight': `Masse à vide (${getUnitSymbol(units.weight)})`,
       'weights.mtow': `Masse max au décollage (${getUnitSymbol(units.weight)})`,
@@ -197,7 +197,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         // Pour les objets photo, afficher juste "Photo présente"
         if (value.data || value.url || value.base64) return 'Photo présente';
         // Pour les objets MANEX, afficher "MANEX présent"
-        if (value.fileName || value.fileUrl || value.uploadedAt) return 'MANEX présent';
+        if (value.fileName || value.fileUrl || value.uploadedAt) return 'Manuel de vol présent';
         return JSON.stringify(value);
       }
 
@@ -580,7 +580,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
 
         } catch (conversionError) {
           console.error('❌ Erreur conversion MANEX:', conversionError);
-          throw new Error('Erreur lors de la conversion du MANEX');
+          throw new Error('Erreur lors de la conversion du manuel de vol');
         }
       } else if (manexAlreadyOnSupabase) {
         console.log('ℹ️ MANEX déjà sur Supabase - Skip upload');
@@ -667,12 +667,12 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
   // @returns {boolean} true si l'upload a réussi, false sinon (sans throw)
   const handleUploadManexToSupabase = async () => {
     if (!data.registration) {
-      setManexUploadError('Immatriculation requise pour uploader le MANEX');
+      setManexUploadError('Immatriculation requise pour uploader le manuel de vol');
       return false;
     }
 
     if (!data.manex || (!data.manex.file && !data.manex.pdfData)) {
-      setManexUploadError('Aucun MANEX à uploader');
+      setManexUploadError('Aucun manuel de vol à uploader');
       return false;
     }
 
@@ -1804,7 +1804,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
       )}
       {manexUploadSuccess && (
         <Alert severity="success" sx={{ mb: 3, maxWidth: 800, mx: 'auto' }}>
-          ✅ MANEX uploadé vers Supabase avec succès !
+          ✅ Manuel de vol uploadé vers Supabase avec succès !
         </Alert>
       )}
 

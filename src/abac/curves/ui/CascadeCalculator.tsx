@@ -1091,7 +1091,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               style={styles.input}
               value={expectedValue}
               onChange={(e) => setExpectedValue(e.target.value)}
-              placeholder="Résultat lu sur l'abaque du MANEX"
+              placeholder="Résultat lu sur l'abaque du manuel de vol"
             />
           </div>
         )}

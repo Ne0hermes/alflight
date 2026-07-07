@@ -40,11 +40,11 @@ export const Step5Performance = memo(({ flightPlan, onUpdate }) => {
         <div>
           <strong style={{ color: 'var(--accent-primary)' }}>Marge de précision.</strong>{' '}
           Les performances calculées par l'application proviennent d'abaques et de tableaux
-          numérisés du MANEX : une <strong>marge d'erreur de ±5 %</strong> par rapport aux
+          numérisés du manuel de vol : une <strong>marge d'erreur de ±5 %</strong> par rapport aux
           exemples de référence du manuel est assumée.{' '}
           <strong>
             Le commandant de bord reste seul responsable de la détermination des performances —
-            en cas de doute, reprenez le calcul sur les abaques officiels du MANEX.
+            en cas de doute, reprenez le calcul sur les abaques officiels du manuel de vol.
           </strong>
         </div>
       </div>

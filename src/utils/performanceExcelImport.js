@@ -144,7 +144,9 @@ export async function importPerformanceModelsFromExcel(file) {
         graphs: Array.from(graphMap.values()),
         metadata: {
           systemType: meta['System Type'],
-          sourcePage: meta['Page source MANEX']
+          // Nouveau libellé « manuel de vol » ; on accepte aussi l'ancien
+          // libellé « MANEX » pour ré-importer les fichiers Excel existants.
+          sourcePage: meta['Page source manuel de vol'] ?? meta['Page source MANEX']
         }
       },
       _reimportedFromExcel: true
@@ -226,7 +228,7 @@ function parseTablesSheet(rows, sheetName, warnings) {
 
     // Métadonnées du tableau courant
     if (mode === 'table-meta') {
-      if (first === 'Page MANEX' && row[1] !== '') {
+      if ((first === 'Page manuel de vol' || first === 'Page MANEX') && row[1] !== '') {
         current.pageNumber = isNaN(Number(row[1])) ? row[1] : Number(row[1]);
         continue;
       }

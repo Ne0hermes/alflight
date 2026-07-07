@@ -246,7 +246,7 @@ const Row = memo(({ item, onChange, onSelectIcao }) => {
             color: 'var(--text-primary)',
             fontWeight: 600,
             fontSize: 11
-          }} title="Numéro de page du MANEX où la donnée a été extraite">
+          }} title="Numéro de page du manuel de vol où la donnée a été extraite">
             p. {item.sourcePage}
           </span>
         ) : (
@@ -348,7 +348,7 @@ const ManexExtractionReview = memo(({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ fontSize: 20, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
             <Sparkles size={22} color="var(--accent-primary)" />
-            Validation des données extraites du MANEX
+            Validation des données extraites du manuel de vol
           </h3>
           <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
             <X size={24} />
@@ -421,8 +421,8 @@ const ManexExtractionReview = memo(({
                   <th style={th}>Champ</th>
                   <th style={th}>Valeur (storage)</th>
                   <th style={th}>Unité cible</th>
-                  <th style={th}>Source MANEX (brut IA)</th>
-                  <th style={{ ...th, textAlign: 'center' }} title="Numéro de page du MANEX d'origine">Page</th>
+                  <th style={th}>Source manuel de vol (brut IA)</th>
+                  <th style={{ ...th, textAlign: 'center' }} title="Numéro de page du manuel de vol d'origine">Page</th>
                   <th style={th}>Confiance</th>
                   <th style={{ ...th, textAlign: 'center' }}>Importer</th>
                 </tr>
