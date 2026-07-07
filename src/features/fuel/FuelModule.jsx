@@ -114,7 +114,8 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     alternate: fuelData?.alternate || { gal: 0, ltr: 0 },
     finalReserve: fuelData?.finalReserve || { gal: 0, ltr: 0 },
     additional: fuelData?.additional || { gal: 0, ltr: 0 },
-    extra: fuelData?.extra || { gal: 0, ltr: 0 }
+    extra: fuelData?.extra || { gal: 0, ltr: 0 },
+    discretionary: fuelData?.discretionary || { gal: 0, ltr: 0 }
   };
 
   // Synchronisation automatique du carburant depuis la navigation
@@ -361,7 +362,9 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     { key: 'contingency', label: 'Contingency', description: getContingencyDescription(), readonly: true, automatic: true },
     { key: 'alternate', label: 'Alternate', description: getAlternateDescription(), readonly: true, automatic: true },
     { key: 'finalReserve', label: 'Final Reserve', description: getReserveDescription(), readonly: true, automatic: true },
-    { key: 'extra', label: 'Extra', description: 'Discrétion pilote' }
+    { key: 'additional', label: 'Additional', description: 'Si requis par le type d\'opération' },
+    { key: 'extra', label: 'Extra', description: 'Retards prévus / contraintes opérationnelles' },
+    { key: 'discretionary', label: 'Discretionary', description: 'À la discrétion du commandant de bord' }
   ];
 
   return (

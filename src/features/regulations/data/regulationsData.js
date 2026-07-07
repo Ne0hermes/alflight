@@ -255,14 +255,28 @@ export const regulationsData = {
         regulations: [
           {
             ref: 'NCO.OP.125',
-            title: 'Carburant et lubrifiant - avions',
-            description: 'Quantité minimale de carburant requise pour VFR',
+            title: 'Carburant/énergie et lubrifiant - avions',
+            description: 'Le pilote commandant de bord n\'entreprend le vol que si l\'aéronef emporte suffisamment de carburant/énergie pour le vol prévu et une réserve finale intouchable (schéma carburant/énergie du règlement (UE) 2021/1296, applicable depuis le 30 octobre 2022) :',
             requirements: [
-              'Carburant pour atteindre la destination',
-              'Réserve de route (généralement 5-10% selon les conditions)',
-              'Carburant de dégagement vers l\'aérodrome de dégagement',
-              'Réserve finale : 30 minutes en VFR de jour, 45 minutes de nuit',
-              'Carburant supplémentaire si requis par les conditions'
+              'Réserve finale VFR de jour, décollage et atterrissage au même aérodrome en restant en vue : 10 minutes à la puissance maximale continue de croisière à 1 500 ft',
+              'Réserve finale VFR de jour (voyage) : 30 minutes à la vitesse d\'attente à 1 500 ft',
+              'Réserve finale VFR de nuit et IFR : 45 minutes à la vitesse d\'attente à 1 500 ft',
+              'Entamer la réserve finale en vol constitue une situation d\'urgence (MAYDAY FUEL)'
+            ]
+          },
+          {
+            ref: 'CAT.OP.MPA.181(c) / AMC1 NCO.OP.125(b)',
+            title: 'Décomposition du bilan carburant (schéma EASA 2022)',
+            description: 'Le calcul pré-vol du carburant/énergie utilisable requis comprend les postes suivants :',
+            requirements: [
+              'Taxi fuel : carburant de roulage avant le décollage',
+              'Trip fuel : du lâcher des freins au toucher des roues à destination',
+              'Contingency fuel : réserve de route pour les imprévus (vent, re-routages, restrictions ATC)',
+              'Destination alternate fuel : déroutement vers l\'aérodrome de dégagement',
+              'Final reserve fuel : réserve finale réglementaire (voir NCO.OP.125)',
+              'Additional fuel : si requis par le type d\'opération',
+              'Extra fuel : retards prévus ou contraintes opérationnelles spécifiques',
+              'Discretionary fuel : marge ajoutée à la seule discrétion du commandant de bord'
             ]
           },
           {

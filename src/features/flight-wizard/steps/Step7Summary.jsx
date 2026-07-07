@@ -1093,6 +1093,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     <span style={{ fontWeight: '500' }}>{format(fuelData.extra.ltr, 'fuel', 1)}</span>
                   </div>
                 )}
+
+                {/* Carburant discrétionnaire (marge commandant de bord) */}
+                {fuelData?.discretionary?.ltr > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: theme.colors.textSecondary }}>• Discretionary:</span>
+                    <span style={{ fontWeight: '500' }}>{format(fuelData.discretionary.ltr, 'fuel', 1)}</span>
+                  </div>
+                )}
               </div>
             </div>
 

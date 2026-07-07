@@ -14,7 +14,8 @@ export const useFuelStore = create(
       alternate: { gal: 2.0, ltr: 7.57 },
       finalReserve: { gal: 0, ltr: 0 },
       additional: { gal: 0, ltr: 0 },
-      extra: { gal: 0, ltr: 0 }
+      extra: { gal: 0, ltr: 0 },
+      discretionary: { gal: 0, ltr: 0 }
     },
     fobFuel: { gal: 0, ltr: 0 },
     
@@ -108,7 +109,8 @@ export const useFuelStore = create(
         alternate: { gal: 2.0, ltr: 7.57 },
         finalReserve: { gal: 0, ltr: 0 },
         additional: { gal: 0, ltr: 0 },
-        extra: { gal: 0, ltr: 0 }
+        extra: { gal: 0, ltr: 0 },
+        discretionary: { gal: 0, ltr: 0 }
       };
       state.fobFuel = { gal: 0, ltr: 0 };
     })
@@ -124,6 +126,11 @@ export const useFuelStore = create(
     // Normalise fobFuel au chargement : récupère les anciens states où c'était un nombre
     onRehydrateStorage: () => (state) => {
       if (!state) return;
+      // Migration : les states persistés avant l'ajout du poste discrétionnaire
+      // (schéma carburant EASA 2022) n'ont pas la clé
+      if (state.fuelData && typeof state.fuelData === 'object' && !state.fuelData.discretionary) {
+        state.fuelData.discretionary = { gal: 0, ltr: 0 };
+      }
       const f = state.fobFuel;
       if (typeof f === 'number') {
         state.fobFuel = {
