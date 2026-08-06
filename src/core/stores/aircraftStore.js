@@ -402,9 +402,12 @@ export const useAircraftStore = create(
             // Owner (pour dédup + remplacement silencieux de la version communautaire)
             submitted_by: result.submitted_by || currentUserId,
             // 🔧 FIX: Ajouter les flags pour le chargement des données volumineuses depuis IndexedDB
-            hasPhoto: !!(photo || profilePhoto),
-            hasManex: !!manex,
-            hasWeighingReport: !!weighingReport,
+            // (préserver les flags déjà posés par l'appelant — ex. AircraftForm
+            // passe lightData SANS blobs mais avec hasPhoto/hasManex à true,
+            // les blobs étant sauvegardés séparément sous l'id résolu)
+            hasPhoto: !!(photo || profilePhoto || normalizedAircraft.hasPhoto),
+            hasManex: !!(manex || normalizedAircraft.hasManex),
+            hasWeighingReport: !!(weighingReport || normalizedAircraft.hasWeighingReport),
             _metadata: {
               ...normalizedAircraft._metadata,
               supabaseId: result.id
@@ -474,7 +477,10 @@ export const useAircraftStore = create(
               }
             } else {
               // Annuler l'ajout - garder la liste actuelle
+              // 🔧 FIX : remettre isLoading à false avant de sortir, sinon le
+              // store reste en état « chargement » après un refus.
               console.log('❌ [AircraftStore] Ajout annulé par l\'utilisateur (doublon)');
+              set({ isLoading: false, error: null });
               return null; // Retourner null pour signaler l'annulation
             }
           }

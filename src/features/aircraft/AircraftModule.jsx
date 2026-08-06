@@ -2907,23 +2907,39 @@ export const AircraftModule = memo(() => {
                     if (manex) lightData.hasManex = true;
                     if (weighingReport) lightData.hasWeighingReport = true;
 
-                    // Sauvegarder les données volumineuses dans IndexedDB si elles existent
-                    if (photo || manex || weighingReport) {
-                      const fullAircraft = {
-                        ...lightData,
-                        photo: photo || null,
-                        manex: manex || null,
-                        weighingReport: weighingReport || null
-                      };
-                      await dataBackupManager.saveAircraftData(fullAircraft);
-                      console.log('✅ Données volumineuses sauvegardées dans IndexedDB');
-                    }
-                    
                     // ⚠️ await OBLIGATOIRE : laisser le rejet remonter au catch
                     // englobant pour afficher l'erreur réelle (au lieu de l'avaler
                     // ici et de fermer le formulaire sur un faux succès).
                     const result = await addAircraft(lightData);
                     console.log('✅ AircraftModule - addAircraft result:', result);
+
+                    // 🛡️ FIX : addAircraft retourne null quand l'utilisateur refuse
+                    // le remplacement au confirm() de doublon — ne pas fermer le
+                    // formulaire en « faux succès » silencieux.
+                    if (!result) {
+                      alert(`Ajout annulé — l'avion ${lightData.registration} existant a été conservé.`);
+                    }
+
+                    // 🛡️ FIX DOUBLON : sauvegarder les blobs APRÈS addAircraft, sous
+                    // l'id Supabase RÉSOLU (result.id) et PAS sous l'id local forgé.
+                    // Avant : le record blobs partait sous `aircraft_<ts>_…` → 2e
+                    // record IndexedDB de même immatriculation (avion en double),
+                    // et les blobs ne vivaient QUE sur ce record parasite.
+                    // On enrichit le record écrit par addAircraft (normalisé) au
+                    // lieu de l'écraser.
+                    if (result?.id && (photo || manex || weighingReport)) {
+                      const storeRecord = await dataBackupManager.getAircraftData(result.id);
+                      const base = storeRecord || { ...lightData };
+                      await dataBackupManager.saveAircraftData({
+                        ...base,
+                        id: result.id,
+                        aircraftId: result.id,
+                        photo: photo || base.photo || null,
+                        manex: manex || base.manex || null,
+                        weighingReport: weighingReport || base.weighingReport || null
+                      });
+                      console.log('✅ Données volumineuses sauvegardées dans IndexedDB sous l\'id Supabase:', result.id);
+                    }
                     console.log('✅ AircraftModule - New aircraft added');
                   }
                   setShowForm(false);
@@ -3031,10 +3047,14 @@ export const AircraftModule = memo(() => {
                   const { photo, manex, ...lightData } = aircraftData;
 
                   if (wizardAircraft) {
-                    // Mode édition : mettre à jour l'avion existant
+                    // Mode édition : mettre à jour l'avion existant.
+                    // ⚠️ Utiliser l'id transmis par le wizard (résolu par Supabase)
+                    // et non wizardAircraft.id : pour un import communautaire,
+                    // wizardAircraft.id est un id local forgé `aircraft-<ts>` —
+                    // l'utiliser créerait un 2e record IndexedDB (avion en double).
                     const updatedAircraft = {
                       ...lightData,
-                      id: wizardAircraft.id,
+                      id: lightData.id || wizardAircraft.id,
                       photo: photo || null,
                       manex: manex || null
                     };
@@ -3064,8 +3084,13 @@ export const AircraftModule = memo(() => {
                     await dataBackupManager.saveAircraftData(updatedAircraft);
                     console.log('✅ Wizard - Données volumineuses sauvegardées dans IndexedDB');
 
-                    // Mettre à jour avec l'objet complet (photo/manex inclus)
-                    updateAircraft(updatedAircraft);
+                    // Mettre à jour avec l'objet complet (photo/manex inclus).
+                    // ⚠️ await OBLIGATOIRE : sans lui, refreshFromSupabase (plus bas)
+                    // peut recharger la liste AVANT que la mise à jour cloud aboutisse
+                    // (éditions invisibles), et l'écriture IndexedDB interne
+                    // d'updateAircraft peut arriver APRÈS la migration et écraser
+                    // les blobs rescapés.
+                    await updateAircraft(updatedAircraft);
                     console.log('✅ Wizard - Aircraft updated');
                   } else {
                     // Mode création : ajouter un nouvel avion
@@ -3086,19 +3111,18 @@ export const AircraftModule = memo(() => {
 
                     console.log('💾 Wizard - New aircraft photo:', !!photo, 'manex:', !!manex);
 
-                    // Sauvegarder les données volumineuses dans IndexedDB si elles existent
-                    if (photo || manex || lightData.hasPerformance) {
-                      const fullAircraft = {
-                        ...lightData,
-                        photo: photo || null,
-                        manex: manex || null
-                      };
-                      await dataBackupManager.saveAircraftData(fullAircraft);
-                      console.log('✅ Wizard - Données volumineuses sauvegardées dans IndexedDB');
-                    }
+                    // 🛡️ FIX : ne PAS ré-écrire le record IndexedDB ici — l'addAircraft
+                    // du wizard a déjà persisté le record COMPLET (photo/manex inclus)
+                    // sous l'UUID résolu, avec les _metadata d'identité (supabaseId,
+                    // unitsVerified, savedAt). Une ré-écriture avec lightData les
+                    // dégradait (métadonnées du wizard sans ces estampilles).
 
-                    addAircraft(lightData);
-                    console.log('✅ Wizard - New aircraft added');
+                    // 🛡️ FIX DOUBLON : ne PAS rappeler addAircraft ici — le wizard
+                    // l'a DÉJÀ fait (handleAircraftSave) et lightData.id est l'UUID
+                    // résolu. Un 2e appel re-soumettait l'avion à Supabase et son
+                    // écriture IndexedDB (sans photo/manex) écrasait le record
+                    // complet sauvegardé juste au-dessus sous le même UUID.
+                    console.log('✅ Wizard - New aircraft added (déjà persisté par le wizard)');
                   }
 
                   // 🔧 FIX: Recharger la liste des avions depuis Supabase pour synchroniser
@@ -3111,9 +3135,21 @@ export const AircraftModule = memo(() => {
                   const aircraftRegistration = wizardAircraft?.registration || lightData?.registration;
 
                   // Récupérer la liste à jour depuis le store (pas depuis le contexte qui n'est pas encore mis à jour)
+                  // 🔧 FIX : comparaison d'immatriculation NORMALISÉE (trim + majuscules),
+                  // comme partout ailleurs — sinon une casse/espace résiduel fait
+                  // silencieusement échouer la migration.
+                  const normalizeReg = (r) => (r || '').toString().trim().toUpperCase();
                   const updatedAircraftList = useAircraftStore.getState().aircraftList;
-                  const supabaseAircraft = updatedAircraftList.find(a => a.registration === aircraftRegistration);
-                  const supabaseId = supabaseAircraft?.id;
+                  const supabaseAircraft = updatedAircraftList.find(a => normalizeReg(a.registration) === normalizeReg(aircraftRegistration));
+                  // 🔧 FIX : cible prioritaire = l'id RÉSOLU transmis par le wizard
+                  // (lightData.id, non forgé). La résolution par immatriculation sur
+                  // la liste rafraîchie peut élire un AUTRE UUID (ligne communautaire
+                  // si la session a expiré pendant le refresh) et migrer vers le
+                  // mauvais record.
+                  const resolvedWizardId = lightData?.id && !/^aircraft[-_]\d+/i.test(String(lightData.id))
+                    ? lightData.id
+                    : null;
+                  const supabaseId = resolvedWizardId || supabaseAircraft?.id;
 
                   console.log('🔄 Migration données volumineuses:', {
                     tempId,
@@ -3124,7 +3160,15 @@ export const AircraftModule = memo(() => {
                     updatedListLength: updatedAircraftList.length
                   });
 
-                  if (tempId && supabaseId && tempId !== supabaseId && (photo || manex)) {
+                  // 🔧 FIX DOUBLON : la migration/purge doit tourner dès que les ids
+                  // divergent, même SANS photo ni MANEX — c'est précisément le cas
+                  // d'un avion communautaire téléchargé (strippé à l'upload) qui
+                  // laissait un record IndexedDB orphelin (avion en double).
+                  // 🛡️ GARDE : uniquement si tempId est un id local FORGÉ
+                  // (`aircraft-<ts>` / `aircraft_<ts>_…`) — jamais d'écrasement
+                  // UUID→UUID (ex. variant : tempId = id de l'avion de base).
+                  const isForgedTempId = /^aircraft[-_]\d+/i.test(String(tempId || ''));
+                  if (tempId && supabaseId && tempId !== supabaseId && isForgedTempId) {
                     try {
                       // Récupérer les données de l'ID temporaire
                       const tempData = await dataBackupManager.getAircraftData(tempId);
@@ -3135,13 +3179,31 @@ export const AircraftModule = memo(() => {
                       });
 
                       if (tempData) {
-                        // Sauvegarder avec le nouvel ID Supabase
+                        // 🔧 FIX : FUSION et non remplacement. Le snapshot temp peut
+                        // être PÉRIMÉ (ex. écrit par Step5Review au moment de l'upload
+                        // MANEX, avant les dernières éditions du wizard). Base = record
+                        // canonique actuel ; on ne rapatrie que les blobs manquants.
+                        // On réécrit aussi aircraftId et _metadata.supabaseId pour des
+                        // identités cohérentes.
+                        const currentCanonical = await dataBackupManager.getAircraftData(supabaseId);
+                        const base = currentCanonical || tempData;
                         const migratedData = {
-                          ...tempData,
-                          id: supabaseId
+                          ...base,
+                          id: supabaseId,
+                          aircraftId: supabaseId,
+                          photo: base.photo || tempData.photo || null,
+                          profilePhoto: base.profilePhoto || tempData.profilePhoto || null,
+                          // Ne pas ressusciter un MANEX supprimé VOLONTAIREMENT
+                          // pendant l'édition (flag manexDeleted posé par Step1BasicInfo)
+                          manex: base.manex || (base.manexDeleted ? null : tempData.manex) || null,
+                          weighingReport: base.weighingReport || tempData.weighingReport || null,
+                          _metadata: {
+                            ...(base._metadata || tempData._metadata || {}),
+                            supabaseId
+                          }
                         };
                         await dataBackupManager.saveAircraftData(migratedData);
-                        console.log('✅ Données migrées vers ID Supabase:', supabaseId);
+                        console.log('✅ Données migrées (fusion) vers ID Supabase:', supabaseId);
 
                         // Supprimer l'ancienne entrée avec l'ID temporaire
                         await dataBackupManager.deleteAircraftData(tempId);

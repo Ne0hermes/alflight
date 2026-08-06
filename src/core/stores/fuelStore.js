@@ -3,6 +3,30 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+// Identité avion pour la configuration réservoirs (id local sinon immatriculation).
+// Partagée entre FuelModule (écriture) et weightBalanceStore/Step6 (lecture) pour
+// garantir que la config n'est appliquée qu'à l'avion qui l'a saisie.
+export const aircraftTankConfigId = (aircraft) =>
+  aircraft == null ? null : String(aircraft.id ?? aircraft.registration ?? '');
+
+// Ids (String(id ?? index)) des réservoirs COCHÉS pour cet avion, ou null si la
+// config ne fait pas foi. Elle ne fait pas foi quand :
+//   - elle n'est pas engagée, ou engagée pour un AUTRE avion ;
+//   - elle est VIERGE (aucune case touchée) : après un reload de brouillon la
+//     config repart vide (non persistée) — tant que le pilote n'a pas interagi,
+//     on n'écrase NI le FOB restauré NI la répartition (revue adversariale
+//     2026-07 : la version qui écrasait détruisait le brouillon au montage).
+// null ⇒ comportement historique (tous les réservoirs déclarés comptent).
+export const activeTankIdsFrom = (tankConfig, aircraft) => {
+  if (!tankConfig || tankConfig.aircraftId == null) return null;
+  if (aircraftTankConfigId(aircraft) !== tankConfig.aircraftId) return null;
+  if (Object.keys(tankConfig.tanks).length === 0) return null; // vierge : pas encore vérifiée
+  const tanks = Array.isArray(aircraft?.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+  return tanks
+    .map((t, i) => String(t?.id ?? i))
+    .filter((key) => tankConfig.tanks[key]?.active);
+};
+
 export const useFuelStore = create(
   persist(
     immer((set, get) => ({
@@ -18,7 +42,19 @@ export const useFuelStore = create(
       discretionary: { gal: 0, ltr: 0 }
     },
     fobFuel: { gal: 0, ltr: 0 },
-    
+
+    // ─── Configuration réservoirs PAR VOL (avions multi-réservoirs) ─────────
+    // Demande pilote (2026-07) : en préparation carburant, le CDB coche les
+    // réservoirs réellement embarqués (standard vs long-range / auxiliaire)
+    // et saisit les litres de chacun. VOLONTAIREMENT exclu de partialize :
+    // remis à zéro à chaque nouvelle préparation de vol pour OBLIGER la
+    // re-vérification de la configuration réelle de l'avion.
+    // tanks : clé String(tank.id ?? index) → { active: bool, ltr: number }.
+    tankConfig: {
+      aircraftId: null,
+      tanks: {}
+    },
+
     // Actions
     setFuelData: (dataOrUpdater) => set(state => {
       // Support pour les fonctions updater comme (prev => ({...}))
@@ -113,7 +149,53 @@ export const useFuelStore = create(
         discretionary: { gal: 0, ltr: 0 }
       };
       state.fobFuel = { gal: 0, ltr: 0 };
-    })
+      state.tankConfig = { aircraftId: null, tanks: {} };
+    }),
+
+    // ─── Actions configuration réservoirs ───────────────────────────────────
+    // Engage la config pour un avion. Même avion → no-op (la saisie en cours
+    // survit aux allers-retours entre étapes) ; avion différent → repart vierge.
+    initTankConfig: (aircraftId) => set(state => {
+      const id = aircraftId == null ? null : String(aircraftId);
+      if (state.tankConfig.aircraftId === id) return;
+      state.tankConfig = { aircraftId: id, tanks: {} };
+    }),
+
+    // Purge totale — appelée au démarrage d'une NOUVELLE préparation de vol
+    // (décision pilote : le CDB doit re-vérifier la configuration à chaque vol).
+    resetTankConfig: () => set(state => {
+      state.tankConfig = { aircraftId: null, tanks: {} };
+    }),
+
+    setTankActive: (tankKey, active) => set(state => {
+      const key = String(tankKey);
+      const prev = state.tankConfig.tanks[key];
+      // Décocher remet le volume à zéro (décision pilote : pas de mémoire).
+      state.tankConfig.tanks[key] = active
+        ? { active: true, ltr: prev?.ltr || 0 }
+        : { active: false, ltr: 0 };
+    }),
+
+    setTankLiters: (tankKey, ltr) => set(state => {
+      const key = String(tankKey);
+      const liters = Math.max(0, parseFloat(ltr) || 0);
+      const prev = state.tankConfig.tanks[key];
+      state.tankConfig.tanks[key] = { active: prev?.active ?? true, ltr: liters };
+    }),
+
+    // Ids (String) des réservoirs cochés pour cet avion, ou null si la config
+    // ne fait pas foi : non engagée, engagée pour un autre avion, ou VIERGE
+    // (aucune case touchée — cf. activeTankIdsFrom). null → les calculs gardent
+    // le comportement historique (tous les réservoirs déclarés comptent).
+    getActiveTankIds: (aircraftId) => {
+      const cfg = get().tankConfig;
+      if (cfg.aircraftId == null) return null;
+      if (aircraftId == null || String(aircraftId) !== cfg.aircraftId) return null;
+      if (Object.keys(cfg.tanks).length === 0) return null; // vierge : pas encore vérifiée
+      return Object.entries(cfg.tanks)
+        .filter(([, t]) => t?.active)
+        .map(([k]) => k);
+    }
   })),
   {
     name: 'fuel-storage', // Nom unique pour localStorage

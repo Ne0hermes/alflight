@@ -1106,6 +1106,24 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
       try {
         savedAircraft = await addAircraft(dataToSave);
+
+        // 🛡️ FIX DOUBLON : addAircraft retourne null quand l'utilisateur REFUSE
+        // le remplacement au confirm() de doublon. Ne PAS poursuivre comme un
+        // succès : sans ce garde, onComplete était appelé avec l'id local forgé
+        // et la migration IndexedDB écrasait le record de l'avion que
+        // l'utilisateur venait de choisir de CONSERVER.
+        if (!savedAircraft) {
+          console.warn('⚠️ Ajout annulé par l\'utilisateur (doublon refusé) — avion existant conservé, aucune écriture locale');
+          setSavingProgress(prev => ({ ...prev, isOpen: false }));
+          setNotification({
+            open: true,
+            message: `Ajout annulé — l'avion ${dataToSave.registration} existant a été conservé.`,
+            severity: 'info',
+            duration: 5000
+          });
+          return;
+        }
+
         console.log('✅ Avion sauvegardé dans Supabase:', savedAircraft);
         updateStep(2, 'completed');
       } catch (error) {
@@ -1218,9 +1236,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           }
         }
 
-        // Appeler onComplete si défini
+        // Appeler onComplete si défini — en transmettant l'id RÉSOLU par
+        // Supabase (searchId) et non l'id local forgé : sinon AircraftModule
+        // ré-écrit le même avion sous une 2e clé IndexedDB (doublon au
+        // prochain démarrage).
         if (onComplete) {
-          onComplete(dataToSave);
+          onComplete({ ...dataToSave, id: searchId, aircraftId: searchId });
         }
       }, 1500);
 

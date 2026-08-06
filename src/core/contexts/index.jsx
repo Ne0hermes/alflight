@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useMemo, useCallback, memo } from 'react';
 import { useAircraftStore } from '../stores/aircraftStore';
 import { useNavigationStore } from '../stores/navigationStore';
-import { useFuelStore } from '../stores/fuelStore';
+import { useFuelStore, activeTankIdsFrom } from '../stores/fuelStore';
 import { useWeightBalanceStore } from '../stores/weightBalanceStore';
 import { useWeatherStore } from '../stores/weatherStore';
 import { getFuelDensity } from '@utils/fuelDensity';
@@ -249,22 +249,179 @@ export const AircraftProvider = memo(({ children }) => {
             return light;
           });
 
+          // 🛡️ FIX DOUBLON (2026-08) : un import communautaire pouvait laisser
+          // DEUX records IndexedDB pour la même immatriculation (id local forgé
+          // `aircraft-<ts>` + UUID Supabase) — l'avion apparaissait en double.
+          // Auto-réparation CONSERVATRICE :
+          // - on ne touche QUE la signature exacte du bug (1 record Supabase
+          //   + ≥1 record à id forgé pour la même immatriculation) ;
+          // - le CONTENU gagnant est le record le plus RÉCENT (les éditions
+          //   post-import de l'utilisateur vivaient parfois sur la copie forgée) ;
+          // - ce contenu est d'abord PRÉSERVÉ sous l'id Supabase canonique,
+          //   PUIS seulement les records forgés sont supprimés ;
+          // - tout autre cas de doublon (2 UUID, 2 forgés…) est laissé INTACT
+          //   (visible mais aucune donnée détruite) et signalé en console.
+          const isForgedId = (id) => /^aircraft[-_]\d+/i.test(String(id || ''));
+          // ⚠️ lastModified EN PREMIER : c'est le seul horodatage rafraîchi par
+          // dataBackupManager à CHAQUE écriture IndexedDB. _metadata.savedAt peut
+          // être hérité d'un autre utilisateur (preset communautaire) ou figé par
+          // les chemins d'écriture directe (ManexImporter…) — non fiable seul.
+          const recordTime = (a) => {
+            const t = a?.lastModified || a?._metadata?.savedAt || a?._metadata?.updatedAt || a?.updatedAt || a?.createdAt || null;
+            const parsed = t ? Date.parse(t) : NaN;
+            return Number.isNaN(parsed) ? 0 : parsed;
+          };
+          const contentScore = (a) => {
+            let s = 0;
+            if (a?.performanceModels?.length || a?.advancedPerformance?.tables?.length || a?.performanceTables?.length) s += 4;
+            if (a?.hasManex) s += 2;
+            if (a?.hasPhoto) s += 1;
+            return s;
+          };
+          const fullRecordById = new Map(allAircraft.map(a => [a?.id, a]));
+          const groupsByRegistration = new Map();
+          for (const ac of lightAircraft) {
+            const reg = (ac?.registration || '').toString().trim().toUpperCase() || `__noreg__${ac?.id}`;
+            if (!groupsByRegistration.has(reg)) groupsByRegistration.set(reg, []);
+            groupsByRegistration.get(reg).push(ac);
+          }
+          const dedupedAircraft = [];
+          for (const [reg, group] of groupsByRegistration) {
+            if (group.length === 1 || reg.startsWith('__noreg__')) {
+              dedupedAircraft.push(...group);
+              continue;
+            }
+            const forgedRecords = group.filter(a => isForgedId(a.id));
+            const canonicalRecords = group.filter(a => !isForgedId(a.id));
+            // Signature du bug : exactement 1 record Supabase + ≥1 record forgé.
+            // Tout autre cas est ambigu → NE RIEN détruire.
+            if (canonicalRecords.length !== 1 || forgedRecords.length === 0) {
+              console.warn(`⚠️ [AircraftProvider] ${group.length} avions partagent l'immatriculation ${reg} hors signature de doublon d'import — aucune purge (sécurité).`);
+              dedupedAircraft.push(...group);
+              continue;
+            }
+            const canonical = canonicalRecords[0];
+            // Contenu gagnant : le plus récent ; à date égale, le plus riche ;
+            // sinon le record canonique.
+            let contentSource = canonical;
+            for (const forged of forgedRecords) {
+              const newer = recordTime(forged) > recordTime(contentSource);
+              const sameTimeButRicher = recordTime(forged) === recordTime(contentSource) && contentScore(forged) > contentScore(contentSource);
+              if (newer || sameTimeButRicher) contentSource = forged;
+            }
+            let repaired = true;
+            let mergedFull = null;
+            try {
+              const fullContentSource = fullRecordById.get(contentSource.id);
+              if (!fullContentSource) throw new Error(`Record complet introuvable pour ${contentSource.id}`);
+
+              // Fusion : contenu du record le plus récent + BLOBS rescapés de
+              // TOUTES les copies du groupe (photo/manex/pesée peuvent ne vivre
+              // que sur la copie forgée — ex. ancien flux AircraftForm — ou que
+              // sur la canonique). Aucun blob n'est jamais perdu.
+              mergedFull = { ...fullContentSource };
+              let rescuedBlobs = false;
+              for (const member of group) {
+                const fullMember = fullRecordById.get(member.id);
+                if (!fullMember || fullMember === fullContentSource) continue;
+                for (const field of ['photo', 'profilePhoto', 'manex']) {
+                  if (!mergedFull[field] && fullMember[field]) {
+                    mergedFull[field] = fullMember[field];
+                    rescuedBlobs = true;
+                  }
+                }
+                // weighingReport : le gagnant peut porter un objet « métadonnées
+                // seules » ({hasData, url} sans pdfData) — rapatrier le PDF local
+                // complet du perdant dans ce cas.
+                if (!mergedFull.weighingReport?.pdfData && fullMember.weighingReport?.pdfData) {
+                  mergedFull.weighingReport = fullMember.weighingReport;
+                  rescuedBlobs = true;
+                }
+              }
+              // Données de performances STRUCTURÉES : si le gagnant n'en a AUCUNE
+              // et qu'une copie perdante en porte, les rapatrier (d'un SEUL donneur,
+              // pour rester cohérent). Sinon les abaques/tableaux saisis à la main
+              // seraient supprimés avec le record forgé.
+              const hasPerfData = (r) => !!(r?.performanceModels?.length || r?.advancedPerformance?.tables?.length || r?.performanceTables?.length);
+              if (!hasPerfData(mergedFull)) {
+                const perfDonor = group
+                  .map(m => fullRecordById.get(m.id))
+                  .find(fm => fm && fm !== fullContentSource && hasPerfData(fm));
+                if (perfDonor) {
+                  for (const field of ['performanceModels', 'advancedPerformance', 'performanceTables']) {
+                    if (perfDonor[field]) mergedFull[field] = perfDonor[field];
+                  }
+                  rescuedBlobs = true;
+                  console.log(`🔀 [AircraftProvider] Doublon ${reg} : données de performances rapatriées depuis ${perfDonor.id}`);
+                }
+              }
+
+              // Écrire le record fusionné sous l'id canonique AVANT toute
+              // suppression. submitted_by reste celui du record canonique
+              // (identité de propriété — sinon la dédup Supabase et le modèle
+              // « clone possédé » traitent l'avion comme celui d'un autre).
+              if (contentSource !== canonical || rescuedBlobs) {
+                await dataBackupManager.saveAircraftData({
+                  ...mergedFull,
+                  id: canonical.id,
+                  aircraftId: canonical.id,
+                  submitted_by: canonical.submitted_by ?? mergedFull.submitted_by,
+                  _metadata: {
+                    ...mergedFull._metadata,
+                    supabaseId: canonical.id,
+                    mergedFromDuplicate: contentSource !== canonical ? contentSource.id : undefined,
+                    mergedAt: new Date().toISOString()
+                  }
+                });
+                console.log(`🔀 [AircraftProvider] Doublon ${reg} : contenu fusionné (source: ${contentSource.id}${rescuedBlobs ? ', blobs rescapés' : ''}) préservé sous l'id canonique ${canonical.id}`);
+              }
+              for (const forged of forgedRecords) {
+                // deleteAircraftData retourne false (sans throw) en cas d'échec —
+                // dans ce cas le record survivra et la réparation reconvergera au
+                // prochain démarrage (le contenu est déjà préservé sous l'id canonique).
+                const deleted = await dataBackupManager.deleteAircraftData(forged.id);
+                if (deleted === false) {
+                  console.warn(`⚠️ [AircraftProvider] Doublon ${reg} : suppression du record forgé ${forged.id} échouée — retentée au prochain démarrage`);
+                } else {
+                  console.log(`🗑️ [AircraftProvider] Doublon ${reg} : record forgé supprimé d'IndexedDB:`, forged.id);
+                }
+              }
+            } catch (repairError) {
+              repaired = false;
+              console.error(`❌ [AircraftProvider] Échec auto-réparation du doublon ${reg} — les deux copies sont conservées:`, repairError);
+            }
+            if (repaired) {
+              const entryBase = contentSource === canonical
+                ? canonical
+                : { ...contentSource, id: canonical.id, aircraftId: canonical.id };
+              dedupedAircraft.push({
+                ...entryBase,
+                submitted_by: canonical.submitted_by ?? entryBase.submitted_by,
+                hasPhoto: !!(entryBase.hasPhoto || mergedFull?.photo || mergedFull?.profilePhoto),
+                hasManex: !!(entryBase.hasManex || mergedFull?.manex),
+                hasWeighingReport: !!(entryBase.hasWeighingReport || mergedFull?.weighingReport)
+              });
+            } else {
+              dedupedAircraft.push(...group);
+            }
+          }
+
           console.log('✅ [AircraftProvider] Métadonnées légères chargées depuis IndexedDB:', {
-            count: lightAircraft.length,
-            registrations: lightAircraft.map(a => a.registration)
+            count: dedupedAircraft.length,
+            registrations: dedupedAircraft.map(a => a.registration)
           });
 
           // 🔧 NE PAS CONVERTIR ICI : Les données restent en STORAGE units
           // La conversion vers USER units se fera automatiquement via useUnits().format()
           // lors de l'affichage dans les composants
           console.log('📦 [AircraftProvider] Avions chargés en STORAGE units (ltr/lph/kg/kt):', {
-            count: lightAircraft.length,
+            count: dedupedAircraft.length,
             note: 'Conversion → USER units faite par format() lors de l\'affichage'
           });
 
-          // Charger les avions dans le store (en STORAGE units)
+          // Charger les avions dans le store (en STORAGE units, dédupliqués)
           useAircraftStore.setState({
-            aircraftList: lightAircraft,
+            aircraftList: dedupedAircraft,
             isInitialized: true,
             selectedAircraftId: null
           });
@@ -421,23 +578,55 @@ export const FuelProvider = memo(({ children }) => {
   const isFobSufficient = useFuelStore(state => state.isFobSufficient);
   const updateTripFuel = useFuelStore(state => state.updateTripFuel);
   const updateFinalReserve = useFuelStore(state => state.updateFinalReserve);
-  
+  // Configuration réservoirs par vol (standard vs long-range/auxiliaire)
+  const tankConfig = useFuelStore(state => state.tankConfig);
+  const initTankConfig = useFuelStore(state => state.initTankConfig);
+  const resetTankConfig = useFuelStore(state => state.resetTankConfig);
+  const setTankActive = useFuelStore(state => state.setTankActive);
+  const setTankLiters = useFuelStore(state => state.setTankLiters);
+
   const { navigationResults } = useNavigation();
   const { selectedAircraft } = useAircraft();
-  
+
   // Auto-sync avec la navigation
   React.useEffect(() => {
     if (navigationResults?.fuelRequired) {
       updateTripFuel(navigationResults.fuelRequired);
     }
   }, [navigationResults?.fuelRequired, updateTripFuel]);
-  
+
   // Auto-sync de la réserve finale
   React.useEffect(() => {
     if (navigationResults?.regulationReserveLiters) {
       updateFinalReserve(navigationResults.regulationReserveLiters);
     }
   }, [navigationResults?.regulationReserveLiters, updateFinalReserve]);
+
+  // ─── Config réservoirs par vol → FOB + répartition centrage ─────────────
+  // Quand la config FAIT FOI (engagée pour l'avion sélectionné ET au moins une
+  // case touchée par le pilote — cf. activeTankIdsFrom) : le FOB devient la
+  // SOMME des litres des réservoirs cochés (source unique — fin de la double
+  // saisie FOB/répartition), et chaque réservoir alimente loads[`fuel_<id>`]
+  // (0 si décoché) pour le centrage par réservoir (weightBalanceStore +
+  // scénarios). Config vierge (reload de brouillon, étape pas encore vérifiée)
+  // ou avion sans réservoirs : on n'écrase RIEN — le FOB/les loads restaurés
+  // du brouillon survivent jusqu'à la première interaction du pilote.
+  React.useEffect(() => {
+    const tanks = Array.isArray(selectedAircraft?.additionalFuelTanks)
+      ? selectedAircraft.additionalFuelTanks : [];
+    if (tanks.length === 0) return;
+    if (activeTankIdsFrom(tankConfig, selectedAircraft) == null) return;
+
+    let sumLtr = 0;
+    const { updateLoad } = useWeightBalanceStore.getState();
+    tanks.forEach((t, i) => {
+      const cfg = tankConfig.tanks[String(t?.id ?? i)];
+      const ltr = cfg?.active ? (parseFloat(cfg.ltr) || 0) : 0;
+      sumLtr += ltr;
+      updateLoad(`fuel_${t?.id ?? i}`, ltr);
+    });
+    setFobFuel(sumLtr);
+  }, [tankConfig, selectedAircraft, setFobFuel]);
 
   const value = useMemo(() => ({
     fuelData,
@@ -447,8 +636,14 @@ export const FuelProvider = memo(({ children }) => {
     calculateTotal,
     isFobSufficient,
     updateTripFuel,
-    updateFinalReserve
-  }), [fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient, updateTripFuel, updateFinalReserve]);
+    updateFinalReserve,
+    tankConfig,
+    initTankConfig,
+    resetTankConfig,
+    setTankActive,
+    setTankLiters
+  }), [fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient, updateTripFuel, updateFinalReserve,
+      tankConfig, initTankConfig, resetTankConfig, setTankActive, setTankLiters]);
 
   return <FuelContext.Provider value={value}>{children}</FuelContext.Provider>;
 });
