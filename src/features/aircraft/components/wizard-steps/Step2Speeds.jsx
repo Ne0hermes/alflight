@@ -271,16 +271,16 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     },
     vx: {
       name: "VX",
-      label: "VX - Vitesse de meilleur angle de montée",
-      description: "Vitesse pour la pente de montée maximale",
+      label: "VX - Vitesse de meilleur angle de montée (config. takeoff)",
+      description: "Vitesse pour la pente de montée maximale — indiquée en configuration takeoff",
       color: "#6610f2",
       category: "optional",
       required: false
     },
     vy: {
       name: "VY",
-      label: "VY - Vitesse de meilleur taux de montée",
-      description: "Vitesse pour le taux de montée maximal",
+      label: "VY - Vitesse de meilleur taux de montée (config. takeoff)",
+      description: "Vitesse pour le taux de montée maximal — indiquée en configuration takeoff",
       color: "#e83e8c",
       category: "optional",
       required: false

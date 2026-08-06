@@ -827,8 +827,9 @@ const styles = {
     width: '28px',
     height: '28px',
     borderRadius: '50%',
-    backgroundColor: 'var(--bg-overlay)',
-    color: 'var(--text-secondary)',
+    // Badge accent (charte) : orange doux au repos, orange plein au survol
+    backgroundColor: 'var(--accent-soft)',
+    color: 'var(--accent-primary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1023,8 +1024,8 @@ styleSheet.innerText = `
     background-color: var(--bg-overlay) !important;
   }
   .result-item:hover .plus-button {
-    background-color: var(--text-secondary) !important;
-    color: white !important;
+    background-color: var(--accent-primary) !important;
+    color: var(--text-inverse) !important;
   }
   @keyframes spin {
     from { transform: rotate(0deg); }

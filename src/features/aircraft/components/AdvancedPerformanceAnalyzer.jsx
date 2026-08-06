@@ -987,7 +987,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
           problemMessage += `\n⚠️ Documents où aucun tableau n'a été détecté (${analysisSummary.undetectedDocuments}) :\n`;
           problemMessage += analysisSummary.documentsUndetected.map(d => `  - ${d}`).join('\n');
           problemMessage += `\n\nCes documents ont été ajoutés à la liste. Vous pouvez :\n`;
-          problemMessage += `• Cliquer sur "Ré-analyser" pour réessayer l'extraction\n`;
+          problemMessage += `• Cliquer sur "Ré-analyser" pour relancer la lecture du document\n`;
           problemMessage += `• Éditer manuellement les données\n`;
           problemMessage += `• Supprimer les entrées non pertinentes\n`;
         }
@@ -1828,7 +1828,7 @@ Do NOT return empty tables array.`;
                       fontWeight: 'bold'
                     }}
                   >
-                    <span>🧪 Test de prédiction sur les données extraites</span>
+                    <span>🧪 Test de prédiction sur les données du tableau</span>
                     {showPredictionPanel ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </button>
 
@@ -1837,7 +1837,7 @@ Do NOT return empty tables array.`;
                   
                   <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mb(3))}>
                     <p style={sx.text.sm}>
-                      Testez l'interpolation basée sur les {selectedTable.data.length} points extraits du tableau
+                      Testez une estimation de distance calculée à partir des {selectedTable.data.length} points relevés dans le tableau
                     </p>
                   </div>
                   
@@ -1918,9 +1918,9 @@ Do NOT return empty tables array.`;
                         if (result.method === 'no_result_column') {
                           methodText = 'Erreur: Aucune colonne de distance trouvée';
                         } else if (result.method === 'interpolation') {
-                          methodText = 'Interpolation IDW (proche)';
+                          methodText = 'Estimation entre les points du tableau (conditions proches des valeurs connues)';
                         } else if (result.method === 'extrapolation') {
-                          methodText = 'Extrapolation IDW (éloigné)';
+                          methodText = 'Estimation au-delà des points du tableau (conditions éloignées — résultat à vérifier)';
                         }
                         
                         // Afficher les valeurs de test utilisées
@@ -2113,7 +2113,7 @@ Do NOT return empty tables array.`;
         <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(4))}>
           <Info size={16} />
           <p style={sx.text.sm}>
-            Cliquez sur le bouton "🚀 Analyser les documents" pour lancer l'extraction automatique.
+            Cliquez sur le bouton "🚀 Analyser les documents" pour lancer la lecture automatique des tableaux.
           </p>
         </div>
       )}

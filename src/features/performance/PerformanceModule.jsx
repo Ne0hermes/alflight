@@ -776,7 +776,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
               <li>Sélectionnez votre avion ({selectedAircraft.registration})</li>
               <li>Cliquez sur <strong>"Modifier"</strong></li>
               <li>Étape <strong>"Performances"</strong> → cliquez "Ajouter des données"</li>
-              <li>Choisissez <strong>Tableaux</strong> (extraction IA Claude) ou <strong>Abaques</strong> (construction manuelle)</li>
+              <li>Choisissez <strong>Tableaux</strong> (lecture automatique du manuel par l'IA) ou <strong>Abaques</strong> (construction manuelle)</li>
             </ol>
           </div>
         </div>

@@ -721,13 +721,10 @@ export const FlightRecapTable = ({
                       whiteSpace: 'nowrap'
                     }}>
                       <span style={{ whiteSpace: 'nowrap' }}>
-                        🌅 <strong>Coucher:</strong> {formatSunTime(sunTimes.sunset)}
+                        🌞 <strong>Jour aéro:</strong> {formatSunTime(sunTimes.nightEnd)}
                       </span>
                       <span style={{ whiteSpace: 'nowrap' }}>
-                        🌙 <strong>Nuit:</strong> {formatSunTime(sunTimes.nightStart)}
-                      </span>
-                      <span style={{ whiteSpace: 'nowrap' }}>
-                        🌄 <strong>Lever:</strong> {formatSunTime(sunTimes.sunrise)}
+                        🌙 <strong>Nuit aéro:</strong> {formatSunTime(sunTimes.nightStart)}
                       </span>
                     </div>
                   )}

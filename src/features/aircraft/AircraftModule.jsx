@@ -4996,8 +4996,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               </div>
               <div>
                 <label style={labelStyle}>
-                  Vx - Montée max (pente)
-                  <InfoIcon tooltip="Meilleur angle de montée" />
+                  Vx - Montée max (pente) · config. takeoff
+                  <InfoIcon tooltip="Meilleur angle de montée — indiquée en configuration takeoff" />
                 </label>
                 <input
                   type="number"
@@ -5010,8 +5010,8 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
               </div>
               <div>
                 <label style={labelStyle}>
-                  Vy - Montée optimale (taux)
-                  <InfoIcon tooltip="Meilleur taux de montée" />
+                  Vy - Montée optimale (taux) · config. takeoff
+                  <InfoIcon tooltip="Meilleur taux de montée — indiquée en configuration takeoff" />
                 </label>
                 <input
                   type="number"

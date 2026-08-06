@@ -1,6 +1,6 @@
 // src/features/navigation/components/VFRNavigationTable.jsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { Table, AlertTriangle, Sun, Sunset, Moon } from 'lucide-react';
+import { Table, AlertTriangle, Sun, Moon } from 'lucide-react';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { useUnits } from '@hooks/useUnits';
@@ -250,9 +250,9 @@ const VFRNavigationTable = ({
       };
     });
 
-    // Détecter les warnings
+    // Détecter les warnings (jour → nuit aéronautique uniquement)
     const hasWarnings = segmentsAnalysis.some(seg =>
-      seg.dayNightStatus?.warning || seg.dayNightStatus?.twilightWarning
+      seg.dayNightStatus?.warning
     );
 
     return {
@@ -367,15 +367,14 @@ const VFRNavigationTable = ({
                 gap: '8px',
                 marginBottom: '8px'
               }}>
-                <Sunset size={18} color="var(--accent-primary)" />
+                <Moon size={18} color="var(--accent-primary)" />
                 <span style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: 'var(--fs-body)' }}>
-                  ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera au crépuscule ou de nuit
+                  ⚠️ ALERTE JOUR/NUIT : Une partie du vol se déroulera de nuit
                 </span>
               </div>
               <div style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)', lineHeight: '1.5' }}>
-                <div><strong>Coucher du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunset)}</div>
-                <div><strong>Début nuit aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightStart)} (coucher + 30min)</div>
-                <div><strong>Lever du soleil :</strong> {formatSunTime(dayNightAnalysis.sunTimes.sunrise)}</div>
+                <div><strong>Jour aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightEnd)} (lever - 30 min)</div>
+                <div><strong>Nuit aéronautique :</strong> {formatSunTime(dayNightAnalysis.sunTimes.nightStart)} (coucher + 30 min)</div>
                 <div style={{ marginTop: '8px', fontWeight: '500' }}>
                   Vérifiez que vous êtes qualifié pour le vol de nuit et que l'avion est équipé en conséquence.
                 </div>
@@ -485,13 +484,6 @@ const VFRNavigationTable = ({
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                               <Sun size={14} color="var(--accent-primary)" />
                               <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>Jour</span>
-                            </div>
-                          );
-                        } else if (status === 'twilight') {
-                          return (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                              <Sunset size={14} color="var(--accent-primary)" />
-                              <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)' }}>Crépuscule</span>
                             </div>
                           );
                         } else if (status === 'night') {

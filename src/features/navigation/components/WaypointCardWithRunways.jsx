@@ -728,40 +728,40 @@ export const WaypointCardWithRunways = memo(({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
           {/* Ligne 1: Boutons flèche haut/bas */}
           <div style={{ display: 'flex', gap: '8px' }}>
-            {/* Déplacer vers le haut (désactivé si départ ou juste après départ) */}
+            {/* Déplacer vers le haut (désactivé uniquement pour le premier) */}
             <button
               onClick={onMoveUp}
-              disabled={index <= 1}
+              disabled={index === 0}
               style={sx.combine(
                 sx.components.button.base,
                 {
                   padding: '6px',
-                  backgroundColor: index <= 1 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
-                  color: index <= 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: index <= 1 ? 'not-allowed' : 'pointer',
-                  opacity: index <= 1 ? 0.5 : 1
+                  backgroundColor: index === 0 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
+                  color: index === 0 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: index === 0 ? 'not-allowed' : 'pointer',
+                  opacity: index === 0 ? 0.5 : 1
                 }
               )}
-              title={index <= 1 ? "Impossible de remonter plus haut" : "Déplacer vers le haut"}
+              title={index === 0 ? "Impossible de remonter plus haut" : "Déplacer vers le haut"}
             >
               <ArrowUp size={14} />
             </button>
 
-            {/* Déplacer vers le bas (désactivé si arrivée ou juste avant arrivée) */}
+            {/* Déplacer vers le bas (désactivé uniquement pour le dernier) */}
             <button
               onClick={onMoveDown}
-              disabled={index >= totalWaypoints - 2}
+              disabled={index === totalWaypoints - 1}
               style={sx.combine(
                 sx.components.button.base,
                 {
                   padding: '6px',
-                  backgroundColor: index >= totalWaypoints - 2 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
-                  color: index >= totalWaypoints - 2 ? 'var(--text-tertiary)' : 'var(--text-primary)',
-                  cursor: index >= totalWaypoints - 2 ? 'not-allowed' : 'pointer',
-                  opacity: index >= totalWaypoints - 2 ? 0.5 : 1
+                  backgroundColor: index === totalWaypoints - 1 ? 'var(--border-subtle)' : 'var(--bg-overlay)',
+                  color: index === totalWaypoints - 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                  cursor: index === totalWaypoints - 1 ? 'not-allowed' : 'pointer',
+                  opacity: index === totalWaypoints - 1 ? 0.5 : 1
                 }
               )}
-              title={index >= totalWaypoints - 2 ? "Impossible de descendre plus bas" : "Déplacer vers le bas"}
+              title={index === totalWaypoints - 1 ? "Impossible de descendre plus bas" : "Déplacer vers le bas"}
             >
               <ArrowDown size={14} />
             </button>

@@ -6,6 +6,20 @@ import { persist } from 'zustand/middleware';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { computeRegulatoryReserveMinutes, DEFAULT_FLIGHT_TYPE } from '@core/flightType';
 
+// Réassigne les rôles départ/arrivée selon la POSITION après un déplacement :
+// premier = 'departure', dernier = 'arrival' ; un ancien départ/arrivée déplacé
+// au milieu redevient 'waypoint' (les types spécifiques des points intermédiaires
+// — points VFR, etc. — sont conservés). Sans cette normalisation, les
+// consommateurs par TYPE (cartes VAC, marqueurs carte, PDF, déroutements)
+// divergent des consommateurs par INDEX (labels Départ/Arrivée de la liste).
+export const normalizeWaypointRoles = (waypoints) => waypoints.map((wp, i) => {
+  const desired = i === 0 ? 'departure' : (i === waypoints.length - 1 ? 'arrival' : null);
+  if (desired) {
+    return wp.type === desired ? wp : { ...wp, type: desired };
+  }
+  return (wp.type === 'departure' || wp.type === 'arrival') ? { ...wp, type: 'waypoint' } : wp;
+});
+
 // Fonction de calcul des résultats de navigation
 const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => {
   if (!selectedAircraft || !waypoints || waypoints.length < 2) {
@@ -168,12 +182,12 @@ export const useNavigationStore = create(
         const waypoints = get().waypoints;
         const index = waypoints.findIndex(wp => wp.id === id);
 
-        // Ne pas déplacer si c'est le premier ou si le précédent est le départ
-        if (index <= 1) return;
+        // Ne pas déplacer si c'est le premier (ou id introuvable, index -1)
+        if (index <= 0) return;
 
         const newWaypoints = [...waypoints];
         [newWaypoints[index - 1], newWaypoints[index]] = [newWaypoints[index], newWaypoints[index - 1]];
-        set({ waypoints: newWaypoints });
+        set({ waypoints: normalizeWaypointRoles(newWaypoints) });
       },
 
       // Déplacer un waypoint vers le bas
@@ -181,12 +195,12 @@ export const useNavigationStore = create(
         const waypoints = get().waypoints;
         const index = waypoints.findIndex(wp => wp.id === id);
 
-        // Ne pas déplacer si c'est l'avant-dernier ou dernier (l'arrivée doit rester à la fin)
-        if (index >= waypoints.length - 2) return;
+        // Ne pas déplacer si c'est le dernier (ou id introuvable via findIndex)
+        if (index < 0 || index >= waypoints.length - 1) return;
 
         const newWaypoints = [...waypoints];
         [newWaypoints[index], newWaypoints[index + 1]] = [newWaypoints[index + 1], newWaypoints[index]];
-        set({ waypoints: newWaypoints });
+        set({ waypoints: normalizeWaypointRoles(newWaypoints) });
       },
       
       // Getter pour les résultats (calculé à la volée)

@@ -9,6 +9,7 @@ import { useAircraft, useNavigation, useFuel, useWeather } from '@core/contexts'
 import { generalInfoToFlightType } from '@core/flightType';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
+import { useFuelStore } from '@core/stores/fuelStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
@@ -96,6 +97,18 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  // ─── Config réservoirs : remise à zéro à chaque NOUVELLE préparation ─────
+  // Décision pilote (2026-07) : le CDB doit re-vérifier la configuration des
+  // réservoirs (standard vs long-range/auxiliaire) à chaque vol. Sans brouillon
+  // en cours = nouvelle préparation → purge. (La config n'est de toute façon
+  // pas persistée : un rechargement de page la vide aussi.)
+  useEffect(() => {
+    if (!localStorage.getItem('flightPlanDraft')) {
+      useFuelStore.getState().resetTankConfig();
+      console.log('🛢️ [Wizard] Nouvelle préparation — configuration réservoirs remise à zéro');
+    }
+  }, []);
 
   // Force le re-render quand le plan de vol change
   const [, forceUpdate] = useState({});
@@ -450,6 +463,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         localStorage.removeItem('flightPlanDraft');
         localStorage.removeItem('flightPlanCurrentStep');
         localStorage.removeItem('flightPlanCompletedSteps');
+        // Vol clôturé : la config réservoirs ne doit pas survivre au vol suivant
+        useFuelStore.getState().resetTankConfig();
         console.log('✅ Plan archivé et brouillon effacé');
       } catch (error) {
         console.error('❌ Erreur lors de l\'archivage:', error);
@@ -464,15 +479,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       if (shouldGeneratePdf) {
         console.log('📄 [Wizard] Génération et sauvegarde PDF...');
 
-        // 🎨 FIX CONTRASTE (audit QA) : le PDF est une capture html2canvas du DOM écran,
-        // qui ignore @media print. Le thème par défaut est sombre → texte clair sur fond
-        // noir, illisible/vorace en encre en cockpit. On force le mode jour le temps de la
-        // capture, puis on restaure dans le finally.
-        const prevTheme = document.documentElement.getAttribute('data-theme');
-        document.documentElement.setAttribute('data-theme', 'day-cockpit');
-        // Laisser le navigateur recalculer les variables CSS avant la capture.
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
+        // 🎨 FIX CONTRASTE (audit QA) : le PDF est une capture html2canvas du DOM,
+        // qui ignore @media print. Le thème par défaut est sombre → texte clair sur
+        // fond noir, illisible/vorace en encre en cockpit. Le forçage du mode jour
+        // se fait DANS le clone html2canvas (onclone ci-dessous) : l'écran ne
+        // bascule plus visiblement en clair pendant la génération.
         try {
           // Trouver l'élément contenant le Step7Summary (tout le contenu à imprimer)
           const element = document.getElementById('flight-plan-summary');
@@ -511,6 +522,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
               // par du texte statique dans le clone. On retire aussi les éléments écran-seul.
               onclone: (clonedDoc) => {
                 try {
+                  // 🎨 Mode jour appliqué au CLONE uniquement (capture claire sans
+                  // flash visible à l'écran) — le sélecteur [data-theme="day-cockpit"]
+                  // de index.css résout toutes les var(--*) en clair dans le clone.
+                  clonedDoc.documentElement.setAttribute('data-theme', 'day-cockpit');
                   clonedDoc.querySelectorAll('.weight-balance-alert').forEach((el) => el.remove());
                   clonedDoc.querySelectorAll('input, textarea').forEach((el) => {
                     const span = clonedDoc.createElement('span');
@@ -641,13 +656,6 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         } catch (error) {
           console.error('❌ [Wizard] Erreur génération/sauvegarde PDF:', error);
           alert('❌ Erreur lors de la génération du PDF: ' + error.message);
-        } finally {
-          // 🎨 Restaurer le thème initial après la capture (audit QA P2)
-          if (prevTheme) {
-            document.documentElement.setAttribute('data-theme', prevTheme);
-          } else {
-            document.documentElement.removeAttribute('data-theme');
-          }
         }
       }
 
@@ -685,6 +693,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // Step 3 - Alternates
       localStorage.removeItem('alternates-storage');
 
+      // Config réservoirs (non persistée, mais purge explicite avant le reload)
+      useFuelStore.getState().resetTankConfig();
+
       console.log('🔄 [Wizard] Toutes les données effacées - Redémarrage...');
       window.location.reload();
     }
@@ -711,6 +722,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       localStorage.removeItem('flightPlanCompletedSteps');
       localStorage.removeItem('navigation-storage');
       localStorage.removeItem('alternates-storage');
+      useFuelStore.getState().resetTankConfig();
       console.log('🗑️ [Wizard] Brouillon supprimé - Fermeture...');
     }
 

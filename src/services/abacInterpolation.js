@@ -395,11 +395,11 @@ export function bracketInterpolateGraph(graph, conditions) {
     const onlyCurve = effectiveCurves[0];
     const queryX = effectiveConditions[xDim];
     if (queryX === undefined || queryX === null || Number.isNaN(queryX)) {
-      return { error: `Input manquant pour l'axe X (${xDim})`, xDim };
+      return { error: `Donnée manquante pour l'axe X (${xDim})`, xDim };
     }
     const y = interpolate1D(onlyCurve.points, queryX);
     if (y === null) {
-      return { error: 'Échec interpolation 1D sur la courbe unique' };
+      return { error: 'Lecture impossible sur la courbe : la valeur demandée est hors de la plage tracée' };
     }
     return {
       value: y,
@@ -479,10 +479,10 @@ export function bracketInterpolateGraph(graph, conditions) {
   const queryX = effectiveConditions[xDim];
   const queryFamily = effectiveConditions[familyDim];
   if (queryX === undefined || queryX === null || Number.isNaN(queryX)) {
-    return { error: `Input manquant pour l'axe X (${xDim})`, xDim, familyDim, windFilter: windFilter.info };
+    return { error: `Donnée manquante pour l'axe X (${xDim})`, xDim, familyDim, windFilter: windFilter.info };
   }
   if (queryFamily === undefined || queryFamily === null || Number.isNaN(queryFamily)) {
-    return { error: `Input manquant pour la dimension familiale (${familyDim})`, xDim, familyDim, windFilter: windFilter.info };
+    return { error: `Donnée manquante pour la famille de courbes (${familyDim})`, xDim, familyDim, windFilter: windFilter.info };
   }
 
   // 6. Bracket : trouve les 2 courbes encadrant queryFamily AVEC extrapolation propre
@@ -531,7 +531,7 @@ export function bracketInterpolateGraph(graph, conditions) {
   const yLower = interpolate1D(lowerCurve.curve.points, queryX);
   const yUpper = interpolate1D(upperCurve.curve.points, queryX);
   if (yLower === null || yUpper === null) {
-    return { error: 'Échec interpolation 1D sur une courbe encadrante' };
+    return { error: 'Lecture impossible sur une des courbes encadrantes (valeur hors de la plage tracée)' };
   }
 
   // 8. Interpolation finale entre Y_bas et Y_haut par ratio familial
@@ -716,7 +716,7 @@ export function slopeFollowInterpolateGraph(graph, entryY, targetX, conditions =
   const yLowerTarget = interpolate1D(lower.curve.points, targetX);
   const yUpperTarget = interpolate1D(upper.curve.points, targetX);
   if (yLowerTarget === null || yUpperTarget === null) {
-    return { error: 'Échec interpolation 1D sur une courbe à X = targetX' };
+    return { error: 'Lecture impossible sur une courbe à la valeur demandée (hors de la plage tracée)' };
   }
 
   // 6. Output final en conservant le même ratio t entre les 2 courbes
@@ -1084,7 +1084,7 @@ export function interpolateAbac(abaqueData, conditions) {
   }
   const result = idwInterpolate(points, conditions);
   if (!result) {
-    return { status: InterpolationStatus.ERROR, reason: 'Échec interpolation IDW.', totalPoints: points.length };
+    return { status: InterpolationStatus.ERROR, reason: 'Impossible d\'estimer une valeur à partir des points de l\'abaque.', totalPoints: points.length };
   }
   return {
     status: InterpolationStatus.OK,

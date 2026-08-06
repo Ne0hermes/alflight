@@ -625,7 +625,7 @@ class UnifiedPerformanceService {
               
               return {
                 tables: [{
-                  table_name: 'Extracted Data (Manual Review Required)',
+                  table_name: 'Données à vérifier manuellement',
                   table_type: 'extracted',
                   data: [],
                   raw_content: content.substring(0, 1000),

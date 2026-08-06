@@ -623,8 +623,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
                   {[
-                    ['Vr', selectedAircraft.speeds.vr], ['Vx', selectedAircraft.speeds.vx],
-                    ['Vy', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
+                    ['Vr', selectedAircraft.speeds.vr], ['Vx (T/O)', selectedAircraft.speeds.vx],
+                    ['Vy (T/O)', selectedAircraft.speeds.vy], ['Vapp', selectedAircraft.speeds.vapp],
                     ['Vref', selectedAircraft.speeds.vref], ['Vglide', selectedAircraft.speeds.vglide],
                     ['Vso', selectedAircraft.speeds.vso], ['Vs1', selectedAircraft.speeds.vs1],
                     ['Va', selectedAircraft.speeds.va], ['Vno', selectedAircraft.speeds.vno],
@@ -638,6 +638,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </div>
                 <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginTop: 6, fontStyle: 'italic' }}>
                   Référence pilote (saisies dans « Mes avions ») — non utilisées dans les calculs de distance.
+                  Vx et Vy sont indiquées en configuration takeoff.
                 </div>
               </div>
             )}

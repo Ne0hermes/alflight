@@ -163,7 +163,7 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
       operationId,
       operationLabel: opDef.labelFr,
       status: 'MISSING_INPUT',
-      reason: `Input manquant (mass=${targetMass}, alt=${targetAlt}, temp=${targetTemp}).`,
+      reason: `Donnée manquante (masse=${targetMass}, altitude=${targetAlt}, température=${targetTemp}).`,
       source: { kind: 'table', tableCount: group.tables.length, method: 'Interpolation trilinéaire' }
     };
   }
@@ -241,7 +241,7 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
       operationId,
       operationLabel: opDef.labelFr,
       status: 'ERROR',
-      reason: `Interpolation a renvoyé null. Vérifier la couverture du tableau (peut-être valeurs manquantes pour cette combinaison).`,
+      reason: `Calcul impossible : aucune valeur n'a pu être estimée à partir du tableau (valeurs probablement manquantes pour cette combinaison masse/altitude/température).`,
       source: { kind: 'table', tableCount: group.tables.length, method, masses, altitudes, temperatures },
       warnings
     };

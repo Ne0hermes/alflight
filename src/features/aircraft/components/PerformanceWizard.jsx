@@ -336,7 +336,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     for (let i = 1; i <= pdf.numPages; i++) {
       // Mise à jour du message de progression
       if (i % 10 === 0) {
-        setLoadingMessage(`Extraction page ${i}/${pdf.numPages}...`);
+        setLoadingMessage(`Lecture de la page ${i}/${pdf.numPages}...`);
       }
 
       const page = await pdf.getPage(i);
@@ -459,7 +459,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         
       } catch (error) {
         console.error('❌ Erreur lors de l\'extraction des pages:', error);
-        setError(`Erreur lors de l'extraction: ${error.message}`);
+        setError(`Erreur lors de la lecture des pages du manuel : ${error.message}`);
       } finally {
         setIsProcessing(false);
       }
@@ -600,7 +600,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     </h4>
                   </div>
                   <p style={{ ...styles.text.sm, color: 'var(--text-secondary)', margin: 0 }}>
-                    Extraction automatique avec OpenAI
+                    Lecture automatique du manuel par l'IA
                   </p>
                 </div>
 
@@ -684,7 +684,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   ← Retour à la sélection
                 </button>
                 <h3 style={{ ...styles.text.lg, ...styles.text.bold }}>
-                  Extraction des tableaux de performance
+                  Lecture des tableaux de performance du manuel
                 </h3>
               </div>
 
@@ -760,7 +760,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 {selectedPages.length > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
                     <span style={{ ...styles.text.sm, color: 'var(--text-secondary)' }}>
-                      Cliquez sur le bouton "Continuer" pour lancer l'extraction automatique
+                      Cliquez sur le bouton "Continuer" pour lancer la lecture automatique des pages sélectionnées
                     </span>
                   </div>
                 )}
@@ -778,9 +778,9 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     marginRight: '8px'
                   }} />
                   <div>
-                    <strong>Extraction en cours...</strong>
+                    <strong>Lecture en cours...</strong>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
-                      {loadingMessage || 'Extraction des pages du manuel de vol...'}
+                      {loadingMessage || 'Lecture des pages du manuel de vol...'}
                     </p>
                   </div>
                   <style>{`

@@ -481,6 +481,26 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         }
       `}</style>
 
+      {/* ⚠️ Disclaimer vent — affiché à l'étape Carte, sur la synthèse et dans le
+          PDF (capture de #flight-plan-summary). À retirer quand les corrections
+          météo seront intégrées aux tracés et aux temps de navigation. */}
+      <div
+        className="nav-wind-disclaimer"
+        style={{
+          backgroundColor: 'rgba(242, 105, 33, 0.10)',
+          border: '1px solid var(--accent-primary)',
+          borderLeft: '6px solid var(--accent-primary)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '10px 12px',
+          marginBottom: '12px',
+          fontSize: 'var(--fs-caption)',
+          color: 'var(--text-primary)',
+          fontWeight: 500
+        }}
+      >
+        ⚠️ Les tracés et les temps de navigation ne sont pas encore corrigés du vent.
+      </div>
+
       <div
         className="route-map-container"
         style={{ height: '500px', width: '100%', borderRadius: 'var(--radius-sm)', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}

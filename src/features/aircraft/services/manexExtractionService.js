@@ -122,7 +122,7 @@ que le wizard de création d'avion sait stocker, ni plus ni moins) :
     "vno": ".. (max structural cruising)",
     "vne": ".. (never exceed)",
     "vr": ".. (rotation)",
-    "vx": ".. (best angle of climb)", "vy": ".. (best rate of climb)",
+    "vx": ".. (best angle of climb, takeoff configuration)", "vy": ".. (best rate of climb, takeoff configuration)",
     "vapp": ".. (approach)",
     "vglide": ".. (best glide)",
     "vle": ".. (landing gear extended)", "vlo": ".. (gear operating)",

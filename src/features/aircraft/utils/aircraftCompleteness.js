@@ -151,8 +151,8 @@ export const FIELD_DEFINITIONS = [
   { path: 'speeds.vfeTO',         label: 'VFE T/O',                   severity: 'CRITICAL', weight: 3 },
   { path: 'speeds.vfeLdg',        label: 'VFE LDG',                   severity: 'CRITICAL', weight: 3 },
   { path: 'speeds.vr',            label: 'VR (rotation)',             severity: 'REQUIRED', weight: 2 },
-  { path: 'speeds.vx',            label: 'VX',                        severity: 'REQUIRED', weight: 2 },
-  { path: 'speeds.vy',            label: 'VY',                        severity: 'REQUIRED', weight: 2 },
+  { path: 'speeds.vx',            label: 'VX (config. takeoff)',      severity: 'REQUIRED', weight: 2 },
+  { path: 'speeds.vy',            label: 'VY (config. takeoff)',      severity: 'REQUIRED', weight: 2 },
   { path: 'speeds.vapp',          label: 'V approche',                severity: 'REQUIRED', weight: 2 },
   { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
 

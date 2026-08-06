@@ -630,7 +630,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     try {
       const hasData = currentPerformanceModels.length > 0 || advancedTables.length > 0;
       if (!hasData) {
-        alert('Aucune donnée de performance à exporter. Lance d\'abord une extraction.');
+        alert('Aucune donnée de performance à exporter. Lance d\'abord la lecture du manuel (bouton "Ajouter des données").');
         return;
       }
       if (!selectedModels.length && !selectedTables.length) {

@@ -10,6 +10,7 @@ import { tokens } from '@shared/styles/designSystem';
 
 // Import des contextes et hooks
 import { useNavigation, useAircraft } from '@core/contexts';
+import { normalizeWaypointRoles } from '@core/stores/navigationStore';
 
 // Import du vrai hook useNavigationResults
 import { useNavigationResults } from './hooks/useNavigationResults';
@@ -130,8 +131,8 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
 
   // Handlers pour déplacer les waypoints (avec fallback index)
   const handleMoveUp = useCallback((id, index) => {
-    // Ne pas déplacer si c'est le premier ou si le précédent est le départ (index <= 1)
-    if (index <= 1) return;
+    // Ne pas déplacer si c'est le premier (liste entièrement réordonnables)
+    if (index <= 0) return;
 
     if (id && moveWaypointUp) {
       // Essayer via le store d'abord
@@ -143,12 +144,12 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
     console.log('⬆️ Déplacement vers le haut par index (fallback):', index);
     const newWaypoints = [...waypoints];
     [newWaypoints[index - 1], newWaypoints[index]] = [newWaypoints[index], newWaypoints[index - 1]];
-    setWaypoints(newWaypoints);
+    setWaypoints(normalizeWaypointRoles(newWaypoints));
   }, [waypoints, setWaypoints, moveWaypointUp]);
 
   const handleMoveDown = useCallback((id, index) => {
-    // Ne pas déplacer si c'est l'avant-dernier ou dernier (index >= length - 2)
-    if (index >= waypoints.length - 2) return;
+    // Ne pas déplacer si c'est le dernier (liste entièrement réordonnables)
+    if (index >= waypoints.length - 1) return;
 
     if (id && moveWaypointDown) {
       // Essayer via le store d'abord
@@ -160,7 +161,7 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
     console.log('⬇️ Déplacement vers le bas par index (fallback):', index);
     const newWaypoints = [...waypoints];
     [newWaypoints[index], newWaypoints[index + 1]] = [newWaypoints[index + 1], newWaypoints[index]];
-    setWaypoints(newWaypoints);
+    setWaypoints(normalizeWaypointRoles(newWaypoints));
   }, [waypoints, setWaypoints, moveWaypointDown]);
 
   // Fonction pour insérer un waypoint à une position spécifique
@@ -624,9 +625,9 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                       marginTop: '8px'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'var(--text-secondary)';
-                      e.currentTarget.style.color = 'var(--text-secondary)';
-                      e.currentTarget.style.background = 'var(--bg-overlay)';
+                      e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                      e.currentTarget.style.color = 'var(--accent-primary)';
+                      e.currentTarget.style.background = 'var(--accent-soft)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-subtle)';

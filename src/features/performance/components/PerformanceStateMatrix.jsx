@@ -39,7 +39,7 @@ const STATUS_VISUAL = {
   },
   MISSING_INPUT: {
     bg: 'var(--bg-overlay)', border: 'var(--border-regular)', text: 'var(--text-primary)',
-    badge: 'Input manquant', badgeBg: 'var(--bg-raised)', badgeText: 'var(--text-primary)'
+    badge: 'Donnée manquante', badgeBg: 'var(--bg-raised)', badgeText: 'var(--text-primary)'
   },
   AMBIGUOUS: {
     bg: 'var(--bg-overlay)', border: 'var(--color-red-critical)', text: 'var(--color-red-critical)',
@@ -160,7 +160,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
         {(coverage.notImplemented > 0 || coverage.missingInput > 0 || coverage.ambiguous > 0 || coverage.error > 0) && (
           <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 11, flexWrap: 'wrap' }}>
             {coverage.notImplemented > 0 && <span style={{ color: 'var(--accent-primary)' }}>{coverage.notImplemented} non implémenté{coverage.notImplemented > 1 ? 's' : ''}</span>}
-            {coverage.missingInput > 0 && <span style={{ color: 'var(--accent-primary)' }}>{coverage.missingInput} input manquant</span>}
+            {coverage.missingInput > 0 && <span style={{ color: 'var(--accent-primary)' }}>{coverage.missingInput} donnée{coverage.missingInput > 1 ? 's' : ''} manquante{coverage.missingInput > 1 ? 's' : ''}</span>}
             {coverage.ambiguous > 0 && <span style={{ color: 'var(--color-red-critical)' }}>{coverage.ambiguous} ambigu{coverage.ambiguous > 1 ? 's' : ''}</span>}
             {coverage.error > 0 && <span style={{ color: 'var(--color-red-critical)' }}>{coverage.error} erreur{coverage.error > 1 ? 's' : ''}</span>}
           </div>
@@ -200,7 +200,7 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                   color: visual.text,
                   fontSize: 13
                 }}
-                title="Cliquer pour voir le détail (source, inputs, warnings)"
+                title="Cliquer pour voir le détail (source, données utilisées, avertissements)"
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{op.labelFr}</div>
@@ -445,7 +445,7 @@ Bracket tenté en auto : {step.bracketResult.error}
                   )}
                   {result.missingInputs?.length > 0 && (
                     <div style={{ marginBottom: 6 }}>
-                      <strong>Inputs manquants :</strong> {result.missingInputs.join(', ')}
+                      <strong>Données manquantes :</strong> {result.missingInputs.join(', ')}
                     </div>
                   )}
                   {result.candidates && (

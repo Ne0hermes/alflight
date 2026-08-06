@@ -23,44 +23,32 @@ export const calculateAeronauticalNight = (lat, lon, date) => {
   return {
     sunrise: times.sunrise,
     sunset: times.sunset,
-    nightStart, // Début nuit aéronautique (sunset + 30min)
-    nightEnd,   // Fin nuit aéronautique (sunrise - 30min)
-    civilTwilight: {
-      start: times.dusk,  // Début crépuscule civil
-      end: times.dawn     // Fin crépuscule civil
-    },
-    nauticalTwilight: {
-      start: times.nauticalDusk,
-      end: times.nauticalDawn
-    }
+    nightStart, // Début nuit aéronautique (sunset + 30min) = fin du jour aéro
+    nightEnd    // Fin nuit aéronautique (sunrise - 30min) = début du jour aéro
   };
 };
 
 /**
- * Détermine si une heure donnée est de jour, crépuscule ou nuit
+ * Détermine si une heure donnée est de jour ou de nuit aéronautique.
+ * Simplification volontaire (retour de test 2026-08) : seuls JOUR AÉRO
+ * (lever - 30 min → coucher + 30 min) et NUIT AÉRO existent — plus d'état
+ * « crépuscule » intermédiaire.
  * @param {Date} time - Heure à vérifier
  * @param {Object} sunTimes - Résultat de calculateAeronauticalNight
- * @returns {string} 'day' | 'twilight' | 'night'
+ * @returns {string} 'day' | 'night'
  */
 export const getDayNightStatus = (time, sunTimes) => {
   if (!time || !sunTimes) return 'day';
 
   const timeMs = time.getTime();
 
-  // Nuit aéronautique
-  if (timeMs >= sunTimes.nightStart.getTime() || timeMs <= sunTimes.nightEnd.getTime()) {
+  // Nuit aéronautique — nightEnd (lever - 30 min) est la PREMIÈRE minute du
+  // jour aéronautique, donc borne stricte (<) côté fin de nuit.
+  if (timeMs >= sunTimes.nightStart.getTime() || timeMs < sunTimes.nightEnd.getTime()) {
     return 'night';
   }
 
-  // Crépuscule (entre sunset et nightStart, ou entre nightEnd et sunrise)
-  if (
-    (timeMs >= sunTimes.sunset.getTime() && timeMs < sunTimes.nightStart.getTime()) ||
-    (timeMs > sunTimes.nightEnd.getTime() && timeMs <= sunTimes.sunrise.getTime())
-  ) {
-    return 'twilight';
-  }
-
-  // Jour
+  // Jour aéronautique
   return 'day';
 };
 
@@ -109,34 +97,6 @@ export const analyzeSegmentDayNight = (departureTime, arrivalTime, sunTimes) => 
     departure: depStatus,
     arrival: arrStatus,
     status: arrStatus, // Status à l'arrivée (le plus critique)
-    warning: depStatus === 'day' && arrStatus === 'night', // Passe du jour à la nuit
-    twilightWarning: depStatus === 'day' && arrStatus === 'twilight'
-  };
-};
-
-/**
- * Calcule les statistiques jour/nuit pour un vol complet
- * @param {Array} segments - Tableau de segments avec departureTime et arrivalTime
- * @param {Object} sunTimes - Résultat de calculateAeronauticalNight
- * @returns {Object} Statistiques du vol
- */
-export const analyzeFlightDayNight = (segments, sunTimes) => {
-  if (!segments || !segments.length || !sunTimes) {
-    return { hasNightSegments: false, hasTwilightSegments: false, warnings: [] };
-  }
-
-  const analysis = segments.map(seg => analyzeSegmentDayNight(seg.departureTime, seg.arrivalTime, sunTimes));
-
-  const hasNightSegments = analysis.some(a => a.status === 'night');
-  const hasTwilightSegments = analysis.some(a => a.status === 'twilight');
-  const warnings = analysis
-    .map((a, idx) => ({ ...a, segmentIndex: idx }))
-    .filter(a => a.warning || a.twilightWarning);
-
-  return {
-    hasNightSegments,
-    hasTwilightSegments,
-    warnings,
-    analysis
+    warning: depStatus === 'day' && arrStatus === 'night' // Passe du jour à la nuit
   };
 };
