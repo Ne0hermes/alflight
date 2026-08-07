@@ -110,6 +110,22 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     }
   }, []);
 
+  // 🔧 LOT 2 — Reprise de brouillon atterrissant sur une étape TARDIVE (le
+  // brouillon mémorise l'étape courante) : restaurer le store des déroutements
+  // depuis flightPlan si le store est vide, sinon le bilan carburant ne voit
+  // aucun déroutement tant que l'étape Déroutements n'est pas re-visitée.
+  useEffect(() => {
+    const store = useAlternatesStore.getState();
+    if ((store.selectedAlternates || []).length === 0 && (flightPlan?.alternates || []).length > 0) {
+      store.setSelectedAlternates(flightPlan.alternates.map(alt => ({
+        ...alt,
+        position: alt.position || alt.coordinates || { lat: alt.lat, lon: alt.lon ?? alt.lng }
+      })));
+      console.log('♻️ [Wizard] Déroutements restaurés depuis le brouillon:', flightPlan.alternates.map(a => a.icao));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flightPlan?.alternates?.length]);
+
   // Force le re-render quand le plan de vol change
   const [, forceUpdate] = useState({});
   const updateFlightPlan = useCallback(() => {
@@ -722,6 +738,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       localStorage.removeItem('flightPlanCompletedSteps');
       localStorage.removeItem('navigation-storage');
       localStorage.removeItem('alternates-storage');
+      // 🔧 LOT 2 : purger AUSSI le store en mémoire — supprimer la clé
+      // localStorage ne vide pas zustand, qui ré-écrivait les déroutements
+      // périmés à la préparation suivante (calcul de dégagement fantôme).
+      useAlternatesStore.getState().clearAll();
       useFuelStore.getState().resetTankConfig();
       console.log('🗑️ [Wizard] Brouillon supprimé - Fermeture...');
     }

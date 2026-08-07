@@ -19,6 +19,7 @@ import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
+import { useAlternatesForFuel } from '@features/alternates';
 
 /**
  * Étape 7 : Synthèse du vol
@@ -242,6 +243,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   const fuelData = useFuelStore(state => state.fuelData);
   const fobFuel = useFuelStore(state => state.fobFuel);
   const calculateTotal = useFuelStore(state => state.calculateTotal);
+
+  // 🔧 LOT 2 — Verdict du calcul de dégagement (algorithme de la
+  // perpendiculaire) : distingue « vérifié suffisant » de « non calculé »
+  // (fuelData.alternate vaut 0 dans les deux cas).
+  const { diversionAnalysis } = useAlternatesForFuel();
 
   // Récupérer les données météo depuis le store
   const weatherData = useWeatherStore(state => state.weatherData || {});
@@ -1055,11 +1061,21 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                   </div>
                 )}
 
-                {/* Carburant déroutement */}
-                {fuelData?.alternate?.ltr > 0 && (
+                {/* Carburant déroutement — 🔧 LOT 2 : afficher AUSSI quand le
+                    supplément est 0 avec un déroutement sélectionné (verdict
+                    « carburant suffisant » de l'algorithme de la perpendiculaire),
+                    au lieu de masquer la ligne (l'utilisateur croyait que le
+                    calcul ne se faisait pas). */}
+                {(fuelData?.alternate?.ltr > 0 || (flightPlan.alternates?.length > 0)) && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: theme.colors.textSecondary }}>• Déroutement:</span>
-                    <span style={{ fontWeight: '500' }}>{format(fuelData.alternate.ltr, 'fuel', 1)}</span>
+                    <span style={{ fontWeight: '500' }}>
+                      {fuelData?.alternate?.ltr > 0
+                        ? format(fuelData.alternate.ltr, 'fuel', 1)
+                        : diversionAnalysis?.worst?.isSufficient
+                          ? '✓ suffisant (0 supplément)'
+                          : '⚠ non calculé — voir Bilan carburant'}
+                    </span>
                   </div>
                 )}
 

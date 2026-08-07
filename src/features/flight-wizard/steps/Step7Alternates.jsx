@@ -138,6 +138,19 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
   // carburant en a besoin pour le carburant de dégagement. (Auparavant assuré par Step3Route,
   // désormais en amont de la sélection — abonnement propre avec cleanup.)
   useEffect(() => {
+    // 🔧 LOT 2 — Restauration store ← flightPlan (reprise de brouillon sur un
+    // store vidé) : sans ça, la Synthèse affichait un déroutement (elle lit
+    // flightPlan.alternates) mais le calcul carburant ne voyait RIEN (il lit
+    // le store) → « le calcul ne se fait pas ».
+    const store = useAlternatesStore.getState();
+    if ((store.selectedAlternates || []).length === 0 && (flightPlan.alternates || []).length > 0) {
+      store.setSelectedAlternates(flightPlan.alternates.map(alt => ({
+        ...alt,
+        position: alt.position || alt.coordinates || { lat: alt.lat, lon: alt.lon ?? alt.lng }
+      })));
+      console.log('♻️ [Step7Alternates] Déroutements restaurés depuis le brouillon:', flightPlan.alternates.map(a => a.icao));
+    }
+
     const syncAlternates = () => {
       const selected = useAlternatesStore.getState().selectedAlternates || [];
       const current = flightPlan.alternates || [];
@@ -145,10 +158,15 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
         selected.some((alt, i) => alt.icao !== current[i]?.icao);
       if (!changed) return;
 
+      // 🔧 LOT 2 — conserver position et selectionType : le calcul carburant
+      // (algorithme de la perpendiculaire) exige la position ; l'ancienne
+      // recopie la jetait, rendant le déroutement incalculable après reprise.
       flightPlan.alternates = selected.map(alt => ({
         icao: alt.icao,
         name: alt.name,
-        coordinates: alt.coordinates || { lat: alt.lat, lon: alt.lon },
+        position: alt.position || alt.coordinates || { lat: alt.lat, lon: alt.lon ?? alt.lng },
+        coordinates: alt.coordinates || alt.position || { lat: alt.lat, lon: alt.lon ?? alt.lng },
+        selectionType: alt.selectionType,
         distance: alt.distance || 0
       }));
       console.log('✅ [Step7Alternates] Alternates synchronisés dans flightPlan:', flightPlan.alternates);

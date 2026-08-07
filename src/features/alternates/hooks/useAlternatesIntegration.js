@@ -4,9 +4,7 @@ import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { useVACStore } from '@core/stores/vacStore';
 import { useCallback, useMemo } from 'react';
-import { calculateDistanceFromRoute } from '../utils/geometryCalculations';
-import { useUnits } from '@hooks/useUnits';
-import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { computeWorstDiversion } from '../utils/alternateFuelCalculations';
 
 /**
  * Hook pour intégration dans le module Navigation
@@ -62,132 +60,51 @@ export const useAlternatesForFuel = () => {
   const { selectedAlternates } = useAlternatesStore();
   const { selectedAircraft } = useAircraft();
   const { waypoints } = useNavigation();
-  const { getUnit } = useUnits();
 
-  const calculateAlternateFuel = useCallback(() => {
-    if (!selectedAlternates.length || !selectedAircraft) {
-            return 0;
-    }
+  // 🔧 LOT 2 — Algorithme validé (pied de perpendiculaire sur la route réelle,
+  // supplément = carburant(pied→déroutement) − carburant(pied→arrivée) si
+  // positif, sinon « carburant suffisant »). Remplace l'ancien calcul
+  // « distance perpendiculaire max × conso » qui donnait ~0 L pour un
+  // déroutement proche de la route (perçu comme « le calcul ne se fait pas »)
+  // et retournait 0 en silence sur toute donnée manquante.
+  const diversionAnalysis = useMemo(() => computeWorstDiversion({
+    alternates: selectedAlternates,
+    waypoints,
+    aircraft: selectedAircraft
+  }), [selectedAlternates, waypoints, selectedAircraft]);
 
-    const departure = waypoints[0];
-    const arrival = waypoints[waypoints.length - 1];
+  const fuelRequired = diversionAnalysis.supplementLtr;
 
-    if (!departure || !arrival) {
-            return 0;
-    }
-
-    const departurePoint = { lat: departure.lat, lon: departure.lon || departure.lng };
-    const arrivalPoint = { lat: arrival.lat, lon: arrival.lon || arrival.lng };
-
-    // Calculer la distance PERPENDICULAIRE minimale depuis la route pour chaque alternate
-    let maxDistanceToRoute = 0;
-    let selectedAlternate = null;
-
-    selectedAlternates.forEach(alt => {
-      if (!alt.position || !alt.position.lat || !alt.position.lon) {
-                return;
-      }
-
-      // ✅ CORRECTION : Utiliser la distance perpendiculaire depuis la ROUTE
-      const distanceToRoute = calculateDistanceFromRoute(
-        alt.position,
-        departurePoint,
-        arrivalPoint
-      );
-
-      console.log(`Alternate: ${alt.icao}`, {
-        position: alt.position,
-        selectionType: alt.selectionType,
-        distanceToRoute: distanceToRoute.toFixed(1) + ' NM (perpendiculaire)'
-      });
-
-      if (distanceToRoute > maxDistanceToRoute) {
-        maxDistanceToRoute = distanceToRoute;
-        selectedAlternate = alt;
-      }
-    });
-
-    // Utiliser la distance perpendiculaire maximale
-    const maxDistance = maxDistanceToRoute;
-
-    // Si aucune distance valide, retourner 0
-    if (maxDistance === 0) {
-            return 0;
-    }
-
-    // Calculer le carburant nécessaire pour la distance maximale
-    // 🔧 FIX D-moteur : conso/vitesse canoniques, plus de 30 lph / 100 kt fabriqués.
-    // fuelConsumption est canoniquement en lph (cf. utils/aircraftPerf) → pas de conversion gph.
-    // Avion incomplet → 0 (cohérent avec le retour 0 quand maxDistance === 0).
-    const fuelConsumptionLph = getFuelConsumptionLph(selectedAircraft);
-    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
-    if (!fuelConsumptionLph || !cruiseSpeed) {
-      return 0;
-    }
-    const flightTime = maxDistance / cruiseSpeed; // en heures
-
-    // Ne pas ajouter de réserve d'approche - la réserve finale (final reserve) est comptée séparément
-    const fuelRequired = flightTime * fuelConsumptionLph;
-
-    console.log('Fuel calculation (alternate):', {
-      cruiseSpeed,
-      flightTime: flightTime.toFixed(4),
-      fuelConsumptionLph,
-      fuelRequired: fuelRequired.toFixed(2),
-      fuelRequiredCeil: Math.ceil(fuelRequired)
-    });
-    
-    // Pour les très courtes distances, s'assurer d'avoir un minimum
-    // Si on a une distance > 0, on retourne au minimum 1 litre
-    if (maxDistance > 0 && fuelRequired < 1) {
-            return 1;
-    }
-    
-    // Arrondir au litre supérieur
-    return Math.ceil(fuelRequired);
-  }, [selectedAlternates, selectedAircraft, waypoints, getUnit]);
-  
-  // Calculer les distances perpendiculaires pour chaque alternate depuis la route
-  const alternateDistances = selectedAlternates.map(alt => {
-    if (!alt.position) return { icao: alt.icao, distance: 0, type: alt.selectionType, name: alt.name };
-
-    const departure = waypoints[0];
-    const arrival = waypoints[waypoints.length - 1];
-
-    if (!departure || !arrival) return { icao: alt.icao, distance: 0, type: alt.selectionType, name: alt.name };
-
-    // ✅ CORRECTION : Utiliser la distance perpendiculaire depuis la ROUTE
-    const distanceToRoute = calculateDistanceFromRoute(
-      alt.position,
-      { lat: departure.lat, lon: departure.lon || departure.lng },
-      { lat: arrival.lat, lon: arrival.lon || arrival.lng }
-    );
-
+  // Distances pied de perpendiculaire → déroutement (affichage), avec statut
+  // explicite pour les déroutements non calculables (plus de 0 ambigu).
+  // Appariement par INDEX (computeWorstDiversion préserve l'ordre) — un match
+  // par icao confondrait deux points sans icao ou de même OACI.
+  const alternateDistances = selectedAlternates.map((alt, index) => {
+    const result = diversionAnalysis.results[index];
     return {
       icao: alt.icao,
-      distance: distanceToRoute,
+      distance: result?.status === 'ok' ? result.distFootToAlternateNM : 0,
+      status: result?.status || 'missing-position',
       type: alt.selectionType,
       name: alt.name,
-      referencePoint: 'Route' // Plus pertinent car c'est la distance perpendiculaire
+      referencePoint: 'Perpendiculaire route'
     };
   });
-  
-  // Trouver l'aérodrome le plus éloigné
-  const maxDistanceAlternate = alternateDistances.reduce((max, current) =>
-    current.distance > max.distance ? current : max,
-    { distance: 0 }
-  );
 
-  // Calculer une seule fois le carburant avec useMemo pour éviter les recalculs
-  const fuelRequired = useMemo(() => {
-    const result = calculateAlternateFuel();
+  // Le déroutement le plus pénalisant (celui qui dimensionne le supplément)
+  const maxDistanceAlternate = diversionAnalysis.worst
+    ? {
+        icao: diversionAnalysis.worst.icao,
+        name: diversionAnalysis.worst.name,
+        distance: diversionAnalysis.worst.distFootToAlternateNM,
+        status: 'ok'
+      }
+    : { distance: 0, status: diversionAnalysis.errors[0]?.status || 'no-alternate' };
 
-    return result;
-  }, [calculateAlternateFuel]);
-  
   return {
     alternateFuelRequired: fuelRequired,
     alternateFuelRequiredGal: fuelRequired / 3.78541, // Conversion en gallons
+    diversionAnalysis,
     alternatesCount: selectedAlternates.length,
     alternateIcaos: selectedAlternates.map(alt => alt.icao),
     alternatesByType: {

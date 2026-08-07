@@ -29,7 +29,7 @@ export const toDeg = (rad) => rad * RAD_TO_DEG;
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
   // Support pour les objets {lat, lon}
   if (typeof lat1 === 'object' && typeof lon1 === 'object') {
-    return calculateDistance(lat1.lat, lat1.lon || lat1.lng, lon1.lat, lon1.lon || lon1.lng);
+    return calculateDistance(lat1.lat, lat1.lon ?? lat1.lng, lon1.lat, lon1.lon ?? lon1.lng);
   }
   
   // Vérifier le cache
@@ -65,7 +65,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
 export const calculateBearing = (lat1, lon1, lat2, lon2) => {
   // Support pour les objets
   if (typeof lat1 === 'object' && typeof lon1 === 'object') {
-    return calculateBearing(lat1.lat, lat1.lon || lat1.lng, lon1.lat, lon1.lon || lon1.lng);
+    return calculateBearing(lat1.lat, lat1.lon ?? lat1.lng, lon1.lat, lon1.lon ?? lon1.lng);
   }
   
   const dLon = (lon2 - lon1) * DEG_TO_RAD;
@@ -131,7 +131,7 @@ export const calculateDestination = (origin, distanceNM, bearingDeg) => {
   const d = distanceNM / EARTH_RADIUS_NM;
   const brng = toRad(bearingDeg);
   const lat1 = toRad(origin.lat);
-  const lon1 = toRad(origin.lon || origin.lng);
+  const lon1 = toRad(origin.lon ?? origin.lng);
   
   const lat2 = Math.asin(
     Math.sin(lat1) * Math.cos(d) +
@@ -155,9 +155,9 @@ export const calculateDestination = (origin, distanceNM, bearingDeg) => {
  */
 export const calculateMidpoint = (point1, point2) => {
   const lat1 = toRad(point1.lat);
-  const lon1 = toRad(point1.lon || point1.lng);
+  const lon1 = toRad(point1.lon ?? point1.lng);
   const lat2 = toRad(point2.lat);
-  const lon2 = toRad(point2.lon || point2.lng);
+  const lon2 = toRad(point2.lon ?? point2.lng);
   
   const dLon = lon2 - lon1;
   
@@ -256,9 +256,9 @@ export const parseCoordinate = (coordinate, type) => {
  */
 export const interpolatePosition = (wp1, wp2, fraction) => {
   const lat1Rad = wp1.lat * DEG_TO_RAD;
-  const lon1Rad = (wp1.lon || wp1.lng) * DEG_TO_RAD;
+  const lon1Rad = (wp1.lon ?? wp1.lng) * DEG_TO_RAD;
   const lat2Rad = wp2.lat * DEG_TO_RAD;
-  const lon2Rad = (wp2.lon || wp2.lng) * DEG_TO_RAD;
+  const lon2Rad = (wp2.lon ?? wp2.lng) * DEG_TO_RAD;
   
   const d = calculateDistance(wp1, wp2) / EARTH_RADIUS_NM;
   const a = Math.sin((1 - fraction) * d) / Math.sin(d);
@@ -284,7 +284,7 @@ export const interpolatePosition = (wp1, wp2, fraction) => {
  * @returns {number} Distance en NM
  */
 export const calculateDistanceToSegment = (point, start, end) => {
-  if (start.lat === end.lat && (start.lon || start.lng) === (end.lon || end.lng)) {
+  if (start.lat === end.lat && (start.lon ?? start.lng) === (end.lon ?? end.lng)) {
     return calculateDistance(point, start);
   }
   
@@ -362,9 +362,9 @@ export const isPointInPolygon = (point, vertices) => {
   let inside = false;
   
   for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-    const xi = vertices[i].lon || vertices[i].lng;
+    const xi = vertices[i].lon ?? vertices[i].lng;
     const yi = vertices[i].lat;
-    const xj = vertices[j].lon || vertices[j].lng;
+    const xj = vertices[j].lon ?? vertices[j].lng;
     const yj = vertices[j].lat;
     
     const intersect = ((yi > point.lat) !== (yj > point.lat))

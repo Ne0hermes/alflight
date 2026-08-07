@@ -1,8 +1,10 @@
 // src/features/fuel/FuelModule.jsx
 
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState, useRef } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { aircraftTankConfigId, activeTankIdsFrom } from '@core/stores/fuelStore';
+import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
 import { useFuelSync } from '@hooks/useFuelSync';
@@ -87,6 +89,93 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
   );
 });
 
+// ─── Configuration réservoirs par vol ────────────────────────────────────────
+// Demande pilote (2026-07) : liste dépliable de TOUS les réservoirs déclarés de
+// l'avion ; le CDB coche ceux réellement embarqués (standard vs long-range /
+// auxiliaire) et saisit le volume de chacun AU MOMENT du cochage. Tout est
+// décoché au début de CHAQUE préparation de vol (config non persistée, cf.
+// fuelStore) pour forcer la re-vérification. FOB = somme des réservoirs cochés.
+const TankConfigRow = memo(({ tank, cfg, onToggle, onLiters }) => {
+  const { convert, getSymbol, getUnit } = useUnits();
+  useUnitsWatcher(); // Force re-render on units change
+
+  const active = !!cfg?.active;
+  const capLtr = parseFloat(tank.capacity) || 0;
+  const userUnit = getUnit('fuel');
+  const capDisplay = convert(capLtr, 'fuel', 'ltr', { toUnit: userUnit });
+  const isOptional = tank.optional ?? ['aux', 'optional', 'tip'].includes(tank.type);
+
+  // Saisie tolérante (virgule, états transitoires) — même correctif que les
+  // inputs du centrage : l'état local pilote l'affichage. cf. utils/numericInput.
+  const litersDisplay = active ? convert(parseFloat(cfg?.ltr) || 0, 'fuel', 'ltr', { toUnit: userUnit }) : 0;
+  const fmt = (v) => { const n = Number(v); return (!Number.isFinite(n) || n === 0) ? '' : String(Math.round(n * 10) / 10); };
+  const [raw, setRaw] = useState(() => fmt(litersDisplay));
+  const focusedRef = useRef(false);
+  useEffect(() => {
+    if (focusedRef.current) return;
+    if (!numbersClose(litersDisplay || 0, parseDecimalInput(raw) ?? 0)) setRaw(fmt(litersDisplay));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [litersDisplay]);
+
+  const handleLitersChange = (e) => {
+    const v = e.target.value;
+    if (!DECIMAL_INPUT_RE.test(v)) return;          // refuse l'invalide sans reset
+    setRaw(v);
+    const n = v === '' ? 0 : parseDecimalInput(v);  // '40,5' → 40.5 ; '40,' → null
+    if (n === null) return;                         // saisie transitoire
+    let ltr = convert(Math.max(0, n), 'fuel', userUnit, { toUnit: 'ltr' });
+    if (capLtr > 0 && ltr > capLtr) ltr = capLtr;   // plafonné à la capacité du réservoir
+    onLiters(ltr);
+  };
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+      padding: '8px 10px', borderBottom: `1px solid ${sx.theme.colors.gray[200]}`
+    }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 220px', cursor: 'pointer', margin: 0 }}>
+        <input
+          type="checkbox"
+          checked={active}
+          onChange={(e) => onToggle(e.target.checked)}
+          style={{ width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+        />
+        <span>
+          <span style={sx.combine(sx.text.sm, sx.text.bold, { display: 'block' })}>
+            {tank.name || 'Réservoir'}
+          </span>
+          <span style={sx.combine(sx.text.xs, sx.text.secondary)}>
+            {isOptional ? 'Optionnel (amovible)' : 'Fixe'} · Capacité {capDisplay.toFixed(1)} {getSymbol('fuel')}
+          </span>
+        </span>
+      </label>
+      {active ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={raw}
+            onChange={handleLitersChange}
+            onFocus={() => { focusedRef.current = true; }}
+            onBlur={() => { focusedRef.current = false; setRaw(fmt(litersDisplay)); }}
+            placeholder="0"
+            aria-label={`Carburant dans ${tank.name || 'réservoir'}`}
+            style={sx.combine(
+              sx.components.input.base,
+              { width: '90px', textAlign: 'center', padding: '6px 4px', fontSize: 'var(--fs-body)' }
+            )}
+          />
+          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', fontWeight: '500' }}>
+            {getSymbol('fuel')}
+          </span>
+        </div>
+      ) : (
+        <span style={sx.combine(sx.text.xs, sx.text.secondary)}>Non embarqué</span>
+      )}
+    </div>
+  );
+});
+
 export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   useFuelSync();
   const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
@@ -94,14 +183,52 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
   const { selectedAircraft } = useAircraft();
   const { navigationResults, flightType } = useNavigation();
-  const { fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient } = useFuel();
+  const {
+    fuelData, setFuelData, fobFuel, setFobFuel, calculateTotal, isFobSufficient,
+    tankConfig, initTankConfig, setTankActive, setTankLiters
+  } = useFuel();
+
+  // ─── Configuration réservoirs par vol (standard vs long-range/auxiliaire) ─
+  const aircraftTanks = Array.isArray(selectedAircraft?.additionalFuelTanks)
+    ? selectedAircraft.additionalFuelTanks : [];
+  const hasTanks = aircraftTanks.length > 0;
+  const aircraftKey = aircraftTankConfigId(selectedAircraft);
+  const tankConfigEngaged = hasTanks && tankConfig?.aircraftId != null && tankConfig.aircraftId === aircraftKey;
+  const [showTankList, setShowTankList] = useState(true);
+
+  // Engage la config pour l'avion sélectionné (vierge : tout décoché — le CDB
+  // doit vérifier la configuration réelle). Même avion → conserve la saisie.
+  useEffect(() => {
+    if (hasTanks && aircraftKey != null) initTankConfig(aircraftKey);
+  }, [hasTanks, aircraftKey, initTankConfig]);
+
+  // Config qui FAIT FOI = engagée pour cet avion ET au moins une case touchée
+  // (une config vierge — reload de brouillon — n'écrase rien, cf. fuelStore).
+  const flightTankIds = activeTankIdsFrom(tankConfig, selectedAircraft);
+  const tankConfigAuthoritative = hasTanks && flightTankIds != null;
+  const activeTankCount = flightTankIds?.length ?? 0;
+  const totalCapacityLtr = hasTanks
+    ? aircraftTanks.reduce((s, t) => s + (parseFloat(t.capacity) || 0), 0)
+    : (selectedAircraft?.fuelCapacity || 0);
+  // Somme des capacités des réservoirs COCHÉS (affichage liste).
+  const checkedCapacityLtr = aircraftTanks.reduce((s, t, i) =>
+    s + (tankConfig?.tanks?.[String(t?.id ?? i)]?.active ? (parseFloat(t.capacity) || 0) : 0), 0);
+  // Capacité EFFECTIVE du vol = somme des réservoirs cochés quand la config
+  // fait foi (base des alertes de dépassement et du % remplissage — plus
+  // jamais la capacité long-range quand l'avion vole en standard). Config
+  // vierge/non engagée : capacité historique de l'avion.
+  const effectiveCapacityLtr = tankConfigAuthoritative
+    ? checkedCapacityLtr
+    : (selectedAircraft?.fuelCapacity || 0);
+
   const alternatesData = useAlternatesForFuel();
   const {
     alternateFuelRequired,
     alternateFuelRequiredGal,
     alternatesCount,
     maxDistanceAlternate,
-    hasAlternates
+    hasAlternates,
+    diversionAnalysis
   } = alternatesData;
 
 
@@ -290,32 +417,37 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
     return desc;
   };
 
+  // 🔧 LOT 2 — Verdict de l'algorithme de la perpendiculaire, avec causes
+  // EXPLICITES en cas de calcul impossible (fini le « Calcul en cours... »
+  // éternel qui masquait les données manquantes).
   const getAlternateDescription = () => {
     if (!hasAlternates) return 'Aucun déroutement sélectionné';
-    if (!maxDistanceAlternate || maxDistanceAlternate.distance === 0) return 'Calcul en cours...';
     if (!selectedAircraft) return 'Avion non sélectionné';
 
-    const distance = maxDistanceAlternate.distance.toFixed(1);
-    // 🔧 FIX D (fin Phase 4.2) : source unique, plus de fallback fabriqué (|| 100 / || 30).
-    const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
-    const consumptionLph = getFuelConsumptionLph(selectedAircraft);
-    if (!cruiseSpeed || !consumptionLph) {
-      return 'Vitesse de croisière ou consommation manquante (avion incomplet)';
+    const worst = diversionAnalysis?.worst;
+    if (!worst) {
+      const firstError = diversionAnalysis?.errors?.[0];
+      switch (firstError?.status) {
+        case 'missing-position':
+          return `Position du déroutement ${firstError.icao || ''} indisponible — resélectionnez-le à l'étape Déroutements`;
+        case 'missing-aircraft-data':
+          return 'Vitesse de croisière ou consommation manquante (avion incomplet)';
+        case 'missing-route':
+          return 'Route incomplète : renseignez départ et arrivée pour calculer le dégagement';
+        default:
+          return 'Calcul du dégagement impossible (données manquantes)';
+      }
     }
-    const timeHours = maxDistanceAlternate.distance / cruiseSpeed;
 
-    // Arrondir à 2 décimales pour éviter d'afficher "0.0h"
-    const timeFormatted = timeHours.toFixed(2);
+    // A = carburant pied de perpendiculaire → arrivée ; B = pied → déroutement
+    const a = worst.fuelToArrivalLtr;
+    const b = worst.fuelToAlternateLtr;
+    const icao = worst.icao || worst.name || 'Alternate';
 
-    // Conso canonique (lph) → préférence utilisateur. getSymbol attend une CATÉGORIE.
-    const consumptionUserUnit = getUnit('fuelConsumption');
-    const consumptionDisplay = toUserUnit(consumptionLph, 'fuelConsumption', consumptionUserUnit) || consumptionLph;
-    const consumptionSymbol = getSymbol('fuelConsumption');
-
-    // Formule simplifiée : la réserve finale (final reserve) est comptée séparément
-    // Afficher l'ICAO de l'alternate de référence (le plus éloigné)
-    const alternateIcao = maxDistanceAlternate.icao || maxDistanceAlternate.name || 'Alternate';
-    return `${alternateIcao} : ${distance} NM ÷ ${cruiseSpeed} kt = ${timeFormatted}h × ${consumptionDisplay.toFixed(1)} ${consumptionSymbol}`;
+    if (worst.isSufficient) {
+      return `✓ ${icao} : carburant suffisant si le déroutement est décidé au passage du travers — le rejoindre (${b.toFixed(1)} L) demande moins que finir la navigation (${a.toFixed(1)} L)`;
+    }
+    return `${icao} : supplément ${worst.supplementLtr} L = rejoindre le déroutement (${b.toFixed(1)} L) − finir la navigation (${a.toFixed(1)} L), depuis le travers à ${worst.distFootToAlternateNM.toFixed(1)} NM`;
   };
 
   const getTripFuelDescription = () => {
@@ -477,6 +609,73 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
           ⛽ FOB - Carburant au décollage
         </h3>
 
+        {/* ─── Configuration des réservoirs (liste dépliable) ───
+            Le CDB coche les réservoirs réellement embarqués et saisit le volume
+            de chacun. Remis à zéro à chaque préparation de vol (fuelStore). */}
+        {hasTanks && (
+          <div style={sx.spacing.mb(4)}>
+            <button
+              type="button"
+              onClick={() => setShowTankList(v => !v)}
+              aria-expanded={showTankList}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
+                background: 'none', border: `1px solid ${sx.theme.colors.gray[300]}`,
+                borderRadius: '6px', padding: '10px 12px', cursor: 'pointer',
+                color: 'var(--text-primary)', fontSize: 'var(--fs-body)',
+                fontWeight: 600, textAlign: 'left'
+              }}
+            >
+              {showTankList ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              🛢️ Configuration des réservoirs — {activeTankCount}/{aircraftTanks.length} embarqué{activeTankCount > 1 ? 's' : ''}
+            </button>
+
+            {tankConfigEngaged && activeTankCount === 0 && (
+              <div style={sx.combine(sx.components.alert.base, sx.components.alert.warning, sx.spacing.mt(2))}>
+                <AlertTriangle size={20} />
+                <div>
+                  <p style={sx.text.bold}>Configuration à vérifier</p>
+                  <p style={sx.text.sm}>
+                    Aucun réservoir sélectionné. Cochez les réservoirs réellement embarqués
+                    (configuration standard / long-range / auxiliaire) et saisissez le carburant
+                    de chacun. La configuration est remise à zéro à chaque préparation de vol.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {showTankList && (
+              <div style={{ border: `1px solid ${sx.theme.colors.gray[200]}`, borderRadius: '6px', marginTop: '8px' }}>
+                {aircraftTanks.map((tank, i) => {
+                  const key = String(tank?.id ?? i);
+                  return (
+                    <TankConfigRow
+                      key={key}
+                      tank={tank}
+                      cfg={tankConfig?.tanks?.[key]}
+                      onToggle={(checked) => setTankActive(key, checked)}
+                      onLiters={(ltr) => setTankLiters(key, ltr)}
+                    />
+                  );
+                })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', padding: '8px 10px', fontWeight: 600, fontSize: 'var(--fs-body)' }}>
+                  <span>Capacité configuration</span>
+                  <span>
+                    {convert(checkedCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')}
+                    {checkedCapacityLtr !== totalCapacityLtr &&
+                      ` (max avion : ${convert(totalCapacityLtr, 'fuel', 'ltr').toFixed(1)} ${getSymbol('fuel')})`}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tankConfigAuthoritative && (
+          <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(2))}>
+            FOB calculé automatiquement — somme des réservoirs cochés ci-dessus.
+          </p>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div>
             <label style={sx.components.label.base}>Gallons</label>
@@ -484,7 +683,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
               type="number"
               value={safeFobFuel.gal.toFixed(1)}
               onChange={(e) => handleFobChange('gal', e.target.value)}
-              style={sx.components.input.base}
+              disabled={tankConfigEngaged}
+              style={sx.combine(
+                sx.components.input.base,
+                tankConfigEngaged && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
+              )}
               step="0.1"
             />
           </div>
@@ -494,7 +697,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
               type="number"
               value={safeFobFuel.ltr.toFixed(1)}
               onChange={(e) => handleFobChange('ltr', e.target.value)}
-              style={sx.components.input.base}
+              disabled={tankConfigEngaged}
+              style={sx.combine(
+                sx.components.input.base,
+                tankConfigEngaged && { backgroundColor: sx.theme.colors.gray[100], cursor: 'not-allowed' }
+              )}
               step="0.1"
             />
           </div>
@@ -504,9 +711,11 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         {(() => {
           // Vérifier si le carburant dépasse la capacité de l'avion
           // 🔧 FIX: fuelCapacity est TOUJOURS stocké en litres (unité de stockage standard)
-          const fuelCapacityLtr = selectedAircraft?.fuelCapacity || 0;
+          // Config réservoirs faisant foi → capacité EFFECTIVE (réservoirs
+          // cochés uniquement), sinon capacité totale historique de l'avion.
+          const fuelCapacityLtr = effectiveCapacityLtr;
 
-          const exceedsCapacity = selectedAircraft && selectedAircraft.fuelCapacity && safeFobFuel.ltr > fuelCapacityLtr;
+          const exceedsCapacity = fuelCapacityLtr > 0 && safeFobFuel.ltr > fuelCapacityLtr;
           const fillRatio = fuelCapacityLtr > 0 ? ((safeFobFuel.ltr / fuelCapacityLtr) * 100).toFixed(0) : 0;
 
           // 3 états possibles : Insuffisant (rouge), Capacité dépassée (orange), Suffisant (vert)
@@ -538,7 +747,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                     <p style={sx.text.sm}>
                       Excédent: {convert(Math.abs(safeFobFuel.ltr - safeCalculateTotal('ltr')), 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')}
                     </p>
-                    {selectedAircraft && selectedAircraft.fuelCapacity && (
+                    {fuelCapacityLtr > 0 && (
                       <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                         Capacité max: {convert(fuelCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')} •
                         Remplissage: {fillRatio}%
@@ -554,7 +763,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                     <p style={sx.text.sm}>
                       Manque: {convert(Math.abs(safeFobFuel.ltr - safeCalculateTotal('ltr')), 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')}
                     </p>
-                    {selectedAircraft && selectedAircraft.fuelCapacity && (
+                    {fuelCapacityLtr > 0 && (
                       <p style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mt(1))}>
                         Capacité max: {convert(fuelCapacityLtr, 'fuel', 'ltr').toFixed(1)} {getSymbol('fuel')} •
                         Remplissage: {fillRatio}%

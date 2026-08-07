@@ -285,7 +285,20 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
     const syncAlternates = async () => {
       // Importer le store
       const { useAlternatesStore } = await import('@core/stores/alternatesStore');
-      const selectedAlternates = useAlternatesStore.getState().selectedAlternates;
+      const store = useAlternatesStore.getState();
+      const selectedAlternates = store.selectedAlternates;
+
+      // 🔧 LOT 2 — Store vide + brouillon avec déroutements = REPRISE : on
+      // restaure le store depuis flightPlan au lieu d'écraser flightPlan avec
+      // un tableau vide (l'ancienne version amputait le brouillon).
+      if (selectedAlternates.length === 0 && (flightPlan.alternates || []).length > 0) {
+        store.setSelectedAlternates(flightPlan.alternates.map(alt => ({
+          ...alt,
+          position: alt.position || alt.coordinates || { lat: alt.lat, lon: alt.lon ?? alt.lng }
+        })));
+        console.log('♻️ [Step3Route] Déroutements restaurés depuis le brouillon:', flightPlan.alternates.map(a => a.icao));
+        return;
+      }
 
       console.log('🔄 [Step3Route] Synchronisation alternates:', {
         storeCount: selectedAlternates.length,
@@ -298,10 +311,14 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
       if (alternatesChanged) {
         // Mettre à jour flightPlan.alternates
+        // 🔧 LOT 2 — conserver position et selectionType (le calcul de
+        // dégagement exige la position ; l'ancienne recopie la jetait)
         flightPlan.alternates = selectedAlternates.map(alt => ({
           icao: alt.icao,
           name: alt.name,
-          coordinates: alt.coordinates || { lat: alt.lat, lon: alt.lon },
+          position: alt.position || alt.coordinates || { lat: alt.lat, lon: alt.lon ?? alt.lng },
+          coordinates: alt.coordinates || alt.position || { lat: alt.lat, lon: alt.lon ?? alt.lng },
+          selectionType: alt.selectionType,
           distance: alt.distance || 0
         }));
 
