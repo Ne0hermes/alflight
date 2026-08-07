@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation } from 'lucide-react';
+import { Calendar, Radio, Plane, Sun, Moon, MapPin, Navigation, Fuel } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { aircraftSelectors } from '../../../core/stores/aircraftStore';
 import { useAircraft, useNavigation } from '@core/contexts';
 import { flightTypeToGeneralInfo } from '@core/flightType';
+import { useFuelStore } from '@core/stores/fuelStore';
+import { useWeightBalanceStore } from '@core/stores/weightBalanceStore';
+import { applyTankVariant, hasTankVariants, getDefaultVariantId } from '@utils/tankVariants';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -15,7 +18,15 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
   // Récupérer la liste des avions disponibles
   const aircraftList = aircraftSelectors.useAircraftList();
   // Récupérer le contexte Aircraft pour mettre à jour l'avion sélectionné globalement
-  const { setSelectedAircraft } = useAircraft();
+  // 🔧 LOT 5 : rawSelectedAircraft = avion SANS overlay de variante (source des
+  // variantes disponibles) ; selectedTankVariantId/setSelectedTankVariant =
+  // variante active (l'avion effectif est dérivé dans AircraftProvider)
+  const {
+    setSelectedAircraft,
+    rawSelectedAircraft,
+    selectedTankVariantId,
+    setSelectedTankVariant
+  } = useAircraft();
 
   // 🔒 SOURCE UNIQUE « type de vol » : period/rules/category vivent dans le
   // navigationStore (cf. @core/flightType). Le sélecteur de cette étape écrit
@@ -68,6 +79,13 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
       setSelectedAircraft(selectedAircraft);
       console.log('🛩️ Contexte Aircraft mis à jour:', selectedAircraft.registration);
 
+      // 🔧 LOT 5 : appliquer la variante de réservoirs PAR DÉFAUT de l'avion
+      // (setSelectedAircraft vient de remettre la variante à null si l'avion
+      // a changé). L'avion effectif du contexte suivra automatiquement.
+      const defaultVariantId = getDefaultVariantId(selectedAircraft);
+      setSelectedTankVariant(defaultVariantId);
+      const effectiveAircraft = applyTankVariant(selectedAircraft, defaultVariantId);
+
       // 🔍 DEBUG : Vérifier si weightBalance existe dans selectedAircraft
       console.log('🔍 [Step1] selectedAircraft has weightBalance?', !!selectedAircraft.weightBalance);
       console.log('🔍 [Step1] selectedAircraft has arms?', !!selectedAircraft.arms);
@@ -81,15 +99,18 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
 
       // Pré-remplir automatiquement TOUTES les données de l'avion dans le flightPlan
       // Copier l'objet complet pour que Step6 (Weight & Balance) ait accès à toutes les propriétés
+      // 🔧 LOT 5 : on copie l'avion EFFECTIF (variante par défaut appliquée :
+      // additionalFuelTanks/fuelCapacity filtrés) + tankVariantId pour le brouillon
       const aircraftData = {
-        ...selectedAircraft, // Copier TOUTES les propriétés de l'avion
+        ...effectiveAircraft, // Copier TOUTES les propriétés de l'avion (effectif)
+        tankVariantId: defaultVariantId,
         // S'assurer que les propriétés essentielles sont bien définies
         registration: selectedAircraft.registration,
         type: selectedAircraft.aircraftType || selectedAircraft.type || '',
         model: selectedAircraft.model || '',
         cruiseSpeed: selectedAircraft.cruiseSpeed || 0,
         fuelConsumption: selectedAircraft.fuelConsumption || 0,
-        fuelCapacity: selectedAircraft.fuelCapacity || 0,
+        fuelCapacity: effectiveAircraft.fuelCapacity || 0,
         emptyWeight: selectedAircraft.emptyWeight || 0,
         maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,
       };
@@ -177,6 +198,41 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     onUpdate();
   };
 
+  // 🔧 LOT 5 : changement de variante de réservoirs pour ce vol
+  const handleTankVariantSelection = (variantId) => {
+    const id = variantId || null;
+    setSelectedTankVariant(id);
+    // Le cochage par vol doit être re-vérifié : la clé du tankConfig
+    // (aircraft.id) ne change pas avec la variante
+    useFuelStore.getState().resetTankConfig();
+    // ⚠️ Purger AUSSI le FOB et les charges carburant du devis de masse :
+    // un réservoir retiré par la variante garderait sinon un load fantôme
+    // (l'effet FuelProvider ne remet à zéro que les réservoirs de la liste
+    // COURANTE) et le FOB conserverait les litres de l'ancienne config.
+    useFuelStore.getState().setFobFuel(0);
+    const wbStore = useWeightBalanceStore.getState();
+    Object.keys(wbStore.loads || {}).forEach((k) => {
+      if (k === 'fuel' || k.startsWith('fuel_')) wbStore.updateLoad(k, 0);
+    });
+    if (rawSelectedAircraft) {
+      const eff = applyTankVariant(rawSelectedAircraft, id);
+      flightPlan.updateAircraft({
+        tankVariantId: id,
+        additionalFuelTanks: eff.additionalFuelTanks,
+        fuelCapacity: eff.fuelCapacity,
+        fuelUsableCapacity: eff.fuelUsableCapacity
+      });
+    }
+    onUpdate();
+  };
+
+  const variantCapacityLtr = (aircraft, variant) => {
+    const keys = new Set((Array.isArray(variant?.tankIds) ? variant.tankIds : []).map(String));
+    return (aircraft?.additionalFuelTanks || []).reduce(
+      (s, t, i) => (keys.has(String(t?.id ?? i)) ? s + (parseFloat(t?.capacity) || 0) : s), 0
+    );
+  };
+
   const formatDate = (date) => {
     if (!date) return '';
     const d = new Date(date);
@@ -204,6 +260,35 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
           ))}
         </select>
       </div>
+
+      {/* 🔧 LOT 5 : Configuration de réservoirs (variante) — visible seulement
+          si l'avion sélectionné a au moins 2 variantes définies */}
+      {hasTankVariants(rawSelectedAircraft) && (
+        <div style={styles.field}>
+          <label style={styles.label}>
+            <Fuel size={18} style={styles.icon} />
+            Configuration réservoirs
+          </label>
+          <select
+            style={styles.select}
+            value={selectedTankVariantId || ''}
+            onChange={(e) => handleTankVariantSelection(e.target.value)}
+          >
+            {/* Option « sans variante » : tous les réservoirs de l'avion —
+                aussi l'état affiché d'un brouillon d'avant les variantes */}
+            <option value="">
+              Tous les réservoirs — {((rawSelectedAircraft.additionalFuelTanks || [])
+                .reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0)).toFixed(0)} L
+            </option>
+            {(rawSelectedAircraft.tankVariants || []).map((variant) => (
+              <option key={variant.id} value={variant.id}>
+                {variant.name} — {variantCapacityLtr(rawSelectedAircraft, variant).toFixed(0)} L
+                {variant.isDefault ? ' (défaut)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Date du vol - ligne 2 */}
       <div style={styles.field}>

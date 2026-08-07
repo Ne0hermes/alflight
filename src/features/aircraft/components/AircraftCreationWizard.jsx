@@ -33,6 +33,7 @@ import {
 import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
+import { sanitizeTankVariants } from '@utils/tankVariants';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
@@ -319,6 +320,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // save. On recharge donc explicitement les réservoirs de l'avion existant,
     // exactement comme baggageCompartments / additionalSeats ci-dessus.
     additionalFuelTanks: existingAircraft?.additionalFuelTanks || [],
+
+    // 🔧 LOT 5 : variantes de configuration des réservoirs (Standard / Long
+    // Range…) — sous-ensembles nommés de additionalFuelTanks, référencés par id
+    tankVariants: existingAircraft?.tankVariants || [],
 
     // Performances
     advancedPerformance: existingAircraft?.advancedPerformance || null,
@@ -993,6 +998,45 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         });
       } catch (syncErr) {
         console.warn('⚠️ [Save] Sync tank principal échoué (non bloquant):', syncErr);
+      }
+
+      // ─── LOT 5 : variantes de réservoirs ─────────────────────────────────
+      // Source de vérité = l'état du WIZARD (aircraftData.tankVariants), PAS
+      // dataToSave : mergeNonEmpty restaure les tableaux vides depuis
+      // existingAircraft et annulerait silencieusement la suppression de la
+      // dernière variante. Étapes : (1) garantir un id sur chaque réservoir en
+      // remappant les références par index vers le nouvel id ; (2) assainir ;
+      // (3) pas de champ fantôme — tankVariants n'est écrit que s'il reste au
+      // moins une variante valide (avions pré-Lot 5 : enregistrement inchangé).
+      {
+        let wizardVariants = Array.isArray(aircraftData.tankVariants)
+          ? aircraftData.tankVariants
+          : (Array.isArray(dataToSave.tankVariants) ? dataToSave.tankVariants : []);
+
+        if (Array.isArray(dataToSave.additionalFuelTanks)) {
+          const keyRemap = {};
+          dataToSave.additionalFuelTanks = dataToSave.additionalFuelTanks.map((t, i) => {
+            if (t && t.id == null) {
+              const withId = { ...t, id: Date.now() + Math.random() };
+              keyRemap[String(i)] = String(withId.id);
+              return withId;
+            }
+            return t;
+          });
+          if (Object.keys(keyRemap).length > 0) {
+            wizardVariants = wizardVariants.map(v => ({
+              ...v,
+              tankIds: (Array.isArray(v?.tankIds) ? v.tankIds : []).map(k => keyRemap[String(k)] ?? String(k))
+            }));
+          }
+        }
+
+        const sanitized = sanitizeTankVariants(wizardVariants, dataToSave.additionalFuelTanks);
+        if (sanitized.length > 0) {
+          dataToSave.tankVariants = sanitized;
+        } else {
+          delete dataToSave.tankVariants;
+        }
       }
 
       // Calculer le baseFactor si nécessaire

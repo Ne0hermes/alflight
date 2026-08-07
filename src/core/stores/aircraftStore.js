@@ -99,6 +99,8 @@ export const useAircraftStore = create(
       // État
       aircraftList: [],
       selectedAircraftId: null,
+      // 🔧 LOT 5 : variante de réservoirs du vol en cours (volatile)
+      selectedTankVariantId: null,
       isLoading: false,
       isInitialized: false,
       error: null,
@@ -284,7 +286,22 @@ export const useAircraftStore = create(
     // Sélectionner un avion
     setSelectedAircraft: (aircraft) => {
       logger.debug('setSelectedAircraft called with:', aircraft);
-      set({ selectedAircraftId: aircraft?.id || null });
+      const newId = aircraft?.id || null;
+      const prevId = get().selectedAircraftId;
+      set({
+        selectedAircraftId: newId,
+        // 🔧 LOT 5 : la variante de réservoirs est propre à un avion — on la
+        // réinitialise quand l'avion CHANGE (pas sur une re-sélection du même)
+        ...(newId !== prevId ? { selectedTankVariantId: null } : {})
+      });
+    },
+
+    // 🔧 LOT 5 — Variante de réservoirs sélectionnée pour la préparation en
+    // cours (ex. « Standard » vs « Long Range »). L'avion EFFECTIF est dérivé
+    // dans AircraftProvider via applyTankVariant. Persistance du choix : le
+    // brouillon de vol (flightPlan.aircraft.tankVariantId), pas ce store.
+    setSelectedTankVariant: (variantId) => {
+      set({ selectedTankVariantId: variantId ?? null });
     },
 
     // Ajouter un avion (soumettre à Supabase)

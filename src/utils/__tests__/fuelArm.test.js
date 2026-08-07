@@ -98,3 +98,66 @@ describe('computeScenarioFuel — moment par réservoir, jamais de moyenne', () 
     expect(r).toEqual({ ok: false, reason: 'fuelArm' });
   });
 });
+
+// Configuration réservoirs PAR VOL (décision pilote 2026-07) : le CDB coche les
+// réservoirs réellement embarqués (standard vs long-range/auxiliaire). Les
+// réservoirs décochés n'existent pas pour le vol : ni dans « pleins », ni dans
+// la répartition, ni dans le bras unique.
+describe('activeTankIds — configuration réservoirs du vol', () => {
+  const LONG_RANGE = { fuelCapacity: 150, additionalFuelTanks: [
+    { id: 'L', name: 'Aile G', capacity: 60, arm: 2.0 },
+    { id: 'R', name: 'Aile D', capacity: 40, arm: 2.5 },
+    { id: 'AUX', name: 'Auxiliaire', capacity: 50, arm: 3.1, optional: true },
+  ] };
+
+  it('full : seuls les réservoirs COCHÉS sont remplis (config standard sans aux)', () => {
+    const r = computeScenarioFuel({ aircraft: LONG_RANGE, scenario: 'full', density: D, activeTankIds: ['L', 'R'] });
+    expect(r.ok).toBe(true);
+    expect(r.rows).toHaveLength(2);
+    expect(r.weight).toBeCloseTo((60 + 40) * D, 6);          // PAS 150 L
+    expect(r.moment).toBeCloseTo(60 * D * 2.0 + 40 * D * 2.5, 6);
+  });
+
+  it('full : config long-range (tout coché) = comportement complet', () => {
+    const r = computeScenarioFuel({ aircraft: LONG_RANGE, scenario: 'full', density: D, activeTankIds: ['L', 'R', 'AUX'] });
+    expect(r.weight).toBeCloseTo(150 * D, 6);
+  });
+
+  it('AUCUN réservoir coché → scénarios vides (0 L), jamais le repli fuelCapacity', () => {
+    const r = computeScenarioFuel({ aircraft: LONG_RANGE, scenario: 'full', density: D, activeTankIds: [] });
+    expect(r).toEqual({ ok: true, rows: [], weight: 0, moment: 0 });
+  });
+
+  it('null (config non engagée) → comportement historique (tous les réservoirs)', () => {
+    const r = computeScenarioFuel({ aircraft: LONG_RANGE, scenario: 'full', density: D, activeTankIds: null });
+    expect(r.weight).toBeCloseTo(150 * D, 6);
+  });
+
+  it('fob : la répartition ne compte que les réservoirs cochés', () => {
+    const loads = { fuel_L: 30, fuel_R: 20, fuel_AUX: 50 }; // AUX décoché → ignoré
+    const r = computeScenarioFuel({ aircraft: LONG_RANGE, scenario: 'fob', density: D, fobLiters: 50, loads, activeTankIds: ['L', 'R'] });
+    expect(r.ok).toBe(true);
+    expect(r.weight).toBeCloseTo(50 * D, 6);
+    expect(r.moment).toBeCloseTo(30 * D * 2.0 + 20 * D * 2.5, 6);
+  });
+
+  it('singleFuelArm : bras non ambigu si les réservoirs COCHÉS partagent un bras', () => {
+    const ac = { additionalFuelTanks: [
+      { id: 'L', capacity: 60, arm: 2.2 },
+      { id: 'R', capacity: 40, arm: 2.2 },
+      { id: 'AUX', capacity: 50, arm: 3.1 },
+    ] };
+    expect(singleFuelArm(ac)).toEqual({ error: 'ambiguous' });                    // sans config
+    expect(singleFuelArm(ac, undefined, ['L', 'R'])).toEqual({ arm: 2.2 });       // standard
+  });
+
+  it('clés numériques (id ?? index) : correspondance en String', () => {
+    const ac = { additionalFuelTanks: [
+      { capacity: 60, arm: 2.0 },  // pas d'id → clé '0'
+      { capacity: 40, arm: 2.5 },  // pas d'id → clé '1'
+    ] };
+    const r = computeScenarioFuel({ aircraft: ac, scenario: 'full', density: D, activeTankIds: ['0'] });
+    expect(r.ok).toBe(true);
+    expect(r.weight).toBeCloseTo(60 * D, 6);
+  });
+});

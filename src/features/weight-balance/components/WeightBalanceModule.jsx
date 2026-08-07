@@ -6,6 +6,7 @@ import { LoadInput } from './LoadInput';
 import { WeightBalanceChart } from './WeightBalanceChart';
 import { ScenarioCards } from './ScenarioCards';
 import { calculateScenarios } from '../utils/calculations';
+import { activeTankIdsFrom } from '@core/stores/fuelStore';
 import { sx } from '@shared/styles/styleSystem';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
@@ -14,7 +15,7 @@ import { tokens } from '@shared/styles/designSystem';
 // Composant principal optimisé
 export const WeightBalanceModule = memo(() => {
   const { selectedAircraft } = useAircraft();
-  const { fobFuel, fuelData } = useFuel();
+  const { fobFuel, fuelData, tankConfig } = useFuel();
   const { loads, updateLoad, calculations } = useWeightBalance();
   const { navigationResults } = useNavigation();
   const { getUnit } = useUnits();
@@ -23,14 +24,23 @@ export const WeightBalanceModule = memo(() => {
   console.log('Current loads state:', loads);
   console.log('Current calculations:', calculations);
 
+  // ─── Config réservoirs du vol (module Carburant) ──────────────────────────
+  // FAIT FOI pour CET avion (au moins une case touchée) → seuls les réservoirs
+  // cochés comptent dans les scénarios ; null → comportement historique (tous
+  // les réservoirs déclarés). cf. fuelStore.activeTankIdsFrom.
+  const activeTankIds = useMemo(
+    () => activeTankIdsFrom(tankConfig, selectedAircraft),
+    [selectedAircraft, tankConfig]
+  );
+
   // Calcul des scénarios mémorisé
   const scenarios = useMemo(() => {
     if (!selectedAircraft || !calculations || typeof calculations.totalWeight !== 'number' || typeof calculations.totalMoment !== 'number') {
       return null;
     }
     const fuelUnit = getUnit('fuel');
-    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
-  }, [selectedAircraft, calculations, loads, fobFuel, fuelData, getUnit]);
+    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds);
+  }, [selectedAircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds]);
 
   // Handler mémorisé pour updateLoad
   const handleLoadChange = useCallback((type, value) => {

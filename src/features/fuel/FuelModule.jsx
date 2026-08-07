@@ -4,6 +4,8 @@ import React, { memo, useEffect, useState, useRef } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { AlertTriangle, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { aircraftTankConfigId, activeTankIdsFrom } from '@core/stores/fuelStore';
+import { useWeightBalanceStore } from '@core/stores/weightBalanceStore';
+import { computeMaxFuel } from '@utils/maxFuel';
 import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
@@ -220,6 +222,49 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   const effectiveCapacityLtr = tankConfigAuthoritative
     ? checkedCapacityLtr
     : (selectedAircraft?.fuelCapacity || 0);
+
+  // 🔧 LOT 5 — Volume Max : remplit les réservoirs cochés au maximum permis
+  // par la masse disponible (jusqu'à MTOW). ZFW massique = masse à vide +
+  // charges hors carburant (loads du weightBalanceStore, lues au clic).
+  // Fail-closed : message explicite si densité/masses manquantes.
+  const handleVolumeMax = () => {
+    const { loads } = useWeightBalanceStore.getState();
+    const emptyWeight = parseFloat(selectedAircraft?.weights?.emptyWeight ?? selectedAircraft?.emptyWeight);
+    if (!Number.isFinite(emptyWeight)) {
+      alert('Volume Max impossible : masse à vide de l\'avion inconnue.');
+      return;
+    }
+    const nonFuelKg = Object.entries(loads || {}).reduce((s, [k, v]) => {
+      if (k === 'fuel' || k.startsWith('fuel_')) return s;
+      return s + (parseFloat(v) || 0);
+    }, 0);
+    const result = computeMaxFuel({
+      aircraft: selectedAircraft,
+      zfwKg: emptyWeight + nonFuelKg,
+      activeTankIds: flightTankIds
+    });
+    if (!result.ok) {
+      const msgs = {
+        fuelDensity: 'type de carburant inconnu (densité indisponible)',
+        weights: 'MTOW ou masse à vide manquante',
+        noTanks: 'aucun réservoir coché'
+      };
+      alert(`Volume Max impossible : ${msgs[result.error] || result.error}.`);
+      return;
+    }
+    // ⚠️ À l'étape Carburant, les charges (pilote/pax/bagages) peuvent ne pas
+    // encore être saisies (étape Masse & Centrage APRÈS) : le maximum est alors
+    // calculé pour un avion vide. Confirmation informée plutôt que silence —
+    // le bouton de l'étape Masse & Centrage donne le chiffre définitif.
+    const proceed = window.confirm(
+      `Volume Max : ${result.litresMax} L (${result.limitedBy === 'mtow' ? 'limité par la MTOW' : 'réservoirs pleins'}).\n\n` +
+      `Calcul basé sur les charges actuellement saisies : ${nonFuelKg.toFixed(0)} kg hors carburant.\n` +
+      `Si passagers/bagages ne sont pas encore renseignés (étape Masse & Centrage), le maximum réel sera plus faible.\n\nAppliquer ?`
+    );
+    if (!proceed) return;
+    result.perTank.forEach(({ key, ltr }) => setTankLiters(key, ltr));
+    console.log(`⛽ [FuelModule] Volume Max appliqué : ${result.litresMax} L (${result.limitedBy === 'mtow' ? 'limité par la MTOW' : 'réservoirs pleins'}, masse dispo ${result.massAvailableKg} kg)`);
+  };
 
   const alternatesData = useAlternatesForFuel();
   const {
@@ -666,6 +711,31 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                       ` (max avion : ${convert(totalCapacityLtr, 'fuel', 'ltr').toFixed(1)} ${getSymbol('fuel')})`}
                   </span>
                 </div>
+                {/* 🔧 LOT 5 — Volume Max : remplit les réservoirs cochés (dans
+                    l'ordre de la liste, comme la séquence de consommation)
+                    jusqu'au min(capacité cochée, masse dispo jusqu'à MTOW) */}
+                {tankConfigAuthoritative && (
+                  <div className="pdf-hidden" style={{ padding: '0 10px 10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={handleVolumeMax}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: 'var(--fs-caption)',
+                        fontWeight: 600,
+                        color: 'var(--accent-primary)',
+                        backgroundColor: 'var(--accent-soft)',
+                        border: '1px solid var(--accent-primary)',
+                        borderRadius: 'var(--radius-sm)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ⛽ Volume Max (jusqu'à MTOW)
+                    </button>
+                    <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+                      Borné par la masse disponible et la capacité des réservoirs cochés.
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -13,7 +13,9 @@ const getFuelLiters = (fobFuel) => {
 
 const GAL_TO_LTR = 3.78541;
 
-export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelData, fuelUnit = 'ltr') => {
+// `activeTankIds` (config réservoirs du vol, cf. fuelStore) : clés des réservoirs
+// embarqués — null = pas de config → tous les réservoirs déclarés (historique).
+export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelData, fuelUnit = 'ltr', activeTankIds = null) => {
   if (!aircraft || !calculations) return null;
 
   // ⚠️ PROTECTION CRITIQUE : Vérifier que weightBalance existe
@@ -75,7 +77,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   // bras propre de chaque réservoir). Renvoie { ok:false, reason } si un bras
   // manque ('fuelArm') ou si des bras différents exigent une répartition non
   // fournie ('distribution') → le scénario devient indisponible (jamais faux).
-  const fuelArgs = { aircraft, density: fuelDensityForCalc, fobLiters: fobFuelLiters, loads, wb };
+  const fuelArgs = { aircraft, density: fuelDensityForCalc, fobLiters: fobFuelLiters, loads, wb, activeTankIds };
   const fuelFull = computeScenarioFuel({ ...fuelArgs, scenario: 'full' });
   const fuelFob = computeScenarioFuel({ ...fuelArgs, scenario: 'fob' });
   const fuelLanding = computeScenarioFuel({ ...fuelArgs, scenario: 'landing', burnedLiters: burnedFuelL });

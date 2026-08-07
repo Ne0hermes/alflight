@@ -6,9 +6,11 @@ import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numeri
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
+import { activeTankIdsFrom } from '@core/stores/fuelStore';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { getFuelDensity } from '@utils/fuelDensity';
+import { computeMaxFuel } from '@utils/maxFuel';
 import { useUnits } from '@hooks/useUnits';
 import { getWeighingReportAge, WEIGHING_REPORT_REMINDER } from '@utils/weighingReportAge';
 
@@ -49,7 +51,7 @@ const commonStyles = {
 // Composant principal de l'étape 6
 export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
   const { selectedAircraft, setSelectedAircraft } = useAircraft();
-  const { fobFuel, fuelData, setFobFuel } = useFuel();
+  const { fobFuel, fuelData, setFobFuel, tankConfig, setTankLiters } = useFuel();
   const { loads, updateLoad, updateFuelLoad, calculations } = useWeightBalance();
   const { getUnit, convert, getSymbol } = useUnits();
 
@@ -272,11 +274,22 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
           // 🔧 IMPORTANT: Mettre à jour flightPlan ET contexte avec le fullAircraft mappé
           // qui contient maintenant emptyWeight
-          if (flightPlan?.updateAircraft) {
-            flightPlan.updateAircraft(fullAircraft);
+          // 🔧 LOT 5 : le record IndexedDB porte TOUS les réservoirs — ré-appliquer
+          // la variante du vol avant d'écrire dans le brouillon, sinon la liste
+          // filtrée de l'étape 1 serait écrasée par la liste complète.
+          {
+            const { applyTankVariant } = await import('@utils/tankVariants');
+            const variantId = flightPlan?.aircraft?.tankVariantId
+              ?? store.selectedTankVariantId
+              ?? null;
+            const effectiveFull = applyTankVariant(fullAircraft, variantId);
+            if (flightPlan?.updateAircraft) {
+              flightPlan.updateAircraft({ ...effectiveFull, tankVariantId: variantId });
+            }
           }
 
-          // Synchroniser avec le contexte
+          // Synchroniser avec le contexte (avion BRUT : l'overlay de variante
+          // est dérivé dans AircraftProvider à partir de l'id)
           setSelectedAircraft(fullAircraft);
 
           // 🔍 DEBUG: Vérifier que weightBalance ET emptyWeight sont présents
@@ -302,16 +315,40 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     }
   }, [aircraft?.registration, setSelectedAircraft, flightPlan, onUpdate]);
 
+  // ─── Config réservoirs du vol (définie à l'étape Carburant) ──────────────
+  // FAIT FOI pour CET avion (au moins une case touchée) → seuls les réservoirs
+  // cochés comptent dans les scénarios et la répartition ; null → comportement
+  // historique (tous les réservoirs déclarés). cf. fuelStore.activeTankIdsFrom.
+  const activeTankIds = useMemo(
+    () => activeTankIdsFrom(tankConfig, aircraft),
+    [aircraft, tankConfig]
+  );
+
   // Synchroniser le carburant (fobFuel doit être { ltr, gal }, pas un nombre)
+  // ⚠️ Sens de la sync selon la source de vérité (revue adversariale 2026-07) :
+  //   - Config réservoirs FAISANT FOI : fobFuel (somme des réservoirs cochés,
+  //     recalculée par le FuelProvider) est LA référence → on aligne
+  //     flightPlan.fuel.confirmed dessus. L'ancien sens écrasait toute
+  //     correction de répartition saisie à cette étape (FOB fantôme).
+  //   - Sinon (comportement historique) : le plan de vol restauré fait foi →
+  //     on réaligne fobFuel sur flightPlan.fuel.confirmed.
   useEffect(() => {
     const confirmedLtr = flightPlan?.fuel?.confirmed;
+    if (Array.isArray(activeTankIds)) {
+      const fobLtr = fobFuel?.ltr || 0;
+      if (flightPlan?.fuel && Math.abs(fobLtr - (parseFloat(confirmedLtr) || 0)) > 0.01) {
+        flightPlan.confirmFuel(fobLtr);
+        if (onUpdate) onUpdate();
+      }
+      return;
+    }
     if (confirmedLtr && confirmedLtr > 0 && fobFuel?.ltr !== confirmedLtr) {
       setFobFuel({
         ltr: confirmedLtr,
         gal: parseFloat((confirmedLtr / 3.78541).toFixed(2))
       });
     }
-  }, [flightPlan, fobFuel, setFobFuel]);
+  }, [flightPlan, fobFuel, setFobFuel, activeTankIds, onUpdate]);
 
       // 🔧 FIX CRITIQUE: Restaurer les loads depuis flightPlan au montage
       // Utiliser un ref pour ne restaurer qu'une seule fois au montage
@@ -331,13 +368,19 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           // Restaurer depuis flightPlan
           console.log('🔄 [Step6WB] Restauration des loads depuis flightPlan:', flightPlan.weightBalance.loads);
           Object.entries(flightPlan.weightBalance.loads).forEach(([type, value]) => {
+            // Config réservoirs faisant foi : le carburant vient EXCLUSIVEMENT
+            // du fuelStore (somme des réservoirs cochés, sync FuelProvider) —
+            // ne pas réinjecter les fuel_* d'un ancien brouillon par-dessus la
+            // configuration vérifiée (revue adversariale 2026-07 : du carburant
+            // fantôme entrait au bilan alors que le FOB affichait 0).
+            if (Array.isArray(activeTankIds) && type.startsWith('fuel_')) return;
             if (value !== undefined && value !== null && value !== 0) {
               updateLoad(type, value);
             }
           });
           hasRestoredLoads.current = true;
         }
-      }, [flightPlan?.weightBalance?.loads, loads, updateLoad]);
+      }, [flightPlan?.weightBalance?.loads, loads, updateLoad, activeTankIds]);
 
       // 🔧 FIX: Mettre à jour loads.fuel quand fobFuel change
       useEffect(() => {
@@ -368,8 +411,8 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           return null;
         }
         const fuelUnit = getUnit('fuel');
-        return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit);
-      }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit]);
+        return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds);
+      }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds]);
 
       // 🔧 SÉCURITÉ CRITIQUE: Vérifier les limites opérationnelles de masse
       const weightLimitViolations = useMemo(() => {
@@ -630,6 +673,8 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             fuelData={fuelData}
             flightPlan={flightPlan}
             weighingCertDate={weighingCertDate}
+            activeTankIds={activeTankIds}
+            onTankLiters={setTankLiters}
           />
 
           {scenarios && (
@@ -650,7 +695,9 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     });
 
   // Composant pour la section de chargement
-  const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan, weighingCertDate }) => {
+  // `activeTankIds` : réservoirs cochés à l'étape Carburant (null = pas de
+  // config engagée → tous les réservoirs affichés, comportement historique).
+  const LoadingSection = memo(({ loads, aircraft, onLoadChange, fobFuel, fuelData, flightPlan, weighingCertDate, activeTankIds = null, onTankLiters = null }) => {
     const { convert, getSymbol, getUnit } = useUnits();
 
     // ⚠️ SÉCURITÉ CRITIQUE : PAS DE VALEURS PAR DÉFAUT POUR LES BRAS
@@ -909,21 +956,44 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               </div>
             </div>
 
-            {/* Full Tank */}
+            {/* Full Tank — config réservoirs faisant foi : « pleins » = réservoirs
+                COCHÉS uniquement (capacités + bras propres), cohérent avec le
+                scénario « Réservoirs pleins » (computeScenarioFuel). Sinon :
+                capacité totale historique de l'avion. */}
             {(() => {
               const userFuelUnit = getUnit('fuel');
+              const configEngaged = Array.isArray(activeTankIds);
+              const declaredTanks = Array.isArray(aircraft.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+              const activeSet = configEngaged ? new Set(activeTankIds.map(String)) : null;
+              const checkedTanks = configEngaged
+                ? declaredTanks
+                    .map((t, i) => ({ t, i }))
+                    .filter(({ t, i }) => activeSet.has(String(t.id ?? i)))
+                : [];
+
               // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
               // Pas besoin de conversion, c'est déjà en litres !
-              const fuelCapacityLtr = aircraft.fuelCapacity || 0;
+              const fuelCapacityLtr = configEngaged
+                ? checkedTanks.reduce((s, { t }) => s + (parseFloat(t.capacity) || 0), 0)
+                : (aircraft.fuelCapacity || 0);
 
               const fullTankKg = fuelCapacityLtr * fuelDensity;
-              const fullTankMoment = fullTankKg * (arms.fuel || 0);
+              // Moment : par réservoir quand la config fait foi (bras propre de
+              // chaque réservoir coché), sinon bras unique historique.
+              const fullTankMoment = configEngaged
+                ? checkedTanks.reduce((s, { t }) => {
+                    const a = parseFloat(t.arm);
+                    return s + (parseFloat(t.capacity) || 0) * fuelDensity * (Number.isFinite(a) ? a : 0);
+                  }, 0)
+                : fullTankKg * (arms.fuel || 0);
               const fullTankInUserUnit = convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit);
 
               return (
                 <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--bg-overlay)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>Full Tank</span>
+                    <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>
+                      Full Tank{configEngaged ? ` (${checkedTanks.length} réservoir${checkedTanks.length > 1 ? 's' : ''} coché${checkedTanks.length > 1 ? 's' : ''})` : ''}
+                    </span>
                     <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                       {fullTankInUserUnit.toFixed(3)} {fuelUnitSymbol} ({fullTankKg.toFixed(3)} kg)
                     </span>
@@ -931,11 +1001,11 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Bras:</span>
-                      <span>{arms.fuel !== null ? `${arms.fuel.toFixed(3)} m` : 'N/A'}</span>
+                      <span>{configEngaged ? 'par réservoir' : (arms.fuel !== null ? `${arms.fuel.toFixed(3)} m` : 'N/A')}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Moment:</span>
-                      <span>{arms.fuel !== null ? `${fullTankMoment.toFixed(3)} kg.m` : 'N/A'}</span>
+                      <span>{configEngaged || arms.fuel !== null ? `${fullTankMoment.toFixed(3)} kg.m` : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -1078,34 +1148,136 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               Demande pilote : quand l'avion a des réservoirs (bras différents),
               saisir les litres dans chaque réservoir pour un centrage exact,
               plafonné à la capacité de chaque réservoir. Le moment est calculé
-              avec le bras de CHAQUE réservoir (cf. weightBalanceStore). */}
+              avec le bras de CHAQUE réservoir (cf. weightBalanceStore).
+              Config réservoirs engagée (étape Carburant) : seuls les réservoirs
+              COCHÉS sont affichés — les autres ne sont pas embarqués ce vol. */}
           {Array.isArray(aircraft.additionalFuelTanks) && aircraft.additionalFuelTanks.length > 0 && (() => {
             // C3.6 (ANO-14) : source canonique, repli AVGAS signalé (affichage).
             const density = getFuelDensity(aircraft.fuelType) ?? DENSITIES.AVGAS;
             const fobLtr = typeof fobFuel === 'number' ? fobFuel : (fobFuel?.ltr || 0);
-            const distributed = aircraft.additionalFuelTanks.reduce(
-              (s, t, i) => s + (parseFloat(loads[`fuel_${t.id ?? i}`]) || 0), 0
+            const configEngaged = Array.isArray(activeTankIds);
+            const activeSet = configEngaged ? new Set(activeTankIds.map(String)) : null;
+            const indexedTanks = aircraft.additionalFuelTanks.map((tank, i) => ({ tank, i }));
+            const shownTanks = configEngaged
+              ? indexedTanks.filter(({ tank, i }) => activeSet.has(String(tank.id ?? i)))
+              : indexedTanks;
+            const excludedTanks = configEngaged
+              ? indexedTanks.filter(({ tank, i }) => !activeSet.has(String(tank.id ?? i)))
+              : [];
+            // Le total réparti ne compte que les réservoirs embarqués (les
+            // décochés sont à 0 L par construction, cf. FuelProvider).
+            const distributed = shownTanks.reduce(
+              (s, { tank, i }) => s + (parseFloat(loads[`fuel_${tank.id ?? i}`]) || 0), 0
             );
             const mismatch = fobLtr > 0 && Math.abs(distributed - fobLtr) > 0.5;
+
+            // 🔧 LOT 5 — Volume Max côté devis de masse. Portée LoadingSection :
+            // uniquement les props (aircraft/loads/activeTankIds/onTankLiters).
+            // ZFW massique = masse à vide + charges hors carburant (mêmes clés
+            // que le weightBalanceStore ; les clés fuel_* sont exclues).
+            // `aircraft` porte la MTOW éventuellement réduite (catégorie U).
+            const handleVolumeMaxWb = () => {
+              // ⚠️ GARDE : n'agir que si la config réservoirs FAIT FOI (engagée
+              // pour CET avion + touchée). setTankLiters écrirait sinon dans une
+              // config non engagée (voire celle d'un AUTRE avion) — écriture
+              // silencieusement sans effet ou contamination croisée.
+              if (!Array.isArray(activeTankIds)) {
+                alert('Volume Max : cochez d\'abord les réservoirs embarqués à l\'étape Carburant.');
+                return;
+              }
+              const emptyWeight = parseFloat(aircraft?.weights?.emptyWeight ?? aircraft?.emptyWeight);
+              if (!Number.isFinite(emptyWeight)) {
+                alert('Volume Max impossible : masse à vide de l\'avion inconnue.');
+                return;
+              }
+              const nonFuelKg = Object.entries(loads || {}).reduce((s, [k, v]) => {
+                if (k === 'fuel' || k.startsWith('fuel_')) return s;
+                return s + (parseFloat(v) || 0);
+              }, 0);
+              const result = computeMaxFuel({
+                aircraft,
+                zfwKg: emptyWeight + nonFuelKg,
+                activeTankIds
+              });
+              if (!result.ok) {
+                const msgs = {
+                  fuelDensity: 'type de carburant inconnu (densité indisponible)',
+                  weights: 'MTOW ou masse à vide manquante',
+                  noTanks: 'aucun réservoir coché'
+                };
+                alert(`Volume Max impossible : ${msgs[result.error] || result.error}.`);
+                return;
+              }
+              result.perTank.forEach(({ key, ltr }) => onTankLiters && onTankLiters(key, ltr));
+            };
+
             return (
               <div style={{ marginTop: '24px' }}>
-                <h4 style={{ ...commonStyles.label, fontSize: 'var(--fs-title)', marginBottom: '6px' }}>
-                  Répartition du carburant par réservoir
-                </h4>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                  <h4 style={{ ...commonStyles.label, fontSize: 'var(--fs-title)', marginBottom: '6px' }}>
+                    Répartition du carburant par réservoir
+                  </h4>
+                  {Array.isArray(activeTankIds) && typeof onTankLiters === 'function' && (
+                    <button
+                      className="pdf-hidden"
+                      onClick={handleVolumeMaxWb}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: 'var(--fs-caption)',
+                        fontWeight: 600,
+                        color: 'var(--accent-primary)',
+                        backgroundColor: 'var(--accent-soft)',
+                        border: '1px solid var(--accent-primary)',
+                        borderRadius: 'var(--radius-sm)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ⛽ Volume Max (jusqu'à MTOW)
+                    </button>
+                  )}
+                </div>
                 <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                   Litres dans chaque réservoir (chacun a son propre bras de levier). FOB total : {fobLtr.toFixed(3)} L.
                 </p>
+                {configEngaged && shownTanks.length === 0 && (
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', backgroundColor: 'rgba(217, 119, 6, 0.12)', borderLeft: '3px solid #d97706', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '600' }}>
+                    ⚠️ Aucun réservoir coché à l'étape Carburant. Retournez à l'étape
+                    précédente pour sélectionner les réservoirs embarqués.
+                  </div>
+                )}
+                {!configEngaged && (
+                  <div style={{ marginBottom: '12px', padding: '10px 12px', backgroundColor: 'rgba(217, 119, 6, 0.12)', borderLeft: '3px solid #d97706', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '600' }}>
+                    ⚠️ Configuration des réservoirs non vérifiée pour ce vol — elle est
+                    remise à zéro à chaque préparation. Repassez par l'étape Carburant
+                    pour cocher les réservoirs réellement embarqués (standard / long-range).
+                  </div>
+                )}
                 <div style={commonStyles.grid2}>
-                  {aircraft.additionalFuelTanks.map((tank, i) => (
+                  {shownTanks.map(({ tank, i }) => (
                     <FuelTankInput
                       key={tank.id ?? i}
                       tank={tank}
                       density={density}
                       liters={loads[`fuel_${tank.id ?? i}`] ?? ''}
-                      onChange={(v) => onLoadChange(`fuel_${tank.id ?? i}`, v)}
+                      onChange={(v) => {
+                        // Config engagée : la saisie repasse par le fuelStore
+                        // (source unique) → FOB et loads resynchronisés par le
+                        // FuelProvider. Sinon, écriture directe legacy.
+                        if (configEngaged && onTankLiters) {
+                          onTankLiters(String(tank.id ?? i), v);
+                        } else {
+                          onLoadChange(`fuel_${tank.id ?? i}`, v);
+                        }
+                      }}
                     />
                   ))}
                 </div>
+                {excludedTanks.length > 0 && (
+                  <p style={{ margin: '10px 0 0', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
+                    Non embarqué{excludedTanks.length > 1 ? 's' : ''} ce vol (décoché{excludedTanks.length > 1 ? 's' : ''} à l'étape Carburant) :{' '}
+                    {excludedTanks.map(({ tank }) => tank.name || 'Réservoir').join(', ')}.
+                  </p>
+                )}
                 <div style={{ marginTop: '10px', fontSize: 'var(--fs-body)', fontWeight: '600', color: theme.colors.textPrimary }}>
                   Total réparti : {distributed.toFixed(3)} L / FOB {fobLtr.toFixed(3)} L {fobLtr > 0 && !mismatch ? '✓' : ''}
                 </div>

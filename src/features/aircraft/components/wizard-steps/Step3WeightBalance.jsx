@@ -15,7 +15,9 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -177,6 +179,85 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   // Refonte : le « principal » est désormais juste un réservoir parmi les autres,
   // au même niveau (type: 'main'). data.fuelMainCapacity est legacy uniquement.
   const [additionalFuelTanks, setAdditionalFuelTanks] = useState(data.additionalFuelTanks || []);
+
+  // ─── LOT 5 : variantes de configuration des réservoirs ──────────────────
+  // Sous-ensembles NOMMÉS de additionalFuelTanks (référence par clé
+  // String(id ?? index) — convention fuelStore). À la préparation du vol, le
+  // pilote choisit la variante : seuls ses réservoirs existent pour le vol.
+  const [tankVariants, setTankVariants] = useState(data.tankVariants || []);
+  const tankKeyOf = (tank, index) => String(tank?.id ?? index);
+
+  // Resync locale ← data (même pattern que additionalFuelTanks) : si une
+  // écriture externe remplace data.tankVariants, l'éditeur doit suivre.
+  useEffect(() => {
+    if (Array.isArray(data.tankVariants) && data.tankVariants !== tankVariants) {
+      setTankVariants(data.tankVariants);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.tankVariants]);
+
+  // 🔧 LOT 5 — Backfill d'id AU MONTAGE pour les réservoirs legacy sans id :
+  // les variantes référencent par String(id ?? index) et les INDEX bougent à
+  // chaque suppression (référence figée sur le MAUVAIS réservoir au save) ;
+  // removeFuelTank filtre par id (un id undefined supprimerait d'un coup tous
+  // les réservoirs sans id). On assigne les ids une fois pour toutes et on
+  // remappe les références par index des variantes existantes.
+  useEffect(() => {
+    const tanks = data.additionalFuelTanks || [];
+    if (!tanks.some(t => t && t.id == null)) return;
+    const remap = {};
+    const withIds = tanks.map((t, i) => {
+      if (t && t.id == null) {
+        const withId = { ...t, id: Date.now() + Math.random() };
+        remap[String(i)] = String(withId.id);
+        return withId;
+      }
+      return t;
+    });
+    setAdditionalFuelTanks(withIds);
+    updateData('additionalFuelTanks', withIds);
+    const variants = Array.isArray(data.tankVariants) ? data.tankVariants : [];
+    if (variants.length > 0) {
+      const remapped = variants.map(v => ({
+        ...v,
+        tankIds: (Array.isArray(v?.tankIds) ? v.tankIds : []).map(k => remap[String(k)] ?? String(k))
+      }));
+      setTankVariants(remapped);
+      updateData('tankVariants', remapped);
+    }
+    console.log('🔧 [Step3] Ids de réservoirs assignés (backfill legacy):', Object.keys(remap).length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const syncTankVariants = (updated) => {
+    setTankVariants(updated);
+    updateData('tankVariants', updated);
+  };
+  const addTankVariant = () => {
+    const newVariant = {
+      id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: tankVariants.length === 0 ? 'Standard' : `Variante ${tankVariants.length + 1}`,
+      isDefault: tankVariants.length === 0,
+      // Pré-remplissage : les réservoirs NON optionnels (proto « Standard »)
+      tankIds: additionalFuelTanks
+        .map((t, i) => ({ optional: !!t?.optional, key: tankKeyOf(t, i) }))
+        .filter(x => !x.optional)
+        .map(x => x.key)
+    };
+    syncTankVariants([...tankVariants, newVariant]);
+  };
+  const updateTankVariant = (vi, patch) =>
+    syncTankVariants(tankVariants.map((v, i) => (i === vi ? { ...v, ...patch } : v)));
+  const setDefaultTankVariant = (vi) =>
+    syncTankVariants(tankVariants.map((v, i) => ({ ...v, isDefault: i === vi })));
+  const removeTankVariant = (vi) =>
+    syncTankVariants(tankVariants.filter((_, i) => i !== vi));
+  const toggleVariantTank = (vi, key, checked) =>
+    syncTankVariants(tankVariants.map((v, i) => {
+      if (i !== vi) return v;
+      const keys = new Set((Array.isArray(v.tankIds) ? v.tankIds : []).map(String));
+      if (checked) keys.add(String(key)); else keys.delete(String(key));
+      return { ...v, tankIds: Array.from(keys) };
+    }));
 
   // ─── Sync local ← data après mise à jour externe (ex. CentrogramReader) ──
   // Quand le CentrogramReader écrit dans data.additionalFuelTanks[i].arm via
@@ -604,7 +685,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       name: `${defaultNames[type] || 'Réservoir'} ${additionalFuelTanks.length + 1}`,
       type,
       arm: '',
-      capacity: ''
+      capacity: '',
+      // Réservoir amovible (long-range/convoyage) : proposé au cochage en
+      // préparation de vol. Pré-coché pour les types naturellement optionnels.
+      optional: type === 'aux' || type === 'optional' || type === 'tip'
     };
     const updated = [...additionalFuelTanks, newTank];
     setAdditionalFuelTanks(updated);
@@ -1108,12 +1192,122 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             }}
                           />
                         </Grid>
+                        <Grid size={12}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={tank.optional ?? ['aux', 'optional', 'tip'].includes(tank.type)}
+                                onChange={(e) => updateFuelTank(tank.id, 'optional', e.target.checked)}
+                              />
+                            }
+                            label={
+                              <Typography variant="body2">
+                                Réservoir optionnel (amovible — long-range / convoyage).{' '}
+                                <Typography component="span" variant="caption" color="text.secondary">
+                                  En préparation de vol, le pilote coche les réservoirs
+                                  réellement embarqués ; ce marquage sert d'indication.
+                                </Typography>
+                              </Typography>
+                            }
+                          />
+                        </Grid>
                       </Grid>
                     </Box>
                   ))}
                 </Box>
               )}
             </Box>
+
+            {/* ─── LOT 5 : Variantes de configuration des réservoirs ─────────
+                Ex. « Standard » (réservoirs fixes) vs « Long Range » (+ aux).
+                À la préparation du vol, le pilote choisit la variante : le
+                bilan carburant ET le devis de masse n'utilisent que ses
+                réservoirs. Sans variante : tous les réservoirs (inchangé). */}
+            {additionalFuelTanks.length > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  Configurations de réservoirs (variantes)
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                  Définissez des configurations nommées (ex. « Standard », « Long Range »).
+                  Le pilote choisira la variante à l'étape 1 de la préparation de vol —
+                  carburant et centrage suivront automatiquement. Sans variante définie,
+                  tous les réservoirs restent disponibles.
+                </Typography>
+
+                {tankVariants.map((variant, vi) => {
+                  const variantKeys = new Set((Array.isArray(variant.tankIds) ? variant.tankIds : []).map(String));
+                  const variantCapacity = additionalFuelTanks.reduce((s, t, i) =>
+                    variantKeys.has(tankKeyOf(t, i)) ? s + (parseFloat(t.capacity) || 0) : s, 0);
+                  return (
+                    <Box
+                      key={variant.id}
+                      sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)', p: 2, mb: 2 }}
+                    >
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid size={{ xs: 12, sm: 5 }}>
+                          <StyledTextField
+                            fullWidth
+                            size="small"
+                            label="Nom de la variante"
+                            value={variant.name || ''}
+                            onChange={(e) => updateTankVariant(vi, { name: e.target.value })}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 8, sm: 5 }}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={!!variant.isDefault}
+                                onChange={() => setDefaultTankVariant(vi)}
+                              />
+                            }
+                            label={<Typography variant="body2">Variante par défaut</Typography>}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 4, sm: 2 }} sx={{ textAlign: 'right' }}>
+                          <Button size="small" color="error" onClick={() => removeTankVariant(vi)}>
+                            Supprimer
+                          </Button>
+                        </Grid>
+                        <Grid size={12}>
+                          {additionalFuelTanks.map((tank, ti) => {
+                            const key = tankKeyOf(tank, ti);
+                            return (
+                              <FormControlLabel
+                                key={key}
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    checked={variantKeys.has(key)}
+                                    onChange={(e) => toggleVariantTank(vi, key, e.target.checked)}
+                                  />
+                                }
+                                label={
+                                  <Typography variant="body2">
+                                    {tank.name || `Réservoir ${ti + 1}`} ({parseFloat(tank.capacity) || 0} L)
+                                  </Typography>
+                                }
+                              />
+                            );
+                          })}
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                            Capacité de la variante : {variantCapacity.toFixed(0)} L
+                            {variantKeys.size === 0 && ' — ⚠ aucune case cochée : la variante sera ignorée au save'}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  );
+                })}
+
+                <Button size="small" variant="outlined" onClick={addTankVariant}>
+                  + Ajouter une variante
+                </Button>
+              </Box>
+            )}
 
             {/* ─── Récap : somme calculée vs total importé MANEX ───
                 Toutes les valeurs en mémoire sont en CANONIQUE (litres).

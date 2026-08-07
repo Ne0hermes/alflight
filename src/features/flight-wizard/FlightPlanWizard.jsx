@@ -150,6 +150,21 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   useEffect(() => {
     if (!flightPlan.aircraft?.registration || aircraftList.length === 0) return;
 
+    // 🔧 LOT 5 : ré-armer la variante du brouillon AVANT le garde anti-boucle —
+    // quand l'avion est déjà sélectionné (garde ci-dessous court-circuite la
+    // suite), la variante a pu être remise à null entre-temps (passage par le
+    // module Avions, re-sélection). Idempotent : n'écrit que si différent.
+    import('@core/stores/aircraftStore').then(({ useAircraftStore }) => {
+      const store = useAircraftStore.getState();
+      const draftVariantId = flightPlan.aircraft?.tankVariantId ?? null;
+      if (store.selectedTankVariantId === draftVariantId) return;
+      const current = store.aircraftList.find(a => a.id === store.selectedAircraftId);
+      if (current?.registration === flightPlan.aircraft.registration) {
+        store.setSelectedTankVariant(draftVariantId);
+        console.log('♻️ [Wizard] Variante réservoirs ré-armée depuis le brouillon:', draftVariantId);
+      }
+    });
+
     // ⛔ ANTI-BOUCLE INFINIE (étape 7 Performances) : si l'avion déjà sélectionné
     // correspond à celui du plan de vol, NE PAS ré-appliquer. Sinon
     // setSelectedAircraft (nouvel objet à chaque run) + flightPlan.updateAircraft
@@ -170,6 +185,12 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       };
       console.log('🔄 [Wizard] Restauration de l\'avion (fusionné):', mergedAircraft.registration);
       setSelectedAircraft(mergedAircraft);
+      // 🔧 LOT 5 : ré-armer la variante de réservoirs du brouillon — seul l'id
+      // d'avion survit dans le store (l'avion effectif est dérivé au provider),
+      // et setSelectedAircraft vient de remettre la variante à null.
+      import('@core/stores/aircraftStore').then(({ useAircraftStore }) => {
+        useAircraftStore.getState().setSelectedTankVariant(flightPlan.aircraft?.tankVariantId ?? null);
+      });
       flightPlan.updateAircraft(mergedAircraft);
     } else {
       console.warn('⚠️ [Wizard] Avion non trouvé dans aircraftList:', flightPlan.aircraft.registration);

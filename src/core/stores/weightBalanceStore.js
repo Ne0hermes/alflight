@@ -5,6 +5,7 @@ import { getFuelDensity } from '@utils/fuelDensity';
 import { cgLimitsAtMass } from '@utils/cgEnvelope';
 import { normalizeAircraftArmsToMeters, normalizeAircraftCgEnvelopeToMeters } from '@utils/armUnits';
 import { singleFuelArm } from '@utils/fuelArm';
+import { useFuelStore, aircraftTankConfigId } from './fuelStore';
 
 export const useWeightBalanceStore = create(
   immer((set, get) => ({
@@ -201,6 +202,11 @@ export const useWeightBalanceStore = create(
       //     son propre bras de levier). Les loads par réservoir sont en LITRES,
       //     clé `fuel_${tank.id}` ; convertis en kg via la densité.
       const fuelTanks = Array.isArray(aircraft.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+      // Configuration réservoirs du vol (fuelStore) : null si non engagée pour
+      // cet avion → comportement historique (tous les réservoirs comptent).
+      // Engagée : seuls les réservoirs COCHÉS (embarqués) participent au bilan.
+      const activeTankIds = useFuelStore.getState().getActiveTankIds(aircraftTankConfigId(aircraft));
+      const activeTankSet = activeTankIds == null ? null : new Set(activeTankIds.map(String));
       let fuelWeight = 0;
       let fuelMoment = 0;
       let fuelArmMissing = false;
@@ -208,6 +214,7 @@ export const useWeightBalanceStore = create(
         fuelTanks.some((t, i) => Number.isFinite(parseFloat(loads[`fuel_${t.id ?? i}`])));
       if (usePerTankFuel) {
         fuelTanks.forEach((t, i) => {
+          if (activeTankSet && !activeTankSet.has(String(t.id ?? i))) return; // non embarqué ce vol
           const liters = parseFloat(loads[`fuel_${t.id ?? i}`]) || 0; // litres dans ce réservoir
           if (liters > 0 && fuelDensity == null) fuelDensityMissing = true;
           const w = fuelDensity == null ? 0 : liters * fuelDensity;
@@ -225,7 +232,7 @@ export const useWeightBalanceStore = create(
         // moyenne, jamais de × bras absent : le pilote doit répartir par
         // réservoir (branche usePerTankFuel ci-dessus) pour lever l'ambiguïté.
         fuelWeight = loads.fuel || 0;
-        const fa = singleFuelArm(aircraft, wb);
+        const fa = singleFuelArm(aircraft, wb, activeTankIds);
         if (fuelWeight > 0 && fa.error) fuelArmMissing = true;
         fuelMoment = fa.arm != null ? fuelWeight * fa.arm : 0;
       }

@@ -27,9 +27,13 @@ import { armToMeters } from './armUnits';
 const ARM_EQ_TOL = 1e-3;
 
 /** Réservoirs ayant une capacité exploitable (>0), bras ramené en mètres.
- *  `_i` = index d'ORIGINE (clé de load `fuel_<id|index>`), conservé avant filtrage. */
-function usableTanks(aircraft) {
+ *  `_i` = index d'ORIGINE (clé de load `fuel_<id|index>`), conservé avant filtrage.
+ *  `activeTankIds` (config réservoirs du vol, cf. fuelStore) : liste de clés
+ *  String(id ?? index) des réservoirs EMBARQUÉS — null = pas de config engagée
+ *  → tous les réservoirs déclarés comptent (comportement historique). */
+function usableTanks(aircraft, activeTankIds = null) {
   const list = Array.isArray(aircraft?.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+  const activeSet = Array.isArray(activeTankIds) ? new Set(activeTankIds.map(String)) : null;
   return list
     .map((t, i) => ({
       raw: t,
@@ -39,7 +43,8 @@ function usableTanks(aircraft) {
       cap: parseFloat(t?.capacity),
       arm: armToMeters(parseFloat(t?.arm)),
     }))
-    .filter((t) => Number.isFinite(t.cap) && t.cap > 0);
+    .filter((t) => Number.isFinite(t.cap) && t.cap > 0)
+    .filter((t) => activeSet == null || activeSet.has(String(t.id)));
 }
 
 /** Bras legacy mono-réservoir (aucun additionalFuelTanks). null si absent/0. */
@@ -62,8 +67,8 @@ function tanksShareOneArm(tanks) {
  *   - {error:'fuelArm'}  : un réservoir avec capacité n'a pas de bras
  *   - {error:'ambiguous'}: plusieurs bras DIFFÉRENTS → répartition par réservoir requise
  */
-export function singleFuelArm(aircraft, wb = aircraft?.weightBalance) {
-  const tanks = usableTanks(aircraft);
+export function singleFuelArm(aircraft, wb = aircraft?.weightBalance, activeTankIds = null) {
+  const tanks = usableTanks(aircraft, activeTankIds);
   if (tanks.length === 0) {
     const a = legacyArm(aircraft, wb);
     return a == null ? { error: 'fuelArm' } : { arm: a };
@@ -83,12 +88,20 @@ export function singleFuelArm(aircraft, wb = aircraft?.weightBalance) {
  * @param {number} [o.burnedLiters=0] carburant brûlé jusqu'à l'atterrissage (L) — 'landing'
  * @param {object} [o.loads={}]      loads du store ; clés par réservoir `fuel_<id|index>`
  * @param {object} [o.wb]
+ * @param {string[]|null} [o.activeTankIds=null] réservoirs EMBARQUÉS (config du
+ *   vol, clés String(id ?? index)) — null = pas de config → tous les réservoirs.
  * @returns {{ ok:true, rows:Array<{label,value,arm,moment}>, weight:number, moment:number }
  *          | { ok:false, reason:'fuelArm'|'distribution' }}
  */
-export function computeScenarioFuel({ aircraft, scenario, density, fobLiters = 0, burnedLiters = 0, loads = {}, wb = aircraft?.weightBalance }) {
-  const tanks = usableTanks(aircraft);
+export function computeScenarioFuel({ aircraft, scenario, density, fobLiters = 0, burnedLiters = 0, loads = {}, wb = aircraft?.weightBalance, activeTankIds = null }) {
+  const declaredTanks = usableTanks(aircraft);
+  const tanks = usableTanks(aircraft, activeTankIds);
   const empty = { ok: true, rows: [], weight: 0, moment: 0 };
+
+  // Config engagée avec AUCUN réservoir coché : aucun carburant ne peut être à
+  // bord — scénarios vides (0 L). SURTOUT PAS le repli legacy fuelCapacity
+  // ci-dessous, qui remplirait un avion sans réservoir embarqué.
+  if (declaredTanks.length > 0 && tanks.length === 0) return empty;
   const totalForScenario = () =>
     scenario === 'full'
       ? (parseFloat(aircraft?.fuelCapacity) || 0)

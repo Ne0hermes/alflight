@@ -3,6 +3,7 @@ import React, { createContext, useContext, useMemo, useCallback, memo } from 're
 import { useAircraftStore } from '../stores/aircraftStore';
 import { useNavigationStore } from '../stores/navigationStore';
 import { useFuelStore, activeTankIdsFrom } from '../stores/fuelStore';
+import { applyTankVariant } from '@utils/tankVariants';
 import { useWeightBalanceStore } from '../stores/weightBalanceStore';
 import { useWeatherStore } from '../stores/weatherStore';
 import { getFuelDensity } from '@utils/fuelDensity';
@@ -51,10 +52,21 @@ export const useWeather = () => {
 export const AircraftProvider = memo(({ children }) => {
   const aircraftList = useAircraftStore(state => state.aircraftList);
   const selectedAircraftId = useAircraftStore(state => state.selectedAircraftId);
-  const selectedAircraft = useAircraftStore(state => {
+  const rawSelectedAircraft = useAircraftStore(state => {
     const id = state.selectedAircraftId;
     return state.aircraftList.find(a => a.id === id) || null;
   });
+  // 🔧 LOT 5 — AVION EFFECTIF : point de dérivation UNIQUE de la variante de
+  // réservoirs. Tous les consommateurs (FOB dérivé, cochage par vol, devis de
+  // masse, scénarios) reçoivent l'avion filtré par la variante choisie —
+  // additionalFuelTanks/fuelCapacity recalculés — sans aucune modification de
+  // leur côté. Avion sans variantes : identité STRICTE (même référence).
+  const selectedTankVariantId = useAircraftStore(state => state.selectedTankVariantId);
+  const setSelectedTankVariant = useAircraftStore(state => state.setSelectedTankVariant);
+  const selectedAircraft = React.useMemo(
+    () => applyTankVariant(rawSelectedAircraft, selectedTankVariantId),
+    [rawSelectedAircraft, selectedTankVariantId]
+  );
   const setSelectedAircraft = useAircraftStore(state => state.setSelectedAircraft);
   const updateAircraft = useAircraftStore(state => state.updateAircraft);
   const deleteAircraft = useAircraftStore(state => state.deleteAircraft);
@@ -488,6 +500,11 @@ export const AircraftProvider = memo(({ children }) => {
   const value = useMemo(() => ({
     aircraftList,
     selectedAircraft,
+    // 🔧 LOT 5 — variante de réservoirs : avion brut (sans overlay), id de la
+    // variante active et setter (sélecteur de l'étape 1, restauration brouillon)
+    rawSelectedAircraft,
+    selectedTankVariantId,
+    setSelectedTankVariant,
     setSelectedAircraft,
     updateAircraft,
     deleteAircraft,
@@ -495,6 +512,9 @@ export const AircraftProvider = memo(({ children }) => {
   }), [
     aircraftList,
     selectedAircraft,
+    rawSelectedAircraft,
+    selectedTankVariantId,
+    setSelectedTankVariant,
     setSelectedAircraft,
     updateAircraft,
     deleteAircraft,
