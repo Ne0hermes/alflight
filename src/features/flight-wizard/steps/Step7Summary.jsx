@@ -21,6 +21,10 @@ import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
 import { useAlternatesForFuel } from '@features/alternates';
 
+// Un texte météo est « réel » s'il ne vient pas des fallbacks « METAR/TAF non
+// disponible » de weatherAPI (le store horodate aussi les fetch en échec).
+const hasWxRaw = (raw) => !!raw && !String(raw).includes('non disponible');
+
 /**
  * Étape 7 : Synthèse du vol
  */
@@ -249,8 +253,45 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   // (fuelData.alternate vaut 0 dans les deux cas).
   const { diversionAnalysis } = useAlternatesForFuel();
 
-  // Récupérer les données météo depuis le store
+  // Récupérer les données météo depuis le store (déclaré AVANT tout usage —
+  // un accès anticipé lèverait une ReferenceError de temporal dead zone)
   const weatherData = useWeatherStore(state => state.weatherData || {});
+
+  // 🔧 LOT 3 — Stations météo du vol (départ/arrivée/déroutements, convention
+  // icao || name du projet, filtrée aux codes OACI plausibles — 4 caractères —
+  // pour ne pas brûler du quota AVWX sur des points nommés « Mont Blanc »).
+  const flightWeatherIcaos = useMemo(() => {
+    const codes = [];
+    const pushIfIcao = (raw) => {
+      const code = (raw || '').toUpperCase().trim();
+      if (/^[A-Z0-9]{4}$/.test(code) && !codes.includes(code)) codes.push(code);
+    };
+    pushIfIcao(waypoints[0]?.icao || waypoints[0]?.name);
+    pushIfIcao(waypoints[waypoints.length - 1]?.icao || waypoints[waypoints.length - 1]?.name);
+    (flightPlan.alternates || []).forEach(alt => pushIfIcao(alt?.icao));
+    return codes;
+  }, [waypoints, flightPlan.alternates]);
+
+  // Horodatages du relevé : UNIQUEMENT les stations avec de vraies données —
+  // le store horodate aussi les fetch en échec (metar/taf null), et le bandeau
+  // mentirait en annonçant un relevé sans aucune donnée.
+  const weatherTimestamps = flightWeatherIcaos
+    .map(icao => weatherData[icao])
+    .filter(wx => wx?.timestamp && (hasWxRaw(wx.metar?.raw) || hasWxRaw(wx.taf?.raw)))
+    .map(wx => wx.timestamp);
+  const oldestWeatherTs = weatherTimestamps.length ? Math.min(...weatherTimestamps) : null;
+  const newestWeatherTs = weatherTimestamps.length ? Math.max(...weatherTimestamps) : null;
+
+  // 🔧 LOT 3 — le weatherStore n'est PAS persisté et Step7 ne fetchait jamais :
+  // après un rechargement direct sur la synthèse, le PDF partait sans météo.
+  // On re-fetch au montage (mêmes stations que Step3VAC) — garantit des
+  // METAR/TAF présents ET un horodatage de relevé frais au moment du PDF.
+  const fetchWeatherMultiple = useWeatherStore(state => state.fetchMultiple);
+  useEffect(() => {
+    if (flightWeatherIcaos.length > 0 && fetchWeatherMultiple) {
+      fetchWeatherMultiple(flightWeatherIcaos);
+    }
+  }, [flightWeatherIcaos, fetchWeatherMultiple]);
 
   // Distances de performance calculées à l'étape Performance — chiffre opérationnel
   // (valeur majorée par le facteur de sécurité si présente, sinon valeur brute).
@@ -331,33 +372,46 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   return (
     <>
       {/* Styles pour l'impression PDF - Responsive A4 portrait */}
-      <style>{`
-        @media print {
-          .departure-time-container {
-            flex-wrap: wrap !important;
-            gap: 8px !important;
-          }
-          .departure-time-label,
-          .sun-times-badge,
-          .sun-time-item {
-            white-space: normal !important;
-            word-wrap: break-word !important;
-          }
-          .sun-times-badge {
-            flex-wrap: wrap !important;
-            gap: 4px !important;
-          }
-          .vfr-nav-table-wrapper {
-            page-break-before: always !important;
-            page-break-inside: avoid !important;
-          }
-          .weight-balance-alert {
-            display: none !important;
-          }
-        }
-      `}</style>
+      {/* 🔧 LOT 3 : l'ancien bloc @media print était MORT — le PDF est une
+          capture html2canvas, jamais une impression. Les règles sont portées
+          dans src/styles/pdf-capture.css (scope .html2pdf__container). */}
 
       <div style={styles.container}>
+        {/* 🔧 LOT 3 — Horodatage du relevé météo, tout en haut du document
+            (donc en tête de la page 1 du PDF) */}
+        <div
+          className="pdf-avoid-break"
+          style={{
+            padding: '8px 12px',
+            marginBottom: '12px',
+            backgroundColor: 'var(--bg-overlay)',
+            border: '1px solid var(--border-subtle)',
+            borderLeft: '4px solid var(--accent-primary)',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: 'var(--fs-caption)',
+            color: 'var(--text-primary)'
+          }}
+        >
+          {(() => {
+            // Précision à la minute : les fetch par station diffèrent de
+            // quelques ms, inutile d'afficher deux horodatages quasi identiques
+            const fmtTs = (ts) => new Date(ts).toLocaleString('fr-FR', {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            });
+            if (!oldestWeatherTs) {
+              return '⚠ METAR/TAF non disponibles pour ce dossier';
+            }
+            return (
+              <>
+                Données météo (METAR/TAF) relevées le{' '}
+                <strong>{fmtTs(oldestWeatherTs)}</strong>
+                {fmtTs(newestWeatherTs) !== fmtTs(oldestWeatherTs) &&
+                  ` (dernier relevé : ${fmtTs(newestWeatherTs)})`}
+              </>
+            );
+          })()}
+        </div>
         <div style={styles.field}>
           <label style={styles.label}>
             <FileText size={18} style={styles.icon} />
@@ -453,7 +507,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           title={`${flightPlan.aircraft.registration} ${flightPlan.aircraft.type || flightPlan.aircraft.model ? `(${flightPlan.aircraft.type || flightPlan.aircraft.model})` : ''}`}
           containerStyle={{ marginTop: '24px' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* pdf-two-col : 2 colonnes dans le PDF uniquement (prose sans tableau) */}
+          <div className="pdf-two-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Équipements SAR */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
@@ -686,75 +741,111 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           />
         </CollapsibleSection>
 
-        {/* Section Météo (METAR) - Séparée */}
+        {/* Section Météo METAR/TAF — 🔧 LOT 3 : + TAF, + déroutements,
+            + heures de relevé/observation, fallback VISIBLE si aucune donnée
+            (le PDF doit trahir l'absence de météo, pas la masquer) */}
         {(() => {
-          // Récupérer les codes ICAO de départ et arrivée
-          const departureIcao = waypoints[0]?.icao?.toUpperCase();
-          const arrivalIcao = waypoints[waypoints.length - 1]?.icao?.toUpperCase();
+          const dep = (waypoints[0]?.icao || waypoints[0]?.name || '').toUpperCase();
+          const arr = (waypoints[waypoints.length - 1]?.icao || waypoints[waypoints.length - 1]?.name || '').toUpperCase();
+          const roleOf = (icao) =>
+            icao === dep && icao === arr ? 'Départ/Arrivée'
+              : icao === dep ? 'Départ'
+                : icao === arr ? 'Arrivée'
+                  : 'Déroutement';
 
-          // Vérifier s'il y a des données météo
-          const hasWeatherData = (departureIcao && weatherData[departureIcao]?.metar?.raw) ||
-            (arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw);
+          const stations = flightWeatherIcaos
+            .map(icao => ({ icao, role: roleOf(icao), wx: weatherData[icao] }))
+            .filter(s => hasWxRaw(s.wx?.metar?.raw) || hasWxRaw(s.wx?.taf?.raw));
 
-          if (!hasWeatherData) {
-            return null; // Ne rien afficher si pas de données météo
-          }
+          const wxBlockStyle = {
+            fontFamily: 'monospace',
+            fontSize: 'var(--fs-body)',
+            backgroundColor: 'var(--bg-overlay)',
+            padding: '12px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-subtle)',
+            lineHeight: '1.6',
+            color: 'var(--text-primary)',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
+          };
+          const wxMetaStyle = {
+            fontSize: 'var(--fs-caption)',
+            color: theme.colors.textSecondary,
+            marginTop: '4px'
+          };
 
           return (
             <CollapsibleSection
               defaultExpanded={true}
-              title="Météo (METAR)"
+              title="Météo — METAR / TAF"
               containerStyle={{ marginTop: '24px' }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {/* METAR Départ */}
-                {departureIcao && weatherData[departureIcao]?.metar?.raw && (
-                  <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
-                    <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>
-                      <strong style={{ color: 'var(--text-primary)', fontSize: 'var(--fs-body)' }}>{departureIcao}</strong>
-                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
-                        {departureIcao === arrivalIcao ? '(Départ/Arrivée)' : '(Départ)'}
-                      </span>
-                    </div>
-                    <div style={{
-                      fontFamily: 'monospace',
-                      fontSize: 'var(--fs-body)',
-                      backgroundColor: 'var(--bg-overlay)',
-                      padding: '12px',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-subtle)',
-                      lineHeight: '1.6',
-                      color: 'var(--text-primary)'
-                    }}>
-                      {weatherData[departureIcao].metar.raw}
-                    </div>
-                  </div>
-                )}
+              {stations.length === 0 ? (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: 'rgba(242, 105, 33, 0.10)',
+                  border: '1px solid var(--accent-primary)',
+                  borderLeft: '4px solid var(--accent-primary)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 'var(--fs-body)',
+                  color: 'var(--text-primary)'
+                }}>
+                  ⚠ Météo non disponible — aucun METAR/TAF relevé pour {flightWeatherIcaos.join(', ') || 'ce vol'}.
+                </div>
+              ) : (
+                <div className="pdf-two-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {stations.map(({ icao, role, wx }) => (
+                    // ⚠️ PAS de .pdf-avoid-break sur un enfant de .pdf-two-col :
+                    // les espaceurs de saut de page insérés par html2pdf
+                    // deviendraient des items de grille et corrompraient les
+                    // colonnes (la grille entière porte la protection).
+                    <div
+                      key={icao}
+                      style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}
+                    >
+                      <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>
+                        <strong style={{
+                          color: role === 'Arrivée' ? 'var(--color-red-critical)' : 'var(--text-primary)',
+                          fontSize: 'var(--fs-body)'
+                        }}>
+                          {icao}
+                        </strong>
+                        <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
+                          ({role})
+                        </span>
+                        {wx?.timestamp && (
+                          <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-caption)' }}>
+                            relevé à {new Date(wx.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
 
-                {/* METAR Arrivée (si différent du départ) */}
-                {arrivalIcao && arrivalIcao !== departureIcao && weatherData[arrivalIcao]?.metar?.raw && (
-                  <div>
-                    <div style={{ fontSize: 'var(--fs-body)', marginBottom: '8px' }}>
-                      <strong style={{ color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>{arrivalIcao}</strong>
-                      <span style={{ marginLeft: '8px', color: theme.colors.textSecondary, fontSize: 'var(--fs-body)' }}>
-                        (Arrivée)
-                      </span>
+                      {hasWxRaw(wx?.metar?.raw) && (
+                        <>
+                          <div style={wxBlockStyle}>{wx.metar.raw}</div>
+                          {wx.metar.decoded?.time && (
+                            <div style={wxMetaStyle}>
+                              METAR observé le {new Date(wx.metar.decoded.time).toLocaleString('fr-FR')}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {hasWxRaw(wx?.taf?.raw) && (
+                        <>
+                          <div style={{ ...wxBlockStyle, marginTop: '8px' }}>{wx.taf.raw}</div>
+                          {wx.taf.decoded?.time?.dt && (
+                            <div style={wxMetaStyle}>
+                              TAF émis le {new Date(wx.taf.decoded.time.dt).toLocaleString('fr-FR')}
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                    <div style={{
-                      fontFamily: 'monospace',
-                      fontSize: 'var(--fs-body)',
-                      backgroundColor: 'var(--bg-overlay)',
-                      padding: '12px',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border-subtle)',
-                      lineHeight: '1.6',
-                      color: 'var(--text-primary)'
-                    }}>
-                      {weatherData[arrivalIcao].metar.raw}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </CollapsibleSection>
           );
         })()}
@@ -1009,7 +1100,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           title="Bilan Carburant et Autonomie"
           containerStyle={{ marginTop: '24px' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* pdf-two-col : 2 colonnes dans le PDF uniquement (prose sans tableau) */}
+          <div className="pdf-two-col" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Carburant requis */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

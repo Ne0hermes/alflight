@@ -451,26 +451,11 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
 
   return (
     <>
-      {/* Styles pour l'impression PDF */}
+      {/* 🔧 LOT 3 : l'ancien bloc @media print (800px) était MORT — le PDF est
+          une capture html2canvas, jamais une impression. La hauteur et les
+          protections de la carte dans le PDF sont désormais dans
+          src/styles/pdf-capture.css (scope .html2pdf__container). */}
       <style>{`
-        @media print {
-          .route-map-container {
-            height: 800px !important;
-            min-height: 800px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            page-break-inside: avoid !important;
-            overflow: visible !important;
-            display: block !important;
-          }
-          .route-map-container .leaflet-container {
-            height: 800px !important;
-            min-height: 800px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-          }
-        }
-
         @media screen {
           .route-map-container {
             min-height: 500px !important;

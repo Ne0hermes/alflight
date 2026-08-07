@@ -5,6 +5,9 @@
    TOUS LES STYLES SONT MAINTENANT ICI
    ============================================ */
 @import './styles/unified-styles.css';
+/* Mise en page du PDF de plan de vol (Lot 3) — règles scopées
+   .html2pdf__container, zéro impact écran */
+@import './styles/pdf-capture.css';
 
 /* ============================================
    COMPOSANTS ALFLIGHT — patterns factorisés

@@ -105,7 +105,10 @@ export const weatherAPI = {
           raw: data.raw || 'METAR non disponible',
           decoded: {
             station: data.station || icao,
-            time: data.time?.dt || new Date().toISOString(),
+            // 🔧 LOT 3 : null si AVWX ne fournit pas l'heure d'observation — le
+      // fallback new Date() fabriquait une fausse heure (heure du fetch)
+      // affichée comme « observé le » dans la synthèse/PDF.
+      time: data.time?.dt || null,
             wind: {
               direction: data.wind_direction?.value || (data.wind_speed?.value === 0 ? 'Calme' : 'Variable'),
               speed: data.wind_speed?.value || 0,

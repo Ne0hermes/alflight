@@ -21,33 +21,10 @@ export const CollapsibleSection = ({
 
   return (
     <>
-      {/* Styles pour l'impression PDF */}
-      <style>{`
-        @media print {
-          .collapsible-section {
-            page-break-after: always !important;
-            page-break-inside: avoid !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-          }
-          .collapsible-content {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 8px !important;
-            box-sizing: border-box !important;
-          }
-          .collapsible-content * {
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-          }
-          .collapsible-chevron {
-            display: none !important;
-          }
-        }
-      `}</style>
+      {/* 🔧 LOT 3 : l'ancien bloc @media print était MORT — le PDF est une
+          capture html2canvas, jamais une impression. Le dépliage forcé des
+          sections et le masquage des chevrons dans le PDF sont désormais dans
+          src/styles/pdf-capture.css (scope .html2pdf__container). */}
 
       <div
         className="collapsible-section"

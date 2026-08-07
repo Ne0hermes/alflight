@@ -1,0 +1,103 @@
+/* ============================================================================
+   MISE EN PAGE PDF (Lot 3) — règles scopées .html2pdf__container
+
+   Le PDF du plan de vol est une CAPTURE html2canvas : les blocs @media print
+   ne s'appliquent JAMAIS (ce n'est pas une impression navigateur).
+
+   Mécanique html2pdf (v0.12.1) :
+   1. .from(#flight-plan-summary) clone le contenu dans un conteneur hors
+      écran `.html2pdf__container` (média SCREEN, document principal) ;
+   2. le plugin pagebreak calcule et insère les sauts de page sur CE clone ;
+   3. html2canvas peint ce conteneur (second clone iframe, qui copie aussi
+      cette feuille de style).
+
+   Scoper toutes les règles sous `.html2pdf__container` garantit que le CALCUL
+   DES SAUTS DE PAGE et le RENDU voient exactement la même mise en page — un
+   style posé seulement dans onclone (iframe) désynchroniserait les deux —
+   sans AUCUN impact sur l'affichage écran (le conteneur n'existe que pendant
+   la génération, hors écran).
+
+   ⚠️ PAS de column-count ici : html2canvas 1.4.1 ne sait pas fragmenter les
+   multi-colonnes CSS (contenu superposé). La grid 2 colonnes, elle, est déjà
+   éprouvée dans les PDF actuels (.recap-grid-2col de FlightRecapTable).
+   ========================================================================= */
+
+/* --- Épuration du document -------------------------------------------- */
+
+/* Le hero photo de l'étape n'apporte rien au document : on densifie la page 1 */
+.html2pdf__container .wizard-step-header {
+  display: none !important;
+}
+
+/* Sections repliées à l'écran : tout déplier dans le PDF (sinon le contenu
+   est absent de la capture), et masquer les chevrons d'accordéon */
+.html2pdf__container .collapsible-content {
+  display: block !important;
+}
+.html2pdf__container .collapsible-chevron {
+  display: none !important;
+}
+
+/* Alertes écran-seulement (aussi retirées par onclone — ceinture+bretelles) */
+.html2pdf__container .weight-balance-alert {
+  display: none !important;
+}
+
+/* --- Anti-troncature ---------------------------------------------------- */
+
+/* Blocs atomiques : jamais coupés entre deux pages */
+.html2pdf__container .pdf-avoid-break {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Lignes de tableaux : coupe propre ENTRE les lignes, jamais au milieu */
+.html2pdf__container tr {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Conteneurs plus hauts qu'une page : un avoid y est insatisfiable et
+   provoque des coupes brutales — on autorise la coupe interne, les
+   sous-blocs (.pdf-avoid-break) et les tr portant leurs protections */
+.html2pdf__container .flight-recap-table-container,
+.html2pdf__container .pdf-nav-block,
+.html2pdf__container .collapsible-section {
+  break-inside: auto !important;
+  page-break-inside: auto !important;
+}
+
+/* Tableau de navigation du récap : nouvelle page dédiée */
+.html2pdf__container .pdf-nav-block {
+  page-break-before: always !important;
+}
+
+/* --- Carte de navigation ------------------------------------------------ */
+
+/* ⚠️ GARDER 500px (la hauteur écran) : le clone est STATIQUE — Leaflet n'a
+   chargé que les tuiles du viewport réel ; agrandir la carte dans la capture
+   afficherait des bandes grises sans tuiles et décentrerait le tracé. */
+.html2pdf__container .route-map-container {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* --- Deux colonnes (sections prose, jamais les tableaux) ---------------- */
+
+/* ⚠️ La protection anti-coupure porte sur la GRILLE ENTIÈRE, jamais sur ses
+   enfants : un espaceur de saut de page inséré par html2pdf devant un enfant
+   deviendrait un item de grille (colonnes décalées, trous fantômes). Si la
+   grille dépasse une page, le plugin ignore l'avoid (garde > 1 page) et la
+   coupe se fait au pixel — acceptable, sans corruption de colonnes. */
+.html2pdf__container .pdf-two-col {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px 16px !important;
+  align-items: start !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.html2pdf__container .pdf-two-col > * {
+  break-inside: auto !important;
+  page-break-inside: auto !important;
+}

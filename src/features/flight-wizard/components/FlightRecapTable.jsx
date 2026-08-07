@@ -501,9 +501,12 @@ export const FlightRecapTable = ({
     const plannedAltitude = 3000; // Altitude par défaut
 
     return (
-      <div style={{
+      // 🔧 LOT 3 : plus de pageBreakInside:'avoid' inline — le bloc peut
+      // dépasser une page (avoid insatisfiable = coupes brutales). La coupe
+      // se fait proprement ENTRE les lignes du tableau (tr protégés par
+      // pdf-capture.css) ; classe pdf-nav-block pour l'override.
+      <div className="pdf-nav-block" style={{
         marginBottom: '12px',
-        pageBreakInside: 'avoid',
         border: '2px solid var(--border-subtle)',
         borderRadius: '8px',
         overflow: 'hidden',

@@ -563,7 +563,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
               format: 'a4',
               orientation: 'portrait'
             },
-            pagebreak: { mode: ['css', 'legacy'] }
+            // 🔧 LOT 3 : avoid explicite sur les blocs atomiques et les lignes
+            // de tableau (complète les règles CSS de src/styles/pdf-capture.css,
+            // scopées .html2pdf__container — voir ce fichier pour la mécanique)
+            pagebreak: { mode: ['css', 'legacy'], avoid: ['.pdf-avoid-break', 'tr'] }
           };
 
           // Worker html2pdf : on rend le PDF, puis on ajoute l'en-tête/pied sur chaque page
