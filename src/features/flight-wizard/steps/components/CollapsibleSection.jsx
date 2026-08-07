@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { theme } from '../../../../styles/theme';
 
@@ -9,15 +9,29 @@ import { theme } from '../../../../styles/theme';
  * @param {boolean} defaultExpanded - État initial (ouvert/fermé)
  * @param {string} titleColor - Couleur du titre (optionnel)
  * @param {object} containerStyle - Styles additionnels pour le container
+ * @param {object} expandSignal - Signal « Tout déplier/replier » du parent :
+ *   { value: boolean, tick: number } — appliqué à chaque nouveau tick
+ * @param {boolean} pdfHideHeader - Masque l'en-tête d'accordéon dans la
+ *   capture PDF (pour les sections dont le CONTENU porte déjà son titre et
+ *   saute en page suivante — évite un bandeau orphelin + titre en doublon)
  */
 export const CollapsibleSection = ({
   title,
   children,
   defaultExpanded = false, // 🔧 FIX: Fermé par défaut
   titleColor = theme.colors.primary,
-  containerStyle = {}
+  containerStyle = {},
+  expandSignal = null,
+  pdfHideHeader = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  // 🔧 LOT 4 — contrôle global depuis le parent (Tout déplier / Tout replier)
+  useEffect(() => {
+    if (expandSignal && typeof expandSignal.value === 'boolean') {
+      setIsExpanded(expandSignal.value);
+    }
+  }, [expandSignal]);
 
   return (
     <>
@@ -36,8 +50,10 @@ export const CollapsibleSection = ({
           ...containerStyle
         }}
       >
-        {/* Header cliquable */}
+        {/* Header cliquable — fond aux variables de thème (le 'white' codé en
+            dur rendait les titres illisibles en thème sombre, Lot 4) */}
         <div
+          className={pdfHideHeader ? 'collapsible-header pdf-hidden' : 'collapsible-header'}
           onClick={() => setIsExpanded(!isExpanded)}
           style={{
             display: 'flex',
@@ -45,7 +61,7 @@ export const CollapsibleSection = ({
             justifyContent: 'space-between',
             padding: '16px',
             cursor: 'pointer',
-            backgroundColor: isExpanded ? 'var(--bg-overlay)' : 'white',
+            backgroundColor: isExpanded ? 'var(--bg-overlay)' : 'var(--bg-surface)',
             borderBottom: isExpanded ? `1px solid ${theme.colors.border}` : 'none',
             transition: 'all 0.2s ease'
           }}

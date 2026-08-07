@@ -37,9 +37,22 @@
 .html2pdf__container .collapsible-chevron {
   display: none !important;
 }
+/* En-têtes d'accordéon : aspect « déplié » homogène dans le document (une
+   section repliée à l'écran serait capturée avec son fond replié sans
+   bordure) — ceux marqués pdf-hidden (contenu portant déjà son titre)
+   restent masqués par la règle .pdf-hidden ci-dessous */
+.html2pdf__container .collapsible-header {
+  background-color: var(--bg-overlay) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
 
 /* Alertes écran-seulement (aussi retirées par onclone — ceinture+bretelles) */
 .html2pdf__container .weight-balance-alert {
+  display: none !important;
+}
+
+/* Contrôles d'interface sans objet dans un document (boutons Tout déplier…) */
+.html2pdf__container .pdf-hidden {
   display: none !important;
 }
 

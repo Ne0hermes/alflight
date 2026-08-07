@@ -253,6 +253,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   // (fuelData.alternate vaut 0 dans les deux cas).
   const { diversionAnalysis } = useAlternatesForFuel();
 
+  // 🔧 LOT 4 — Synthèse en accordéons : sections repliées par défaut pour
+  // alléger la page ; signal global « Tout déplier / Tout replier ».
+  // Le PDF n'est pas affecté : pdf-capture.css force le dépliage dans la capture.
+  const [expandSignal, setExpandSignal] = useState(null);
+
   // Récupérer les données météo depuis le store (déclaré AVANT tout usage —
   // un accès anticipé lèverait une ReferenceError de temporal dead zone)
   const weatherData = useWeatherStore(state => state.weatherData || {});
@@ -419,11 +424,39 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           </label>
         </div>
 
-        <div style={{ ...styles.card, backgroundColor: 'var(--accent-soft)' }}>
-          <h4 style={{ fontSize: 'var(--fs-title)', color: theme.colors.primary, marginBottom: '16px' }}>
-            Résumé de la préparation
-          </h4>
+        {/* 🔧 LOT 4 — Contrôle global des accordéons (masqué dans le PDF via
+            pdf-capture.css ; la capture déplie toutes les sections d'office) */}
+        <div className="pdf-hidden" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          {[
+            { label: 'Tout déplier', value: true },
+            { label: 'Tout replier', value: false }
+          ].map(({ label, value }) => (
+            <button
+              key={label}
+              onClick={() => setExpandSignal({ value, tick: Date.now() })}
+              style={{
+                padding: '6px 14px',
+                fontSize: 'var(--fs-caption)',
+                fontWeight: 600,
+                color: 'var(--accent-primary)',
+                backgroundColor: 'var(--accent-soft)',
+                border: '1px solid var(--accent-primary)',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer'
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
+        {/* Résumé de la préparation — accordéon ouvert par défaut (l'essentiel
+            reste visible, tout le reste est replié) */}
+        <CollapsibleSection
+          defaultExpanded={true}
+          expandSignal={expandSignal}
+          title="Résumé de la préparation"
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Date, Pilote, Aéronef, Vol */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
@@ -499,11 +532,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               </div>
             </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Section Informations Avion */}
         <CollapsibleSection
-          defaultExpanded={true}
+          defaultExpanded={false} expandSignal={expandSignal}
           title={`${flightPlan.aircraft.registration} ${flightPlan.aircraft.type || flightPlan.aircraft.model ? `(${flightPlan.aircraft.type || flightPlan.aircraft.model})` : ''}`}
           containerStyle={{ marginTop: '24px' }}
         >
@@ -709,7 +742,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         {/* Carte statique de navigation avec points VFR */}
         {waypoints.length > 0 && (
           <CollapsibleSection
-            defaultExpanded={true}
+            // ⚠️ OUVERTE par défaut (exception au Lot 4) : la carte Leaflet
+            // montée en display:none ferait 0×0 — aucune tuile chargée, carte
+            // VIDE dans le PDF. Reste repliable manuellement (les tuiles déjà
+            // chargées survivent au repli).
+            defaultExpanded={true} expandSignal={expandSignal}
             title="Navigation VFR"
             containerStyle={{ marginTop: '24px' }}
           >
@@ -729,7 +766,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
         {/* Section Espaces Aériens - Déplacé ici */}
         <CollapsibleSection
-          defaultExpanded={true}
+          defaultExpanded={false} expandSignal={expandSignal}
           title="Espaces Aériens et Zones Traversés"
           containerStyle={{ marginTop: '24px' }}
           titleColor='var(--text-secondary)'
@@ -777,7 +814,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
           return (
             <CollapsibleSection
-              defaultExpanded={true}
+              defaultExpanded={false} expandSignal={expandSignal}
               title="Météo — METAR / TAF"
               containerStyle={{ marginTop: '24px' }}
             >
@@ -853,7 +890,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         {/* Section Performances */}
         {flightPlan?.performance && (flightPlan.performance.departure || flightPlan.performance.arrival) && (
           <CollapsibleSection
-            defaultExpanded={true}
+            defaultExpanded={false} expandSignal={expandSignal}
             title="Performances Décollage / Atterrissage"
             containerStyle={{ marginTop: '24px' }}
           >
@@ -1096,7 +1133,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
 
         {/* Section Bilan Carburant */}
         <CollapsibleSection
-          defaultExpanded={true}
+          defaultExpanded={false} expandSignal={expandSignal}
           title="Bilan Carburant et Autonomie"
           containerStyle={{ marginTop: '24px' }}
         >
@@ -1299,7 +1336,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           return true;
         })() && (
             <CollapsibleSection
-              defaultExpanded={true}
+              defaultExpanded={false} expandSignal={expandSignal}
               title="Masse et Centrage"
               containerStyle={{ marginTop: '24px' }}
             >
@@ -1327,7 +1364,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
         {/* Section Informations Aérodromes (VAC) */}
         {aerodromeData.length > 0 && (
           <CollapsibleSection
-            defaultExpanded={true}
+            defaultExpanded={false} expandSignal={expandSignal}
             title="Informations Aérodromes (VAC)"
             containerStyle={{ marginTop: '24px' }}
             titleColor='var(--accent-primary)'
@@ -1920,7 +1957,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           </CollapsibleSection>
         )}
 
-        {/* Tableau récapitulatif pour le PDF */}
+        {/* Tableau récapitulatif pour le PDF — 🔧 LOT 4 : en accordéon comme
+            le reste de la synthèse (déplié d'office dans la capture PDF) */}
+        <CollapsibleSection
+          defaultExpanded={false} expandSignal={expandSignal}
+          title="Tableau récapitulatif de vol"
+          containerStyle={{ marginTop: '24px' }}
+          pdfHideHeader
+        >
         <FlightRecapTable
           flightPlan={flightPlan}
           waypoints={waypoints}
@@ -1941,8 +1985,16 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           formatSunTime={formatSunTime}
           onUpdate={onUpdate}
         />
+        </CollapsibleSection>
 
-        {/* Page de rappel pour documents à joindre */}
+        {/* Page de rappel pour documents à joindre — 🔧 LOT 4 : en accordéon
+            (page dédiée conservée dans le PDF via son pageBreakBefore) */}
+        <CollapsibleSection
+          defaultExpanded={false} expandSignal={expandSignal}
+          title="Documents à joindre au dossier"
+          containerStyle={{ marginTop: '24px' }}
+          pdfHideHeader
+        >
         <div
           className="documents-reminder-page"
           style={{
@@ -2013,6 +2065,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             </li>
           </ul>
         </div>
+        </CollapsibleSection>
       </div>
     </>
   );
