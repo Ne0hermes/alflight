@@ -9,6 +9,8 @@ import { useAirspaceAnalysis } from '../hooks/useAirspaceAnalysis';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { getDeclination } from '@utils/magneticDeclination';
 import { calculateMidpoint } from '@utils/navigationCalculations';
+import { useWindsAloftStore } from '@core/stores/windsAloftStore';
+import { solveWindTriangle } from '@utils/windTriangle';
 import {
   calculateAeronauticalNight,
   parseTimeString,
@@ -56,6 +58,29 @@ const VFRNavigationTable = ({
     }
   }, [waypoints, weatherData, fetchWeather]);
 
+  // 🔧 LOT 6-B : vents en altitude (Open-Meteo) + vent manuel
+  const windsProfiles = useWindsAloftStore(state => state.profiles);
+  const manualWind = useWindsAloftStore(state => state.manualWind);
+  const setManualWind = useWindsAloftStore(state => state.setManualWind);
+  const clearManualWind = useWindsAloftStore(state => state.clearManualWind);
+  const ensureWindProfiles = useWindsAloftStore(state => state.ensureProfiles);
+  const [manualDirInput, setManualDirInput] = useState('');
+  const [manualSpdInput, setManualSpdInput] = useState('');
+
+  // Précharger les profils de vents aux milieux de segments (fire-and-forget,
+  // dédupliqué par cellule de grille 0,1° et TTL dans le store)
+  useEffect(() => {
+    if (!waypoints || waypoints.length < 2) return;
+    const mids = [];
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const from = waypoints[i];
+      const to = waypoints[i + 1];
+      if (!from?.lat || !from?.lon || !to?.lat || !to?.lon) continue;
+      mids.push(calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon }));
+    }
+    if (mids.length > 0) ensureWindProfiles(mids);
+  }, [waypoints, ensureWindProfiles]);
+
   // Calculer les données de navigation pour chaque segment
   const navigationData = useMemo(() => {
     // 🔧 FIX D-moteur : sans vitesse de croisière canonique, on ne fabrique pas 100 kt —
@@ -94,43 +119,68 @@ const VFRNavigationTable = ({
       let trueCourse = Math.atan2(y, x) * 180 / Math.PI;
       trueCourse = (trueCourse + 360) % 360;
       
-      // Récupérer les données météo pour le point de départ
-      const weather = weatherData[from.name]?.metar;
+      // Identifiant + altitude du segment (nécessaires au vent en altitude)
+      const fromIdW = from.id || from.name || `wp${i}`;
+      const toIdW = to.id || to.name || `wp${i + 1}`;
+      const segmentIdW = `${fromIdW}-${toIdW}`;
+      const segAltForWind = segmentAltitudes[segmentIdW]?.startAlt || plannedAltitude;
+      const segMid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+
+      // 🔧 LOT 6-B — Vent du segment, par PRIORITÉ :
+      // manuel > vents en altitude Open-Meteo (milieu du segment, altitude du
+      // segment, heure de départ prévue) > METAR de surface du terrain amont
+      // (repli historique) > aucun. La source est affichée dans la colonne VENT.
+      const whenForWind = (flightDate && departureTimeTheoretical)
+        ? (parseTimeString(departureTimeTheoretical, new Date(flightDate)) || new Date())
+        : new Date();
       let windSpeed = 0;
       let windDirection = 0;
-      
-      if (weather) {
-        if (weather.wind) {
-          windSpeed = weather.wind.speed_kts || weather.wind.speed || 0;
-          windDirection = weather.wind.degrees || weather.wind.direction || 0;
-        } else if (weather.wind_speed !== undefined) {
-          windSpeed = weather.wind_speed?.value || 0;
-          windDirection = weather.wind_direction?.value || 0;
+      let windSource = 'none';
+
+      const aloftWind = useWindsAloftStore.getState().getWindAt(segMid.lat, segMid.lon, segAltForWind, whenForWind);
+      if (aloftWind && aloftWind.speedKt > 0) {
+        windSpeed = aloftWind.speedKt;
+        windDirection = aloftWind.directionDeg;
+        windSource = aloftWind.source; // 'manual' | 'open-meteo'
+      } else if (!aloftWind) {
+        const weather = weatherData[from.name]?.metar;
+        if (weather) {
+          if (weather.wind) {
+            windSpeed = weather.wind.speed_kts || weather.wind.speed || 0;
+            windDirection = weather.wind.degrees || weather.wind.direction || 0;
+          } else if (weather.wind_speed !== undefined) {
+            windSpeed = weather.wind_speed?.value || 0;
+            windDirection = weather.wind_direction?.value || 0;
+          }
+          if (windSpeed > 0) windSource = 'metar';
         }
+      } else {
+        // Vent altitude connu et NUL : source honnête, pas de repli METAR
+        windSource = aloftWind.source;
       }
-      
-      // Calculer la dérive et la vitesse sol
+
+      // Dérive et vitesse sol — triangle des vents partagé (formule exacte)
       const tas = getCruiseSpeedKt(selectedAircraft); // garanti non-null (useMemo gardé en amont)
       let groundSpeed = tas;
       let windCorrectionAngle = 0;
       let headingWithDrift = trueCourse;
+      let windUntenable = false;
 
       if (windSpeed > 0) {
-        const windAngle = (windDirection - trueCourse + 360) % 360;
-        const headwindComponent = windSpeed * Math.cos(windAngle * Math.PI / 180);
-        const crosswindComponent = windSpeed * Math.sin(windAngle * Math.PI / 180);
-
-        windCorrectionAngle = Math.asin(crosswindComponent / tas) * 180 / Math.PI;
-        groundSpeed = tas - headwindComponent;
-        headingWithDrift = trueCourse + windCorrectionAngle;
+        const tri = solveWindTriangle(trueCourse, tas, windDirection, windSpeed);
+        if (tri) {
+          windCorrectionAngle = tri.windCorrectionAngle;
+          groundSpeed = tri.groundSpeed;
+          headingWithDrift = tri.headingTrue;
+        } else {
+          // Vent ≥ TAS : segment intenable — on l'affiche, sans inventer de GS
+          windUntenable = true;
+        }
       }
 
-      // 🔧 LOT 6-A : la colonne CAP affichait un cap VRAI faussement nommé
-      // « magneticHeading » — aucune déclinaison n'était soustraite. Le cap
-      // magnétique = cap vrai (+ dérive) − déclinaison WMM au milieu du
-      // segment. Fail-closed : sans déclinaison, on garde le cap vrai (et la
-      // colonne l'indiquera par « (vrai) »).
-      const segMid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+      // 🔧 LOT 6-A : cap magnétique = cap vrai (+ dérive) − déclinaison WMM au
+      // milieu sphérique du segment. Fail-closed : sans déclinaison, cap vrai
+      // (suffixe « (vrai) » dans la colonne).
       const declination = getDeclination(segMid.lat, segMid.lon, flightDate ? new Date(flightDate) : new Date());
       const magneticHeading = (((headingWithDrift - (declination ?? 0)) % 360) + 360) % 360;
       
@@ -194,6 +244,8 @@ const VFRNavigationTable = ({
         distance: distance, // Garder la valeur brute pour conversion
         distanceDisplay: format(distance, 'distance', 1),
         windInfo: windSpeed > 0 ? `${windDirection}°/${format(windSpeed, 'windSpeed', 0)}` : 'Calme',
+        windSource,
+        windUntenable,
         windCorrectionAngle: Math.round(windCorrectionAngle),
         groundSpeed: groundSpeed, // Garder la valeur brute
         groundSpeedDisplay: format(groundSpeed, 'speed', 0),
@@ -222,7 +274,7 @@ const VFRNavigationTable = ({
     }
 
     return segments;
-  }, [waypoints, selectedAircraft, plannedAltitude, weatherData, vacData, segmentAltitudes, airspaceAnalysis, flightDate]);
+  }, [waypoints, selectedAircraft, plannedAltitude, weatherData, vacData, segmentAltitudes, airspaceAnalysis, flightDate, windsProfiles, manualWind, departureTimeTheoretical]);
 
   // 🌅 Calculer la nuit aéronautique et analyser chaque segment
   const dayNightAnalysis = useMemo(() => {
@@ -364,6 +416,62 @@ const VFRNavigationTable = ({
 
       {showTable && (
         <>
+          {/* 🔧 LOT 6-B : saisie MANUELLE du vent en altitude (prioritaire sur
+              Open-Meteo et METAR pour tous les segments) — masquée dans le PDF */}
+          <div
+            className="pdf-hidden"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
+              marginBottom: '12px', padding: '8px 10px',
+              backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-caption)'
+            }}
+          >
+            <span style={{ fontWeight: 600 }}>Vent altitude manuel :</span>
+            <input
+              type="number" min="0" max="360" placeholder="dir °"
+              value={manualDirInput}
+              onChange={(e) => setManualDirInput(e.target.value)}
+              style={{ width: '70px', padding: '4px 6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+            />
+            <span>/</span>
+            <input
+              type="number" min="0" placeholder="kt"
+              value={manualSpdInput}
+              onChange={(e) => setManualSpdInput(e.target.value)}
+              style={{ width: '60px', padding: '4px 6px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+            />
+            <button
+              onClick={() => {
+                const d = parseFloat(manualDirInput);
+                const s = parseFloat(manualSpdInput);
+                // Garde : une saisie invalide ne doit PAS effacer silencieusement
+                // un vent manuel déjà appliqué (setManualWind(NaN) → null)
+                if (!Number.isFinite(d) || !Number.isFinite(s) || s < 0) {
+                  alert('Vent manuel : saisissez une direction (0-360°) et une vitesse (kt) valides.');
+                  return;
+                }
+                setManualWind(d, s);
+              }}
+              style={{ padding: '4px 10px', fontWeight: 600, color: 'var(--accent-primary)', backgroundColor: 'var(--accent-soft)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+            >
+              Appliquer
+            </button>
+            {manualWind && (
+              <button
+                onClick={() => { clearManualWind(); setManualDirInput(''); setManualSpdInput(''); }}
+                style={{ padding: '4px 10px', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}
+              >
+                Auto (Open-Meteo)
+              </button>
+            )}
+            <span style={{ color: 'var(--text-tertiary)' }}>
+              {manualWind
+                ? `→ vent manuel ${manualWind.directionDeg}° / ${manualWind.speedKt} kt appliqué à tous les segments`
+                : 'sinon : vents en altitude Open-Meteo par segment, repli METAR sol'}
+            </span>
+          </div>
+
           {/* 🌅 Alerte jour/nuit si warnings détectés */}
           {dayNightAnalysis.hasWarnings && dayNightAnalysis.sunTimes && (
             <div style={{
@@ -410,6 +518,7 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP MAG (°)</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>VENT</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>ETE</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'var(--bg-overlay)' }}>HEURE THÉORIQUE</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'var(--bg-overlay)' }}>JOUR/NUIT</th>
@@ -465,8 +574,33 @@ const VFRNavigationTable = ({
                     <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
                     </td>
+                    {/* 🔧 LOT 6-B : colonne VENT avec provenance (le vent était
+                        calculé mais jamais affiché) */}
+                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontSize: 'var(--fs-caption)' }}>
+                      {seg.windUntenable ? (
+                        <span style={{ color: 'var(--color-red-critical)', fontWeight: 600 }}>⚠ {seg.windInfo} ≥ TAS</span>
+                      ) : (
+                        <>
+                          {seg.windInfo}
+                          {seg.windSource !== 'none' && (
+                            <div style={{ color: 'var(--text-tertiary)' }}>
+                              {{ manual: 'manuel', 'open-meteo': 'altitude', metar: 'METAR sol' }[seg.windSource] || seg.windSource}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </td>
                     <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
-                      {formatTime(seg.estimatedTime)}
+                      {seg.windUntenable ? (
+                        <span
+                          style={{ color: 'var(--color-red-critical)' }}
+                          title="Vent ≥ vitesse propre : segment intenable — temps calculé SANS vent, non représentatif"
+                        >
+                          ⚠ {formatTime(seg.estimatedTime)}
+                        </span>
+                      ) : (
+                        formatTime(seg.estimatedTime)
+                      )}
                     </td>
                     <td style={{
                       padding: '8px',
@@ -707,10 +841,14 @@ const VFRNavigationTable = ({
                   <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     {format(totals?.distance || 0, 'distance', 1)}
                   </td>
+                  {/* colonne VENT (Lot 6-B) */}
+                  <td style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}></td>
                   <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     {formatTime(totals?.estimatedTime || 0)}
                   </td>
-                  <td colSpan="4" style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}></td>
+                  {/* colSpan 5 : couvre jusqu'à la dernière colonne (l'off-by-one
+                      pré-existant laissait un trou sous ESPACES AÉRIENS) */}
+                  <td colSpan="5" style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}></td>
                 </tr>
               </tbody>
             </table>

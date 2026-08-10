@@ -6,6 +6,9 @@ import 'leaflet-polylinedecorator';
 import { useNavigation } from '@core/contexts';
 import { calculateBearing, calculateDistance, calculateDestination, calculateMidpoint } from '@utils/navigationCalculations';
 import { getDeclination, trueToMagnetic } from '@utils/magneticDeclination';
+import { useWindsAloftStore } from '@core/stores/windsAloftStore';
+import { solveWindTriangle } from '@utils/windTriangle';
+import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 
 // Fonction pour appliquer un offset perpendiculaire à une ligne
 // Cela permet de séparer visuellement les lignes qui se superposent
@@ -373,6 +376,52 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
     return { positions, available: anyDeclination };
   }, [validWaypoints, flightPlan?.generalInfo?.date]);
 
+  // ─── LOT 6-B : tracé « cap corrigé du vent » (bleu, tirets courts) ───────
+  // PAR SEGMENT, ré-ancré à chaque waypoint réel : depuis chaque waypoint, on
+  // trace l'orientation du NEZ de l'avion (cap vrai + dérive = le « crabe »)
+  // sur la distance du segment — l'écart visuel avec la route montre la
+  // correction de dérive à tenir. Vent : manuel > profils Open-Meteo en cache.
+  const windsProfiles = useWindsAloftStore(state => state.profiles);
+  const manualWind = useWindsAloftStore(state => state.manualWind);
+  const ensureWindProfiles = useWindsAloftStore(state => state.ensureProfiles);
+
+  useEffect(() => {
+    if (validWaypoints.length < 2) return;
+    const mids = [];
+    for (let i = 0; i < validWaypoints.length - 1; i++) {
+      mids.push(calculateMidpoint(
+        { lat: validWaypoints[i].lat, lon: validWaypoints[i].lon },
+        { lat: validWaypoints[i + 1].lat, lon: validWaypoints[i + 1].lon }
+      ));
+    }
+    ensureWindProfiles(mids);
+  }, [validWaypoints, ensureWindProfiles]);
+
+  const windTrace = useMemo(() => {
+    const tas = getCruiseSpeedKt(flightPlan?.aircraft);
+    if (validWaypoints.length < 2 || !tas) return { segments: [], available: false, source: null };
+    const store = useWindsAloftStore.getState();
+    const segments = [];
+    let source = null;
+    for (let i = 0; i < validWaypoints.length - 1; i++) {
+      const from = validWaypoints[i];
+      const to = validWaypoints[i + 1];
+      const mid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+      // Altitude de référence : 3000 ft (altitude VFR par défaut du projet) —
+      // l'altitude par segment fine vit dans le tableau de navigation.
+      const wind = store.getWindAt(mid.lat, mid.lon, 3000, new Date());
+      if (!wind || !(wind.speedKt > 0)) continue;
+      const trueCourse = calculateBearing(from.lat, from.lon, to.lat, to.lon);
+      const distanceNM = calculateDistance(from.lat, from.lon, to.lat, to.lon);
+      const tri = solveWindTriangle(trueCourse, tas, wind.directionDeg, wind.speedKt);
+      if (!tri || tri.windCorrectionAngle === 0) continue;
+      const end = calculateDestination({ lat: from.lat, lon: from.lon }, distanceNM, tri.headingTrue);
+      segments.push([[from.lat, from.lon], [end.lat, end.lon]]);
+      source = wind.source;
+    }
+    return { segments, available: segments.length > 0, source };
+  }, [validWaypoints, windsProfiles, manualWind, flightPlan?.aircraft]);
+
   // 🛬 Calculer le point de TOD si les données sont disponibles
   useEffect(() => {
     if (todCalculation && !todCalculation.error && arrival && validWaypoints.length >= 2) {
@@ -499,25 +548,50 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         }
       `}</style>
 
-      {/* ⚠️ Disclaimer vent — affiché à l'étape Carte, sur la synthèse et dans le
-          PDF (capture de #flight-plan-summary). À retirer quand les corrections
-          météo seront intégrées aux tracés et aux temps de navigation. */}
-      <div
-        className="nav-wind-disclaimer"
-        style={{
-          backgroundColor: 'rgba(242, 105, 33, 0.10)',
-          border: '1px solid var(--accent-primary)',
-          borderLeft: '6px solid var(--accent-primary)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '10px 12px',
-          marginBottom: '12px',
-          fontSize: 'var(--fs-caption)',
-          color: 'var(--text-primary)',
-          fontWeight: 500
-        }}
-      >
-        ⚠️ Les tracés et les temps de navigation ne sont pas encore corrigés du vent.
-      </div>
+      {/* 🔧 LOT 6-B : disclaimer vent CONDITIONNEL — avertissement tant
+          qu'aucun vent n'est disponible, provenance honnête sinon. Affiché à
+          l'étape Carte, sur la synthèse et dans le PDF. */}
+      {windTrace.available ? (
+        <div
+          className="nav-wind-disclaimer"
+          style={{
+            backgroundColor: 'var(--bg-overlay)',
+            border: '1px solid var(--border-subtle)',
+            borderLeft: '6px solid #2196f3',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 12px',
+            marginBottom: '12px',
+            fontSize: 'var(--fs-caption)',
+            color: 'var(--text-primary)',
+            fontWeight: 500
+          }}
+        >
+          ℹ️ Caps et temps par segment corrigés du vent
+          ({windTrace.source === 'manual' ? 'vent saisi manuellement' : 'vents en altitude Open-Meteo'}) —
+          voir le tableau de navigation. Le temps total de la synthèse reste basé
+          sur la vitesse de croisière sans vent.
+        </div>
+      ) : (
+        <div
+          className="nav-wind-disclaimer"
+          style={{
+            backgroundColor: 'rgba(242, 105, 33, 0.10)',
+            border: '1px solid var(--accent-primary)',
+            borderLeft: '6px solid var(--accent-primary)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 12px',
+            marginBottom: '12px',
+            fontSize: 'var(--fs-caption)',
+            color: 'var(--text-primary)',
+            fontWeight: 500
+          }}
+        >
+          ⚠️ Tracés de la carte non corrigés du vent (vents en altitude
+          indisponibles). Les temps du tableau de navigation utilisent le
+          meilleur vent disponible par segment (altitude, METAR sol ou manuel),
+          le cas échéant.
+        </div>
+      )}
 
       <div
         className="route-map-container"
@@ -597,8 +671,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         })()}
 
         {/* 🔧 LOT 6-A : tracé « au cap magnétique » (violet, tirets longs) —
-            trajectoire pédagogique si on suivait le chiffre du cap vrai au
-            compas sans corriger la déclinaison (WMM NOAA) */}
+            visualisation cumulative de l'écart de déclinaison (WMM NOAA) */}
         {magneticTrace.available && magneticTrace.positions.length > 1 && (
           <PolylineWithArrows
             positions={magneticTrace.positions}
@@ -609,6 +682,20 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             isReturn={false}
           />
         )}
+
+        {/* 🔧 LOT 6-B : tracé « cap corrigé du vent » (bleu, tirets courts) —
+            par segment, l'orientation du nez de l'avion (crabe) */}
+        {windTrace.available && windTrace.segments.map((positions, idx) => (
+          <PolylineWithArrows
+            key={`wind-${idx}`}
+            positions={positions}
+            color="#2196f3"
+            weight={2}
+            opacity={0.85}
+            dashArray="3, 6"
+            isReturn={false}
+          />
+        ))}
 
         {/* Marqueur de départ (premier waypoint) */}
         {departure && (
@@ -743,6 +830,12 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ display: 'inline-block', width: '26px', borderTop: '3px dashed #8b5cf6' }} />
             Au cap magnétique (déclinaison WMM)
+          </div>
+        )}
+        {windTrace.available && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ display: 'inline-block', width: '26px', borderTop: '3px dashed #2196f3' }} />
+            Cap corrigé du vent ({windTrace.source === 'manual' ? 'manuel' : 'Open-Meteo'})
           </div>
         )}
       </div>
