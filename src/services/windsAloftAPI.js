@@ -12,13 +12,25 @@
 // Niveaux de pression couvrant les altitudes VFR (~360 → ~10 000 ft ISA)
 const PRESSURE_LEVELS_HPA = [1000, 950, 925, 900, 850, 800, 700];
 
+// 🔧 LOT 6-C — paramètres « phénomènes significatifs » (contenu chiffré de la
+// TEMSI) : isotherme 0 °C, couches nuageuses, visibilité, potentiel orageux.
+// ⚠️ visibility n'est pas fournie par tous les modèles (AROME) → null-safe (A5).
+const SIGNIFICANT_WX_PARAMS = [
+  'freezing_level_height',
+  'cloud_cover_low',
+  'cloud_cover_mid',
+  'cloud_cover_high',
+  'visibility',
+  'cape'
+];
+
 const buildHourlyParams = () =>
   PRESSURE_LEVELS_HPA.flatMap((hpa) => [
     `wind_speed_${hpa}hPa`,
     `wind_direction_${hpa}hPa`,
     `temperature_${hpa}hPa`,
     `geopotential_height_${hpa}hPa`
-  ]).join(',');
+  ]).concat(SIGNIFICANT_WX_PARAMS).join(',');
 
 /**
  * Récupère le profil de vents en altitude pour un point.
@@ -70,7 +82,21 @@ export async function fetchWindsAloftProfile(lat, lon) {
       }
       // Niveaux triés par altitude croissante (le géopotentiel varie avec la météo)
       levels.sort((a, b) => a.heightFt - b.heightFt);
-      return { timeISO, levels };
+
+      // 🔧 LOT 6-C — phénomènes significatifs de l'heure (frère de levels[],
+      // null par champ si le modèle ne le fournit pas — jamais de valeur inventée)
+      const numOrNull = (v) => (Number.isFinite(v) ? v : null);
+      const flm = data.hourly.freezing_level_height?.[i];
+      const wx = {
+        freezingLevelFt: Number.isFinite(flm) ? Math.round(flm * 3.28084) : null,
+        cloudCoverLowPct: numOrNull(data.hourly.cloud_cover_low?.[i]),
+        cloudCoverMidPct: numOrNull(data.hourly.cloud_cover_mid?.[i]),
+        cloudCoverHighPct: numOrNull(data.hourly.cloud_cover_high?.[i]),
+        visibilityM: numOrNull(data.hourly.visibility?.[i]),
+        capeJkg: numOrNull(data.hourly.cape?.[i])
+      };
+
+      return { timeISO, levels, wx };
     });
 
     return {
@@ -158,4 +184,28 @@ export function sampleWind(profile, altitudeFt, when = new Date()) {
     source: profile.source || 'open-meteo',
     timeISO: hour.timeISO
   };
+}
+
+/**
+ * 🔧 LOT 6-C — Phénomènes significatifs à une heure donnée (contenu chiffré
+ * de la TEMSI) : même sélection d'heure la plus proche et même borne 3 h que
+ * sampleWind. null si profil absent, hors horizon, ou heure sans champ wx.
+ */
+export function sampleWx(profile, when = new Date()) {
+  if (!profile?.hours?.length) return null;
+  const target = when instanceof Date && !Number.isNaN(when.getTime()) ? when.getTime() : Date.now();
+  let hour = null;
+  let bestDelta = Infinity;
+  for (const h of profile.hours) {
+    const t = Date.parse(`${h.timeISO}Z`);
+    if (!Number.isFinite(t)) continue;
+    const delta = Math.abs(t - target);
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      hour = h;
+    }
+  }
+  const MAX_HOUR_DELTA_MS = 3 * 60 * 60 * 1000;
+  if (!hour || !hour.wx || bestDelta > MAX_HOUR_DELTA_MS) return null;
+  return { ...hour.wx, source: profile.source || 'open-meteo', timeISO: hour.timeISO };
 }

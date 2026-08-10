@@ -101,24 +101,21 @@ export const AlternatesMapView = memo(({
   scoredAlternates = [],
   dynamicRadius = null,
   onSelectionChange = null,
-  currentSelection = { departure: null, arrival: null },
+  selection = [],
   style = {}
 }) => {
   // Récupérer les waypoints de l'étape 2 pour afficher le trajet complet
   const { waypoints } = useNavigation();
 
-  // Gérer la sélection depuis la carte
-  const handleSelect = React.useCallback((airport, side) => {
-    if (!onSelectionChange) return;
-
-    if (side === 'departure') {
-      const newDeparture = airport?.icao === currentSelection.departure?.icao ? null : airport;
-      onSelectionChange({ departure: newDeparture, arrival: currentSelection.arrival });
-    } else {
-      const newArrival = airport?.icao === currentSelection.arrival?.icao ? null : airport;
-      onSelectionChange({ departure: currentSelection.departure, arrival: newArrival });
-    }
-  }, [onSelectionChange, currentSelection]);
+  // 🔧 LOT 7 — sélection SIMPLE : ajoute/retire l'aérodrome de la liste
+  const handleToggle = React.useCallback((airport) => {
+    if (!onSelectionChange || !airport) return;
+    const isSelected = (selection || []).some(alt => alt?.icao === airport.icao);
+    const next = isSelected
+      ? (selection || []).filter(alt => alt.icao !== airport.icao)
+      : [...(selection || []), airport];
+    onSelectionChange(next);
+  }, [onSelectionChange, selection]);
 
   // Calculer les coordonnées pour le trajet complet (trait rouge passant par tous les waypoints)
   const routeLine = useMemo(() => {
@@ -147,7 +144,6 @@ export const AlternatesMapView = memo(({
         position: [alt.position.lat, alt.position.lon],
         icao: alt.icao,
         name: alt.name,
-        selectionType: alt.selectionType,
         isSelected: true
       }));
   }, [selectedAlternates]);
@@ -303,10 +299,53 @@ export const AlternatesMapView = memo(({
         {/* Ajuster automatiquement la vue */}
         {bounds && <FitBounds bounds={bounds} />}
 
-        {/* Cercle du RAYON D'ACTION autour de l'aérodrome de base (départ).
-            Rayon = distance de navigation. Le cercle d'arrivée a été retiré :
-            la zone de déroutement part uniquement de la base. Couleur orange (charte). */}
-        {dynamicRadius && searchZone && searchZone.departure && (
+        {/* 🔧 LOT 7 — visualisation du CORRIDOR : union de cercles échantillonnés
+            le long de la trajectoire (rendu « bande » autour de la route).
+            Remplace le cercle « rayon d'action » autour de la base. */}
+        {searchZone?.type === 'corridor' && searchZone.radius > 0 && routeLine.length > 1 && (() => {
+          const radiusM = searchZone.radius * 1852;
+          // 🔧 REVUE LOT 7 — pas ADAPTATIF à la longueur totale : le budget de
+          // ~100 cercles doit couvrir TOUTE la route (un plafond fixe tronquait
+          // la bande en cours de route sur une longue nav à corridor étroit)
+          let totalNM = 0;
+          for (let i = 0; i < routeLine.length - 1; i++) {
+            totalNM += calculateDistance(
+              { lat: routeLine[i][0], lon: routeLine[i][1] },
+              { lat: routeLine[i + 1][0], lon: routeLine[i + 1][1] }
+            );
+          }
+          const stepNM = Math.max(searchZone.radius / 2, 2, totalNM / 100);
+          const samples = [];
+          for (let i = 0; i < routeLine.length - 1 && samples.length < 120; i++) {
+            const from = { lat: routeLine[i][0], lon: routeLine[i][1] };
+            const to = { lat: routeLine[i + 1][0], lon: routeLine[i + 1][1] };
+            const distNM = calculateDistance(from, to);
+            const n = Math.max(1, Math.ceil(distNM / stepNM));
+            // k démarre à 1 après le premier segment (le point k=0 duplique le
+            // point k=n du segment précédent)
+            for (let k = (i === 0 ? 0 : 1); k <= n && samples.length < 120; k++) {
+              const t = k / n;
+              samples.push([from.lat + (to.lat - from.lat) * t, from.lon + (to.lon - from.lon) * t]);
+            }
+          }
+          return samples.map((pos, idx) => (
+            <Circle
+              key={`corridor-${idx}`}
+              center={pos}
+              radius={radiusM}
+              interactive={false}
+              pathOptions={{
+                color: 'transparent',
+                fillColor: 'var(--accent-primary)',
+                fillOpacity: 0.05,
+                weight: 0
+              }}
+            />
+          ));
+        })()}
+
+        {/* Repli : ancien cercle circulaire si la zone n'est pas un corridor */}
+        {searchZone?.type !== 'corridor' && dynamicRadius && searchZone && searchZone.departure && (
           <Circle
             center={[searchZone.departure.lat, searchZone.departure.lon]}
             radius={dynamicRadius * 1852}
@@ -390,11 +429,9 @@ export const AlternatesMapView = memo(({
                   </div>
                 )}
 
-                {/* Boutons de sélection */}
+                {/* 🔧 LOT 7 — bouton de sélection unique (plus de côté) */}
                 {onSelectionChange && (
                   <div style={{
-                    display: 'flex',
-                    gap: '8px',
                     marginTop: '12px',
                     paddingTop: '8px',
                     borderTop: '1px solid var(--border-subtle)'
@@ -403,47 +440,22 @@ export const AlternatesMapView = memo(({
                       onClick={(e) => {
                         e.stopPropagation();
                         const airport = scoredAlternates.find(a => a.icao === marker.icao);
-                        if (airport) handleSelect(airport, 'departure');
+                        if (airport) handleToggle(airport);
                       }}
                       style={{
-                        flex: 1,
+                        width: '100%',
                         padding: '6px 12px',
-                        borderWidth: currentSelection.departure?.icao === marker.icao ? '0' : '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'var(--color-red-critical)',
+                        border: '1px solid var(--accent-primary)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: currentSelection.departure?.icao === marker.icao ? 'var(--color-red-critical)' : '#ffffff',
-                        color: currentSelection.departure?.icao === marker.icao ? '#ffffff' : 'var(--color-red-critical)',
+                        backgroundColor: '#ffffff',
+                        color: 'var(--accent-primary)',
                         cursor: 'pointer',
                         fontSize: 'var(--fs-caption)',
                         fontWeight: 'bold',
                         transition: 'all 0.2s'
                       }}
                     >
-                      {currentSelection.departure?.icao === marker.icao ? '✓' : ''} 🔴 Départ
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const airport = scoredAlternates.find(a => a.icao === marker.icao);
-                        if (airport) handleSelect(airport, 'arrival');
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '6px 12px',
-                        borderWidth: currentSelection.arrival?.icao === marker.icao ? '0' : '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'var(--text-primary)',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: currentSelection.arrival?.icao === marker.icao ? 'var(--text-primary)' : '#ffffff',
-                        color: currentSelection.arrival?.icao === marker.icao ? '#ffffff' : 'var(--text-primary)',
-                        cursor: 'pointer',
-                        fontSize: 'var(--fs-caption)',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {currentSelection.arrival?.icao === marker.icao ? '✓' : ''} 🟢 Arrivée
+                      + Sélectionner en déroutement
                     </button>
                   </div>
                 )}
@@ -452,40 +464,36 @@ export const AlternatesMapView = memo(({
           </CircleMarker>
         ))}
 
-        {/* Marqueurs pour les aérodromes de déroutement sélectionnés */}
-        {selectedMarkers.map((marker, index) => {
-          // Couleur selon le type de déroutement : rouge pour départ, vert pour arrivée
-          const markerColor = marker.selectionType === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)';
-
-          return (
-            <CircleMarker
-              key={`selected-${marker.icao}-${index}`}
-              center={marker.position}
-              radius={6}
-              pathOptions={{
-                color: markerColor,
-                fillColor: markerColor,
-                fillOpacity: 1,
-                weight: 2
-              }}
-            >
+        {/* 🔧 LOT 7 — Marqueurs des déroutements sélectionnés (couleur unique) */}
+        {selectedMarkers.map((marker, index) => (
+          <CircleMarker
+            key={`selected-${marker.icao}-${index}`}
+            center={marker.position}
+            radius={6}
+            pathOptions={{
+              color: 'var(--accent-primary)',
+              fillColor: 'var(--accent-primary)',
+              fillOpacity: 1,
+              weight: 2
+            }}
+          >
             <Popup>
               <div style={{ padding: '4px' }}>
                 <strong style={{ fontSize: 'var(--fs-body)', display: 'block', marginBottom: '4px' }}>
-                  {marker.selectionType === 'departure' ? '🔴' : '🟢'} {marker.icao}
+                  🛬 {marker.icao}
                 </strong>
                 <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
                   {marker.name}
                 </div>
                 <div style={{
                   fontSize: 'var(--fs-caption)',
-                  color: 'var(--text-primary)',
-                  backgroundColor: marker.selectionType === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)',
+                  color: '#ffffff',
+                  backgroundColor: 'var(--accent-primary)',
                   padding: '2px 6px',
                   borderRadius: 'var(--radius-sm)',
                   display: 'inline-block'
                 }}>
-                  {marker.selectionType === 'departure' ? 'Déroutement départ' : 'Déroutement arrivée'}
+                  Déroutement sélectionné
                 </div>
 
                 {/* Bouton de désélection */}
@@ -494,7 +502,7 @@ export const AlternatesMapView = memo(({
                     onClick={(e) => {
                       e.stopPropagation();
                       const airport = selectedAlternates.find(a => a.icao === marker.icao);
-                      if (airport) handleSelect(airport, marker.selectionType);
+                      if (airport) handleToggle(airport);
                     }}
                     style={{
                       width: '100%',
@@ -516,8 +524,7 @@ export const AlternatesMapView = memo(({
               </div>
             </Popup>
           </CircleMarker>
-          );
-        })}
+        ))}
       </MapContainer>
 
       {/* Informations de distance sous la carte */}
@@ -532,7 +539,7 @@ export const AlternatesMapView = memo(({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: selectedMarkers.length === 2 ? '8px' : '0'
+            marginBottom: '0'
           }}>
             <div>
               <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginRight: '8px' }}>
@@ -567,47 +574,8 @@ export const AlternatesMapView = memo(({
             </div>
           </div>
 
-          {/* Deuxième ligne : Distance entre les déroutements si les deux sont sélectionnés */}
-          {(() => {
-            const departureAlternate = selectedAlternates.find(alt => alt.selectionType === 'departure');
-            const arrivalAlternate = selectedAlternates.find(alt => alt.selectionType === 'arrival');
-
-            if (departureAlternate && arrivalAlternate &&
-                departureAlternate.position && arrivalAlternate.position) {
-              const distanceBetweenAlternates = calculateDistance(
-                departureAlternate.position,
-                arrivalAlternate.position
-              );
-
-              return (
-                <div style={{
-                  paddingTop: '8px',
-                  borderTop: '1px solid var(--text-tertiary)',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '12px'
-                }}>
-                  <div>
-                    <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginBottom: '2px' }}>
-                      Distance entre déroutements:
-                    </div>
-                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
-                      {distanceBetweenAlternates.toFixed(1)} NM
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginBottom: '2px' }}>
-                      Trajet:
-                    </div>
-                    <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                      {departureAlternate.icao} → {arrivalAlternate.icao}
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-            return null;
-          })()}
+          {/* 🔧 LOT 7 — le bloc « distance entre déroutements départ/arrivée »
+              a été retiré avec la disparition des côtés de sélection */}
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-polylinedecorator';
@@ -403,13 +403,16 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
     const store = useWindsAloftStore.getState();
     const segments = [];
     let source = null;
+    // 🔧 REVUE LOT 7 — vent à la DATE DU VOL (cohérent avec le tableau de
+    // navigation et les cartouches), pas au moment du rendu
+    const flightDateForWind = flightPlan?.generalInfo?.date ? new Date(flightPlan.generalInfo.date) : new Date();
     for (let i = 0; i < validWaypoints.length - 1; i++) {
       const from = validWaypoints[i];
       const to = validWaypoints[i + 1];
       const mid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
       // Altitude de référence : 3000 ft (altitude VFR par défaut du projet) —
       // l'altitude par segment fine vit dans le tableau de navigation.
-      const wind = store.getWindAt(mid.lat, mid.lon, 3000, new Date());
+      const wind = store.getWindAt(mid.lat, mid.lon, 3000, flightDateForWind);
       if (!wind || !(wind.speedKt > 0)) continue;
       const trueCourse = calculateBearing(from.lat, from.lon, to.lat, to.lon);
       const distanceNM = calculateDistance(from.lat, from.lon, to.lat, to.lon);
@@ -420,7 +423,57 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
       source = wind.source;
     }
     return { segments, available: segments.length > 0, source };
-  }, [validWaypoints, windsProfiles, manualWind, flightPlan?.aircraft]);
+  }, [validWaypoints, windsProfiles, manualWind, flightPlan?.aircraft, flightPlan?.generalInfo?.date]);
+
+  // ─── LOT 7 — étiquettes de cap PAR TRONÇON DROIT ─────────────────────────
+  // À chaque changement de cap (= chaque segment), un cartouche à côté du
+  // trait : Rte (route vraie), Mag (cap magnétique, déclinaison WMM) et Vent
+  // (correction de dérive signée). Fail-closed : ligne omise/« — » sans donnée.
+  const segmentCapLabels = useMemo(() => {
+    if (validWaypoints.length < 2) return [];
+    const date = flightPlan?.generalInfo?.date ? new Date(flightPlan.generalInfo.date) : new Date();
+    const tas = getCruiseSpeedKt(flightPlan?.aircraft);
+    const store = useWindsAloftStore.getState();
+    const labels = [];
+    // Aller-retour A→B→A : les deux segments ont le MÊME milieu — le second
+    // cartouche passe SOUS le trait pour rester lisible (revue lot 7)
+    const seenMids = new Set();
+    for (let i = 0; i < validWaypoints.length - 1; i++) {
+      const from = validWaypoints[i];
+      const to = validWaypoints[i + 1];
+      const trueCourse = calculateBearing(from.lat, from.lon, to.lat, to.lon);
+      const mid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+      const midKey = `${mid.lat.toFixed(6)},${mid.lon.toFixed(6)}`;
+      const below = seenMids.has(midKey);
+      seenMids.add(midKey);
+      const declination = getDeclination(mid.lat, mid.lon, date);
+      const magCourse = declination == null ? null : Math.round(trueToMagnetic(trueCourse, declination)) % 360;
+      let wca = null;
+      if (tas) {
+        // Vent à la DATE DU VOL (même référence que le tableau de navigation),
+        // pas au moment du rendu
+        const wind = store.getWindAt(mid.lat, mid.lon, 3000, date);
+        if (wind && wind.speedKt > 0) {
+          const tri = solveWindTriangle(trueCourse, tas, wind.directionDeg, wind.speedKt);
+          if (tri) wca = Math.round(tri.windCorrectionAngle);
+        }
+      }
+      // Échappement HTML : les noms de waypoints sont saisis par l'utilisateur
+      // et injectés dans le HTML du divIcon Leaflet
+      const esc = (s) => String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+      labels.push({
+        position: [mid.lat, mid.lon],
+        legLabel: `${esc(from.icao || from.name || `WP${i + 1}`)} → ${esc(to.icao || to.name || `WP${i + 2}`)}`,
+        below,
+        trueCourse: Math.round(trueCourse) % 360,
+        magCourse,
+        wca
+      });
+    }
+    return labels;
+  }, [validWaypoints, flightPlan?.generalInfo?.date, flightPlan?.aircraft, windsProfiles, manualWind]);
 
   // 🛬 Calculer le point de TOD si les données sont disponibles
   useEffect(() => {
@@ -697,6 +750,26 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           />
         ))}
 
+        {/* 🔧 LOT 7 — cartouche de cap à côté de chaque tronçon droit :
+            Rte (vraie) / Mag (déclinaison WMM) / Vent (dérive signée) */}
+        {segmentCapLabels.map((lbl, idx) => (
+          <Marker
+            key={`cap-label-${idx}`}
+            position={lbl.position}
+            interactive={false}
+            icon={L.divIcon({
+              className: 'route-cap-chip',
+              iconSize: [0, 0],
+              html: `<div style="transform: translate(-50%, ${lbl.below ? '15%' : '-115%'}); display: inline-block; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 10px; line-height: 1.35; color: var(--text-primary); white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.3); opacity: 0.92;">
+                <div style="color: var(--text-tertiary);">${lbl.legLabel}</div>
+                <div>Rte ${String(lbl.trueCourse).padStart(3, '0')}°</div>
+                <div>Mag ${lbl.magCourse != null ? `${String(lbl.magCourse).padStart(3, '0')}°` : '—'}</div>
+                ${lbl.wca != null ? `<div>Vent ${lbl.wca >= 0 ? '+' : '−'}${Math.abs(lbl.wca)}°</div>` : ''}
+              </div>`
+            })}
+          />
+        ))}
+
         {/* Marqueur de départ (premier waypoint) */}
         {departure && (
           <CircleMarker
@@ -804,41 +877,8 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
         )}
       </MapContainer>
 
-      {/* 🔧 LOT 6-A : légende des tracés (visible aussi dans le PDF —
-          la carte est capturée avec son conteneur) */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '12px',
-          left: '12px',
-          zIndex: 1000,
-          backgroundColor: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-sm)',
-          padding: '8px 10px',
-          fontSize: 'var(--fs-caption)',
-          color: 'var(--text-primary)',
-          lineHeight: 1.7,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ display: 'inline-block', width: '26px', borderTop: '3px solid #f26921' }} />
-          Route (cap vrai)
-        </div>
-        {magneticTrace.available && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ display: 'inline-block', width: '26px', borderTop: '3px dashed #8b5cf6' }} />
-            Au cap magnétique (déclinaison WMM)
-          </div>
-        )}
-        {windTrace.available && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ display: 'inline-block', width: '26px', borderTop: '3px dashed #2196f3' }} />
-            Cap corrigé du vent ({windTrace.source === 'manual' ? 'manuel' : 'Open-Meteo'})
-          </div>
-        )}
-      </div>
+      {/* 🔧 LOT 7 — légende/définitions RETIRÉES de la carte (demande pilote) :
+          l'information de cap vit désormais dans les cartouches par tronçon. */}
     </div>
     </>
   );

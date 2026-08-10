@@ -10,7 +10,6 @@ import { activeTankIdsFrom } from '@core/stores/fuelStore';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { getFuelDensity } from '@utils/fuelDensity';
-import { computeMaxFuel } from '@utils/maxFuel';
 import { useUnits } from '@hooks/useUnits';
 import { getWeighingReportAge, WEIGHING_REPORT_REMINDER } from '@utils/weighingReportAge';
 
@@ -1171,71 +1170,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             );
             const mismatch = fobLtr > 0 && Math.abs(distributed - fobLtr) > 0.5;
 
-            // 🔧 LOT 5 — Volume Max côté devis de masse. Portée LoadingSection :
-            // uniquement les props (aircraft/loads/activeTankIds/onTankLiters).
-            // ZFW massique = masse à vide + charges hors carburant (mêmes clés
-            // que le weightBalanceStore ; les clés fuel_* sont exclues).
-            // `aircraft` porte la MTOW éventuellement réduite (catégorie U).
-            const handleVolumeMaxWb = () => {
-              // ⚠️ GARDE : n'agir que si la config réservoirs FAIT FOI (engagée
-              // pour CET avion + touchée). setTankLiters écrirait sinon dans une
-              // config non engagée (voire celle d'un AUTRE avion) — écriture
-              // silencieusement sans effet ou contamination croisée.
-              if (!Array.isArray(activeTankIds)) {
-                alert('Volume Max : cochez d\'abord les réservoirs embarqués à l\'étape Carburant.');
-                return;
-              }
-              const emptyWeight = parseFloat(aircraft?.weights?.emptyWeight ?? aircraft?.emptyWeight);
-              if (!Number.isFinite(emptyWeight)) {
-                alert('Volume Max impossible : masse à vide de l\'avion inconnue.');
-                return;
-              }
-              const nonFuelKg = Object.entries(loads || {}).reduce((s, [k, v]) => {
-                if (k === 'fuel' || k.startsWith('fuel_')) return s;
-                return s + (parseFloat(v) || 0);
-              }, 0);
-              const result = computeMaxFuel({
-                aircraft,
-                zfwKg: emptyWeight + nonFuelKg,
-                activeTankIds
-              });
-              if (!result.ok) {
-                const msgs = {
-                  fuelDensity: 'type de carburant inconnu (densité indisponible)',
-                  weights: 'MTOW ou masse à vide manquante',
-                  noTanks: 'aucun réservoir coché'
-                };
-                alert(`Volume Max impossible : ${msgs[result.error] || result.error}.`);
-                return;
-              }
-              result.perTank.forEach(({ key, ltr }) => onTankLiters && onTankLiters(key, ltr));
-            };
-
+            // 🔧 LOT 7 — Bouton « Volume Max (jusqu'à MTOW) » retiré à la
+            // demande de César (emplacement à redéfinir). Logique conservée
+            // dans utils/maxFuel.js (computeMaxFuel) pour son futur retour.
             return (
               <div style={{ marginTop: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                  <h4 style={{ ...commonStyles.label, fontSize: 'var(--fs-title)', marginBottom: '6px' }}>
-                    Répartition du carburant par réservoir
-                  </h4>
-                  {Array.isArray(activeTankIds) && typeof onTankLiters === 'function' && (
-                    <button
-                      className="pdf-hidden"
-                      onClick={handleVolumeMaxWb}
-                      style={{
-                        padding: '6px 14px',
-                        fontSize: 'var(--fs-caption)',
-                        fontWeight: 600,
-                        color: 'var(--accent-primary)',
-                        backgroundColor: 'var(--accent-soft)',
-                        border: '1px solid var(--accent-primary)',
-                        borderRadius: 'var(--radius-sm)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ⛽ Volume Max (jusqu'à MTOW)
-                    </button>
-                  )}
-                </div>
+                <h4 style={{ ...commonStyles.label, fontSize: 'var(--fs-title)', marginBottom: '6px' }}>
+                  Répartition du carburant par réservoir
+                </h4>
                 <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
                   Litres dans chaque réservoir (chacun a son propre bras de levier). FOB total : {fobLtr.toFixed(3)} L.
                 </p>

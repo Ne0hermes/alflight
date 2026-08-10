@@ -20,6 +20,9 @@ import { aeroDataProvider } from '@core/data';
 import { CollapsibleSection } from './components/CollapsibleSection';
 import { FlightRecapTable } from '../components/FlightRecapTable';
 import { useAlternatesForFuel } from '@features/alternates';
+import WindsAloftTable from '@features/weather/components/WindsAloftTable';
+import SignificantWxTable from '@features/weather/components/SignificantWxTable';
+import AerowebCharts from '@features/weather/components/AerowebCharts';
 
 // Un texte météo est « réel » s'il ne vient pas des fallbacks « METAR/TAF non
 // disponible » de weatherAPI (le store horodate aussi les fetch en échec).
@@ -886,6 +889,47 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             </CollapsibleSection>
           );
         })()}
+
+        {/* 🔧 LOT 6-C — WINTEM chiffré : vents/températures en altitude par
+            segment × niveaux (les valeurs de la carte WINTEM, analysables) */}
+        <CollapsibleSection
+          defaultExpanded={false} expandSignal={expandSignal}
+          title="WINTEM chiffré — Vents et températures en altitude"
+          containerStyle={{ marginTop: '24px' }}
+        >
+          <WindsAloftTable
+            waypoints={waypoints}
+            segmentAltitudes={segmentAltitudes}
+            departureTimeTheoretical={departureTimeTheoretical}
+            flightDate={flightPlan.generalInfo.date}
+          />
+        </CollapsibleSection>
+
+        {/* 🔧 LOT 6-C — TEMSI chiffrée : phénomènes significatifs par segment
+            (iso 0 °C, nuages, visibilité, CAPE) + SIGMET officiels */}
+        <CollapsibleSection
+          defaultExpanded={false} expandSignal={expandSignal}
+          title="Phénomènes significatifs (TEMSI chiffrée)"
+          containerStyle={{ marginTop: '24px' }}
+        >
+          <SignificantWxTable
+            waypoints={waypoints}
+            segmentAltitudes={segmentAltitudes}
+            departureTimeTheoretical={departureTimeTheoretical}
+            flightDate={flightPlan.generalInfo.date}
+          />
+        </CollapsibleSection>
+
+        {/* 🔧 LOT 6-C (volet images) — cartes officielles TEMSI / WINTEM
+            (AEROWEB). Affiche « en attente d'activation » tant que le code
+            Météo-France n'est pas configuré sur Vercel. */}
+        <CollapsibleSection
+          defaultExpanded={false} expandSignal={expandSignal}
+          title="Cartes officielles TEMSI / WINTEM (AEROWEB)"
+          containerStyle={{ marginTop: '24px' }}
+        >
+          <AerowebCharts />
+        </CollapsibleSection>
 
         {/* Section Performances */}
         {flightPlan?.performance && (flightPlan.performance.departure || flightPlan.performance.arrival) && (
@@ -2061,7 +2105,12 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
               gap: '12px'
             }}>
               <span style={{ fontSize: 'var(--fs-title)', flexShrink: 0 }}>☁️</span>
-              <span>Ajouter les cartes météo Wind Temp et TEMSI du SIA</span>
+              <span>
+                Ajouter les cartes météo WINTEM et TEMSI officielles
+                (jointes automatiquement au dossier une fois l'accès AEROWEB
+                Météo-France activé — les données chiffrées équivalentes sont
+                déjà dans les sections WINTEM chiffré et Phénomènes significatifs)
+              </span>
             </li>
           </ul>
         </div>

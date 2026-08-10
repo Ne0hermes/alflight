@@ -11,12 +11,20 @@ export const useAlternatesStore = create(
       scoredAlternates: [],
       searchZone: null,
       lastRouteKey: null,
+      // 🔧 REVUE LOT 7 — verrou de recherche : findAlternates le lisait déjà
+      // mais il n'existait pas (garde inerte → jusqu'à 3 recherches complètes
+      // concurrentes au montage). NE PAS persister (whitelist partialize).
+      isSearching: false,
 
       // Configuration de recherche
       searchConfig: {
         method: 'triangle', // 'triangle' | 'buffer'
         bufferDistance: 20, // NM
       },
+
+      // 🔧 LOT 7 — largeur du CORRIDOR de recherche autour de la trajectoire
+      // (0 à 50 NM, réglable par pilule dans le module Déroutements)
+      corridorNM: 25,
 
       // Filtres
       filters: {
@@ -63,6 +71,15 @@ export const useAlternatesStore = create(
         searchConfig: { ...state.searchConfig, ...config }
       })),
 
+      setIsSearching: (v) => set({ isSearching: !!v }),
+
+      setCorridorNM: (nm) => {
+        const v = parseFloat(nm);
+        if (Number.isFinite(v)) {
+          set({ corridorNM: Math.min(50, Math.max(0, v)) });
+        }
+      },
+
       setFilters: (filters) => set((state) => ({
         filters: { ...state.filters, ...filters }
       })),
@@ -90,6 +107,7 @@ export const useAlternatesStore = create(
       partialize: (state) => ({
         selectedAlternates: state.selectedAlternates,
         searchConfig: state.searchConfig,
+        corridorNM: state.corridorNM,
         filters: state.filters,
         lastRouteKey: state.lastRouteKey
       })

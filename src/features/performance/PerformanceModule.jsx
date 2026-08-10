@@ -5,7 +5,7 @@ import PerformanceDataDebugger from './components/PerformanceDataDebugger';
 import { PerformanceStateMatrix } from './components/PerformanceStateMatrix';
 import { RunwaySuggestionEnhanced } from '../weather/components/RunwaySuggestionEnhanced';
 import { useAircraft, useWeightBalance, useNavigation, useWeather, useFuel } from '../../core/contexts';
-import { useWeatherStore } from '../../core/stores/weatherStore';
+import { useWeatherStore, mergeManualWeather } from '../../core/stores/weatherStore';
 import { useAlternatesStore } from '../../core/stores/alternatesStore';
 import { usePerformanceCalculations } from '../../shared/hooks/usePerformanceCalculations';
 import { useActiveRunwayWind } from '../../shared/hooks/useActiveRunwayWind';
@@ -28,6 +28,8 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { fuelData, fobFuel } = useFuel();
   const weatherData = useWeatherStore(state => state.weatherData || {});
   const fetchWeather = useWeatherStore(state => state.fetchWeather);
+  // 🔧 LOT 6-C — saisies météo manuelles (abonnement nécessaire au re-render)
+  const manualOverrides = useWeatherStore(state => state.manualOverrides || {});
   const selectedAlternates = useAlternatesStore(state => state.selectedAlternates);
   const { calculateISATemperature } = usePerformanceCalculations();
 
@@ -173,14 +175,19 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
 
   // Récupérer la météo pour les aérodromes (indexé par ICAO, pas par name)
   // 🔧 FIX: Utiliser departureIcao/arrivalIcao qui gère le fallback name → icao
-  const departureWeather = departureIcao && (
-    weatherData[departureIcao] ||
+  // 🔧 LOT 6-C — météo EFFECTIVE : saisie manuelle > API (forme METAR decoded
+  // identique, tout l'aval — temp, vent, fiabilité, pistes — suit sans changement).
+  // useMemo OBLIGATOIRE : mergeManualWeather crée un objet neuf à chaque appel,
+  // sans memo les useMemo/memo() aval (temp, useActiveRunwayWind, suggestions
+  // de piste) recalculeraient à chaque render du module.
+  const departureWeather = useMemo(() => departureIcao && (
+    mergeManualWeather(weatherData[departureIcao], manualOverrides[departureIcao]) ||
     flightPlan?.weather?.departure
-  );
-  const arrivalWeather = arrivalIcao && (
-    weatherData[arrivalIcao] ||
+  ), [departureIcao, weatherData, manualOverrides, flightPlan]);
+  const arrivalWeather = useMemo(() => arrivalIcao && (
+    mergeManualWeather(weatherData[arrivalIcao], manualOverrides[arrivalIcao]) ||
     flightPlan?.weather?.arrival
-  );
+  ), [arrivalIcao, weatherData, manualOverrides, flightPlan]);
 
   // 🚨 SÉCURITÉ CRITIQUE : Température depuis METAR uniquement
   // NE JAMAIS utiliser ISA comme fallback → DANGER performances incorrectes
@@ -191,10 +198,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const savedTemp = flightPlan?.performance?.departure?.temperature;
 
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
-    // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
-    const metarTemp = departureWeather?.metar?.decoded?.temperature ||
-      departureWeather?.decoded?.temperature ||
-      departureWeather?.temp ||
+    // 🔧 LOT 6-C REVUE : ?? au lieu de || — 0 °C est une température VALIDE
+    // (saisie manuelle hivernale), || la jetait au profit d'une valeur périmée
+    const metarTemp = departureWeather?.metar?.decoded?.temperature ??
+      departureWeather?.decoded?.temperature ??
+      departureWeather?.temp ??
       flightPlan?.weather?.departure?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
@@ -229,10 +237,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const savedTemp = flightPlan?.performance?.arrival?.temperature;
 
     // 🔧 FIX: Chemin correct vers température METAR = metar.decoded.temperature
-    // weatherAPI.js ligne 91: { decoded: { temperature: data.temperature?.value ?? null } }
-    const metarTemp = arrivalWeather?.metar?.decoded?.temperature ||
-      arrivalWeather?.decoded?.temperature ||
-      arrivalWeather?.temp ||
+    // 🔧 LOT 6-C REVUE : ?? au lieu de || — 0 °C est une température VALIDE
+    const metarTemp = arrivalWeather?.metar?.decoded?.temperature ??
+      arrivalWeather?.decoded?.temperature ??
+      arrivalWeather?.temp ??
       flightPlan?.weather?.arrival?.metar?.decoded?.temperature;
 
     // 🚨 CRITIQUE: Si pas de METAR → utiliser savedTemp si disponible (rechargement page)
@@ -299,8 +307,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   }, [selectedAircraft, takeoffGroups]);
 
   // 🔧 FIX: Sauvegarder les températures dans flightPlan pour persistance
+  // 🔧 LOT 6-C REVUE : == null (pas de !temp) — 0 °C doit être persisté
   useEffect(() => {
-    if (!flightPlan || (!departureTemp && !arrivalTemp)) return;
+    if (!flightPlan || (departureTemp == null && arrivalTemp == null)) return;
 
     // Initialiser performance s'il n'existe pas
     if (!flightPlan.performance) {
@@ -1035,7 +1044,12 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           </h3>
 
           {selectedAlternates.map((alternate, idx) => {
-            const altWeather = weatherData[alternate.icao?.toUpperCase()];
+            // 🔧 LOT 6-C : météo effective (manuel > API) — cas d'usage
+            // typique : petit terrain de déroutement non contrôlé sans METAR
+            const altWeather = mergeManualWeather(
+              weatherData[alternate.icao?.toUpperCase()],
+              manualOverrides[alternate.icao?.toUpperCase()]
+            );
 
             return (
               <div

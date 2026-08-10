@@ -1,24 +1,26 @@
 // src/features/alternates/components/AlternateSelectorUnified.jsx
+// 🔧 LOT 7 — Sélection SIMPLE des déroutements : plus de choix départ/arrivée
+// (demande pilote). Un bouton unique Sélectionner/Désélectionner par aérodrome,
+// plusieurs déroutements possibles. La liste est triée par pertinence (score),
+// la distance affichée est la distance à la ROUTE (corridor).
 import React, { memo, useMemo } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';
 
-/**
- * Composant de sélection unifiée des aérodromes de déroutement
- * Liste unique fusionnée avec badges côté départ/arrivée
- */
 export const AlternateSelectorUnified = memo(({
   candidates = [],
   searchZone,
   onSelectionChange,
-  currentSelection = { departure: null, arrival: null },
+  selection = [],
   filters = {}
 }) => {
 
-  const selectedDeparture = currentSelection.departure;
-  const selectedArrival = currentSelection.arrival;
+  const selectedIcaos = useMemo(
+    () => new Set((selection || []).map(alt => alt?.icao).filter(Boolean)),
+    [selection]
+  );
 
   // Fonction helper pour obtenir la longueur maximale de piste (déplacé ici pour être utilisé par passesFilters)
   const getMaxRunwayLength = (runways) => {
@@ -94,23 +96,16 @@ export const AlternateSelectorUnified = memo(({
         if (airportType.includes('heliport') || airportType.includes('heli')) {
           return false;
         }
-        // Exclure les terrains spécifiquement ULM sauf si c'est aussi un aérodrome
         if (airportType === 'ulm' || airportType === 'ultralight_field') {
           return false;
         }
       }
-
-      // Si l'avion est un hélicoptère, il peut aller sur les héliports et aérodromes
-      // Pas de restriction spécifique
-
-      // Si l'avion est un ULM, il peut aller partout
-      // Pas de restriction spécifique
     }
 
     return true;
   };
 
-  // Fusionner et enrichir tous les candidats
+  // Enrichir tous les candidats (distances, contrôle, filtres)
   const unifiedCandidates = useMemo(() => {
     const enriched = [];
 
@@ -127,9 +122,9 @@ export const AlternateSelectorUnified = memo(({
         return;
       }
 
-      // Calculer les distances depuis départ et arrivée
-      const distToDeparture = calculateDistance(position, searchZone.departure);
-      const distToArrival = calculateDistance(position, searchZone.arrival);
+      // Distances depuis départ et arrivée (information secondaire)
+      const distToDeparture = searchZone?.departure ? calculateDistance(position, searchZone.departure) : null;
+      const distToArrival = searchZone?.arrival ? calculateDistance(position, searchZone.arrival) : null;
 
       // Déterminer si l'aérodrome est contrôlé
       const isControlled = airport.services?.atc === true ||
@@ -137,93 +132,54 @@ export const AlternateSelectorUnified = memo(({
                           airport.type === 'large_airport' ||
                           airport.type === 'medium_airport';
 
-      // Enrichir avec les distances et le statut de contrôle
       const enrichedAirport = {
         ...airport,
         position: position,
         distanceToDeparture: distToDeparture,
         distanceToArrival: distToArrival,
-        side: airport.side || (distToDeparture < distToArrival ? 'departure' : 'arrival'),
         isControlled: isControlled
       };
 
-      // Vérifier si l'aérodrome passe les filtres
       enrichedAirport.passesFilters = passesFilters(enrichedAirport);
 
       enriched.push(enrichedAirport);
     });
 
-    // Trier par score décroissant (meilleurs en premier)
-    // Les aérodromes filtrés sont mis à la fin
+    // Trier par score décroissant (meilleurs en premier), filtrés à la fin
     enriched.sort((a, b) => {
-      // D'abord, les non-filtrés avant les filtrés
       if (a.passesFilters && !b.passesFilters) return -1;
       if (!a.passesFilters && b.passesFilters) return 1;
-      // Ensuite, par score
       return (b.score || 0) - (a.score || 0);
     });
 
     return enriched;
   }, [candidates, searchZone, filters]);
 
-  // Distance totale du vol
-  const totalFlightDistance = useMemo(() => {
-    if (!searchZone) return 0;
-    return calculateDistance(searchZone.departure, searchZone.arrival);
-  }, [searchZone]);
-
-  // Gérer la sélection
-  const handleSelect = (airport, side) => {
-    if (side === 'departure') {
-      const newDeparture = airport?.icao === selectedDeparture?.icao ? null : airport;
-      onSelectionChange?.({ departure: newDeparture, arrival: selectedArrival });
-    } else {
-      const newArrival = airport?.icao === selectedArrival?.icao ? null : airport;
-      onSelectionChange?.({ departure: selectedDeparture, arrival: newArrival });
-    }
+  // Sélection SIMPLE : ajoute/retire l'aérodrome de la liste
+  const handleToggle = (airport) => {
+    if (!onSelectionChange) return;
+    const isSelected = selectedIcaos.has(airport.icao);
+    const next = isSelected
+      ? (selection || []).filter(alt => alt.icao !== airport.icao)
+      : [...(selection || []), airport];
+    onSelectionChange(next);
   };
 
   const [hoveredIcao, setHoveredIcao] = React.useState(null);
-  const [openMenuIcao, setOpenMenuIcao] = React.useState(null);
-
-  // Fermer le menu si on clique ailleurs
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      if (openMenuIcao) {
-        setOpenMenuIcao(null);
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [openMenuIcao]);
 
   return (
     <div style={sx.components.card.base}>
       {unifiedCandidates.length === 0 ? (
         <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.text.center, sx.spacing.p(4))}>
-          Aucun aérodrome trouvé dans la zone de recherche
+          Aucun aérodrome trouvé dans le corridor de recherche
         </p>
       ) : (
         <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
           {unifiedCandidates.map((airport, index) => {
-            const isSelectedDeparture = selectedDeparture?.icao === airport.icao;
-            const isSelectedArrival = selectedArrival?.icao === airport.icao;
+            const isSelected = selectedIcaos.has(airport.icao);
             const isHovered = hoveredIcao === airport.icao;
             const isFiltered = !airport.passesFilters;
-
-            // Déterminer le côté pour l'affichage (badge suggéré)
-            const side = airport.side;
-            const sideColor = side === 'departure' ? 'var(--color-red-critical)' : 'var(--text-primary)';
-            const sideEmoji = side === 'departure' ? '🔴' : '🟢';
-            const sideLabel = side === 'departure' ? 'Départ' : 'Arrivée';
-
-            // Déterminer la couleur selon la sélection RÉELLE (pas le côté suggéré)
-            const selectionColor = isSelectedDeparture ? 'var(--color-red-critical)' : (isSelectedArrival ? 'var(--text-primary)' : sideColor);
-            const selectionBgColor = isSelectedDeparture ? 'var(--bg-overlay)' : (isSelectedArrival ? 'var(--bg-overlay)' : 'var(--bg-surface)');
-
-            const distanceFromRef = side === 'departure'
-              ? airport.distanceToDeparture
-              : airport.distanceToArrival;
+            const accent = 'var(--accent-primary)';
 
             return (
               <div
@@ -233,14 +189,14 @@ export const AlternateSelectorUnified = memo(({
                   marginBottom: '8px',
                   borderWidth: '2px',
                   borderStyle: isFiltered ? 'dashed' : 'solid',
-                  borderColor: isFiltered ? 'var(--text-tertiary)' : ((isSelectedDeparture || isSelectedArrival) ? selectionColor : (isHovered ? `${sideColor}60` : 'var(--border-subtle)')),
+                  borderColor: isFiltered ? 'var(--text-tertiary)' : (isSelected ? accent : (isHovered ? `${'#f26921'}60` : 'var(--border-subtle)')),
                   borderRadius: 'var(--radius-sm)',
-                  backgroundColor: isFiltered ? 'var(--bg-overlay)' : ((isSelectedDeparture || isSelectedArrival) ? selectionBgColor : (isHovered ? 'var(--bg-overlay)' : 'var(--bg-surface)')),
+                  backgroundColor: isFiltered ? 'var(--bg-overlay)' : (isSelected ? 'var(--bg-overlay)' : (isHovered ? 'var(--bg-overlay)' : 'var(--bg-surface)')),
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   position: 'relative',
-                  transform: isHovered && !isSelectedDeparture && !isSelectedArrival ? 'translateY(-1px)' : 'translateY(0)',
-                  boxShadow: isHovered && !isSelectedDeparture && !isSelectedArrival && !isFiltered ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transform: isHovered && !isSelected ? 'translateY(-1px)' : 'translateY(0)',
+                  boxShadow: isHovered && !isSelected && !isFiltered ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
                   opacity: isFiltered ? 0.6 : 1
                 }}
                 onMouseEnter={() => setHoveredIcao(airport.icao)}
@@ -264,13 +220,13 @@ export const AlternateSelectorUnified = memo(({
                 )}
 
                 {/* Indicateur visuel de sélection */}
-                {(isSelectedDeparture || isSelectedArrival) && (
+                {isSelected && (
                   <div style={{
                     position: 'absolute',
                     top: 0,
                     right: 0,
-                    backgroundColor: selectionColor,
-                    color: 'var(--text-primary)',
+                    backgroundColor: accent,
+                    color: '#ffffff',
                     padding: '4px 12px',
                     borderBottomLeftRadius: '8px',
                     fontSize: 'var(--fs-caption)',
@@ -283,7 +239,7 @@ export const AlternateSelectorUnified = memo(({
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {/* Contenu principal */}
                   <div style={{ flex: 1 }}>
-                    {/* En-tête avec ICAO et badge côté */}
+                    {/* En-tête avec rang et ICAO */}
                     <div style={sx.combine(sx.flex.start, sx.spacing.mb(1))}>
                       <span style={{
                         display: 'inline-flex',
@@ -292,8 +248,8 @@ export const AlternateSelectorUnified = memo(({
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? sideColor : `${sideColor}20`,
-                        color: (isSelectedDeparture || isSelectedArrival) ? 'white' : sideColor,
+                        backgroundColor: isSelected ? accent : `${'#f26921'}20`,
+                        color: isSelected ? '#ffffff' : accent,
                         fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
                         marginRight: '8px',
@@ -303,19 +259,6 @@ export const AlternateSelectorUnified = memo(({
                       </span>
 
                       <strong style={sx.text.base}>{airport.icao}</strong>
-
-                      {/* Badge côté */}
-                      <span style={{
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        backgroundColor: `${sideColor}15`,
-                        color: sideColor,
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: 'var(--fs-caption)',
-                        fontWeight: 'bold'
-                      }}>
-                        {sideEmoji} {sideLabel}
-                      </span>
 
                       {airport.dataSource && airport.dataSource !== 'static' && (
                         <DataSourceBadge
@@ -333,16 +276,24 @@ export const AlternateSelectorUnified = memo(({
                       {airport.name}
                     </div>
 
-                    {/* Distances */}
+                    {/* Distances : à la ROUTE d'abord (corridor), puis dép./arr. */}
                     <div style={sx.combine(sx.text.xs, sx.text.secondary, sx.spacing.mb(1))}>
                       <span style={sx.spacing.mr(3)}>
-                        <MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />
-                        {distanceFromRef.toFixed(1)} NM depuis {side === 'departure' ? 'départ' : 'arrivée'}
-                      </span>
-                      <span>
                         <Navigation size={10} style={{ display: 'inline', marginRight: '2px' }} />
-                        {airport.distance.toFixed(1)} NM route
+                        {(airport.distance ?? 0).toFixed(1)} NM de la route
                       </span>
+                      {airport.distanceToDeparture != null && (
+                        <span style={sx.spacing.mr(3)}>
+                          <MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />
+                          {airport.distanceToDeparture.toFixed(1)} NM du départ
+                        </span>
+                      )}
+                      {airport.distanceToArrival != null && (
+                        <span>
+                          <MapPin size={10} style={{ display: 'inline', marginRight: '2px' }} />
+                          {airport.distanceToArrival.toFixed(1)} NM de l'arrivée
+                        </span>
+                      )}
                     </div>
 
                     {/* Infos piste et services */}
@@ -368,21 +319,21 @@ export const AlternateSelectorUnified = memo(({
                     </div>
                   </div>
 
-                  {/* Bouton de sélection en bas */}
-                  <div style={{ position: 'relative', marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
+                  {/* Bouton de sélection unique (plus de menu départ/arrivée) */}
+                  <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenMenuIcao(openMenuIcao === airport.icao ? null : airport.icao);
+                        handleToggle(airport);
                       }}
                       style={{
                         padding: '8px 16px',
                         borderWidth: '2px',
                         borderStyle: 'solid',
-                        borderColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'var(--text-secondary)',
+                        borderColor: isSelected ? accent : 'var(--text-secondary)',
                         borderRadius: 'var(--radius-sm)',
-                        backgroundColor: (isSelectedDeparture || isSelectedArrival) ? (isSelectedDeparture ? 'var(--color-red-critical)' : 'var(--text-primary)') : 'transparent',
-                        color: isSelectedDeparture ? '#ffffff' : (isSelectedArrival ? 'var(--color-black-deep)' : 'var(--text-secondary)'),
+                        backgroundColor: isSelected ? accent : 'transparent',
+                        color: isSelected ? '#ffffff' : 'var(--text-secondary)',
                         cursor: 'pointer',
                         fontSize: 'var(--fs-body)',
                         fontWeight: 'bold',
@@ -390,90 +341,12 @@ export const AlternateSelectorUnified = memo(({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        minWidth: '120px',
+                        minWidth: '150px',
                         justifyContent: 'center'
                       }}
                     >
-                      {isSelectedDeparture ? (
-                        <>✓ 🔴 Départ</>
-                      ) : isSelectedArrival ? (
-                        <>✓ 🟢 Arrivée</>
-                      ) : (
-                        <>+ Sélectionner</>
-                      )}
+                      {isSelected ? '✓ Sélectionné' : '+ Sélectionner'}
                     </button>
-
-                    {/* Menu dropdown */}
-                    {openMenuIcao === airport.icao && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '100%',
-                        right: 0,
-                        marginTop: '4px',
-                        backgroundColor: 'var(--bg-overlay)',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'var(--border-subtle)',
-                        borderRadius: 'var(--radius-sm)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        zIndex: 1000,
-                        minWidth: '180px',
-                        overflow: 'hidden'
-                      }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelect(airport, 'departure');
-                            setOpenMenuIcao(null);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '10px 16px',
-                            border: 'none',
-                            backgroundColor: isSelectedDeparture ? 'var(--bg-raised)' : 'transparent',
-                            color: 'var(--color-red-critical)',
-                            cursor: 'pointer',
-                            fontSize: 'var(--fs-body)',
-                            fontWeight: isSelectedDeparture ? 'bold' : 'normal',
-                            textAlign: 'left',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-raised)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedDeparture ? 'var(--bg-raised)' : 'transparent'}
-                        >
-                          {isSelectedDeparture ? '✓' : ''} 🔴 Déroutement départ
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelect(airport, 'arrival');
-                            setOpenMenuIcao(null);
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '10px 16px',
-                            border: 'none',
-                            backgroundColor: isSelectedArrival ? 'var(--bg-raised)' : 'transparent',
-                            color: 'var(--text-primary)',
-                            cursor: 'pointer',
-                            fontSize: 'var(--fs-body)',
-                            fontWeight: isSelectedArrival ? 'bold' : 'normal',
-                            textAlign: 'left',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-raised)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = isSelectedArrival ? 'var(--bg-raised)' : 'transparent'}
-                        >
-                          {isSelectedArrival ? '✓' : ''} 🟢 Déroutement arrivée
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

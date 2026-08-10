@@ -1,7 +1,12 @@
 // src/services/weatherAPI.js
 
 /**
- * Service API Météo - Version simplifiée AVWX uniquement
+ * Service API Météo — 🔧 LOT 6-C : NOAA aviationweather.gov EN PREMIER
+ * (gratuit, SANS CLÉ, CORS ouvert, couverture mondiale dont LFxx), AVWX en
+ * SECOURS (clé inlinée au build : absente/rotée = échec systématique).
+ * Le contrat de sortie { raw, decoded } est IDENTIQUE quel que soit la source —
+ * tout l'aval (weatherStore, PerformanceModule, useActiveRunwayWind, synthèse)
+ * traverse sans modification. Règle A5 : jamais de météo fabriquée (null).
  */
 
 // Configuration AVWX
@@ -15,10 +20,99 @@ const AVWX_CONFIG = {
   baseUrl: 'https://avwx.rest/api'
 };
 
+const NOAA_BASE = 'https://aviationweather.gov/api/data';
+
+/**
+ * Mappe un METAR NOAA vers le contrat `decoded` EXACT d'AVWX (voir plus bas).
+ * Pièges d'unités NOAA gérés : obsTime en epoch SECONDES, visibilité en
+ * STATUTE MILES (ou string "10+"), plafonds nuageux DÉJÀ en pieds (pas de
+ * ×100 contrairement à AVWX), wdir peut être "VRB" ou 0 (calme).
+ * Exportée pour les tests.
+ */
+export function mapNoaaMetar(m, icao) {
+  if (!m || !m.rawOb) return null;
+
+  // Visibilité : statute miles → mètres, convention européenne 9999 conservée
+  let visibility = 9999;
+  const sm = parseFloat(String(m.visib));
+  if (Number.isFinite(sm)) {
+    visibility = sm >= 6 ? 9999 : Math.round(sm * 1609.34);
+  }
+
+  const speed = Number.isFinite(m.wspd) ? m.wspd : 0;
+  const direction = (typeof m.wdir === 'number' && m.wdir > 0)
+    ? m.wdir
+    : (speed === 0 ? 'Calme' : 'Variable'); // "VRB"/0 → même sémantique qu'AVWX
+
+  return {
+    raw: m.rawOb,
+    source: 'noaa',
+    decoded: {
+      station: m.icaoId || icao,
+      time: Number.isFinite(m.obsTime) ? new Date(m.obsTime * 1000).toISOString() : null,
+      wind: {
+        direction,
+        speed,
+        gust: Number.isFinite(m.wgst) ? m.wgst : null
+      },
+      visibility,
+      clouds: (m.clouds || [])
+        .filter(c => Number.isFinite(c?.base))
+        .map(c => ({ type: c.cover || 'Unknown', altitude: c.base })), // base DÉJÀ en ft
+      temperature: Number.isFinite(m.temp) ? m.temp : null,
+      dewpoint: Number.isFinite(m.dewp) ? m.dewp : null,
+      pressure: Number.isFinite(m.altim) ? Math.round(m.altim) : null // hPa
+    }
+  };
+}
+
+async function fetchJsonNoaa(path) {
+  const response = await fetch(`${NOAA_BASE}${path}`);
+  if (!response.ok) return null;
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('json')) return null;
+  const data = await response.json();
+  return data;
+}
+
+async function fetchMetarNoaa(icao) {
+  try {
+    const data = await fetchJsonNoaa(`/metar?ids=${encodeURIComponent(icao)}&format=json`);
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return mapNoaaMetar(data[0], icao);
+  } catch (e) {
+    console.warn(`⚠️ [weatherAPI] METAR NOAA ${icao} :`, e?.message);
+    return null;
+  }
+}
+
+async function fetchTafNoaa(icao) {
+  try {
+    const data = await fetchJsonNoaa(`/taf?ids=${encodeURIComponent(icao)}&format=json`);
+    if (!Array.isArray(data) || data.length === 0 || !data[0]?.rawTAF) return null;
+    // Seul decoded.time.dt est consommé en aval (Step7Summary « TAF émis le »)
+    const issue = data[0].issueTime
+      ? new Date(typeof data[0].issueTime === 'number' ? data[0].issueTime * 1000 : data[0].issueTime).toISOString()
+      : null;
+    return {
+      raw: data[0].rawTAF,
+      source: 'noaa',
+      decoded: issue ? { time: { dt: issue } } : {}
+    };
+  } catch (e) {
+    console.warn(`⚠️ [weatherAPI] TAF NOAA ${icao} :`, e?.message);
+    return null;
+  }
+}
+
 // Service API météo simplifié
 export const weatherAPI = {
-  // Récupérer le METAR
+  // Récupérer le METAR — 🔧 LOT 6-C : NOAA d'abord (sans clé), AVWX en secours
   async fetchMETAR(icao) {
+    const noaa = await fetchMetarNoaa(icao);
+    if (noaa) return noaa;
+
+    // ─── Secours AVWX (comportement historique) ─────────────────────────────
     // 🔑 Garde-fou clé : VITE_AVWX_API_KEY est inlinée AU BUILD. Si elle est
     // absente du bundle exécuté, c'est qu'il a été construit sans clé →
     // renseigner .env.local PUIS reconstruire (npm run build).
@@ -135,10 +229,13 @@ export const weatherAPI = {
     }
   },
 
-  // Récupérer le TAF
+  // Récupérer le TAF — 🔧 LOT 6-C : NOAA d'abord (sans clé), AVWX en secours
   async fetchTAF(icao) {
+    const noaa = await fetchTafNoaa(icao);
+    if (noaa) return noaa;
+
     try {
-            
+
       const response = await fetch(
         `${AVWX_CONFIG.baseUrl}/taf/${icao}?token=${AVWX_CONFIG.apiKey}`
       );
@@ -186,6 +283,21 @@ export const weatherAPI = {
   // 🔧 A5 — getMockMETAR SUPPRIMÉ : plus aucune météo fabriquée. En cas d'échec
   // de l'API AVWX, fetchMETAR renvoie null → le store marque « Météo non disponible »
   // et l'UI l'affiche, au lieu d'injecter un faux METAR (15 °C/calme déguisé).
+
+  // 🔧 LOT 6-C — SIGMET internationaux (phénomènes significatifs officiels,
+  // en JSON structuré). Filtrés sur les FIR françaises (LF**) par défaut.
+  // @returns Array<{ firId, hazard, qualifier, rawSigmet, validTimeFrom,
+  //          validTimeTo, coords? }> | null (A5 : null si échec, jamais [])
+  async fetchSigmets({ firPrefix = 'LF' } = {}) {
+    try {
+      const data = await fetchJsonNoaa('/isigmet?format=json');
+      if (!Array.isArray(data)) return null;
+      return data.filter(s => !firPrefix || String(s?.firId || '').startsWith(firPrefix));
+    } catch (e) {
+      console.warn('⚠️ [weatherAPI] SIGMET NOAA :', e?.message);
+      return null;
+    }
+  },
 
   // Extraction des nuages depuis le METAR brut
   extractClouds(raw) {

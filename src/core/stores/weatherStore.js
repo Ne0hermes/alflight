@@ -3,6 +3,47 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { weatherAPI } from '@services/weatherAPI';
 
+// 🔧 LOT 6-C — Fusionne une saisie MANUELLE (vent/température/QNH) avec la
+// météo API, en FORME METAR decoded : le résultat traverse useActiveRunwayWind
+// et PerformanceModule sans aucune modification aval. Helper PUR exporté
+// (utilisable dans les composants avec abonnement React).
+// @param base weatherData[icao] | undefined
+// @param override manualOverrides[icao] | undefined
+// @returns weather effectif | base | undefined
+export function mergeManualWeather(base, override) {
+  if (!override) return base;
+  const baseDecoded = base?.metar?.decoded || {
+    station: override.icao || null,
+    time: null,
+    visibility: null,
+    clouds: [],
+    dewpoint: null
+  };
+  return {
+    ...(base || {}),
+    icao: base?.icao || override.icao,
+    timestamp: override.updatedAt || base?.timestamp || null,
+    isManual: true,
+    manualFields: ['wind', 'temperature', 'qnh'].filter(k =>
+      k === 'wind' ? !!override.wind : override[k] != null
+    ),
+    taf: base?.taf ?? null,
+    metar: {
+      raw: base?.metar?.raw || `SAISIE MANUELLE ${override.icao || ''}`.trim(),
+      time: base?.metar?.time ?? null,
+      decoded: {
+        ...baseDecoded,
+        ...(override.wind
+          ? { wind: { direction: override.wind.direction, speed: override.wind.speed, gust: null } }
+          : {}),
+        ...(override.temperature != null ? { temperature: override.temperature } : {}),
+        // ⚠️ le champ decoded s'appelle `pressure` (hPa), pas `qnh`
+        ...(override.qnh != null ? { pressure: override.qnh } : {})
+      }
+    }
+  };
+}
+
 // Store Zustand pour la météo (version corrigée sans Map/Set)
 export const useWeatherStore = create(
   immer((set, get) => ({
@@ -12,6 +53,11 @@ export const useWeatherStore = create(
     errors: {}, // Object<icao, error>
     lastUpdate: {}, // Object<icao, timestamp>
     autoRefreshInterval: 30 * 60 * 1000, // 30 minutes
+    // 🔧 LOT 6-C — saisies MANUELLES par aérodrome (terrains non contrôlés) :
+    // Object<icao, { icao, wind:{direction,speed}|null, temperature|null,
+    // qnh|null, updatedAt }>. Prioritaire sur l'API via getEffectiveWeather.
+    // Survit aux refresh METAR (clearWeather/clearAll n'y touchent pas).
+    manualOverrides: {},
     
     // Actions
     fetchWeather: async (icao) => {
@@ -79,6 +125,52 @@ export const useWeatherStore = create(
       state.loading = {};
     }),
     
+    // 🔧 LOT 6-C — saisie météo manuelle par aérodrome
+    setManualWeather: (icao, values) => set(state => {
+      const upperIcao = icao?.toUpperCase();
+      if (!upperIcao) return;
+      const prev = state.manualOverrides[upperIcao] || {};
+      state.manualOverrides[upperIcao] = {
+        ...prev,
+        ...values,
+        icao: upperIcao,
+        updatedAt: Date.now()
+      };
+    }),
+
+    clearManualWeather: (icao) => set(state => {
+      const upperIcao = icao?.toUpperCase();
+      if (upperIcao) delete state.manualOverrides[upperIcao];
+    }),
+
+    // 🔧 REVUE 6-C — purge GLOBALE aux frontières de vol (nouvelle préparation,
+    // clôture, annulation) : sans elle, la saisie du vol A s'appliquait
+    // silencieusement au vol B (météo d'un autre vol = météo fabriquée, A5)
+    clearAllManualWeather: () => set(state => {
+      state.manualOverrides = {};
+    }),
+
+    // Hydratation depuis un brouillon restauré (le store n'est pas persisté).
+    // 🔧 REVUE 6-C — REMPLACE l'état au lieu de fusionner : l'hydratation
+    // représente l'état complet du brouillon, pas un delta (sinon un brouillon
+    // sans saisie hériterait des saisies du vol précédent)
+    setManualWeatherBulk: (map) => set(state => {
+      state.manualOverrides = {};
+      if (map && typeof map === 'object') {
+        Object.entries(map).forEach(([icao, values]) => {
+          if (values) state.manualOverrides[icao.toUpperCase()] = { ...values, icao: icao.toUpperCase() };
+        });
+      }
+    }),
+
+    // Météo EFFECTIVE (manuel > API) en forme METAR decoded
+    getEffectiveWeather: (icao) => {
+      const upperIcao = icao?.toUpperCase();
+      if (!upperIcao) return undefined;
+      const state = get();
+      return mergeManualWeather(state.weatherData[upperIcao], state.manualOverrides[upperIcao]);
+    },
+
     // Sélecteurs
     getWeatherByIcao: (icao) => {
       return get().weatherData[icao?.toUpperCase()];

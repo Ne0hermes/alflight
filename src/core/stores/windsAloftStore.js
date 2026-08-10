@@ -8,7 +8,7 @@
 // cours, non persisté.
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { fetchWindsAloftProfile, sampleWind } from '../../services/windsAloftAPI';
+import { fetchWindsAloftProfile, sampleWind, sampleWx } from '../../services/windsAloftAPI';
 
 const TTL_MS = 60 * 60 * 1000;
 // TTL court après un ÉCHEC : on retente au bout de 5 min (réseau revenu),
@@ -104,5 +104,18 @@ export const useWindsAloftStore = create(immer((set, get) => ({
     const profile = state.profiles[key];
     if (!profile) return null;
     return sampleWind(profile, altitudeFt, when);
+  },
+
+  /**
+   * 🔧 LOT 6-C — Phénomènes significatifs (TEMSI chiffrée) au point/heure —
+   * SYNCHRONE (cache). Pas de priorité manuelle ici : le vent manuel ne
+   * remplace pas l'isotherme/nuages/visibilité.
+   */
+  getWxAt: (lat, lon, when = new Date()) => {
+    const key = windsAloftKey(lat, lon);
+    if (!key) return null;
+    const profile = get().profiles[key];
+    if (!profile) return null;
+    return sampleWx(profile, when);
   }
 })));

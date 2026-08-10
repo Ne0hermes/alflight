@@ -183,6 +183,10 @@ const VFRNavigationTable = ({
       // (suffixe « (vrai) » dans la colonne).
       const declination = getDeclination(segMid.lat, segMid.lon, flightDate ? new Date(flightDate) : new Date());
       const magneticHeading = (((headingWithDrift - (declination ?? 0)) % 360) + 360) % 360;
+      // 🔧 LOT 7 — route magnétique SANS vent (ligne « Mag » de la colonne Cap) :
+      // la chaîne complète affichée est Vrai (route) → Mag (− déclinaison) →
+      // Vent (+ dérive = cap à afficher au compas)
+      const magneticCourse = (((trueCourse - (declination ?? 0)) % 360) + 360) % 360;
       
       // Calculer le temps de vol pour ce segment
       const timeMinutes = (distance / groundSpeed) * 60;
@@ -237,8 +241,11 @@ const VFRNavigationTable = ({
         from: from.name || `WP${i+1}`,
         to: to.name || `WP${i+2}`,
         altitude: segmentAlt,
-        trueCourse: Math.round(trueCourse),
-        magneticHeading: Math.round(magneticHeading),
+        // Arrondi PUIS re-normalisation : 359,7° → 360 → 000 (même convention
+        // que les cartouches de la carte — revue lot 7)
+        trueCourse: Math.round(trueCourse) % 360,
+        magneticCourse: Math.round(magneticCourse) % 360,
+        magneticHeading: Math.round(magneticHeading) % 360,
         hasDeclination: declination != null,
         declination,
         distance: distance, // Garder la valeur brute pour conversion
@@ -516,7 +523,7 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>De</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>Vers</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
-                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP MAG (°)</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP (°)</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>VENT</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>ETE</th>
@@ -568,8 +575,23 @@ const VFRNavigationTable = ({
                         step="500"
                       />
                     </td>
-                    <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500', color: 'var(--text-secondary)' }}>
-                      {seg.magneticHeading}°{seg.hasDeclination ? '' : ' (vrai)'}
+                    {/* 🔧 LOT 7 — les 3 dérivations empilées : Vrai (route),
+                        Mag (− déclinaison), Vent (+ dérive = cap à piloter) */}
+                    <td style={{ padding: '6px 8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                      <div style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>Vrai </span>
+                        {String(seg.trueCourse).padStart(3, '0')}°
+                      </div>
+                      <div style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>Mag </span>
+                        {seg.hasDeclination ? `${String(seg.magneticCourse).padStart(3, '0')}°` : '—'}
+                      </div>
+                      <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontWeight: 400 }}>Vent </span>
+                        {seg.windUntenable
+                          ? '⚠'
+                          : `${String(seg.magneticHeading).padStart(3, '0')}°${seg.hasDeclination ? '' : ' (vrai)'}`}
+                      </div>
                     </td>
                     <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
@@ -853,6 +875,68 @@ const VFRNavigationTable = ({
               </tbody>
             </table>
           </div>
+
+          {/* 🔧 LOT 7 — Détail des calculs de cap (demande pilote : comprendre
+              d'où sortent les chiffres de la colonne CAP). Exemple chiffré sur
+              le premier segment disposant d'une déclinaison. */}
+          {navigationData.length > 0 && (() => {
+            // Préférer un segment tenable (revue lot 7 : ne jamais fabriquer un
+            // « cap à piloter » pour un segment que le tableau marque ⚠)
+            const ex = navigationData.find(s => s.hasDeclination && !s.windUntenable) ||
+              navigationData.find(s => !s.windUntenable) ||
+              navigationData[0];
+            const fmtSigned = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(Math.round(v * 10) / 10)}°`;
+            // Écarts affichés = différences des ENTIERS déjà affichés dans la
+            // colonne CAP (sinon l'équation de l'exemple pouvait être fausse de
+            // 1° à cause d'arrondis indépendants — revue lot 7)
+            const angDiff = (a, b) => ((a - b + 540) % 360) - 180;
+            const decShown = ex.hasDeclination ? angDiff(ex.trueCourse, ex.magneticCourse) : null;
+            const wcaShown = angDiff(ex.magneticHeading, ex.magneticCourse);
+            return (
+              <div className="pdf-avoid-break" style={{
+                marginTop: '12px',
+                padding: '12px',
+                backgroundColor: 'var(--bg-overlay)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--fs-caption)',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.6
+              }}>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                  Détail des calculs de cap
+                </div>
+                <div>
+                  <strong>1. Route vraie (Vrai)</strong> — angle géographique du segment, mesuré sur la carte
+                  (référence nord vrai).
+                </div>
+                <div>
+                  <strong>2. Cap magnétique (Mag)</strong> = Route vraie − Déclinaison magnétique.
+                  Déclinaison calculée au milieu de chaque segment par le modèle mondial WMM 2025
+                  (déclinaison Est = positive, donc soustraite).
+                </div>
+                <div>
+                  <strong>3. Cap corrigé du vent (Vent)</strong> = Cap magnétique + Dérive.
+                  La dérive vient du triangle des vents (vent du segment à l'altitude prévue,
+                  vitesse propre de l'avion) : c'est le cap à afficher au compas pour suivre la route.
+                </div>
+                {ex && (
+                  <div style={{ marginTop: '8px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
+                    Exemple segment {ex.from} → {ex.to} :
+                    {' '}{String(ex.trueCourse).padStart(3, '0')}° vrai
+                    {ex.hasDeclination
+                      ? ` − (${fmtSigned(decShown)} déclinaison) = ${String(ex.magneticCourse).padStart(3, '0')}° mag`
+                      : ' (déclinaison indisponible — cap vrai conservé)'}
+                    {ex.windUntenable
+                      ? ' ; vent ≥ vitesse propre : segment intenable — aucun cap à piloter (⚠ dans le tableau)'
+                      : wcaShown !== 0
+                        ? ` ; dérive ${fmtSigned(wcaShown)} → cap à piloter ${String(ex.magneticHeading).padStart(3, '0')}°`
+                        : ` ; vent nul ou inconnu → cap à piloter ${String(ex.magneticHeading).padStart(3, '0')}°`}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* 🚨 Bannière zones réglementées/interdites - DÉTAILLÉE avec localisation */}
           {airspaceAnalysis && airspaceAnalysis.some(seg => seg.hasRestrictedZones) && (

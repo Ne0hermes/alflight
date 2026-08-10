@@ -10,11 +10,9 @@ import { useFuelStore } from '@core/stores/fuelStore'; // Accès direct au store
 import { isSurfaceCompatible } from '@utils/runwaySurface';
 import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 import {
-  calculateSearchZone,
   isAirportInSearchZone,
   isAirportInConeZone,
-  calculateDistanceFromRoute,
-  calculateConeZone
+  calculateDistanceFromRoute
 } from '../utils/geometryCalculations';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { scoreAlternates } from './useAlternateScoring';
@@ -214,13 +212,16 @@ export const useAlternateSelection = () => {
   const [isLoadingAirports, setIsLoadingAirports] = useState(true);
   const [hasSearchedOnce, setHasSearchedOnce] = useState(false);
   
-  const { 
+  const {
     searchConfig,
     setCandidates,
     setScoredAlternates,
     setSearchZone,
     selectedAlternates
   } = useAlternatesStore();
+
+  // 🔧 LOT 7 — largeur du corridor de recherche (0-50 NM, pilule dans l'UI)
+  const corridorNM = useAlternatesStore(state => state.corridorNM ?? 25);
   
   // Charger les aérodromes au montage
   useEffect(() => {
@@ -698,30 +699,31 @@ export const useAlternateSelection = () => {
       isCircuit: waypoints[0].icao === waypoints[waypoints.length - 1].icao
     });
 
-    // 🎯 RAYON D'ACTION (demande pilote) : la zone de sélection est un CERCLE
-    // centré sur l'aérodrome de BASE (départ), de rayon = distance de navigation.
-    // Ex : navigation de 28 NM → cercle de 28 NM autour du départ. Tous les
-    // aérodromes compatibles dans ce cercle sont proposés en déroutement.
-    // (Remplace l'ancienne zone « pilule »/cône basée sur le FOB.)
-    const actionRadius = Math.max(10, totalDistance); // plancher 10 NM
+    // 🎯 LOT 7 — CORRIDOR (demande pilote, remplace le « rayon d'action ») :
+    // la zone de sélection est une BANDE de ± corridorNM autour de la
+    // TRAJECTOIRE COMPLÈTE (polyligne de tous les waypoints). L'ancien cercle
+    // « rayon = distance de nav » sélectionnait toute la France sur une longue
+    // navigation. Largeur réglable 0-50 NM (pilule dans le module Déroutements).
+    const routePoints = waypoints
+      .filter(wp => wp.lat && wp.lon)
+      .map(wp => ({ lat: wp.lat, lon: wp.lon }));
     const zone = {
-      type: 'circle',
-      center: departure,
+      type: 'corridor',
       departure,
       arrival,
-      radius: actionRadius,
-      dynamicRadius: actionRadius,
-      area: Math.PI * actionRadius * actionRadius,
+      routePoints,
+      radius: corridorNM,
+      dynamicRadius: corridorNM,
       navDistance: totalDistance
     };
-    console.log('🎯 [Alternates] Rayon d\'action circulaire:', {
-      base: `${departure.lat.toFixed(4)}, ${departure.lon.toFixed(4)}`,
-      navDistance: totalDistance.toFixed(1) + ' NM',
-      rayon: actionRadius.toFixed(1) + ' NM'
+    console.log('🎯 [Alternates] Corridor de recherche:', {
+      largeur: `± ${corridorNM} NM`,
+      points: routePoints.length,
+      navDistance: totalDistance.toFixed(1) + ' NM'
     });
 
     return zone;
-  }, [waypoints, fuelDataForRadius, isReady]);
+  }, [waypoints, corridorNM, isReady]);
 
   // ========================================================================================
   // NOUVEAU: Calcul de la zone CÔNE (utilise FOB pour rayons variables)
@@ -1124,10 +1126,11 @@ export const useAlternateSelection = () => {
     }
   }, [isReady, searchZone, hasSearchedOnce, findAlternates, dynamicParams, airports.length]);
   
-  // Mise à jour automatique à chaque changement de route
+  // Mise à jour automatique à chaque changement de route OU de largeur de
+  // corridor (🔧 LOT 7 : la largeur fait partie de la clé de recherche)
   useEffect(() => {
     if (searchZone && hasSearchedOnce) {
-      const routeKey = `${waypoints[0]?.lat}-${waypoints[0]?.lon}-${waypoints[waypoints.length-1]?.lat}-${waypoints[waypoints.length-1]?.lon}`;
+      const routeKey = `${waypoints[0]?.lat}-${waypoints[0]?.lon}-${waypoints[waypoints.length-1]?.lat}-${waypoints[waypoints.length-1]?.lon}-c${searchZone.radius}`;
       const lastRouteKey = useAlternatesStore.getState().lastRouteKey;
       
       if (routeKey !== lastRouteKey) {

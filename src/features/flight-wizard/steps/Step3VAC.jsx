@@ -2,10 +2,11 @@
 import React, { memo, useState, useEffect } from 'react';
 import {
   FileText, CheckCircle, XCircle, Download, ChevronDown, ChevronUp,
-  MapPin, Radio, Plane, Navigation, Settings, AlertCircle, Cloud
+  MapPin, Plane, Navigation, AlertCircle, Cloud, Pencil
 } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useWeather } from '@core/contexts';
+import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
 import { separateRunwayDirections } from '@utils/runwayDirections';
@@ -511,6 +512,15 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                         </p>
                       </div>
                     )}
+
+                    {/* 🔧 LOT 6-C — saisie météo MANUELLE (terrains sans METAR) :
+                        les valeurs saisies alimentent les calculs de performances */}
+                    <ManualWeatherBlock
+                      icao={aerodrome.icao?.toUpperCase()}
+                      hasApiWeather={!!(weatherData?.[aerodrome.icao]?.metar || weatherData?.[aerodrome.icao]?.taf)}
+                      flightPlan={flightPlan}
+                      onUpdate={onUpdate}
+                    />
                   </div>
 
                   {/* Section Info terrain - Container */}
@@ -760,6 +770,210 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
   );
 });
 
+// 🔧 LOT 6-C — Bloc de saisie météo MANUELLE par aérodrome (vent, température,
+// QNH). Cas d'usage : terrain non contrôlé sans METAR. Les valeurs sont
+// stockées dans le weatherStore (manualOverrides, prioritaires sur l'API pour
+// les performances) ET dans flightPlan.weather.manual (survit au brouillon).
+const ManualWeatherBlock = ({ icao, hasApiWeather, flightPlan, onUpdate }) => {
+  const override = useWeatherStore(state => state.manualOverrides?.[icao]);
+  const setManualWeather = useWeatherStore(state => state.setManualWeather);
+  const clearManualWeather = useWeatherStore(state => state.clearManualWeather);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({ direction: '', speed: '', temperature: '', qnh: '' });
+  const [formError, setFormError] = useState(null);
+
+  if (!icao) return null;
+
+  const openForm = () => {
+    setDraft({
+      direction: override?.wind?.direction ?? '',
+      speed: override?.wind?.speed ?? '',
+      temperature: override?.temperature ?? '',
+      qnh: override?.qnh ?? ''
+    });
+    setFormError(null);
+    setEditing(true);
+  };
+
+  // Persistance côté brouillon (localStorage + Supabase via toJSON)
+  const persistToDraft = (values) => {
+    if (!flightPlan?.weather) return;
+    if (!flightPlan.weather.manual) flightPlan.weather.manual = {};
+    if (values) {
+      flightPlan.weather.manual[icao] = values;
+    } else {
+      delete flightPlan.weather.manual[icao];
+    }
+    if (onUpdate) onUpdate();
+  };
+
+  const handleSave = () => {
+    const dir = draft.direction === '' ? null : parseFloat(draft.direction);
+    const spd = draft.speed === '' ? null : parseFloat(draft.speed);
+    const temp = draft.temperature === '' ? null : parseFloat(draft.temperature);
+    const qnh = draft.qnh === '' ? null : parseFloat(draft.qnh);
+
+    if ((dir === null) !== (spd === null)) {
+      setFormError('Le vent nécessite une direction ET une vitesse (mettez 0/0 pour vent calme).');
+      return;
+    }
+    if (dir !== null && (!Number.isFinite(dir) || dir < 0 || dir > 360)) {
+      setFormError('Direction du vent invalide (0 à 360°).');
+      return;
+    }
+    if (spd !== null && (!Number.isFinite(spd) || spd < 0 || spd > 150)) {
+      setFormError('Vitesse du vent invalide (0 à 150 kt).');
+      return;
+    }
+    if (temp !== null && (!Number.isFinite(temp) || temp < -60 || temp > 55)) {
+      setFormError('Température invalide (−60 à +55 °C).');
+      return;
+    }
+    if (qnh !== null && (!Number.isFinite(qnh) || qnh < 900 || qnh > 1100)) {
+      setFormError('QNH invalide (900 à 1100 hPa).');
+      return;
+    }
+    if (dir === null && temp === null && qnh === null) {
+      setFormError('Renseignez au moins une valeur (vent, température ou QNH).');
+      return;
+    }
+
+    const values = {
+      wind: dir !== null ? { direction: ((dir % 360) + 360) % 360, speed: spd } : null,
+      temperature: temp,
+      qnh,
+      updatedAt: Date.now()
+    };
+    setManualWeather(icao, values);
+    persistToDraft(values);
+    setEditing(false);
+    setFormError(null);
+  };
+
+  const handleClear = () => {
+    clearManualWeather(icao);
+    persistToDraft(null);
+    setEditing(false);
+    setFormError(null);
+  };
+
+  if (!override && !editing) {
+    // Pas de saisie active : proposer la saisie uniquement quand la météo API manque
+    if (hasApiWeather) return null;
+    return (
+      <button onClick={openForm} style={styles.manualEntryButton}>
+        <Pencil size={16} />
+        Saisir la météo manuellement (vent, température, QNH)
+      </button>
+    );
+  }
+
+  if (override && !editing) {
+    const parts = [];
+    if (override.wind) {
+      parts.push(`Vent ${String(Math.round(override.wind.direction)).padStart(3, '0')}°/${Math.round(override.wind.speed)} kt`);
+    }
+    if (override.temperature != null) parts.push(`Temp ${override.temperature} °C`);
+    if (override.qnh != null) parts.push(`QNH ${override.qnh} hPa`);
+    return (
+      <div style={styles.manualBadge}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={styles.manualBadgeTitle}>
+            <Pencil size={14} />
+            Saisie manuelle active
+          </div>
+          <div style={styles.manualBadgeValues}>{parts.join(' · ')}</div>
+          {hasApiWeather && (
+            <div style={styles.manualBadgeWarning}>
+              ⚠ Vent et température prioritaires sur le METAR pour les calculs de performances
+            </div>
+          )}
+        </div>
+        <div style={styles.manualBadgeActions}>
+          <button onClick={openForm} style={styles.manualSmallButton}>Modifier</button>
+          <button onClick={handleClear} style={styles.manualSmallButton}>Effacer</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.manualForm}>
+      <p style={styles.manualFormTitle}>Météo observée / estimée pour {icao}</p>
+      <div style={styles.manualFormGrid}>
+        <label style={styles.manualLabel}>
+          Vent — direction (°)
+          <input
+            type="number"
+            min="0"
+            max="360"
+            step="10"
+            placeholder="ex. 270"
+            value={draft.direction}
+            onChange={(e) => setDraft(d => ({ ...d, direction: e.target.value }))}
+            style={styles.manualInput}
+          />
+        </label>
+        <label style={styles.manualLabel}>
+          Vent — vitesse (kt)
+          <input
+            type="number"
+            min="0"
+            max="150"
+            step="1"
+            placeholder="ex. 10"
+            value={draft.speed}
+            onChange={(e) => setDraft(d => ({ ...d, speed: e.target.value }))}
+            style={styles.manualInput}
+          />
+        </label>
+        <label style={styles.manualLabel}>
+          Température (°C)
+          <input
+            type="number"
+            min="-60"
+            max="55"
+            step="1"
+            placeholder="ex. 15"
+            value={draft.temperature}
+            onChange={(e) => setDraft(d => ({ ...d, temperature: e.target.value }))}
+            style={styles.manualInput}
+          />
+        </label>
+        <label style={styles.manualLabel}>
+          QNH (hPa)
+          <input
+            type="number"
+            min="900"
+            max="1100"
+            step="1"
+            placeholder="ex. 1013"
+            value={draft.qnh}
+            onChange={(e) => setDraft(d => ({ ...d, qnh: e.target.value }))}
+            style={styles.manualInput}
+          />
+        </label>
+      </div>
+      {formError && <p style={styles.manualFormError}>{formError}</p>}
+      <div style={styles.manualFormActions}>
+        <button onClick={handleSave} style={styles.manualSaveButton}>Enregistrer</button>
+        <button
+          onClick={() => { setEditing(false); setFormError(null); }}
+          style={styles.manualCancelButton}
+        >
+          Annuler
+        </button>
+      </div>
+      <p style={styles.manualFormHint}>
+        À utiliser pour un terrain sans METAR (valeurs observées sur place ou estimées
+        prudemment). Le vent et la température alimentent les calculs de performances de
+        cet aérodrome ; le QNH est conservé comme rappel de calage altimétrique (il
+        n'entre pas encore dans les calculs).
+      </p>
+    </div>
+  );
+};
+
 const styles = {
   container: {
     padding: '0',
@@ -878,6 +1092,141 @@ const styles = {
     fontSize: 'var(--fs-body)',
     color: 'var(--text-tertiary)',
     fontStyle: 'italic'
+  },
+  // 🔧 LOT 6-C — saisie météo manuelle
+  manualEntryButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '10px 16px',
+    width: '100%',
+    marginTop: '12px',
+    backgroundColor: 'var(--bg-surface)',
+    color: theme.colors.primary,
+    border: `1px dashed ${theme.colors.border}`,
+    borderRadius: 'var(--radius-sm)',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '500',
+    cursor: 'pointer',
+    boxSizing: 'border-box'
+  },
+  manualBadge: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    marginTop: '12px',
+    padding: '12px',
+    backgroundColor: 'rgba(242, 105, 33, 0.08)',
+    border: '1px solid var(--accent-primary)',
+    borderRadius: 'var(--radius-sm)'
+  },
+  manualBadgeTitle: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '600',
+    color: 'var(--accent-primary)'
+  },
+  manualBadgeValues: {
+    fontSize: 'var(--fs-body)',
+    fontFamily: 'monospace',
+    color: 'var(--text-primary)',
+    marginTop: '4px',
+    wordBreak: 'break-word'
+  },
+  manualBadgeWarning: {
+    fontSize: 'var(--fs-caption)',
+    color: 'var(--accent-primary)',
+    marginTop: '4px'
+  },
+  manualBadgeActions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    flexShrink: 0
+  },
+  manualSmallButton: {
+    padding: '6px 12px',
+    backgroundColor: 'var(--bg-surface)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: 'var(--fs-caption)',
+    cursor: 'pointer'
+  },
+  manualForm: {
+    marginTop: '12px',
+    padding: '12px',
+    backgroundColor: 'var(--bg-surface)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 'var(--radius-sm)'
+  },
+  manualFormTitle: {
+    margin: '0 0 10px 0',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '600',
+    color: 'var(--text-primary)'
+  },
+  manualFormGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+    gap: '10px'
+  },
+  manualLabel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    fontSize: 'var(--fs-caption)',
+    color: 'var(--text-secondary)'
+  },
+  manualInput: {
+    padding: '8px 10px',
+    fontSize: 'var(--fs-body)',
+    fontFamily: 'monospace',
+    color: 'var(--text-primary)',
+    backgroundColor: 'var(--bg-overlay)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 'var(--radius-sm)',
+    boxSizing: 'border-box',
+    width: '100%'
+  },
+  manualFormError: {
+    margin: '10px 0 0 0',
+    fontSize: 'var(--fs-caption)',
+    color: 'var(--color-red-critical)',
+    fontWeight: '600'
+  },
+  manualFormActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '12px'
+  },
+  manualSaveButton: {
+    padding: '8px 16px',
+    backgroundColor: theme.colors.primary,
+    color: '#fff',
+    border: 'none',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: 'var(--fs-body)',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  manualCancelButton: {
+    padding: '8px 16px',
+    backgroundColor: 'var(--bg-overlay)',
+    color: 'var(--text-secondary)',
+    border: '1px solid var(--border-subtle)',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: 'var(--fs-body)',
+    cursor: 'pointer'
+  },
+  manualFormHint: {
+    margin: '10px 0 0 0',
+    fontSize: 'var(--fs-caption)',
+    color: 'var(--text-tertiary)',
+    lineHeight: '1.4'
   },
   terrainSection: {
     border: '1px solid var(--border-subtle)',

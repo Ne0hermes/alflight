@@ -287,50 +287,27 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
   const { scoredAlternates, setSelectedAlternates, selectedAlternates } = useAlternatesStore();
   const { fetchMultiple } = useWeatherStore();
 
+  // 🔧 LOT 7 — largeur du corridor de recherche (pilule 0-50 NM)
+  const corridorNM = useAlternatesStore(state => state.corridorNM ?? 25);
+  const setCorridorNM = useAlternatesStore(state => state.setCorridorNM);
+
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Dériver la sélection manuelle depuis le store
+  // 🔧 LOT 7 — sélection SIMPLE (plus de côtés départ/arrivée) : liste des
+  // déroutements sélectionnés, enrichie des distances si absentes
   const manualSelection = React.useMemo(() => {
-    const depAlt = selectedAlternates?.find(alt => alt.selectionType === 'departure') || null;
-    const arrAlt = selectedAlternates?.find(alt => alt.selectionType === 'arrival') || null;
-
-    // Calculer les distances si elles ne sont pas déjà présentes
-    let departure = depAlt;
-    let arrival = arrAlt;
-
-    if (depAlt && searchZone && depAlt.position) {
-      const needsDistances = depAlt.distanceToDeparture === undefined || depAlt.distanceToArrival === undefined;
-
-      if (needsDistances) {
-        departure = {
-          ...depAlt,
-          distanceToDeparture: depAlt.distanceToDeparture !== undefined
-            ? depAlt.distanceToDeparture
-            : calculateDistance(depAlt.position, searchZone.departure),
-          distanceToArrival: depAlt.distanceToArrival !== undefined
-            ? depAlt.distanceToArrival
-            : calculateDistance(depAlt.position, searchZone.arrival)
-        };
-      }
-    }
-
-    if (arrAlt && searchZone && arrAlt.position) {
-      const needsDistances = arrAlt.distanceToDeparture === undefined || arrAlt.distanceToArrival === undefined;
-
-      if (needsDistances) {
-        arrival = {
-          ...arrAlt,
-          distanceToDeparture: arrAlt.distanceToDeparture !== undefined
-            ? arrAlt.distanceToDeparture
-            : calculateDistance(arrAlt.position, searchZone.departure),
-          distanceToArrival: arrAlt.distanceToArrival !== undefined
-            ? arrAlt.distanceToArrival
-            : calculateDistance(arrAlt.position, searchZone.arrival)
-        };
-      }
-    }
-
-    return { departure, arrival };
+    return (selectedAlternates || []).map(alt => {
+      if (!alt?.position || !searchZone) return alt;
+      return {
+        ...alt,
+        distanceToDeparture: alt.distanceToDeparture !== undefined
+          ? alt.distanceToDeparture
+          : (searchZone.departure ? calculateDistance(alt.position, searchZone.departure) : undefined),
+        distanceToArrival: alt.distanceToArrival !== undefined
+          ? alt.distanceToArrival
+          : (searchZone.arrival ? calculateDistance(alt.position, searchZone.arrival) : undefined)
+      };
+    });
   }, [selectedAlternates, searchZone]);
 
   // Déclencher automatiquement la recherche quand les conditions sont remplies
@@ -341,10 +318,11 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
     }
   }, [isReady, hasSearched, refreshAlternates]);
 
-  // Réinitialiser et relancer la recherche quand la route change
+  // Réinitialiser et relancer la recherche quand la route OU la largeur du
+  // corridor change (🔧 LOT 7 : largeur incluse dans la clé)
   useEffect(() => {
     if (searchZone) {
-      const routeKey = `${searchZone.departure.lat}-${searchZone.departure.lon}-${searchZone.arrival.lat}-${searchZone.arrival.lon}`;
+      const routeKey = `${searchZone.departure.lat}-${searchZone.departure.lon}-${searchZone.arrival.lat}-${searchZone.arrival.lon}-c${searchZone.radius}`;
       const previousKey = useAlternatesStore.getState().lastRouteKey;
       if (routeKey !== previousKey) {
         // Mettre à jour la clé de route
@@ -362,37 +340,19 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
     }
   }, [searchZone, isReady, refreshAlternates]);
 
-  // Gérer la sélection manuelle - DOIT être défini AVANT le return conditionnel
+  // 🔧 LOT 7 — Gérer la sélection manuelle : liste SIMPLE d'aérodromes (plus
+  // de côtés départ/arrivée). selectionType neutre conservé pour la compat des
+  // brouillons existants ; position normalisée à l'entrée.
   const handleManualSelection = React.useCallback((selection) => {
-    // Mettre à jour le store avec la sélection manuelle
-    const newSelection = [];
-    if (selection.departure) {
-      // S'assurer que la position est correctement définie
-      const depAirport = selection.departure;
-      const position = depAirport.position || depAirport.coordinates || { lat: depAirport.lat, lon: depAirport.lon || depAirport.lng };
-      newSelection.push({
-        ...depAirport,
-        position: position,
-        selectionType: 'departure'
-      });
-    }
-    if (selection.arrival) {
-      // S'assurer que la position est correctement définie
-      const arrAirport = selection.arrival;
-      const position = arrAirport.position || arrAirport.coordinates || { lat: arrAirport.lat, lon: arrAirport.lon || arrAirport.lng };
-      newSelection.push({
-        ...arrAirport,
-        position: position,
-        selectionType: 'arrival'
-      });
-    }
+    const newSelection = (Array.isArray(selection) ? selection : [])
+      .filter(Boolean)
+      .map(airport => ({
+        ...airport,
+        position: airport.position || airport.coordinates || { lat: airport.lat, lon: airport.lon ?? airport.lng },
+        selectionType: 'alternate'
+      }));
     setSelectedAlternates(newSelection);
   }, [setSelectedAlternates]);
-
-  // Déterminer quels alternates afficher sur la carte
-  const mapAlternates = (manualSelection.departure || manualSelection.arrival)
-    ? [manualSelection.departure, manualSelection.arrival].filter(Boolean)
-    : [];
 
   // Récupérer les METAR pour les aérodromes sélectionnés
   useEffect(() => {
@@ -522,6 +482,9 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
               <h4 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
                 Visualisation de la route et des déroutements
               </h4>
+              {/* 🔧 LOT 7 — pilule de réglage du CORRIDOR (0-50 NM autour de la
+                  trajectoire), remplace le « rayon d'action » qui couvrait
+                  toute la France sur une longue navigation */}
               <div style={{
                 fontSize: 'var(--fs-body)',
                 color: 'var(--text-secondary)',
@@ -533,11 +496,35 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 border: '1px solid var(--border-subtle)'
               }}>
                 <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-primary)' }}>
-                  Zone de recherche : {Math.ceil(dynamicRadius || 25)} NM de rayon
+                  Aérodromes disponibles : ± {Math.round(corridorNM)} NM autour de la trajectoire
                 </p>
-                <p style={{ margin: '0', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Le rayon correspond à un temps de déroutement de 20-30 min selon l'autonomie de l'avion.
-                  Cela représente la zone où vous pourriez rejoindre un aérodrome de déroutement en cas de besoin.
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    step="5"
+                    value={corridorNM}
+                    onChange={(e) => setCorridorNM(e.target.value)}
+                    style={{ flex: 1, minWidth: '160px', accentColor: 'var(--accent-primary)' }}
+                    aria-label="Largeur du corridor de recherche (NM)"
+                  />
+                  <span style={{
+                    padding: '4px 12px',
+                    borderRadius: '999px',
+                    backgroundColor: 'var(--accent-soft)',
+                    border: '1px solid var(--accent-primary)',
+                    color: 'var(--accent-primary)',
+                    fontWeight: 700,
+                    fontSize: 'var(--fs-caption)',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {Math.round(corridorNM)} NM
+                  </span>
+                </div>
+                <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', lineHeight: '1.4' }}>
+                  Seuls les aérodromes situés à moins de cette distance de votre route
+                  (tous les segments) sont proposés en déroutement.
                 </p>
               </div>
               <AlternatesMapView
@@ -546,7 +533,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                 scoredAlternates={scoredAlternates}
                 dynamicRadius={dynamicRadius}
                 onSelectionChange={handleManualSelection}
-                currentSelection={manualSelection}
+                selection={manualSelection}
               />
             </div>
 
@@ -560,7 +547,7 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
                   candidates={scoredAlternates}
                   searchZone={searchZone}
                   onSelectionChange={handleManualSelection}
-                  currentSelection={manualSelection}
+                  selection={manualSelection}
                   filters={filters}
                 />
               ) : hasSearched ? (
@@ -596,36 +583,26 @@ const AlternatesModule = memo(({ wizardMode = false, config = {}, filters = {} }
           </div>
         )}
 
-        {/* Détails complets des aérodromes sélectionnés */}
-        {(manualSelection.departure || manualSelection.arrival) && (
+        {/* 🔧 LOT 7 — Détails complets des aérodromes sélectionnés (liste
+            simple, plus de côtés départ/arrivée) */}
+        {manualSelection.length > 0 && (
           <div style={sx.combine(sx.components.card.base, sx.spacing.mt(4))}>
             <h4 style={sx.combine(sx.text.base, sx.text.bold, sx.spacing.mb(3))}>
               Aérodromes sélectionnés
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {manualSelection.departure && (
+              {manualSelection.map((alt) => (
                 <AerodromeDetailsCard
-                  airport={manualSelection.departure}
-                  side="departure"
-                  sideColor="var(--color-red-critical)"
-                  sideEmoji="🔴"
-                  sideLabel="Déroutement côté départ"
-                  distanceLabel="NM depuis le départ"
-                  distanceValue={manualSelection.departure.distanceToDeparture}
+                  key={alt.icao}
+                  airport={alt}
+                  side="alternate"
+                  sideColor="var(--accent-primary)"
+                  sideEmoji="🛬"
+                  sideLabel={`Déroutement ${alt.icao}`}
+                  distanceLabel="NM de la route"
+                  distanceValue={alt.distance}
                 />
-              )}
-
-              {manualSelection.arrival && (
-                <AerodromeDetailsCard
-                  airport={manualSelection.arrival}
-                  side="arrival"
-                  sideColor="var(--text-primary)"
-                  sideEmoji="🟢"
-                  sideLabel="Déroutement côté arrivée"
-                  distanceLabel="NM depuis l'arrivée"
-                  distanceValue={manualSelection.arrival.distanceToArrival}
-                />
-              )}
+              ))}
             </div>
           </div>
         )}

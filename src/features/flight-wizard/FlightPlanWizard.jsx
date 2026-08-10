@@ -10,6 +10,7 @@ import { generalInfoToFlightType } from '@core/flightType';
 import { aircraftSelectors } from '../../core/stores/aircraftStore';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useFuelStore } from '@core/stores/fuelStore';
+import { useWeatherStore } from '@core/stores/weatherStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
@@ -106,7 +107,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   useEffect(() => {
     if (!localStorage.getItem('flightPlanDraft')) {
       useFuelStore.getState().resetTankConfig();
-      console.log('🛢️ [Wizard] Nouvelle préparation — configuration réservoirs remise à zéro');
+      // 🔧 REVUE 6-C — même règle pour la météo MANUELLE : la saisie d'un vol
+      // précédent ne doit jamais s'appliquer silencieusement au nouveau vol
+      useWeatherStore.getState().clearAllManualWeather();
+      console.log('🛢️ [Wizard] Nouvelle préparation — configuration réservoirs et météo manuelle remises à zéro');
     }
   }, []);
 
@@ -291,6 +295,14 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     if (flightPlan.weather?.departure || flightPlan.weather?.arrival) {
       console.log('✅ [Wizard] Weather data disponible dans flightPlan');
       // Note: Weather est généralement rechargé via les APIs, pas besoin de restaurer
+    }
+    // 🔧 LOT 6-C — les saisies météo MANUELLES, elles, ne sont pas rechargeables
+    // par API : ré-hydrater le weatherStore depuis le brouillon. Appel
+    // INCONDITIONNEL (même map vide) : setManualWeatherBulk REMPLACE l'état,
+    // ce qui purge aussi d'éventuelles saisies d'un vol précédent (revue 6-C).
+    useWeatherStore.getState().setManualWeatherBulk(flightPlan.weather?.manual || {});
+    if (flightPlan.weather?.manual && Object.keys(flightPlan.weather.manual).length > 0) {
+      console.log('✅ [Wizard] Saisies météo manuelles restaurées:', Object.keys(flightPlan.weather.manual));
     }
 
     console.log('🎉 [Wizard] Restauration complète des contextes terminée');
@@ -502,6 +514,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         localStorage.removeItem('flightPlanCompletedSteps');
         // Vol clôturé : la config réservoirs ne doit pas survivre au vol suivant
         useFuelStore.getState().resetTankConfig();
+        // 🔧 REVUE 6-C — idem pour la météo manuelle (session SPA sans reload)
+        useWeatherStore.getState().clearAllManualWeather();
         console.log('✅ Plan archivé et brouillon effacé');
       } catch (error) {
         console.error('❌ Erreur lors de l\'archivage:', error);
@@ -735,6 +749,7 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
 
       // Config réservoirs (non persistée, mais purge explicite avant le reload)
       useFuelStore.getState().resetTankConfig();
+      useWeatherStore.getState().clearAllManualWeather();
 
       console.log('🔄 [Wizard] Toutes les données effacées - Redémarrage...');
       window.location.reload();
@@ -767,6 +782,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // périmés à la préparation suivante (calcul de dégagement fantôme).
       useAlternatesStore.getState().clearAll();
       useFuelStore.getState().resetTankConfig();
+      // 🔧 REVUE 6-C — la saisie météo manuelle ne survit pas à l'annulation
+      // (le chemin sans onCancel peut rester en SPA sans reload)
+      useWeatherStore.getState().clearAllManualWeather();
       console.log('🗑️ [Wizard] Brouillon supprimé - Fermeture...');
     }
 

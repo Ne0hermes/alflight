@@ -4,7 +4,7 @@
 
 import React, { memo, useMemo, useEffect, useState } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
-import { AlertTriangle, Info, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
@@ -511,12 +511,10 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
         )}
       </div>
 
-      {/* Module de déroutement complet */}
+      {/* Module de déroutement complet — 🔧 LOT 7 : zone corridor gérée par le
+          module lui-même (pilule 0-50 NM), plus de props rayon/cône */}
       <AlternatesModule
         wizardMode
-        customRadius={coneZone ? null : searchRadius.radiusAtDep * 1.852} // Convertir NM en km si pas de cône
-        showRadiusCircle={true}
-        useConeZone={!!coneZone} // Nouveau prop pour utiliser la zone cône
         filters={{
           minRunwayLength: filters.hideShortRunways ? performanceBasedLDA?.minRunwayRequired : null,
           compatibleSurfaces: filters.hideIncompatibleSurface ? aircraftCompatibleSurfaces : null,

@@ -72,7 +72,9 @@ export const flightPlanSupabaseService = {
           arrival: flightPlan.weather.arrival || {},
           alternates: flightPlan.weather.alternates || [],
           notamsChecked: flightPlan.weather.notamsChecked,
-          weatherAcceptable: flightPlan.weather.weatherAcceptable
+          weatherAcceptable: flightPlan.weather.weatherAcceptable,
+          // 🔧 LOT 6-C — saisies manuelles par aérodrome (non rechargeables par API)
+          manual: flightPlan.weather.manual || {}
         },
 
         // Carburant

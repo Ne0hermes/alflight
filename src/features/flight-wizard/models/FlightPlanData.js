@@ -62,6 +62,9 @@ export class FlightPlanData {
       alternates: [],        // [{icao, metar, taf}]
       notamsChecked: false,  // Confirmation NOTAMs consultés
       weatherAcceptable: false, // Confirmation météo acceptable
+      // 🔧 LOT 6-C — saisies MANUELLES par aérodrome (terrains sans METAR) :
+      // Object<icao, {wind:{direction,speed}|null, temperature|null, qnh|null, updatedAt}>
+      manual: {},
     };
 
     // Étape 6 : Bilan carburant
@@ -444,7 +447,11 @@ export class FlightPlanData {
     if (data.aircraft) flightPlan.aircraft = { ...data.aircraft };
     if (data.route) flightPlan.route = { ...data.route };
     if (data.alternates) flightPlan.alternates = [...data.alternates];
-    if (data.weather) flightPlan.weather = { ...data.weather };
+    if (data.weather) {
+      flightPlan.weather = { ...data.weather };
+      // 🔧 LOT 6-C — brouillons antérieurs sans `manual` (ou nettoyé par cleanObject)
+      flightPlan.weather.manual = data.weather.manual || {};
+    }
     if (data.fuel) flightPlan.fuel = { ...data.fuel };
     if (data.weightBalance) flightPlan.weightBalance = { ...data.weightBalance };
     if (data.todParameters) flightPlan.todParameters = { ...data.todParameters };

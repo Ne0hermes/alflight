@@ -11,6 +11,12 @@ import {
   getSideOfPerpendicular,
   toRad
 } from '@utils/navigationCalculations';
+// 🔧 REVUE LOT 7 — projection CORRECTE sur segment (clampée aux extrémités) :
+// calculateDistanceToSegment a un défaut historique (along-track jamais
+// négatif → un point DERRIÈRE le début d'un segment est rapporté à sa distance
+// perpendiculaire au lieu de sa distance à l'extrémité). Le corridor utilise
+// donc projectPointOnSegment, déjà écrit et testé pour le calcul carburant.
+import { projectPointOnSegment } from './alternateFuelCalculations';
 
 // Ces fonctions sont maintenant importées du module centralisé
 
@@ -652,6 +658,25 @@ export const isAirportInSearchZone = (airport, searchZone) => {
 
   // Déterminer le côté par rapport à la médiatrice
   const side = getSideOfPerpendicular(point, searchZone.departure, searchZone.arrival);
+
+  // 🎯 LOT 7 — Zone CORRIDOR : bande de ± radius NM autour de la POLYLIGNE de
+  // navigation complète (tous les waypoints, pas seulement départ→arrivée).
+  // Remplace le « rayon d'action » (cercle = distance de nav autour de la base)
+  // qui sélectionnait la France entière sur une longue navigation.
+  if (searchZone.type === 'corridor' && Array.isArray(searchZone.routePoints) &&
+      searchZone.routePoints.length >= 2 && searchZone.radius != null) {
+    let minDist = Infinity;
+    for (let i = 0; i < searchZone.routePoints.length - 1; i++) {
+      // distToFootNM = distance au pied de perpendiculaire CLAMPÉ aux
+      // extrémités (un point en amont/aval du segment est mesuré à l'extrémité)
+      const d = projectPointOnSegment(point, searchZone.routePoints[i], searchZone.routePoints[i + 1]).distToFootNM;
+      if (d < minDist) minDist = d;
+    }
+    if (minDist <= searchZone.radius) {
+      return { isInZone: true, location: 'corridor', distanceToRoute: minDist, side };
+    }
+    return { isInZone: false, reason: 'Hors corridor', distanceToRoute: minDist };
+  }
 
   // 🎯 Zone CERCLE = rayon d'action centré sur l'aérodrome de base (départ).
   // Un aérodrome est retenu si sa distance au centre ≤ rayon d'action
