@@ -4,6 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-polylinedecorator';
 import { useNavigation } from '@core/contexts';
+import { calculateBearing, calculateDistance, calculateDestination, calculateMidpoint } from '@utils/navigationCalculations';
+import { getDeclination, trueToMagnetic } from '@utils/magneticDeclination';
 
 // Fonction pour appliquer un offset perpendiculaire à une ligne
 // Cela permet de séparer visuellement les lignes qui se superposent
@@ -340,6 +342,37 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
   // Préparer les coordonnées pour la ligne de route
   const routeCoordinates = validWaypoints.map(wp => [wp.lat, wp.lon]);
 
+  // ─── LOT 6-A : tracé « au cap magnétique » (pédagogique) ─────────────────
+  // À partir du départ, chaque segment est retracé en suivant le CHIFFRE du
+  // CAP MAGNÉTIQUE (cap vrai − déclinaison WMM au milieu du segment) comme
+  // s'il était un cap VRAI (référence GPS/track), sur la même distance, en
+  // CHAÎNAGE CUMULATIF : l'écart de déclinaison s'accumule et le tracé dévie
+  // vers l'OUEST de la route pour une déclinaison Est — visualisation de
+  // l'écart vrai/magnétique le long de la navigation. Positions mémoïsées
+  // (PolylineWithArrows recrée ses layers quand `positions` change de réf.).
+  const magneticTrace = useMemo(() => {
+    if (validWaypoints.length < 2) return { positions: [], available: false };
+    const date = flightPlan?.generalInfo?.date ? new Date(flightPlan.generalInfo.date) : new Date();
+    const positions = [[validWaypoints[0].lat, validWaypoints[0].lon]];
+    let anchor = { lat: validWaypoints[0].lat, lon: validWaypoints[0].lon };
+    let anyDeclination = false;
+    for (let i = 0; i < validWaypoints.length - 1; i++) {
+      const from = validWaypoints[i];
+      const to = validWaypoints[i + 1];
+      const trueCourse = calculateBearing(from.lat, from.lon, to.lat, to.lon);
+      const distanceNM = calculateDistance(from.lat, from.lon, to.lat, to.lon);
+      const mid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+      const declination = getDeclination(mid.lat, mid.lon, date);
+      const course = declination == null ? trueCourse : trueToMagnetic(trueCourse, declination);
+      if (declination != null) anyDeclination = true;
+      anchor = calculateDestination(anchor, distanceNM, course);
+      positions.push([anchor.lat, anchor.lon]);
+    }
+    // Sans aucune déclinaison calculable (échec WMM), le tracé serait identique
+    // à la route : ne rien afficher plutôt qu'un doublon trompeur.
+    return { positions, available: anyDeclination };
+  }, [validWaypoints, flightPlan?.generalInfo?.date]);
+
   // 🛬 Calculer le point de TOD si les données sont disponibles
   useEffect(() => {
     if (todCalculation && !todCalculation.error && arrival && validWaypoints.length >= 2) {
@@ -488,7 +521,7 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
 
       <div
         className="route-map-container"
-        style={{ height: '500px', width: '100%', borderRadius: 'var(--radius-sm)', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}
+        style={{ position: 'relative', height: '500px', width: '100%', borderRadius: 'var(--radius-sm)', overflow: 'hidden', borderWidth: '1px', borderStyle: 'solid', borderColor: 'var(--border-subtle)' }}
       >
         <MapContainer
           center={center}
@@ -562,6 +595,20 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
             );
           }
         })()}
+
+        {/* 🔧 LOT 6-A : tracé « au cap magnétique » (violet, tirets longs) —
+            trajectoire pédagogique si on suivait le chiffre du cap vrai au
+            compas sans corriger la déclinaison (WMM NOAA) */}
+        {magneticTrace.available && magneticTrace.positions.length > 1 && (
+          <PolylineWithArrows
+            positions={magneticTrace.positions}
+            color="#8b5cf6"
+            weight={3}
+            opacity={0.8}
+            dashArray="8, 6"
+            isReturn={false}
+          />
+        )}
 
         {/* Marqueur de départ (premier waypoint) */}
         {departure && (
@@ -669,6 +716,36 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           </CircleMarker>
         )}
       </MapContainer>
+
+      {/* 🔧 LOT 6-A : légende des tracés (visible aussi dans le PDF —
+          la carte est capturée avec son conteneur) */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          zIndex: 1000,
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-sm)',
+          padding: '8px 10px',
+          fontSize: 'var(--fs-caption)',
+          color: 'var(--text-primary)',
+          lineHeight: 1.7,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ display: 'inline-block', width: '26px', borderTop: '3px solid #f26921' }} />
+          Route (cap vrai)
+        </div>
+        {magneticTrace.available && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ display: 'inline-block', width: '26px', borderTop: '3px dashed #8b5cf6' }} />
+            Au cap magnétique (déclinaison WMM)
+          </div>
+        )}
+      </div>
     </div>
     </>
   );

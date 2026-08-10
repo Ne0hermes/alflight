@@ -7,6 +7,8 @@ import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { useAirspaceAnalysis } from '../hooks/useAirspaceAnalysis';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { getDeclination } from '@utils/magneticDeclination';
+import { calculateMidpoint } from '@utils/navigationCalculations';
 import {
   calculateAeronauticalNight,
   parseTimeString,
@@ -111,17 +113,26 @@ const VFRNavigationTable = ({
       const tas = getCruiseSpeedKt(selectedAircraft); // garanti non-null (useMemo gardé en amont)
       let groundSpeed = tas;
       let windCorrectionAngle = 0;
-      let magneticHeading = trueCourse;
-      
+      let headingWithDrift = trueCourse;
+
       if (windSpeed > 0) {
         const windAngle = (windDirection - trueCourse + 360) % 360;
         const headwindComponent = windSpeed * Math.cos(windAngle * Math.PI / 180);
         const crosswindComponent = windSpeed * Math.sin(windAngle * Math.PI / 180);
-        
+
         windCorrectionAngle = Math.asin(crosswindComponent / tas) * 180 / Math.PI;
         groundSpeed = tas - headwindComponent;
-        magneticHeading = trueCourse + windCorrectionAngle;
+        headingWithDrift = trueCourse + windCorrectionAngle;
       }
+
+      // 🔧 LOT 6-A : la colonne CAP affichait un cap VRAI faussement nommé
+      // « magneticHeading » — aucune déclinaison n'était soustraite. Le cap
+      // magnétique = cap vrai (+ dérive) − déclinaison WMM au milieu du
+      // segment. Fail-closed : sans déclinaison, on garde le cap vrai (et la
+      // colonne l'indiquera par « (vrai) »).
+      const segMid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
+      const declination = getDeclination(segMid.lat, segMid.lon, flightDate ? new Date(flightDate) : new Date());
+      const magneticHeading = (((headingWithDrift - (declination ?? 0)) % 360) + 360) % 360;
       
       // Calculer le temps de vol pour ce segment
       const timeMinutes = (distance / groundSpeed) * 60;
@@ -178,6 +189,8 @@ const VFRNavigationTable = ({
         altitude: segmentAlt,
         trueCourse: Math.round(trueCourse),
         magneticHeading: Math.round(magneticHeading),
+        hasDeclination: declination != null,
+        declination,
         distance: distance, // Garder la valeur brute pour conversion
         distanceDisplay: format(distance, 'distance', 1),
         windInfo: windSpeed > 0 ? `${windDirection}°/${format(windSpeed, 'windSpeed', 0)}` : 'Calme',
@@ -209,7 +222,7 @@ const VFRNavigationTable = ({
     }
 
     return segments;
-  }, [waypoints, selectedAircraft, plannedAltitude, weatherData, vacData, segmentAltitudes, airspaceAnalysis]);
+  }, [waypoints, selectedAircraft, plannedAltitude, weatherData, vacData, segmentAltitudes, airspaceAnalysis, flightDate]);
 
   // 🌅 Calculer la nuit aéronautique et analyser chaque segment
   const dayNightAnalysis = useMemo(() => {
@@ -395,7 +408,7 @@ const VFRNavigationTable = ({
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>De</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)' }}>Vers</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>Alt ({getSymbol('altitude')})</th>
-                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP (°)</th>
+                  <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>CAP MAG (°)</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>DIST ({getSymbol('distance')})</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>ETE</th>
                   <th style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', backgroundColor: 'var(--bg-overlay)' }}>HEURE THÉORIQUE</th>
@@ -447,7 +460,7 @@ const VFRNavigationTable = ({
                       />
                     </td>
                     <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500', color: 'var(--text-secondary)' }}>
-                      {seg.magneticHeading}°
+                      {seg.magneticHeading}°{seg.hasDeclination ? '' : ' (vrai)'}
                     </td>
                     <td style={{ padding: '8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontWeight: '500' }}>
                       {seg.distanceDisplay || format(seg.distance, 'distance', 1)}
