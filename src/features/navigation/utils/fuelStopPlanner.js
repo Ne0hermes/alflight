@@ -55,25 +55,38 @@ const legDistanceNM = (wps) => {
  * @param {number|null} p.fuelConsumptionLph
  * @param {number} p.reserveLiters      réserve finale réglementaire (L)
  * @param {number|null} p.capacityLtr   capacité carburant totale de l'avion (L)
+ * @param {number} [p.taxiLtr]          roulage par tronçon (0 si inconnu)
+ * @param {number} [p.alternateLtr]     dégagement, dernier tronçon (0 si inconnu)
  * @returns {{ status: 'no-data'|'ok'|'insufficient', legs, worstLeg, capacityLtr }}
  */
-export function analyzeFuelAutonomy({ waypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters = 0, capacityLtr }) {
+export function analyzeFuelAutonomy({ waypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters = 0, capacityLtr, taxiLtr = 0, alternateLtr = 0 }) {
   const validWaypoints = (waypoints || []).filter(isValidWp);
   if (validWaypoints.length < 2) return { status: 'no-data', legs: [], worstLeg: null, capacityLtr: capacityLtr ?? null };
   if (!cruiseSpeedKt || !fuelConsumptionLph || !capacityLtr) {
     return { status: 'no-data', legs: [], worstLeg: null, capacityLtr: capacityLtr ?? null };
   }
 
-  const legs = splitLegsAtFuelStops(validWaypoints).map(leg => {
+  const rawLegs = splitLegsAtFuelStops(validWaypoints);
+  const legs = rawLegs.map((leg, idx) => {
     const distanceNM = legDistanceNM(leg.waypoints);
     const tripLtr = (distanceNM / cruiseSpeedKt) * fuelConsumptionLph;
-    const requiredLtr = tripLtr + reserveLiters;
+    // Même critère que legFuelPlan (revue cran 3) : contingence 5 % (min 1 gal),
+    // roulage par tronçon, dégagement sur le dernier — l'advisor de l'étape
+    // Trajet et le bilan par tronçon rendent le MÊME verdict
+    const contingencyLtr = Math.max(3.78541, tripLtr * 0.05);
+    const isLast = idx === rawLegs.length - 1;
+    const requiredLtr = taxiLtr + tripLtr + contingencyLtr + reserveLiters + (isLast ? alternateLtr : 0);
     return {
       ...leg,
       from: leg.waypoints[0],
       to: leg.waypoints[leg.waypoints.length - 1],
       distanceNM,
       tripLtr,
+      // Composantes exposées pour que l'UI affiche une décomposition qui
+      // ADDITIONNE au total (revue LOT 10 : le bandeau mentait par omission)
+      contingencyLtr,
+      taxiLtr,
+      alternateLtr: isLast ? alternateLtr : 0,
       requiredLtr,
       fits: requiredLtr <= capacityLtr
     };
@@ -90,6 +103,49 @@ export function analyzeFuelAutonomy({ waypoints, cruiseSpeedKt, fuelConsumptionL
     worstLeg,
     capacityLtr
   };
+}
+
+/**
+ * 🔧 LOT 10-C — Évalue l'avitaillement à un aérodrome DÉJÀ DANS la navigation
+ * (ex. Lunéville en waypoint intermédiaire) : consommation pour l'atteindre,
+ * carburant restant à l'arrivée au point (HYPOTHÈSE : réservoirs pleins au
+ * départ — documentée dans l'UI), besoin du reste du vol et litres MINIMUM à
+ * avitailler. Simulation : le waypoint est marqué fuelStop et la route est
+ * ré-analysée par tronçon (mêmes postes que l'advisor/le bilan).
+ * @param {Object} p — waypoint : référence d'un waypoint INTERMÉDIAIRE de
+ *   p.waypoints ; autres params identiques à analyzeFuelAutonomy.
+ * @returns {{ consumedToWpLtr, remainingAtWpLtr, requiredRestLtr,
+ *   minRefuelLtr, reachable } | null} null si données manquantes (A5).
+ */
+export function assessRouteFuelWaypoint({ waypoints, waypoint, cruiseSpeedKt, fuelConsumptionLph, reserveLiters = 0, capacityLtr, taxiLtr = 0, alternateLtr = 0 }) {
+  if (!waypoint || !capacityLtr) return null;
+  const wpIndex = (waypoints || []).indexOf(waypoint);
+  if (wpIndex < 0) return null;
+  const simWaypoints = (waypoints || []).map((wp, i) => (i === wpIndex ? { ...wp, fuelStop: true } : wp));
+  const simWp = simWaypoints[wpIndex];
+  const sim = analyzeFuelAutonomy({
+    waypoints: simWaypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters, capacityLtr, taxiLtr, alternateLtr
+  });
+  if (sim.status === 'no-data' || sim.legs.length < 2) return null;
+
+  // Tronçon menant AU waypoint = celui qui se termine sur lui (même référence)
+  const legIdx = sim.legs.findIndex(l => l.to === simWp);
+  const inboundIdx = legIdx >= 0 ? legIdx : 0;
+  // Conso depuis le DERNIER plein (départ ou escale marquée en AMONT — une
+  // escale fuelStop remet les réservoirs à plein) : tronçon inbound SEUL,
+  // pas le cumul depuis le départ (revue lot 10)
+  const consumedToWpLtr = taxiLtr + sim.legs[inboundIdx].tripLtr;
+  const remainingAtWpLtr = Math.max(0, capacityLtr - consumedToWpLtr);
+  // Besoin du RESTE du vol = max des tronçons après le point (couvre ≥1 escale)
+  const requiredRestLtr = Math.max(...sim.legs.slice(inboundIdx + 1).map(l => l.requiredLtr));
+  const minRefuelLtr = Math.max(0, requiredRestLtr - remainingAtWpLtr);
+  // Atteignable si chaque tronçon JUSQU'AU point tient dans la capacité
+  const reachable = sim.legs.slice(0, inboundIdx + 1).every(l => l.fits);
+  // Même pleins à ras bord à l'escale, la SUITE doit tenir dans la capacité —
+  // sinon avitailler ICI ne suffit pas (revue lot 10)
+  const restFits = requiredRestLtr <= capacityLtr;
+
+  return { consumedToWpLtr, remainingAtWpLtr, requiredRestLtr, minRefuelLtr, reachable, restFits };
 }
 
 /**

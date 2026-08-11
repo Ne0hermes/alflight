@@ -7,6 +7,8 @@ import { WeightBalanceChart } from './WeightBalanceChart';
 import { ScenarioCards } from './ScenarioCards';
 import { calculateScenarios } from '../utils/calculations';
 import { activeTankIdsFrom } from '@core/stores/fuelStore';
+import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { sx } from '@shared/styles/styleSystem';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
@@ -17,7 +19,7 @@ export const WeightBalanceModule = memo(() => {
   const { selectedAircraft } = useAircraft();
   const { fobFuel, fuelData, tankConfig } = useFuel();
   const { loads, updateLoad, calculations } = useWeightBalance();
-  const { navigationResults } = useNavigation();
+  const { navigationResults, waypoints } = useNavigation();
   const { getUnit } = useUnits();
 
   // Log pour déboguer
@@ -34,13 +36,26 @@ export const WeightBalanceModule = memo(() => {
   );
 
   // Calcul des scénarios mémorisé
+  // 🔧 CRAN 3 — escale avitaillement : l'« atterrissage » = prochain
+  // atterrissage réel (escale), brûlé = roulage + trip du tronçon 1
   const scenarios = useMemo(() => {
     if (!selectedAircraft || !calculations || typeof calculations.totalWeight !== 'number' || typeof calculations.totalMoment !== 'number') {
       return null;
     }
     const fuelUnit = getUnit('fuel');
-    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds);
-  }, [selectedAircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds]);
+    const plan = computeLegFuelPlans({
+      waypoints,
+      cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
+      taxiLtr: fuelData?.roulage?.ltr || 0,
+      finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
+      alternateLtr: fuelData?.alternate?.ltr || 0
+    });
+    const burnedOverride = plan?.isMultiLeg
+      ? plan.legs[0].taxiLtr + plan.legs[0].tripLtr
+      : null;
+    return calculateScenarios(selectedAircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds, burnedOverride);
+  }, [selectedAircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds, waypoints]);
 
   // Handler mémorisé pour updateLoad
   const handleLoadChange = useCallback((type, value) => {

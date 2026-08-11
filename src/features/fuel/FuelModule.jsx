@@ -4,6 +4,7 @@ import React, { memo, useEffect } from 'react';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { AlertTriangle } from 'lucide-react';
 import { activeTankIdsFrom } from '@core/stores/fuelStore';
+import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
 import { useFuelSync } from '@hooks/useFuelSync';
@@ -11,6 +12,7 @@ import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit } from '@utils/unitsDisplay';
 import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr } from '@utils/aircraftPerf';
+import { computeLegFuelPlans } from './utils/legFuelPlan';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
@@ -502,8 +504,87 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         const capacityRef = tankConfigAuthoritative
           ? (effectiveCapacityLtr > 0 ? effectiveCapacityLtr : null)
           : getFuelCapacityLtr(selectedAircraft);
+
+        // 🔧 CRAN 3 — avec une escale avitaillement, le bilan pertinent est
+        // PAR TRONÇON (plein refait à l'escale) : le tableau ci-dessous
+        // remplace le total « d'une traite ».
+        const plan = computeLegFuelPlans({
+          waypoints,
+          cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+          fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
+          taxiLtr: safeFuelData.roulage?.ltr || 0,
+          finalReserveLtr: safeFuelData.finalReserve?.ltr || 0,
+          alternateLtr: safeFuelData.alternate?.ltr || 0,
+          // Revue cran 3 : supplément de déroutement PAR TRONÇON
+          alternates: useAlternatesStore.getState().selectedAlternates,
+          aircraft: selectedAircraft
+        });
+
+        if (plan?.isMultiLeg) {
+          const cell = { padding: '6px 8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontSize: 'var(--fs-caption)' };
+          const anyOver = capacityRef && plan.legs.some(l => l.totalLtr > capacityRef);
+          return (
+            <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+              <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
+                ⛽ Bilan par tronçon — vol via {plan.legs.slice(0, -1).map(l => l.to.icao || l.to.name).join(', ')}
+              </h3>
+              <p style={sx.combine(sx.text.sm, sx.text.secondary, sx.spacing.mb(2))}>
+                Plein refait à chaque escale : embarquez au moins le TOTAL de chaque
+                tronçon à son départ (roulage, contingence 5 %, réserve finale par
+                tronçon ; dégagement sur le dernier ; hors extras).
+              </p>
+              <div style={{ overflowX: 'auto' }} className="pdf-avoid-break">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--bg-overlay)' }}>
+                      <th style={{ ...cell, textAlign: 'left' }}>Tronçon</th>
+                      <th style={cell}>Dist. (NM)</th>
+                      <th style={cell}>Trip (L)</th>
+                      <th style={cell}>Conting. (L)</th>
+                      <th style={cell}>Roulage (L)</th>
+                      <th style={cell}>Réserve (L)</th>
+                      <th style={cell}>Dégag. (L)</th>
+                      <th style={cell}>TOTAL (L)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plan.legs.map(l => {
+                      const over = capacityRef && l.totalLtr > capacityRef;
+                      return (
+                        <tr key={l.index}>
+                          <td style={{ ...cell, textAlign: 'left', fontWeight: 600 }}>{l.label}</td>
+                          <td style={cell}>{l.distanceNM.toFixed(0)}</td>
+                          <td style={cell}>{l.tripLtr.toFixed(1)}</td>
+                          <td style={cell}>{l.contingencyLtr.toFixed(1)}</td>
+                          <td style={cell}>{l.taxiLtr.toFixed(1)}</td>
+                          <td style={cell}>{l.finalReserveLtr.toFixed(1)}</td>
+                          <td style={cell}>{l.alternateLtr > 0 ? l.alternateLtr.toFixed(1) : '—'}</td>
+                          <td style={{ ...cell, fontWeight: 700, color: over ? 'var(--color-red-critical)' : 'var(--text-primary)' }}>
+                            {Math.ceil(l.totalLtr)}{over ? ' ⚠' : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {capacityRef && (
+                <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', fontWeight: 600, color: anyOver ? 'var(--color-red-critical)' : 'var(--text-primary)' }}>
+                  {/* Revue cran 3 : distinguer « dépasse la capacité TOTALE de
+                      l'avion » (→ escale) de « dépasse seulement les réservoirs
+                      cochés » (→ cocher plus de réservoirs, l'escale n'y peut rien) */}
+                  {anyOver
+                    ? (plan.worstLeg.totalLtr > (getFuelCapacityLtr(selectedAircraft) || Infinity)
+                      ? `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L embarquables — déplacez l'escale ou ajoutez-en une (étape Trajet).`
+                      : `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L des réservoirs cochés — cochez des réservoirs supplémentaires à l'étape Masse & Centrage (capacité totale avion : ${Math.round(getFuelCapacityLtr(selectedAircraft) || 0)} L).`)
+                    : `✓ Chaque tronçon tient dans les ${Math.round(capacityRef)} L embarquables${tankConfigAuthoritative ? ' (réservoirs cochés)' : ''} — tronçon le plus exigeant : ${Math.ceil(plan.worstLeg.totalLtr)} L.`}
+                </p>
+              )}
+            </div>
+          );
+        }
+
         if (!capacityRef || totalRequiredLtr <= capacityRef) return null;
-        const fuelStops = (waypoints || []).filter(wp => wp?.fuelStop === true);
         return (
           <div style={{
             padding: '12px 16px',
@@ -519,9 +600,8 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
             ⛽ Bilan impossible d'une traite : {Math.ceil(totalRequiredLtr)} L requis pour{' '}
             {Math.round(capacityRef)} L embarquables
             {tankConfigAuthoritative && ' (réservoirs cochés)'}.
-            {fuelStops.length > 0
-              ? ` Une escale avitaillement (${fuelStops.map(wp => wp.icao || wp.name).join(', ')}) est prévue au trajet : ce bilan est calculé D'UNE TRAITE, sans tenir compte du plein à l'escale — prévoyez le carburant tronçon par tronçon (cf. étape Trajet).`
-              : ' Retournez à l\'étape Trajet pour insérer une escale avitaillement (l\'alerte y propose des terrains sur votre route).'}
+            {' '}Retournez à l'étape Trajet pour insérer une escale avitaillement
+            (l'alerte y propose des terrains sur votre route).
           </div>
         );
       })()}
@@ -535,8 +615,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         <p style={sx.combine(sx.text.sm, sx.text.secondary, { margin: 0 })}>
           💡 La saisie du <strong>carburant embarqué (FOB)</strong> et la
           répartition par réservoir se font à l'étape <strong>Masse &amp;
-          Centrage</strong>, avec les autres masses — le total requis calculé
-          ci-dessus y sert de référence.
+          Centrage</strong>, avec les autres masses — le carburant requis
+          calculé ci-dessus y sert de référence (avec une escale
+          avitaillement&nbsp;: le TOTAL du <strong>tronçon&nbsp;1</strong>,
+          le plein étant refait à l'escale).
         </p>
       </div>
     </div>

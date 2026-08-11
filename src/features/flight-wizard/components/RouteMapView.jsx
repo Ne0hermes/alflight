@@ -171,14 +171,14 @@ const PolylineWithArrows = ({ positions, color, weight, opacity, dashArray, isRe
           symbol: L.Symbol.arrowHead({
             pixelSize: 12,
             polygon: false,
+            // 🔧 LOT 10-A — fill:false : avec polygon:false, le remplissage
+            // fermait le chevron en « pilule » orange sur chaque tronçon
             pathOptions: {
               stroke: true,
               color: color,
               weight: 2,
               opacity: opacity,
-              fill: true,
-              fillColor: color,
-              fillOpacity: opacity
+              fill: false
             }
           })
         }
@@ -436,16 +436,22 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
     const store = useWindsAloftStore.getState();
     const labels = [];
     // Aller-retour A→B→A : les deux segments ont le MÊME milieu — le second
-    // cartouche passe SOUS le trait pour rester lisible (revue lot 7)
-    const seenMids = new Set();
+    // cartouche prend le côté OPPOSÉ au premier pour rester lisible (revue lot 7)
+    const seenMids = new Map(); // midKey → below (côté pris au premier passage)
     for (let i = 0; i < validWaypoints.length - 1; i++) {
       const from = validWaypoints[i];
       const to = validWaypoints[i + 1];
       const trueCourse = calculateBearing(from.lat, from.lon, to.lat, to.lon);
       const mid = calculateMidpoint({ lat: from.lat, lon: from.lon }, { lat: to.lat, lon: to.lon });
       const midKey = `${mid.lat.toFixed(6)},${mid.lon.toFixed(6)}`;
-      const below = seenMids.has(midKey);
-      seenMids.add(midKey);
+      // 🔧 LOT 10-B — anti-chevauchement : alternance dessus/dessous par parité
+      // de segment (deux cartouches voisins ne sont jamais du même côté du
+      // trait) ; si milieux identiques (aller-retour), le second passage prend
+      // le côté OPPOSÉ à celui mémorisé au premier passage — « toujours
+      // dessous » superposait deux cartouches quand le 1er passage était un
+      // segment impair (ex. A→B→C→B→A, segments B→C et C→B)
+      const below = seenMids.has(midKey) ? !seenMids.get(midKey) : (i % 2 === 1);
+      seenMids.set(midKey, below);
       const declination = getDeclination(mid.lat, mid.lon, date);
       const magCourse = declination == null ? null : Math.round(trueToMagnetic(trueCourse, declination)) % 360;
       let wca = null;

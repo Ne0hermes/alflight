@@ -15,7 +15,11 @@ const GAL_TO_LTR = 3.78541;
 
 // `activeTankIds` (config réservoirs du vol, cf. fuelStore) : clés des réservoirs
 // embarqués — null = pas de config → tous les réservoirs déclarés (historique).
-export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelData, fuelUnit = 'ltr', activeTankIds = null) => {
+// 🔧 CRAN 3 — burnedOverrideLtr : avec une escale avitaillement, le carburant
+// brûlé jusqu'au PROCHAIN atterrissage réel est roulage + trip du TRONÇON 1
+// (l'atterrissage à destination après plein exigerait une hypothèse sur la
+// quantité avitaillée — hors règle A5). null = comportement historique.
+export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelData, fuelUnit = 'ltr', activeTankIds = null, burnedOverrideLtr = null) => {
   if (!aircraft || !calculations) return null;
 
   // ⚠️ PROTECTION CRITIQUE : Vérifier que weightBalance existe
@@ -60,7 +64,9 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   // CORRECT : carburant BRÛLÉ jusqu'à l'atterrissage destination = roulage (taxi) + trip (vol).
   // Le contingency / alternate / réserve finale restent À BORD à l'atterrissage normal.
   const fobFuelLiters = getFuelLiters(fobFuel);
-  const burnedFuelL = (fuelData?.roulage?.ltr || 0) + (fuelData?.trip?.ltr || 0);
+  const burnedFuelL = burnedOverrideLtr != null
+    ? burnedOverrideLtr
+    : (fuelData?.roulage?.ltr || 0) + (fuelData?.trip?.ltr || 0);
   const remainingFuelL = Math.max(0, fobFuelLiters - burnedFuelL);
   const remainingFuelKg = remainingFuelL * fuelDensityForCalc;
 

@@ -268,7 +268,10 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           elevation: wp.elevation || 0,
           // 🔧 LOT 8 — une escale avitaillement doit survivre au brouillon
           // (le calcul d'autonomie par tronçon en dépend)
-          fuelStop: wp.fuelStop === true
+          fuelStop: wp.fuelStop === true,
+          // 🔧 LOT 10-C — inséré par l'advisor (Retirer = supprimer) vs
+          // aérodrome du trajet marqué (Retirer = dé-marquer)
+          fuelStopInserted: wp.fuelStopInserted === true
         }));
         console.log('✅ Waypoints intermédiaires sauvegardés dans flightPlan:', flightPlan.route.waypoints.length);
       } else {

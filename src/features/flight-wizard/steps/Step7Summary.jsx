@@ -9,6 +9,8 @@ import { useUnits } from '@hooks/useUnits';
 import { useFuelStore } from '@core/stores/fuelStore';
 import { normalizeElevationToFeet } from '@utils/elevationUtils';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
+import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { calculateAeronauticalNight, formatTime as formatSunTime } from '@services/dayNightCalculator';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
@@ -315,30 +317,37 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
 
   // Calculer les vraies valeurs de carburant
+  // 🔧 CRAN 3 — avec une escale avitaillement, le « requis » comparé au FOB
+  // est celui du TRONÇON 1 (miroir exact de la validation du wizard) : le
+  // verdict de la synthèse ne doit pas contredire un vol validé.
   const fuelInfo = useMemo(() => {
-    const totalRequired = calculateTotal('ltr');
+    const legPlan = computeLegFuelPlans({
+      waypoints,
+      cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
+      taxiLtr: fuelData?.roulage?.ltr || 0,
+      finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
+      alternateLtr: fuelData?.alternate?.ltr || 0,
+      alternates: useAlternatesStore.getState().selectedAlternates,
+      aircraft: selectedAircraft
+    });
+    const isMultiLeg = !!legPlan?.isMultiLeg;
+    const totalRequired = isMultiLeg ? legPlan.legs[0].totalLtr : calculateTotal('ltr');
     const totalConfirmed = fobFuel.ltr || 0;
     const reserveFuel = fuelData.finalReserve.ltr || 0;
 
     // Déterminer le temps de réserve selon le type de vol
     const reserveTime = flightPlan.generalInfo.flightType === 'VFR' ? '30min' : '45min';
 
-    console.log('🔍 [Step7] Calcul carburant:', {
-      totalRequired,
-      totalConfirmed,
-      'fobFuel.ltr': fobFuel.ltr,
-      'fobFuel.gal': fobFuel.gal,
-      difference: totalConfirmed - totalRequired,
-      isSufficient: totalConfirmed >= totalRequired
-    });
-
     return {
       required: totalRequired,
       reserve: reserveFuel,
       reserveTime: reserveTime,
-      confirmed: totalConfirmed
+      confirmed: totalConfirmed,
+      isMultiLeg,
+      legs: legPlan?.legs || []
     };
-  }, [fuelData, fobFuel, calculateTotal, flightPlan.generalInfo.flightType]);
+  }, [fuelData, fobFuel, calculateTotal, flightPlan.generalInfo.flightType, waypoints, selectedAircraft]);
 
   // Calculer les rayons d'action basés sur le carburant
   const actionRadii = useMemo(() => {
@@ -1187,13 +1196,31 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
-                  Carburant total requis:
+                  {fuelInfo.isMultiLeg
+                    ? 'Carburant requis au décollage (tronçon 1 — plein à l\'escale):'
+                    : 'Carburant total requis:'}
                 </span>
                 <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)' }}>
                   {format(fuelInfo.required, 'fuel', 1)}
                 </strong>
               </div>
             </div>
+
+            {/* 🔧 CRAN 3 — vol en tronçons (escale avitaillement) : minima par
+                tronçon, aussi dans le PDF (explique l'écart avec le décompte) */}
+            {fuelInfo.isMultiLeg && (
+              <div className="pdf-avoid-break" style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ fontSize: 'var(--fs-body)', fontWeight: 600, marginBottom: '6px' }}>
+                  Vol en {fuelInfo.legs.length} tronçons — minimum au départ de chaque tronçon :
+                </div>
+                {fuelInfo.legs.map((l, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
+                    <span>{l.label} ({l.distanceNM.toFixed(0)} NM)</span>
+                    <strong style={{ color: 'var(--text-primary)' }}>{Math.ceil(l.totalLtr)} L</strong>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Carburant confirmé (FOB) */}
             <div style={{ paddingBottom: '12px', borderBottom: `1px solid ${theme.colors.border}` }}>
@@ -1303,8 +1330,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             }}>
               <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
                 {fuelInfo.confirmed >= fuelInfo.required ?
-                  `✓ Carburant suffisant (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
-                  `✗ Carburant insuffisant (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
+                  `✓ Carburant suffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
+                  `✗ Carburant insuffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
                 }
               </div>
             </div>

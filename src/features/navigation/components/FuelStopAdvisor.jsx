@@ -6,9 +6,9 @@
 // l'alerte disparaît quand chaque tronçon tient dans les réservoirs.
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Fuel, CheckCircle } from 'lucide-react';
-import { useNavigation } from '@core/contexts';
+import { useNavigation, useFuel } from '@core/contexts';
 import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr } from '@utils/aircraftPerf';
-import { analyzeFuelAutonomy, findFuelStopCandidates } from '../utils/fuelStopPlanner';
+import { analyzeFuelAutonomy, findFuelStopCandidates, assessRouteFuelWaypoint } from '../utils/fuelStopPlanner';
 
 const bannerBase = {
   padding: '14px 16px',
@@ -20,6 +20,9 @@ const bannerBase = {
 
 export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
   const { waypoints, setWaypoints } = useNavigation();
+  // Revue cran 3 : mêmes postes que le bilan par tronçon (roulage/dégagement
+  // si déjà calculés — 0 sinon, honnête à l'étape Trajet)
+  const { fuelData } = useFuel();
 
   // Base d'aérodromes (chargée uniquement quand l'alerte se déclenche)
   const [airports, setAirports] = useState(null); // null = pas encore chargé
@@ -35,8 +38,10 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
     cruiseSpeedKt,
     fuelConsumptionLph,
     reserveLiters,
-    capacityLtr
-  }), [waypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters, capacityLtr]);
+    capacityLtr,
+    taxiLtr: fuelData?.roulage?.ltr || 0,
+    alternateLtr: fuelData?.alternate?.ltr || 0
+  }), [waypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters, capacityLtr, fuelData]);
 
   // Charger la base d'aérodromes à la première alerte (même patron que le
   // module Déroutements : store OpenAIP, repli aeroDataProvider).
@@ -107,6 +112,46 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
     return findFuelStopCandidates({ airports, leg: analysis.worstLeg, routeWaypoints: waypoints });
   }, [analysis, airports, waypoints]);
 
+  // 🔧 LOT 10-C — aérodromes DÉJÀ DANS la navigation avec avitaillement (SIA) :
+  // proposer de les MARQUER comme escale (sans insérer de nouveau point), avec
+  // les litres minimum à avitailler compte tenu de la consommation pour y
+  // arriver (hypothèse : réservoirs pleins au départ).
+  const routeFuelOptions = useMemo(() => {
+    if (analysis.status !== 'insufficient' || !airports) return [];
+    const fuelSet = new Set(
+      airports
+        .filter(a => a.services?.fuel === true || a.fuel === true)
+        .map(a => (a.icao || '').toUpperCase())
+    );
+    const valid = waypoints.filter(wp => Number.isFinite(wp?.lat) && Number.isFinite(wp?.lon));
+    return valid
+      .slice(1, -1) // points intermédiaires uniquement (ni départ ni arrivée)
+      .filter(wp => {
+        const icao = String(wp.icao || wp.name || '').toUpperCase();
+        return /^[A-Z]{4}$/.test(icao) && fuelSet.has(icao) && wp.fuelStop !== true;
+      })
+      .map(wp => ({
+        wp,
+        icao: String(wp.icao || wp.name).toUpperCase(),
+        assessment: assessRouteFuelWaypoint({
+          waypoints,
+          waypoint: wp,
+          cruiseSpeedKt,
+          fuelConsumptionLph,
+          reserveLiters,
+          capacityLtr,
+          taxiLtr: fuelData?.roulage?.ltr || 0,
+          alternateLtr: fuelData?.alternate?.ltr || 0
+        })
+      }))
+      .filter(o => o.assessment != null);
+  }, [analysis.status, airports, waypoints, cruiseSpeedKt, fuelConsumptionLph, reserveLiters, capacityLtr, fuelData]);
+
+  const markAsFuelStop = (wp) => {
+    setWaypoints(waypoints.map(w => (w === wp ? { ...w, fuelStop: true } : w)));
+    console.log(`⛽ [FuelStopAdvisor] ${wp.icao || wp.name} marqué comme escale avitaillement`);
+  };
+
   const insertStop = (candidate) => {
     const stopWaypoint = {
       id: Date.now(),
@@ -114,6 +159,9 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
       icao: candidate.icao,
       type: 'waypoint',
       fuelStop: true,
+      // Inséré PAR l'advisor (≠ waypoint existant marqué) : « Retirer »
+      // supprime le point ; un point marqué est seulement dé-marqué
+      fuelStopInserted: true,
       lat: candidate.position.lat,
       lon: candidate.position.lon,
       elevation: candidate.elevation ?? null,
@@ -132,7 +180,13 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
   };
 
   const removeStop = (wp) => {
-    setWaypoints(waypoints.filter(w => w !== wp));
+    // Point inséré par l'advisor → suppression ; aérodrome du trajet marqué
+    // comme escale → simple dé-marquage (le waypoint reste dans la route)
+    if (wp.fuelStopInserted === true) {
+      setWaypoints(waypoints.filter(w => w !== wp));
+    } else {
+      setWaypoints(waypoints.map(w => (w === wp ? { ...w, fuelStop: false } : w)));
+    }
   };
 
   if (analysis.status === 'no-data') return null;
@@ -193,15 +247,71 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
       <div style={{ color: 'var(--text-primary)', marginTop: '6px' }}>
         Le tronçon {worst.from?.name || worst.from?.icao} → {worst.to?.name || worst.to?.icao}
         {' '}demande au minimum <strong>{fmtL(worst.requiredLtr)}</strong>
-        {' '}({fmtL(worst.tripLtr)} de vol + {fmtL(reserveLiters)} de réserve finale, hors roulage/montée/déroutement),
+        {/* Décomposition = mêmes postes que requiredLtr (revue LOT 10 : la
+            contingence — et roulage/dégagement s'ils sont renseignés — sont
+            DANS le total ; l'ancien libellé « hors roulage/déroutement »
+            était devenu faux et la somme affichée n'additionnait plus) */}
+        {' '}({fmtL(worst.tripLtr)} de vol + {fmtL(worst.contingencyLtr)} de contingence
+        {worst.taxiLtr > 0 && <> + {fmtL(worst.taxiLtr)} de roulage</>}
+        {worst.alternateLtr > 0 && <> + {fmtL(worst.alternateLtr)} de dégagement</>}
+        {' '}+ {fmtL(reserveLiters)} de réserve finale, hors montée),
         {' '}pour <strong>{fmtL(analysis.capacityLtr)}</strong> embarquables au maximum.
         {' '}Ajoutez une <strong>escale avitaillement</strong> sur la trajectoire pour refaire le plein.
       </div>
 
+      {/* 🔧 LOT 10-C — priorité aux aérodromes DÉJÀ dans la navigation */}
+      {routeFuelOptions.length > 0 && (
+        <div style={{ marginTop: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+            <Fuel size={16} color="#22c55e" />
+            Un aérodrome de votre navigation permet l'avitaillement
+          </div>
+          {routeFuelOptions.map(({ wp, icao, assessment }) => (
+            <div
+              key={icao}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+                padding: '8px 10px', marginBottom: '6px', flexWrap: 'wrap',
+                backgroundColor: 'var(--bg-surface)', border: '1px solid #22c55e',
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <strong>{icao}</strong>
+                <span style={{ color: 'var(--text-secondary)' }}> — déjà sur votre trajet</span>
+                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
+                  {assessment.reachable && assessment.restFits
+                    ? <>≈ {Math.ceil(assessment.consumedToWpLtr)} L consommés pour l'atteindre
+                      (depuis le dernier plein) · en partant réservoirs pleins, restant ≈ {Math.floor(assessment.remainingAtWpLtr)} L
+                      → <strong style={{ color: 'var(--text-primary)' }}>avitaillez au moins {Math.ceil(assessment.minRefuelLtr)} L</strong> pour
+                      finir le vol ({Math.ceil(assessment.requiredRestLtr)} L requis ensuite)</>
+                    : assessment.reachable
+                      ? <>⚠ même le plein complet ({Math.round(capacityLtr)} L) ne couvre pas la suite du vol
+                        ({Math.ceil(assessment.requiredRestLtr)} L requis) — une escale supplémentaire reste nécessaire</>
+                      : <>⚠ hors de portée même réservoirs pleins — une escale plus tôt reste nécessaire</>}
+                </div>
+              </div>
+              {assessment.reachable && assessment.restFits && (
+                <button
+                  onClick={() => markAsFuelStop(wp)}
+                  style={{
+                    padding: '6px 14px', fontSize: 'var(--fs-caption)', fontWeight: 600,
+                    color: '#ffffff', backgroundColor: '#22c55e',
+                    border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', flexShrink: 0
+                  }}
+                >
+                  ⛽ Marquer comme escale
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ marginTop: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
           <Fuel size={16} color="var(--accent-primary)" />
-          Escales suggérées (avitaillement, à moins de 15 NM de la route)
+          {routeFuelOptions.length > 0 ? 'Autres escales possibles (hors trajet, à moins de 15 NM de la route)' : 'Escales suggérées (avitaillement, à moins de 15 NM de la route)'}
         </div>
 
         {loadingAirports && (
@@ -250,8 +360,9 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
       </div>
 
       <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
-        Estimation sans vent, hors roulage/montée : affinez au bilan carburant.
-        Vérifiez les horaires d'avitaillement du terrain choisi (VAC / téléphone).
+        Estimation sans vent, hors montée : affinez au bilan carburant.
+        Avitaillement recensé par le SIA — <strong>type de carburant non précisé</strong> (AVGAS/JetA1)
+        ni horaires : vérifiez la VAC du terrain choisi ou téléphonez.
       </p>
     </div>
   );

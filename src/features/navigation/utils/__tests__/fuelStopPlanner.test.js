@@ -2,7 +2,7 @@
 // Cas de référence utilisateur : navigation demandant 88 L pour 85 L
 // embarquables → alerte, puis escale qui coupe le vol en tronçons tenables.
 import { describe, it, expect } from 'vitest';
-import { splitLegsAtFuelStops, analyzeFuelAutonomy, findFuelStopCandidates } from '../fuelStopPlanner';
+import { splitLegsAtFuelStops, analyzeFuelAutonomy, findFuelStopCandidates, assessRouteFuelWaypoint } from '../fuelStopPlanner';
 
 // Route ~240 NM plein est à 47°N (1° de longitude ≈ 40,9 NM à cette latitude)
 const A = { name: 'LFAA', icao: 'LFAA', lat: 47.0, lon: 0.0 };
@@ -41,8 +41,10 @@ describe('analyzeFuelAutonomy', () => {
     expect(r.status).toBe('insufficient');
     expect(r.worstLeg).not.toBeNull();
     expect(r.worstLeg.requiredLtr).toBeGreaterThan(85);
-    // La réserve finale est bien INCLUSE dans le requis
-    expect(r.worstLeg.requiredLtr).toBeCloseTo(r.worstLeg.tripLtr + 20, 5);
+    // Requis = trip + contingence (5 %, min 1 gal) + réserve finale (+ roulage/
+    // dégagement si fournis — 0 ici) : même critère que le bilan par tronçon
+    const expectedContingency = Math.max(3.78541, r.worstLeg.tripLtr * 0.05);
+    expect(r.worstLeg.requiredLtr).toBeCloseTo(r.worstLeg.tripLtr + expectedContingency + 20, 5);
   });
 
   it('une escale fuelStop coupe le calcul par tronçon : chaque moitié tient', () => {
@@ -161,6 +163,74 @@ describe('findFuelStopCandidates', () => {
     const airports = [mkApt('LFAA', 47.05, 3.2), mkApt('LFOK', 47.05, 3.2)];
     const r = findFuelStopCandidates({ airports, leg: leg2, routeWaypoints: [A, S, B] });
     expect(r.map(c => c.icao)).toEqual(['LFOK']);
+  });
+});
+
+describe('assessRouteFuelWaypoint (lot 10-C — avitailler à un aérodrome DU trajet)', () => {
+  // Route A → M (aérodrome avitaillable du trajet) → B ; 120 kt / 40 L/h
+  const MID = { name: 'LFQE', icao: 'LFQE', lat: 47.0, lon: 3.0 };
+  const P = {
+    waypoints: [A, MID, B],
+    cruiseSpeedKt: 120,
+    fuelConsumptionLph: 40,
+    reserveLiters: 20,
+    capacityLtr: 85,
+    taxiLtr: 5
+  };
+
+  it('calcule consommation, restant (pleins au départ) et litres minimum à avitailler', () => {
+    const r = assessRouteFuelWaypoint({ ...P, waypoint: MID });
+    // ~122 NM ≈ 1,02 h ≈ 41 L + 5 L roulage ≈ 46 L consommés
+    expect(r.consumedToWpLtr).toBeGreaterThan(40);
+    expect(r.consumedToWpLtr).toBeLessThan(55);
+    expect(r.remainingAtWpLtr).toBeCloseTo(85 - r.consumedToWpLtr, 5);
+    // Reste du vol : ~41 L trip + contingence + 20 réserve + 5 roulage ≈ 70 L
+    expect(r.requiredRestLtr).toBeGreaterThan(60);
+    // Minimum à avitailler = besoin restant − restant à bord
+    expect(r.minRefuelLtr).toBeCloseTo(Math.max(0, r.requiredRestLtr - r.remainingAtWpLtr), 5);
+    expect(r.reachable).toBe(true);
+  });
+
+  it('restant suffisant pour finir → 0 L à avitailler (pas de chiffre négatif)', () => {
+    const r = assessRouteFuelWaypoint({ ...P, capacityLtr: 300, waypoint: MID });
+    expect(r.minRefuelLtr).toBe(0);
+  });
+
+  it('point hors de portée même pleins → reachable=false', () => {
+    const r = assessRouteFuelWaypoint({ ...P, capacityLtr: 30, waypoint: MID });
+    expect(r.reachable).toBe(false);
+  });
+
+  // 🔧 REVUE LOT 10 — le point est atteignable mais même le plein complet ne
+  // couvre pas la SUITE : ne pas proposer « avitaillez X L » (impossible)
+  it('suite du vol > capacité → restFits=false (pas de bouton Marquer)', () => {
+    const NEAR = { name: 'LFNR', icao: 'LFNR', lat: 47.0, lon: 1.0 };  // ~41 NM
+    const FAR = { name: 'LFFR', icao: 'LFFR', lat: 47.0, lon: 8.0 };   // ~286 NM restants
+    const r = assessRouteFuelWaypoint({
+      ...P, waypoints: [A, NEAR, FAR], waypoint: NEAR
+    });
+    expect(r.reachable).toBe(true);
+    expect(r.requiredRestLtr).toBeGreaterThan(85);
+    expect(r.restFits).toBe(false);
+    // Et sur le cas nominal, restFits est vrai
+    expect(assessRouteFuelWaypoint({ ...P, waypoint: MID }).restFits).toBe(true);
+  });
+
+  // 🔧 REVUE LOT 10 — conso depuis le DERNIER plein : une escale marquée en
+  // AMONT remet les réservoirs à plein, le cumul depuis le départ était faux
+  it('escale marquée en amont → consommation comptée depuis cette escale', () => {
+    const STOP1 = { name: 'LFS1', icao: 'LFS1', lat: 47.0, lon: 1.5, fuelStop: true };
+    const W = { name: 'LFWW', icao: 'LFWW', lat: 47.0, lon: 4.5 };
+    const END = { name: 'LFEE', icao: 'LFEE', lat: 47.0, lon: 6.0 };
+    const r = assessRouteFuelWaypoint({ ...P, waypoints: [A, STOP1, W, END], waypoint: W });
+    // Tronçon STOP1→W ≈ 122 NM ≈ 41 L + 5 roulage ≈ 46 L — PAS ~87 L depuis A
+    expect(r.consumedToWpLtr).toBeLessThan(55);
+    expect(r.consumedToWpLtr).toBeGreaterThan(40);
+  });
+
+  it('fail-closed : waypoint absent de la route ou capacité manquante → null', () => {
+    expect(assessRouteFuelWaypoint({ ...P, waypoint: { ...MID } })).toBeNull(); // autre référence
+    expect(assessRouteFuelWaypoint({ ...P, waypoint: MID, capacityLtr: null })).toBeNull();
   });
 });
 

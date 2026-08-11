@@ -1,6 +1,6 @@
 // src/features/flight-wizard/steps/Step6WeightBalance.jsx
 import React, { memo, useMemo, useCallback, useEffect, useState, useRef } from 'react';
-import { useAircraft, useFuel, useWeightBalance } from '@core/contexts';
+import { useAircraft, useFuel, useWeightBalance, useNavigation } from '@core/contexts';
 import { LoadInput } from '@features/weight-balance/components/LoadInput';
 import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
 import { WeightBalanceChart } from '@features/weight-balance/components/WeightBalanceChart';
@@ -8,6 +8,9 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
 import { activeTankIdsFrom, aircraftTankConfigId } from '@core/stores/fuelStore';
 import { computeMaxFuel } from '@utils/maxFuel';
+import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { theme } from '../../../styles/theme';
 import { DENSITIES } from '@utils/unitConversions';
 import { getFuelDensity } from '@utils/fuelDensity';
@@ -315,6 +318,9 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     }
   }, [aircraft?.registration, setSelectedAircraft, flightPlan, onUpdate]);
 
+  // 🔧 CRAN 3 — waypoints de la navigation (découpe par tronçon aux escales)
+  const { waypoints } = useNavigation();
+
   // ─── Config réservoirs du vol (définie à l'étape Carburant) ──────────────
   // FAIT FOI pour CET avion (au moins une case touchée) → seuls les réservoirs
   // cochés comptent dans les scénarios et la répartition ; null → comportement
@@ -416,13 +422,27 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
       }, [aircraft, aircraft?.fuelType, fobFuel, updateFuelLoad]);
 
       // Calcul des scénarios
+      // 🔧 CRAN 3 — avec escale avitaillement, l'« atterrissage » du graphique
+      // est le PROCHAIN atterrissage réel (l'escale) : brûlé = roulage + trip
+      // du tronçon 1 (le trip complet clampait le carburant restant à 0 L)
       const scenarios = useMemo(() => {
         if (!aircraft || !aircraft.weightBalance || !calculations || typeof calculations.totalWeight !== 'number') {
           return null;
         }
         const fuelUnit = getUnit('fuel');
-        return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds);
-      }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds]);
+        const plan = computeLegFuelPlans({
+          waypoints,
+          cruiseSpeedKt: getCruiseSpeedKt(aircraft),
+          fuelConsumptionLph: getFuelConsumptionLph(aircraft),
+          taxiLtr: fuelData?.roulage?.ltr || 0,
+          finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
+          alternateLtr: fuelData?.alternate?.ltr || 0
+        });
+        const burnedOverride = plan?.isMultiLeg
+          ? plan.legs[0].taxiLtr + plan.legs[0].tripLtr
+          : null;
+        return calculateScenarios(aircraft, calculations, loads, fobFuel, fuelData, fuelUnit, activeTankIds, burnedOverride);
+      }, [aircraft, calculations, loads, fobFuel, fuelData, getUnit, activeTankIds, waypoints]);
 
       // 🔧 SÉCURITÉ CRITIQUE: Vérifier les limites opérationnelles de masse
       const weightLimitViolations = useMemo(() => {
@@ -1303,7 +1323,9 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
   // déroulé de saisie, ce qui rend « Volume Max (jusqu'à MTOW) » pertinent
   // (masses et bagages déjà renseignés).
   const TankPlanningBlock = memo(({ aircraft, loads, fobFuel, activeTankIds, onTankLiters }) => {
-    const { calculateTotal, tankConfig, initTankConfig, setTankActive, setFobFuel } = useFuel();
+    const { calculateTotal, tankConfig, initTankConfig, setTankActive, setFobFuel, fuelData } = useFuel();
+    // 🔧 CRAN 3 — waypoints pour le bilan PAR TRONÇON (escale avitaillement)
+    const { waypoints: routeWaypoints } = useNavigation();
 
     const aircraftTanks = Array.isArray(aircraft?.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
     const hasTanks = aircraftTanks.length > 0;
@@ -1326,8 +1348,25 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     // requiredRawLtr = même valeur que le garde-fou du wizard (comparaisons) ;
     // requiredLtr arrondi sup = AFFICHAGE uniquement (revue lot 9 : un ceil
     // dans la comparaison contredisait la validation pour 0,5 L)
-    const requiredRawLtr = (typeof calculateTotal === 'function' ? calculateTotal('ltr') : 0) || 0;
+    // 🔧 CRAN 3 — avec escale avitaillement : le FOB au décollage doit couvrir
+    // le TRONÇON 1 (le plein est refait à l'escale), pas le vol entier.
+    const legPlan = computeLegFuelPlans({
+      waypoints: routeWaypoints,
+      cruiseSpeedKt: getCruiseSpeedKt(aircraft),
+      fuelConsumptionLph: getFuelConsumptionLph(aircraft),
+      taxiLtr: fuelData?.roulage?.ltr || 0,
+      finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
+      alternateLtr: fuelData?.alternate?.ltr || 0,
+      // Revue cran 3 : supplément de déroutement PAR TRONÇON
+      alternates: useAlternatesStore.getState().selectedAlternates,
+      aircraft
+    });
+    const totalRawLtr = (typeof calculateTotal === 'function' ? calculateTotal('ltr') : 0) || 0;
+    const requiredRawLtr = legPlan?.isMultiLeg ? legPlan.legs[0].totalLtr : totalRawLtr;
     const requiredLtr = Math.ceil(requiredRawLtr);
+    const nextLegsMax = legPlan?.isMultiLeg
+      ? Math.ceil(Math.max(...legPlan.legs.slice(1).map(l => l.totalLtr)))
+      : null;
 
     const distributed = shownTanks.reduce(
       (s, { tank, i }) => s + (parseFloat(loads[`fuel_${tank.id ?? i}`]) || 0), 0
@@ -1505,14 +1544,23 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           fobLtr >= requiredRawLtr - 0.01 ? (
             <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: 'rgba(34, 197, 94, 0.10)', borderLeft: '3px solid #22c55e', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', fontWeight: '600' }}>
               ✓ Carburant SUFFISANT — excédent {(fobLtr - requiredRawLtr).toFixed(1)} L
-              par rapport au bilan ({requiredLtr} L requis).
+              par rapport au bilan{legPlan?.isMultiLeg ? ' du tronçon 1' : ''} ({requiredLtr} L requis).
             </div>
           ) : (
             <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: 'rgba(192, 69, 52, 0.12)', borderLeft: '3px solid var(--color-red-critical)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)', fontWeight: '600' }}>
               ⚠️ Carburant INSUFFISANT — manque {(requiredRawLtr - fobLtr).toFixed(1)} L
-              par rapport au bilan ({requiredLtr} L requis).
+              par rapport au bilan{legPlan?.isMultiLeg ? ' du tronçon 1' : ''} ({requiredLtr} L requis).
             </div>
           )
+        )}
+        {legPlan?.isMultiLeg && nextLegsMax != null && (
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
+            ⛽ Escale avitaillement prévue : refaites le plein à{' '}
+            {legPlan.legs.length > 2 ? 'chaque escale' : 'l\'escale'} — au moins{' '}
+            <strong>{nextLegsMax} L</strong> au départ{' '}
+            {legPlan.legs.length > 2 ? 'de chaque tronçon suivant' : 'du tronçon suivant'}{' '}
+            (détail au Bilan carburant, tableau par tronçon).
+          </p>
         )}
       </div>
     );

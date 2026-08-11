@@ -15,6 +15,7 @@ import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseServ
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
 import { showNotification } from '@shared/components/Notification';
 import html2pdf from 'html2pdf.js';
 
@@ -53,7 +54,25 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
   const aircraftList = aircraftSelectors.useAircraftList();
   const selectedAircraft = aircraftSelectors.useSelectedAircraft(); // Hook pour récupérer l'avion sélectionné
   const { setWaypoints, waypoints, segmentAltitudes, setFlightType } = useNavigation();
-  const { setFobFuel, calculateTotal } = useFuel();
+  const { setFobFuel, calculateTotal, fuelData } = useFuel();
+
+  // 🔧 CRAN 3 — carburant requis pour la VALIDATION de l'étape M&C : avec une
+  // escale avitaillement (waypoint fuelStop), le FOB au décollage doit couvrir
+  // le TRONÇON 1 (plein refait à l'escale), sinon le vol entier.
+  const requiredFobForValidation = () => {
+    const plan = computeLegFuelPlans({
+      waypoints,
+      cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
+      taxiLtr: fuelData?.roulage?.ltr || 0,
+      finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
+      alternateLtr: fuelData?.alternate?.ltr || 0,
+      // Revue cran 3 : supplément de déroutement PAR TRONÇON
+      alternates: useAlternatesStore.getState().selectedAlternates,
+      aircraft: selectedAircraft
+    });
+    return plan?.isMultiLeg ? plan.legs[0].totalLtr : calculateTotal('ltr');
+  };
   const { setWeatherData } = useWeather();
   const navigationResults = useNavigationResults();
 
@@ -244,7 +263,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             elevation: wp.elevation || 0,
             // 🔧 LOT 8 — restaurer le statut d'escale avitaillement (le calcul
             // d'autonomie par tronçon en dépend)
-            fuelStop: wp.fuelStop === true
+            fuelStop: wp.fuelStop === true,
+            fuelStopInserted: wp.fuelStopInserted === true
           });
         });
       }
@@ -380,16 +400,16 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       // (enveloppe réelle complexe — cf. graphique).
       validate: () => {
         const fob = flightPlan.fuel.confirmed || 0;
-        const totalRequired = calculateTotal('ltr');
+        const totalRequired = requiredFobForValidation();
         return fob > 0 && fob >= totalRequired - 0.01;
       },
       errorMessage: () => {
         const fob = flightPlan.fuel.confirmed || 0;
-        const totalRequired = calculateTotal('ltr');
+        const totalRequired = requiredFobForValidation();
         if (!fob) {
           return 'Veuillez saisir le carburant embarqué (FOB) — section « Carburant embarqué et répartition » ci-dessus.';
         }
-        return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis (carburant de dégagement inclus), ${Math.round(fob)} L embarqués. Augmentez le carburant.`;
+        return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis au décollage, ${Math.round(fob)} L embarqués. Augmentez le carburant.`;
       }
     },
     {
