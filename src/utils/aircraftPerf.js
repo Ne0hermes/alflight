@@ -25,3 +25,18 @@ export function getFuelConsumptionLph(aircraft) {
   const v = parseFloat(aircraft.fuelConsumption);
   return Number.isFinite(v) && v > 0 ? v : null;
 }
+
+/**
+ * 🔧 LOT 8 — Capacité carburant TOTALE (L) : fuelCapacity prioritaire, sinon
+ * fuel.capacity. Convention CANONIQUE litres (aircraftStore) — PAS d'heuristique
+ * gallons ici : elle gonflerait ×3,785 la capacité d'un ULM à 55 L et
+ * SUPPRIMERAIT l'alerte d'autonomie (fail-open interdit, règle A5). Une vieille
+ * donnée réellement en gallons sous-estime la capacité → alerte à tort, jamais
+ * l'inverse. Null si absente/≤0 (fail-closed).
+ * @returns {number|null} litres, ou null.
+ */
+export function getFuelCapacityLtr(aircraft) {
+  if (!aircraft) return null;
+  const raw = parseFloat(aircraft.fuelCapacity ?? aircraft.fuel?.capacity);
+  return Number.isFinite(raw) && raw > 0 ? raw : null;
+}

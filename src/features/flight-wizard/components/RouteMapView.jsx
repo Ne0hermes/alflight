@@ -656,10 +656,11 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={true}
           zoomControl={false}
+          attributionControl={false}
         >
-        {/* Couche de tuiles OpenStreetMap */}
+        {/* Couche de tuiles OpenStreetMap — 🔧 LOT 9-B : contrôle d'attribution
+            masqué sur la carte ; mention licence OSM affichée sous la carte */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
@@ -880,6 +881,11 @@ export const RouteMapView = ({ vfrPoints = [], flightPlan = null, todCalculation
       {/* 🔧 LOT 7 — légende/définitions RETIRÉES de la carte (demande pilote) :
           l'information de cap vit désormais dans les cartouches par tronçon. */}
     </div>
+
+    {/* Mention licence OSM (obligatoire ODbL) — discrète, SOUS la carte */}
+    <p style={{ margin: '2px 0 0', fontSize: '9px', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+      Fond de carte © contributeurs OpenStreetMap
+    </p>
     </>
   );
 };

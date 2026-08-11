@@ -2,13 +2,13 @@
 import React, { memo, useState, useEffect, useMemo } from 'react';
 import NavigationModule from '@features/navigation/NavigationModule';
 // SUPPRIMÉ: AlternatesModule - déplacé à l'étape 7 (après bilan carburant)
-import { Map, Info } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
 import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
 import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import FuelStopAdvisor from '@features/navigation/components/FuelStopAdvisor';
 // SUPPRIMÉ: useUnits - plus nécessaire
 
 // Styles communs
@@ -265,7 +265,10 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           coordinates: wp.lat && wp.lon ? { lat: wp.lat, lng: wp.lon } : null,
           lat: wp.lat,
           lon: wp.lon,
-          elevation: wp.elevation || 0
+          elevation: wp.elevation || 0,
+          // 🔧 LOT 8 — une escale avitaillement doit survivre au brouillon
+          // (le calcul d'autonomie par tronçon en dépend)
+          fuelStop: wp.fuelStop === true
         }));
         console.log('✅ Waypoints intermédiaires sauvegardés dans flightPlan:', flightPlan.route.waypoints.length);
       } else {
@@ -423,6 +426,13 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           </span>
         </div>
       )}
+
+      {/* 🔧 LOT 8 — alerte autonomie insuffisante + suggestions d'escale
+          avitaillement (dès la création de la navigation, demande pilote) */}
+      <FuelStopAdvisor
+        selectedAircraft={selectedAircraft}
+        navigationResults={navigationResults}
+      />
 
       {/* Module de navigation complet pour la gestion des waypoints */}
       <div style={commonStyles.section}>

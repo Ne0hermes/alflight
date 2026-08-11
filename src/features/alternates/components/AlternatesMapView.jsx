@@ -274,7 +274,11 @@ export const AlternatesMapView = memo(({
     );
   }
 
+  // 🔧 REVUE LOT 9 — le conteneur 400px overflow:hidden ne DOIT contenir que la
+  // carte : la mention OSM et les infos de distance vivent APRÈS lui (elles
+  // étaient clippées, donc invisibles).
   return (
+    <>
     <div style={{
       height: '400px',
       borderRadius: 'var(--radius-sm)',
@@ -290,59 +294,21 @@ export const AlternatesMapView = memo(({
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
         zoomControl={false}
+        attributionControl={false}
       >
+        {/* 🔧 LOT 9-B — contrôle d'attribution masqué sur la carte (demande
+            pilote) ; la mention licence OSM reste affichée sous la carte */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {/* Ajuster automatiquement la vue */}
         {bounds && <FitBounds bounds={bounds} />}
 
-        {/* 🔧 LOT 7 — visualisation du CORRIDOR : union de cercles échantillonnés
-            le long de la trajectoire (rendu « bande » autour de la route).
-            Remplace le cercle « rayon d'action » autour de la base. */}
-        {searchZone?.type === 'corridor' && searchZone.radius > 0 && routeLine.length > 1 && (() => {
-          const radiusM = searchZone.radius * 1852;
-          // 🔧 REVUE LOT 7 — pas ADAPTATIF à la longueur totale : le budget de
-          // ~100 cercles doit couvrir TOUTE la route (un plafond fixe tronquait
-          // la bande en cours de route sur une longue nav à corridor étroit)
-          let totalNM = 0;
-          for (let i = 0; i < routeLine.length - 1; i++) {
-            totalNM += calculateDistance(
-              { lat: routeLine[i][0], lon: routeLine[i][1] },
-              { lat: routeLine[i + 1][0], lon: routeLine[i + 1][1] }
-            );
-          }
-          const stepNM = Math.max(searchZone.radius / 2, 2, totalNM / 100);
-          const samples = [];
-          for (let i = 0; i < routeLine.length - 1 && samples.length < 120; i++) {
-            const from = { lat: routeLine[i][0], lon: routeLine[i][1] };
-            const to = { lat: routeLine[i + 1][0], lon: routeLine[i + 1][1] };
-            const distNM = calculateDistance(from, to);
-            const n = Math.max(1, Math.ceil(distNM / stepNM));
-            // k démarre à 1 après le premier segment (le point k=0 duplique le
-            // point k=n du segment précédent)
-            for (let k = (i === 0 ? 0 : 1); k <= n && samples.length < 120; k++) {
-              const t = k / n;
-              samples.push([from.lat + (to.lat - from.lat) * t, from.lon + (to.lon - from.lon) * t]);
-            }
-          }
-          return samples.map((pos, idx) => (
-            <Circle
-              key={`corridor-${idx}`}
-              center={pos}
-              radius={radiusM}
-              interactive={false}
-              pathOptions={{
-                color: 'transparent',
-                fillColor: 'var(--accent-primary)',
-                fillOpacity: 0.05,
-                weight: 0
-              }}
-            />
-          ));
-        })()}
+        {/* 🔧 LOT 9-A — la BANDE orange du corridor (« pilule ») n'est plus
+            dessinée, à la demande du pilote : le corridor reste actif comme
+            FILTRE (curseur 0-50 NM) et la liste affiche la distance à la route,
+            mais la carte ne superpose plus de zone colorée. */}
 
         {/* Repli : ancien cercle circulaire si la zone n'est pas un corridor */}
         {searchZone?.type !== 'corridor' && dynamicRadius && searchZone && searchZone.departure && (
@@ -526,6 +492,12 @@ export const AlternatesMapView = memo(({
           </CircleMarker>
         ))}
       </MapContainer>
+    </div>
+
+      {/* Mention licence OSM (obligatoire ODbL) — discrète, SOUS le conteneur */}
+      <div style={{ padding: '2px 8px', fontSize: '9px', color: 'var(--text-tertiary)', textAlign: 'right' }}>
+        Fond de carte © contributeurs OpenStreetMap
+      </div>
 
       {/* Informations de distance sous la carte */}
       {routeDistance > 0 && (
@@ -578,7 +550,7 @@ export const AlternatesMapView = memo(({
               a été retiré avec la disparition des côtés de sélection */}
         </div>
       )}
-    </div>
+    </>
   );
 });
 

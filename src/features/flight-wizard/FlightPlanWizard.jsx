@@ -14,6 +14,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { showNotification } from '@shared/components/Notification';
 import html2pdf from 'html2pdf.js';
 
@@ -240,7 +241,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
             name: wp.name,
             lat: wp.coordinates?.lat || wp.lat,
             lon: wp.coordinates?.lng || wp.coordinates?.lon || wp.lon,
-            elevation: wp.elevation || 0
+            elevation: wp.elevation || 0,
+            // 🔧 LOT 8 — restaurer le statut d'escale avitaillement (le calcul
+            // d'autonomie par tronçon en dépend)
+            fuelStop: wp.fuelStop === true
           });
         });
       }
@@ -358,8 +362,22 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       title: 'Bilan Carburant',
       description: '',
       component: Step5Fuel,
-      // Garde-fou : le FOB confirmé doit couvrir le minimum requis (carburant de
-      // dégagement inclus, désormais calculé car l'alternate est choisi à l'étape 3).
+      // 🔧 LOT 9-C — le FOB se saisit désormais à l'étape Masse & Centrage :
+      // cette étape valide seulement que le BESOIN est calculable — test direct
+      // des données avion (revue lot 9 : calculateTotal > 0 était toujours vrai
+      // à cause des postes par défaut).
+      validate: () => getFuelConsumptionLph(selectedAircraft) != null && getCruiseSpeedKt(selectedAircraft) != null,
+      errorMessage: () =>
+        'Le bilan carburant n\'a pas pu être calculé (vitesse de croisière ou consommation de l\'avion manquante ?). Vérifiez les données de l\'avion avant de continuer.'
+    },
+    {
+      number: 6,
+      title: 'Masse et Centrage',
+      description: 'Passagers, bagages et carburant embarqué',
+      component: Step6WeightBalance,
+      // 🔧 LOT 9-C — le FOB (saisi ici, en dernier dans le déroulé) doit couvrir
+      // le minimum du bilan carburant. La conformité CG reste visuelle
+      // (enveloppe réelle complexe — cf. graphique).
       validate: () => {
         const fob = flightPlan.fuel.confirmed || 0;
         const totalRequired = calculateTotal('ltr');
@@ -369,22 +387,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         const fob = flightPlan.fuel.confirmed || 0;
         const totalRequired = calculateTotal('ltr');
         if (!fob) {
-          return 'Veuillez confirmer la quantité de carburant à embarquer (FOB - Fuel On Board) avant de continuer.';
+          return 'Veuillez saisir le carburant embarqué (FOB) — section « Carburant embarqué et répartition » ci-dessus.';
         }
-        return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis (carburant de dégagement inclus), ${Math.round(fob)} L confirmés. Augmentez le carburant embarqué.`;
-      }
-    },
-    {
-      number: 6,
-      title: 'Masse et Centrage',
-      description: 'Passagers et bagages',
-      component: Step6WeightBalance,
-      validate: () => {
-        // ⚠️ TEMP FIX: La validation stricte du CG utilise des limites simplifiées
-        // alors que l'enveloppe réelle est complexe (varie selon le poids).
-        // On accepte toute configuration tant que l'utilisateur a saisi des valeurs.
-        // Le graphique visuel montre la vraie conformité à l'enveloppe.
-        return true; // Validation visuelle uniquement via le graphique
+        return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis (carburant de dégagement inclus), ${Math.round(fob)} L embarqués. Augmentez le carburant.`;
       }
     },
     {
