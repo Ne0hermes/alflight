@@ -16,6 +16,30 @@ import { useAircraftStore } from '@core/stores/aircraftStore';
 
 const MARKER_KEY = 'homeBaseAutoImport';
 
+// 🔧 REVUE LOT 11 (critique) — Ajout STRICTEMENT LOCAL (liste + IndexedDB).
+// Surtout PAS addAircraft : c'est le chemin de SOUMISSION (submitPreset →
+// UPDATE de la fiche communautaire PARTAGÉE — écrasement de version, et sous
+// RLS stricte échec + retry à chaque session). Un import automatique doit
+// être en lecture seule côté Supabase.
+async function addAircraftLocalOnly(aircraftData) {
+  const localId = `aircraft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  // Copie complète (photo incluse) dans IndexedDB sous l'id local forgé
+  const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+  await dataBackupManager.saveAircraftData({ ...aircraftData, id: localId, aircraftId: localId });
+  // Liste locale allégée — mêmes exclusions que l'optimistic update d'addAircraft
+  const { photo, profilePhoto, manex, weighingReport, ...light } = aircraftData;
+  const aircraft = {
+    ...light,
+    id: localId,
+    aircraftId: localId,
+    hasPhoto: !!(photo || profilePhoto || aircraftData.hasPhoto),
+    hasManex: !!(manex || aircraftData.hasManex),
+    hasWeighingReport: !!(weighingReport || aircraftData.hasWeighingReport)
+  };
+  useAircraftStore.setState(s => ({ aircraftList: [...(s.aircraftList || []), aircraft] }));
+  return aircraft;
+}
+
 const readMarker = () => {
   try { return JSON.parse(localStorage.getItem(MARKER_KEY)) || {}; } catch { return {}; }
 };
@@ -44,11 +68,36 @@ export async function syncHomeBaseAircraft(homeBaseIcao) {
   const bases = marker.bases
     || (marker.icao ? { [marker.icao]: marker.processedIds || [] } : {});
   const processed = new Set(bases[icao] || []);
+  const state = useAircraftStore.getState();
   const knownRegs = new Set(
-    (useAircraftStore.getState().aircraftList || [])
+    (state.aircraftList || [])
       .map(a => (a.registration || '').trim().toUpperCase())
       .filter(Boolean)
   );
+  // 🛡️ CHEMIN BOOT : au démarrage sur la landing page, FlightSystemProviders
+  // n'est PAS monté (MobileApp rend la home sans providers) → AircraftProvider,
+  // seul hydrateur du store depuis IndexedDB, n'a pas tourné : aircraftList
+  // est VIDE et la garde « immatriculation déjà présente » ne protège rien.
+  // Conséquence sans ce bloc : ré-import d'un avion déjà possédé → record
+  // IndexedDB doublon (ou écrasement direct sous le même id Supabase), puis
+  // l'auto-réparation du boot suivant garde la copie communautaire (la plus
+  // récente) et ÉCRASE les éditions locales du pilote. On dérive donc les
+  // immatriculations connues d'IndexedDB — la source de vérité locale —
+  // tant que le store n'est pas hydraté. Échec de lecture → fail-closed :
+  // aucun import, marqueur intact (nouvel essai à la prochaine session).
+  if (!state.isInitialized) {
+    try {
+      const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+      const stored = await dataBackupManager.getAllFromStore('aircraftData');
+      for (const a of stored || []) {
+        const reg = (a?.registration || '').trim().toUpperCase();
+        if (reg) knownRegs.add(reg);
+      }
+    } catch (e) {
+      console.warn('⚠️ [HomeBaseSync] Store non hydraté et IndexedDB illisible — import annulé :', e?.message);
+      return { imported: [], skipped: 0 };
+    }
+  }
 
   const imported = [];
   let skipped = 0;
@@ -62,7 +111,9 @@ export async function syncHomeBaseAircraft(homeBaseIcao) {
     try {
       const aircraftData = await communityService.getPresetById(preset.id);
       if (!aircraftData?.registration) { processed.add(preset.id); continue; }
-      await useAircraftStore.getState().addAircraft(aircraftData);
+      // Ajout LOCAL uniquement (jamais addAircraft : chemin de soumission
+      // Supabase — cf. addAircraftLocalOnly ci-dessus, revue lot 11)
+      await addAircraftLocalOnly(aircraftData);
       imported.push(reg);
       knownRegs.add(reg);
       processed.add(preset.id);
