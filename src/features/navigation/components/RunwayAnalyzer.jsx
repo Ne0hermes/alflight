@@ -27,8 +27,14 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
   const reasons = [];
   let compatible = true;
 
+  // Forme de données SIA/AIXM actuelle : distances déclarées À PLAT (m) sur la
+  // piste (tora/toda/asda/lda), longueur en runway.length. Repli sur la
+  // longueur brute si la distance déclarée est absente.
+  const todaM = runway.toda ?? runway.length ?? runway.dimensions?.length ?? 0;
+  const ldaM = runway.lda ?? runway.length ?? runway.dimensions?.length ?? 0;
+
   // 🛫 Vérification distance de décollage (TODA)
-  const todaFeet = metersToFeet(runway.dimensions?.toda || runway.dimensions?.length || 0);
+  const todaFeet = metersToFeet(todaM);
   const requiredTakeoffDistance = aircraft.distances?.takeoffDistance50ft || aircraft.distances?.takeoffDistance15m;
 
   if (requiredTakeoffDistance && todaFeet > 0) {
@@ -39,7 +45,7 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
   }
 
   // 🛬 Vérification distance d'atterrissage (LDA)
-  const ldaFeet = metersToFeet(runway.dimensions?.lda || runway.dimensions?.length || 0);
+  const ldaFeet = metersToFeet(ldaM);
   const requiredLandingDistance = aircraft.distances?.landingDistance50ft || aircraft.distances?.landingDistance15m;
 
   if (requiredLandingDistance && ldaFeet > 0) {
@@ -49,15 +55,15 @@ const analyzeRunwayCompatibility = (runway, aircraft) => {
     }
   }
 
-  // 🏗️ Vérification surface de piste
-  const surface = runway.surface?.type || 'UNKNOWN';
-  const surfaceInfo = SURFACE_TYPES[surface] || { name: surface, icon: '❓', quality: 0.5 };
+  // 🏗️ Vérification surface de piste — surface est désormais une chaîne directe
+  const surfaceRaw = typeof runway.surface === 'string' ? runway.surface : (runway.surface?.type || 'UNKNOWN');
+  const surfaceInfo = SURFACE_TYPES[surfaceRaw] || { name: surfaceRaw, icon: '❓', quality: 0.5 };
 
   // Utiliser compatibleRunwaySurfaces depuis les données d'avion
   if (aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0) {
-    if (!isSurfaceCompatible(runway.surface?.type || runway.surface, aircraft.compatibleRunwaySurfaces)) {
+    if (!isSurfaceCompatible(runway.surface, aircraft.compatibleRunwaySurfaces)) {
       compatible = false;
-      reasons.push(`❌ Surface ${surfaceInfo.name || surface} non autorisée pour cet avion`);
+      reasons.push(`❌ Surface ${surfaceInfo.name || surfaceRaw} non autorisée pour cet avion`);
     } else {
       // Surface autorisée mais performances réduites si qualité < 0.8
       if (surfaceInfo.quality < 0.8) {
@@ -255,11 +261,11 @@ export const RunwayAnalyzer = ({ icao }) => {
                   <div style={sx.flex.row}>
                     <div>
                       <h5 style={sx.combine(sx.text.base, sx.text.bold)}>
-                        Piste {runway.designator || `${runway.le_ident}/${runway.he_ident}`}
+                        Piste {runway.designation || runway.identifier || `${runway.le_ident ?? ''}/${runway.he_ident ?? ''}`}
                       </h5>
                       <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
-                        {runway.surface?.type ? SURFACE_TYPES[runway.surface.type]?.name || runway.surface.type : 'Surface inconnue'}
-                        {runway.dimensions?.width && ` • Largeur: ${runway.dimensions.width}m`}
+                        {(() => { const s = typeof runway.surface === 'string' ? runway.surface : runway.surface?.type; return s ? (SURFACE_TYPES[s]?.name || s) : 'Surface inconnue'; })()}
+                        {(runway.width ?? runway.dimensions?.width) ? ` • Largeur: ${runway.width ?? runway.dimensions?.width}m` : ''}
                       </p>
                     </div>
                     {analysis && (
@@ -281,12 +287,12 @@ export const RunwayAnalyzer = ({ icao }) => {
                 <div style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
                   <div style={sx.combine(sx.flex.row, sx.spacing.gap(4))}>
                     <div>
-                      <strong>TODA:</strong> {runway.dimensions?.toda || runway.dimensions?.length || 'N/A'} m
-                      {runway.dimensions?.toda && ` (${metersToFeet(runway.dimensions.toda)} ft)`}
+                      <strong>TODA:</strong> {runway.toda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                      {runway.toda ? ` (${metersToFeet(runway.toda)} ft)` : ''}
                     </div>
                     <div>
-                      <strong>LDA:</strong> {runway.dimensions?.lda || runway.dimensions?.length || 'N/A'} m
-                      {runway.dimensions?.lda && ` (${metersToFeet(runway.dimensions.lda)} ft)`}
+                      <strong>LDA:</strong> {runway.lda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                      {runway.lda ? ` (${metersToFeet(runway.lda)} ft)` : ''}
                     </div>
                   </div>
                 </div>
@@ -314,20 +320,20 @@ export const RunwayAnalyzer = ({ icao }) => {
                       </h6>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                         <div style={sx.text.xs}>
-                          <strong>TORA:</strong> {runway.dimensions?.tora || runway.dimensions?.length || 'N/A'} m
-                          {runway.dimensions?.tora && ` (${metersToFeet(runway.dimensions.tora)} ft)`}
+                          <strong>TORA:</strong> {runway.tora ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                          {runway.tora ? ` (${metersToFeet(runway.tora)} ft)` : ''}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>TODA:</strong> {runway.dimensions?.toda || runway.dimensions?.length || 'N/A'} m
-                          {runway.dimensions?.toda && ` (${metersToFeet(runway.dimensions.toda)} ft)`}
+                          <strong>TODA:</strong> {runway.toda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                          {runway.toda ? ` (${metersToFeet(runway.toda)} ft)` : ''}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>ASDA:</strong> {runway.dimensions?.asda || runway.dimensions?.length || 'N/A'} m
-                          {runway.dimensions?.asda && ` (${metersToFeet(runway.dimensions.asda)} ft)`}
+                          <strong>ASDA:</strong> {runway.asda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                          {runway.asda ? ` (${metersToFeet(runway.asda)} ft)` : ''}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>LDA:</strong> {runway.dimensions?.lda || runway.dimensions?.length || 'N/A'} m
-                          {runway.dimensions?.lda && ` (${metersToFeet(runway.dimensions.lda)} ft)`}
+                          <strong>LDA:</strong> {runway.lda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
+                          {runway.lda ? ` (${metersToFeet(runway.lda)} ft)` : ''}
                         </div>
                       </div>
                     </div>

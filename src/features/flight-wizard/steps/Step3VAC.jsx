@@ -10,6 +10,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
 import { separateRunwayDirections } from '@utils/runwayDirections';
+import RunwayAnalyzer from '@features/navigation/components/RunwayAnalyzer';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 /**
@@ -638,6 +639,10 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                     {/* Section Pistes */}
                     {currentSection === 'runways' && (
                       <div style={styles.section}>
+                        {/* Verdict de compatibilité piste ↔ avion sélectionné
+                            (distances POH de l'avion + surface). Complète la
+                            liste brute des pistes ci-dessous. */}
+                        <RunwayAnalyzer icao={aerodrome.icao} />
                         {aerodrome.runways && aerodrome.runways.length > 0 ? (
                           aerodrome.runways.flatMap(separateRunwayDirections).map((rwy, idx) => (
                             <div key={idx} style={styles.runwayCard}>

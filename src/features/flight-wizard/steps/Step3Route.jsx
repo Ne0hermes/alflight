@@ -8,6 +8,7 @@ import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
 import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import DangerousZonesDetector from '@features/navigation/components/DangerousZonesDetector';
 import FuelStopAdvisor from '@features/navigation/components/FuelStopAdvisor';
 // SUPPRIMÉ: useUnits - plus nécessaire
 
@@ -448,6 +449,14 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
             simplifiedView: true
           }}
         />
+      </div>
+
+      {/* Analyse des zones dangereuses survolées + équipements de survie SAR
+          obligatoires (NCO.IDE.A.165/170) + codes case 19 du plan de vol.
+          Composant auto-géré (détection auto depuis les waypoints + ajustement
+          manuel), affiché à titre informatif à ce stade. */}
+      <div style={commonStyles.section}>
+        <DangerousZonesDetector waypoints={waypoints} />
       </div>
 
     </div>
