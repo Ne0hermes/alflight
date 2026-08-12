@@ -456,7 +456,7 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
           Composant auto-géré (détection auto depuis les waypoints + ajustement
           manuel), affiché à titre informatif à ce stade. */}
       <div style={commonStyles.section}>
-        <DangerousZonesDetector waypoints={waypoints} />
+        <DangerousZonesDetector waypoints={waypoints} plannedAltitude={plannedAltitude} />
       </div>
 
     </div>
