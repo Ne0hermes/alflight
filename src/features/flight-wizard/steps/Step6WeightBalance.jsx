@@ -1338,7 +1338,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
       if (hasTanks && aircraftKey != null) initTankConfig(aircraftKey);
     }, [hasTanks, aircraftKey, initTankConfig]);
 
-    const density = getFuelDensity(aircraft?.fuelType) ?? DENSITIES.AVGAS;
+    // C3.6 (ANO-14) : repli AVGAS SIGNALÉ — cette densité ne sert qu'à
+    // l'affichage de la masse PAR RÉSERVOIR (FuelTankInput). Aligné sur le
+    // flux ligne 767 ; le verdict de centrage du store reste fail-closed.
+    let density = getFuelDensity(aircraft?.fuelType);
+    if (density == null) {
+      console.warn('[Step6/TankPlanning] Densité inconnue — repli AVGAS (affichage masse réservoir uniquement):', aircraft?.fuelType);
+      density = DENSITIES.AVGAS;
+    }
     const fobLtr = typeof fobFuel === 'number' ? fobFuel : (fobFuel?.ltr || 0);
     const configEngaged = Array.isArray(activeTankIds);
     const activeSet = configEngaged ? new Set(activeTankIds.map(String)) : new Set();

@@ -15,7 +15,6 @@ export {
 
 // Export des composants si nécessaire
 export { AlternateDetails } from './components/AlternateDetails';
-export { AlternateSelector } from './components/AlternateSelector';
 
 // Export des utilitaires
 export { 
