@@ -564,6 +564,21 @@ const PilotProfile = () => {
       // Notifier que le profil est configuré (pour débloquer l'accès aux autres modules)
       window.dispatchEvent(new CustomEvent('profile-configured'));
       alert('Profil sauvegardé avec succès !\n\nVous avez maintenant accès à toutes les fonctionnalités d\'ALFlight.');
+
+      // 🔧 LOT 11 — base d'attache renseignée : proposer d'office les avions
+      // communautaires rattachés à ce terrain (import silencieux, dédupliqué,
+      // jamais bloquant — les échecs réseau sont simplement ignorés)
+      if (profile.homeBase) {
+        try {
+          const { syncHomeBaseAircraft } = await import('@features/aircraft/services/homeBaseAircraftSync');
+          const result = await syncHomeBaseAircraft(profile.homeBase);
+          if (result.imported.length > 0) {
+            alert(`✈️ ${result.imported.length} avion${result.imported.length > 1 ? 's' : ''} de votre base ${profile.homeBase.toUpperCase()} importé${result.imported.length > 1 ? 's' : ''} depuis la communauté :\n${result.imported.join(', ')}\n\nRetrouvez-le${result.imported.length > 1 ? 's' : ''} dans le module Avions.`);
+          }
+        } catch (e) {
+          console.warn('⚠️ Import des avions de la base impossible :', e?.message);
+        }
+      }
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
       alert('Erreur lors de la sauvegarde du profil: ' + error.message);

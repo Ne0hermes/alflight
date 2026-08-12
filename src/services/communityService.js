@@ -292,6 +292,33 @@ class CommunityService {
   }
 
   /**
+   * 🔧 LOT 11 — Presets communautaires rattachés à un aérodrome d'attache.
+   * Filtre côté Supabase sur le JSON `aircraft_data->>homeBase` (PostgREST
+   * accepte les opérateurs JSON dans les filtres — aucune colonne dédiée ni
+   * migration nécessaire). Métadonnées seulement : aircraft_data complet est
+   * chargé à l'import via getPresetById.
+   * @param {string} homeBaseIcao code OACI de la base (ex. 'LFGA')
+   * @returns {Promise<Array<{id, registration, model, manufacturer}>>}
+   */
+  async getPresetsByHomeBase(homeBaseIcao) {
+    const icao = String(homeBaseIcao || '').trim().toUpperCase();
+    if (!/^[A-Z]{4}$/.test(icao)) return [];
+    try {
+      const { data, error } = await supabase
+        .from('community_presets')
+        .select('id, registration, model, manufacturer, aircraft_type, version, has_manex')
+        .eq('status', 'active')
+        .ilike('aircraft_data->>homeBase', icao);
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      // Non bloquant : l'import automatique est un confort, jamais une erreur
+      console.warn('⚠️ [CommunityService] getPresetsByHomeBase :', e?.message);
+      return [];
+    }
+  }
+
+  /**
    * Obtenir l'URL de téléchargement d'un MANEX
    * @param {string} filePath
    * @returns {string}

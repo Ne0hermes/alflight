@@ -88,6 +88,25 @@ const MobileApp = () => {
     return hasRequiredFields;
   };
 
+  // 🔧 LOT 11 — avions communautaires de la base d'attache : import
+  // automatique au démarrage (une fois par session, dédupliqué, jamais
+  // ré-importé après suppression). Différé pour ne pas ralentir le boot.
+  // Effet à dépendances [] : planifié une seule fois au montage (et non à
+  // chaque changement d'onglet), et le timer est nettoyé au démontage.
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      import('@features/aircraft/services/homeBaseAircraftSync')
+        .then(({ syncHomeBaseAircraftAtBoot }) => syncHomeBaseAircraftAtBoot())
+        .then((result) => {
+          if (result?.imported?.length > 0) {
+            console.log(`✈️ [Boot] ${result.imported.length} avion(s) de la base importé(s) :`, result.imported.join(', '));
+          }
+        })
+        .catch((e) => console.warn('⚠️ [Boot] Sync avions de la base :', e?.message));
+    }, 4000);
+    return () => clearTimeout(timerId);
+  }, []);
+
   useEffect(() => {
     // Vérifier si le profil est configuré au démarrage
     checkProfileConfiguration();
