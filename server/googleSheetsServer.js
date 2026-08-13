@@ -40,13 +40,16 @@ app.use((req, res, next) => {
 // Configuration Google Sheets
 const SPREADSHEET_ID = '1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k';
 const SHEET_NAME = 'Tracking';
-// 🔒 Lot 0.3 / préparation rotation (Lot 0.2) : le chemin de la clé vient
-// d'abord de l'environnement — placez la NOUVELLE clé HORS du dépôt et
-// définissez SHEETS_CREDENTIALS_PATH (ex. C:\Users\<vous>\.secrets\alflight-sheets.json).
-// Les anciens chemins restent en repli temporaire jusqu'à la rotation.
+// 🔒 Lot 0.2 (rotation effectuée 2026-08-13) : la clé vit HORS du dépôt et
+// son chemin vient EXCLUSIVEMENT de l'environnement (SHEETS_CREDENTIALS_PATH,
+// posé en variable utilisateur via setx). Aucun repli codé en dur : sans
+// variable, échec explicite — jamais une vieille clé silencieusement.
 const CREDENTIALS_PATH = process.env.SHEETS_CREDENTIALS_PATH
-  || process.env.GOOGLE_APPLICATION_CREDENTIALS
-  || 'D:\\Applicator\\alfight-46443ca54259.json';
+  || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+if (!CREDENTIALS_PATH) {
+  console.error('❌ SHEETS_CREDENTIALS_PATH non défini — placez la clé de compte de service hors du dépôt et définissez la variable (cf. RESTORE_V1.md / Lot 0.2). Arrêt.');
+  process.exit(1);
+}
 
 // Initialiser l'authentification Google Sheets
 let sheetsClient = null;
