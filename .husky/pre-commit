@@ -8,3 +8,8 @@ npm run lint:tokens:staged
 # clair, fallbacks numériques métier, données aéro fictives, hooks debug) hors
 # baseline figée (scripts/fallbacks-baseline.json). Exception : // fallback-ok
 npm run lint:fallbacks:staged
+
+# Garde-fou ANTI-SECRETS (Lot 0.2) — bloque tout commit contenant une clé API,
+# une clé privée, un JWT ou un fichier .env/credentials stagé par erreur.
+# Exception ponctuelle (faux positif) : « secret-ok » sur la ligne concernée.
+npm run lint:secrets:staged
