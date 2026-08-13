@@ -987,11 +987,18 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
               </Paper>
               */}
 
-              {/* Personnaliser/Créer une variante */}
+              {/* Personnaliser/Créer une variante — vrai <button> : accessible
+                  au clavier (Tab/Entrée) et annoncé comme action par les
+                  lecteurs d'écran (était un Paper onClick). */}
               <Paper
+                component="button"
+                type="button"
                 elevation={0}
                 sx={{
                   p: 2,
+                  width: '100%',
+                  textAlign: 'left',
+                  font: 'inherit',
                   bgcolor: 'var(--bg-overlay)',
                   border: '1px solid',
                   borderColor: 'var(--border-subtle)',
@@ -1001,6 +1008,10 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                     bgcolor: 'action.selected',
                     transform: 'translateY(-1px)',
                     boxShadow: 1
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid var(--accent-primary)',
+                    outlineOffset: '2px'
                   }
                 }}
                 onClick={() => {
@@ -1015,6 +1026,9 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="subtitle2" fontWeight="bold">
                       Vérifier la configuration
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Importe cet avion et ouvre le wizard pour vérifier chaque donnée avant l'ajout à votre liste
                     </Typography>
                   </Box>
                 </Box>
