@@ -11,12 +11,9 @@ import ImageEditor from '../../../components/ImageEditor';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
 import AeroclubAutocomplete from '../../aircraft/components/AeroclubAutocomplete';
-import {
-  addCompleteTestData,
-  verifyCompleteProfile,
-  clearAllProfileData,
-  runCompleteSystemTest
-} from '../../../utils/testCompleteExportImport';
+// 🔒 PATTERN-10 / Lot 0.3 : les outils de test (PII fictives) ne sont plus
+// importés statiquement — chargement dynamique UNIQUEMENT en développement
+// (voir l'effet ci-dessous). Garantit leur absence du bundle de production.
 
 const PilotProfile = () => {
   const [showPersonalInfo, setShowPersonalInfo] = useState(false);
@@ -222,20 +219,18 @@ const PilotProfile = () => {
     detectMostUsedAircraft();
 
     // Ajouter les fonctions de test au window pour faciliter les tests
-    // 🔒 PATTERN-10 : outils de test (données PII « Jean Dupont ») exposés
-    // UNIQUEMENT en développement → tree-shakés du bundle de production.
+    // 🔒 PATTERN-10 / Lot 0.3 : import DYNAMIQUE sous garde DEV — le module de
+    // test (données PII « Jean Dupont ») n'existe pas dans le bundle de prod.
     if (import.meta.env.DEV && typeof window !== 'undefined') {
-      window.testExportImport = { // fallback-ok (DEV-only, retiré en prod)
-        addCompleteTestData,
-        verifyCompleteProfile,
-        clearAllProfileData,
-        runCompleteSystemTest
-      };
-      console.log('🧪 Fonctions de test disponibles:');
-      console.log('  testExportImport.runCompleteSystemTest() - Test complet du système');
-      console.log('  testExportImport.addCompleteTestData() - Ajouter des données de test');
-      console.log('  testExportImport.verifyCompleteProfile() - Vérifier le profil');
-      console.log('  testExportImport.clearAllProfileData() - Vider toutes les données');
+      import('../../../utils/testCompleteExportImport').then((m) => {
+        window.testExportImport = { // fallback-ok (DEV-only, retiré en prod)
+          addCompleteTestData: m.addCompleteTestData,
+          verifyCompleteProfile: m.verifyCompleteProfile,
+          clearAllProfileData: m.clearAllProfileData,
+          runCompleteSystemTest: m.runCompleteSystemTest
+        };
+        console.log('🧪 Fonctions de test disponibles (DEV): testExportImport.*');
+      });
     }
     
     // Écouter les mises à jour du carnet de vol

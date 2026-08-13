@@ -7,8 +7,8 @@ import {
   getLocalStorageSize,
   manualCleanStorage
 } from '../../../utils/storageUtils';
-import { debugCertifications, addTestLicense, addTestRating } from '../../../utils/debugCertifications';
-import { runFullTest, resetCertifications, validateStructure } from '../../../utils/testLicensesImportExport';
+// 🔒 Lot 0.3 : outils de debug/test chargés dynamiquement et UNIQUEMENT en
+// développement (voir l'effet plus bas) — ils ne partent plus en production.
 
 const PilotCertifications = () => {
   const [certifications, setCertifications] = useState({
@@ -126,19 +126,21 @@ const PilotCertifications = () => {
     }
 
     // Ajouter les fonctions de debug au window pour faciliter le test
-    if (typeof window !== 'undefined') {
-      window.debugCert = debugCertifications;
-      window.addTestLicense = addTestLicense;
-      window.addTestRating = addTestRating;
-      window.runFullTest = runFullTest;
-      window.resetCert = resetCertifications;
-      window.validateCert = validateStructure;
-      console.log('window.debugCert() : affiche l\'état des certifications');
-      console.log('window.addTestLicense() : ajoute une licence de test');
-      console.log('window.addTestRating() : ajoute une qualification de test');
-      console.log('window.runFullTest() : lance un test complet avec données');
-      console.log('window.resetCert() : réinitialise les certifications');
-      console.log('window.validateCert() : valide la structure des données');
+    // 🔒 Lot 0.3 : était exposé SANS garde DEV (les hooks window.debugCert &
+    // co. partaient en production) — désormais import dynamique DEV-only.
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      Promise.all([
+        import('../../../utils/debugCertifications'),
+        import('../../../utils/testLicensesImportExport')
+      ]).then(([dbg, tst]) => {
+        window.debugCert = dbg.debugCertifications;
+        window.addTestLicense = dbg.addTestLicense;
+        window.addTestRating = dbg.addTestRating;
+        window.runFullTest = tst.runFullTest;
+        window.resetCert = tst.resetCertifications;
+        window.validateCert = tst.validateStructure;
+        console.log('🧪 Outils certifications (DEV): window.debugCert/addTestLicense/addTestRating/runFullTest/resetCert/validateCert');
+      });
     }
   }, []);
 

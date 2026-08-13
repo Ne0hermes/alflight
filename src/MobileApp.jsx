@@ -32,7 +32,7 @@ const FlightWizardModule = React.lazy(() => import('./features/flight-wizard/Fli
 const AircraftWizardModule = React.lazy(() => import('./features/aircraft/components/AircraftCreationWizard'));
 
 // Import test Google Sheets (dev only)
-// import './utils/testGoogleSheets';
+
 // import './utils/fixSpecificEntry';
 // import './utils/testLogbookIntegration';
 // import './utils/analyzeFlightEntry';

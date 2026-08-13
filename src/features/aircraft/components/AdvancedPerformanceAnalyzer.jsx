@@ -10,7 +10,7 @@ import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterO
 import TableDisplay from './TableDisplay';
 import APIConfiguration from '../../performance/components/APIConfiguration';
 import apiKeyManager from '../../../utils/apiKeyManager';
-import testEnvVars from '../../../utils/testEnvVars';
+// 🔒 Lot 0.3 : testEnvVars chargé dynamiquement en DEV uniquement (plus d'import statique).
 
 // ─────────────────────────────────────────────────────────────────────────
 // CONSTRUCTION DU PROMPT D'EXTRACTION (Option B)
@@ -278,7 +278,7 @@ const AdvancedPerformanceAnalyzer = ({ aircraft, onPerformanceUpdate, preloadedI
     
 
     // Tester les variables d'environnement (DEV uniquement, PATTERN-10)
-    if (import.meta.env.DEV) testEnvVars();
+    if (import.meta.env.DEV) import('../../../utils/testEnvVars').then((m) => m.default());
     
 
     // Forcer l'initialisation du gestionnaire de clés API

@@ -32,7 +32,12 @@ const app = express();
 const PORT = process.env.VAC_PROXY_PORT || 3003;
 
 // Configuration CORS
-app.use(cors());
+// 🔒 Lot 0.3 : restreint aux origines de dev locales (était ouvert à toutes).
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173', 'http://127.0.0.1:5173',
+  ...Array.from({ length: 13 }, (_, i) => [`http://localhost:${4000 + i}`, `http://127.0.0.1:${4000 + i}`]).flat()
+];
+app.use(cors({ origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'], credentials: false }));
 app.use(express.json());
 
 // Cache local pour les cartes (un fichier par OACI × cycle → invalidation
@@ -248,8 +253,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Démarrer le serveur
-app.listen(PORT, () => {
+// Démarrer le serveur — 🔒 lié à 127.0.0.1 : inaccessible depuis le réseau local
+app.listen(PORT, '127.0.0.1', () => {
   const cycle = describeCycle(cycleStartForDate());
   console.log(`🚀 VAC Proxy Server démarré sur http://localhost:${PORT}`);
   console.log(`📅 Cycle AIRAC actuel: ${cycle.ident} (${cycle.dir}, du ${cycle.effectiveFrom} au ${cycle.effectiveTo})`);

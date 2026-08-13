@@ -21,7 +21,13 @@ const app = express();
 const PORT = 3001;
 
 // Middleware
-app.use(cors());
+// 🔒 Lot 0.3 : CORS restreint aux origines de dev locales (était cors() ouvert
+// à TOUTES les origines sur un serveur détenant la clé Google Sheets).
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173', 'http://127.0.0.1:5173',
+  ...Array.from({ length: 13 }, (_, i) => [`http://localhost:${4000 + i}`, `http://127.0.0.1:${4000 + i}`]).flat()
+];
+app.use(cors({ origin: ALLOWED_ORIGINS, methods: ['GET', 'POST'], credentials: false }));
 app.use(express.json({ charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true, charset: 'utf-8' }));
 
@@ -34,7 +40,13 @@ app.use((req, res, next) => {
 // Configuration Google Sheets
 const SPREADSHEET_ID = '1Y26_Zf7-jHPgpjWasubXpzQE-k0eMl0pHIMpg8OHw_k';
 const SHEET_NAME = 'Tracking';
-const CREDENTIALS_PATH = 'D:\\Applicator\\alfight-46443ca54259.json';
+// 🔒 Lot 0.3 / préparation rotation (Lot 0.2) : le chemin de la clé vient
+// d'abord de l'environnement — placez la NOUVELLE clé HORS du dépôt et
+// définissez SHEETS_CREDENTIALS_PATH (ex. C:\Users\<vous>\.secrets\alflight-sheets.json).
+// Les anciens chemins restent en repli temporaire jusqu'à la rotation.
+const CREDENTIALS_PATH = process.env.SHEETS_CREDENTIALS_PATH
+  || process.env.GOOGLE_APPLICATION_CREDENTIALS
+  || 'D:\\Applicator\\alfight-46443ca54259.json';
 
 // Initialiser l'authentification Google Sheets
 let sheetsClient = null;
@@ -326,8 +338,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Démarrer le serveur
-app.listen(PORT, async () => {
+// Démarrer le serveur — 🔒 lié à 127.0.0.1 : inaccessible depuis le réseau local
+app.listen(PORT, '127.0.0.1', async () => {
   console.log(`\n🚀 Serveur Google Sheets Logger démarré sur http://localhost:${PORT}`);
   console.log('📊 Spreadsheet ID:', SPREADSHEET_ID);
   console.log('📄 Feuille:', SHEET_NAME);

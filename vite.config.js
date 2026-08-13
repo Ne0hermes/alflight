@@ -4,6 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig(({ mode }) => ({
+  // 🔒 Lot 0.3 : en production, les ~1500 console.*/debugger sont supprimés du
+  // bundle au build (esbuild). En dev, ils restent (outillage volontaire).
+  ...(mode === 'production' ? { esbuild: { drop: ['console', 'debugger'] } } : {}),
   plugins: [
     react(),
     VitePWA({
