@@ -9,6 +9,7 @@ import { useVACStore } from '@core/stores/vacStore';
 import { useFuelStore } from '@core/stores/fuelStore'; // Accès direct au store pour fobFuel
 import { isSurfaceCompatible } from '@utils/runwaySurface';
 import { getCruiseSpeedKt } from '@utils/aircraftPerf';
+import { geoJSONDataService } from '@features/navigation/services/GeoJSONDataService';
 import {
   isAirportInSearchZone,
   isAirportInConeZone,
@@ -1004,12 +1005,30 @@ export const useAlternateSelection = () => {
       // 3. MÉTÉO DÉSACTIVÉE TEMPORAIREMENT (erreur 429)
 
       // 4. Calculer les scores
+      // 🔧 R2 : services réels SIA (carburant, douane, maintenance, handling)
+      // depuis le sidecar aerodrome_services.json — indexés une fois par ICAO.
+      let servicesByIcao = {};
+      try {
+        const svcItems = await geoJSONDataService.getAerodromeServices();
+        for (const s of svcItems) {
+          if (!s?.aerodrome_icao || !s?.type) continue;
+          (servicesByIcao[s.aerodrome_icao] ||= new Set()).add(s.type);
+        }
+      } catch (e) {
+        console.warn('[Alternates] Services SIA indisponibles pour le scoring:', e?.message);
+      }
+
       const context = {
         departure: { lat: waypoints[0].lat, lon: waypoints[0].lon },
         arrival: { lat: waypoints[waypoints.length - 1].lat, lon: waypoints[waypoints.length - 1].lon },
+        // 🔧 R5 : identifie départ/arrivée pour neutraliser la pénalité
+        // « milieu de route » sur ces terrains.
+        departureIcao: waypoints[0].icao || waypoints[0].name,
+        arrivalIcao: waypoints[waypoints.length - 1].icao || waypoints[waypoints.length - 1].name,
         waypoints,
         aircraft: selectedAircraft,
         weather: weatherStore.weatherData,
+        servicesByIcao,
         flightType
       };
       
@@ -1023,9 +1042,9 @@ export const useAlternateSelection = () => {
         distance: airport.distance || airport.zoneInfo?.distanceToRoute || 0,
         // Côté par rapport à la médiatrice
         side: airport.zoneInfo?.side || 'unknown',
-        // Services
+        // Services (🔧 R2 : carburant issu du sidecar SIA si non porté par l'objet)
         services: {
-          fuel: airport.fuel || false,
+          fuel: airport.fuel || servicesByIcao[airport.icao]?.has('FUEL') || false,
           atc: hasATCService(airport),
           lighting: hasNightLighting(airport)
         },

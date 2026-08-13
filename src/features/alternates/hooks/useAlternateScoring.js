@@ -3,7 +3,20 @@
 /**
  * Module complet de scoring multi-critères pour les aérodromes de déroutement
  * Évalue chaque candidat selon 5 critères pondérés pour un score total sur 100
+ *
+ * 🔧 R1-R5 (AUDIT_SCORE_DEROUTEMENTS.md, 2026-08-13) — corrections du plafond
+ * structurel ~66 % :
+ *  R1 surfaces SIA (ASPH/CONC…) reconnues via normalizeSurface (familles) ;
+ *  R2 services réels branchés (sidecar SIA via context.servicesByIcao) ;
+ *  R3 besoin de piste = distance d'atterrissage POH réelle de l'avion (m) ;
+ *  R4 sans METAR : 0,5 « non vérifié » (l'inconnu n'est plus avantageux) ;
+ *  R5 départ/arrivée : position stratégique neutre-bonne (0,6) au lieu de 0 ;
+ *  + critère « type d'aérodrome » (concept OurAirports jamais présent en SIA)
+ *    remplacé par la CLASSE DE TAILLE déduite de la plus longue piste.
  */
+
+import { normalizeSurface } from '@utils/runwaySurface';
+import { getLandingDistanceM } from '@utils/aircraftPerf';
 
 // ===== FONCTION PRINCIPALE DE SCORING =====
 
@@ -36,6 +49,9 @@ export const scoreAlternates = async (candidates, context) => {
         score: totalScore,
         scoreFactors: scores,
         scoreBreakdown: scores, // Alias pour compatibilité
+        // 🔧 R4 : signale à l'UI que le critère météo repose sur une absence
+        // de METAR (badge « météo non vérifiée »), pas sur une observation.
+        weatherUnverified: !context.weather?.[airport.icao]?.metar?.decoded,
         rank,
         recommendation: generateRecommendation(airport, scores, rank)
       };
@@ -83,7 +99,15 @@ const calculateInfrastructureScore = (airport, context) => {
   }
 
   // 1. Longueur de piste (50% du score infrastructure)
-  const requiredLength = aircraft.performances?.landingDistance * 1.43 || 800;
+  // 🔧 R3 : distance d'atterrissage POH réelle (m) × 1,43 (marge réglementaire).
+  // L'ancien chemin aircraft.performances?.landingDistance n'existait dans aucun
+  // avion → tout le monde était évalué contre le défaut. Repli 800 m SIGNALÉ.
+  const ldgM = getLandingDistanceM(aircraft);
+  if (ldgM == null) {
+    console.warn('[AlternateScoring] Distance d\'atterrissage POH absente pour',
+      aircraft.registration || '?', '— repli générique 800 m');
+  }
+  const requiredLength = ldgM != null ? ldgM * 1.43 : 800;
 
   // 🔧 FIX: Utiliser TORA si length = 0 (comme dans AlternateSelectorUnified)
   const longestRunway = Math.max(...airport.runways.map(r => {
@@ -120,28 +144,35 @@ const calculateInfrastructureScore = (airport, context) => {
   
   score += runwayScore * 0.5;
   
-  // 2. Type d'aérodrome (20% du score)
-  const typeScore = {
-    'large_airport': 1.0,
-    'medium_airport': 0.8,
-    'small_airport': 0.5,
-    'closed': 0,
-    'heliport': 0,
-    'seaplane_base': 0
-  };
-  score += (typeScore[airport.type] || 0.3) * 0.2;
-  
+  // 2. Classe de taille (20% du score)
+  // 🔧 Le « type » small/medium/large_airport est un concept OurAirports jamais
+  // renseigné par l'ETL SIA (type='AD' partout) → tout le monde recevait le
+  // défaut 0,3. On déduit la classe de la PLUS LONGUE PISTE (donnée réelle) ;
+  // les types fermé/héliport/hydrobase restent éliminatoires s'ils existent.
+  if (['closed', 'heliport', 'seaplane_base'].includes(airport.type)) {
+    return 0;
+  }
+  let sizeScore;
+  if (longestRunway >= 2400) sizeScore = 1.0;      // classe internationale
+  else if (longestRunway >= 1500) sizeScore = 0.8; // régional
+  else if (longestRunway >= 1000) sizeScore = 0.6; // AG confortable
+  else if (longestRunway >= 600) sizeScore = 0.4;  // AG court
+  else sizeScore = 0.2;                            // altisurface/bande
+  score += sizeScore * 0.2;
+
   // 3. Largeur de piste (15% du score)
   const widestRunway = Math.max(...airport.runways.map(r => r.width || 0));
   if (widestRunway >= 45) score += 0.15;      // Large (≥ 45m)
   else if (widestRunway >= 30) score += 0.10; // Standard (30-45m)
   else if (widestRunway >= 23) score += 0.05; // Étroite (23-30m)
-  
+
   // 4. Surface de piste (15% du score)
-  const hasPavedRunway = airport.runways.some(r => {
-    // Vérifier que surface existe et est une chaîne
-    if (!r.surface || typeof r.surface !== 'string') return false;
-    return ['asphalt', 'concrete', 'paved', 'revêtue'].includes(r.surface.toLowerCase());
+  // 🔧 R1 : les codes SIA (ASPH, CONC, MACADAM, "CONC+ASPH"…) ne matchaient
+  // JAMAIS l'ancienne liste ['asphalt','concrete','paved','revêtue'] → aucune
+  // piste n'était « revêtue ». Normalisation par familles canoniques.
+  const hasPavedRunway = airport.runways.some((r) => {
+    const fam = normalizeSurface(typeof r.surface === 'string' ? r.surface : r.surface?.type);
+    return fam === 'PAVED';
   });
   score += hasPavedRunway ? 0.15 : 0.05;
 
@@ -155,17 +186,22 @@ const calculateInfrastructureScore = (airport, context) => {
  */
 const calculateServicesScore = (airport, context) => {
   let score = 0;
-  
+
+  // 🔧 R2 : services réels SIA (sidecar aerodrome_services.json) transmis via
+  // context.servicesByIcao = { ICAO: Set('FUEL','CUST','REPAIR','HAND',…) }.
+  // Avant : airport.fuel n'était jamais alimenté → Services ≈ 0 pour tous.
+  const sia = context.servicesByIcao?.[airport.icao];
+
   // 1. Carburant (40% du score services)
-  if (airport.fuel || airport.services?.fuel) {
+  if (airport.fuel || airport.services?.fuel || sia?.has('FUEL')) {
     score += 0.4;
   }
-  
+
   // 2. ATC/AFIS (30% du score)
   if (hasATCService(airport)) {
     score += 0.3;
   }
-  
+
   // 3. Balisage nocturne (20% du score)
   if (hasNightLighting(airport)) {
     score += 0.2;
@@ -173,27 +209,27 @@ const calculateServicesScore = (airport, context) => {
     // Pénalité si vol de nuit sans balisage
     score -= 0.2;
   }
-  
+
   // 4. Services additionnels (10% du score)
   let additionalServices = 0;
-  
+
   // Maintenance
-  if (airport.maintenance || airport.services?.maintenance) {
+  if (airport.maintenance || airport.services?.maintenance || sia?.has('REPAIR')) {
     additionalServices += 0.05;
   }
-  
+
   // Douane (pour vols internationaux)
-  if (airport.customs || airport.services?.customs) {
+  if (airport.customs || airport.services?.customs || sia?.has('CUST')) {
     additionalServices += 0.03;
   }
-  
+
   // Handling
-  if (airport.handling || airport.services?.handling) {
+  if (airport.handling || airport.services?.handling || sia?.has('HAND')) {
     additionalServices += 0.02;
   }
-  
+
   score += additionalServices;
-  
+
   return Math.max(0, Math.min(score, 1.0));
 };
 
@@ -207,8 +243,11 @@ const calculateWeatherScore = async (airport, context) => {
   const weather = context.weather?.[airport.icao];
   
   if (!weather?.metar?.decoded) {
-    // Pas de météo disponible - score neutre
-    return 0.7;
+    // 🔧 R4 : météo inconnue = 0,5 « non vérifié » (était 0,7). Un terrain sans
+    // METAR était mieux noté qu'un terrain au METAR moyen — l'inconnu ne doit
+    // jamais être un avantage (fail-closed). Le flag weatherUnverified est posé
+    // sur le résultat par scoreAlternates pour affichage d'un badge UI.
+    return 0.5;
   }
   
   const metar = weather.metar.decoded;
@@ -280,6 +319,15 @@ const calculateWeatherScore = async (airport, context) => {
  */
 const calculateStrategicPosition = (airport, context) => {
   let score = 0;
+
+  // 🔧 R5 : les terrains de DÉPART et d'ARRIVÉE perdaient la totalité du
+  // critère par construction (ratio « milieu de route » = 1 → 0 pt), alors
+  // qu'opérationnellement se dérouter vers son terrain de départ/arrivée est
+  // souvent un très bon choix. Score neutre-bon forfaitaire.
+  if (airport.icao &&
+      (airport.icao === context.departureIcao || airport.icao === context.arrivalIcao)) {
+    return 0.6;
+  }
 
   // Vérifier que les coordonnées existent
   const airportPos = airport.coordinates || airport.position;
@@ -423,10 +471,11 @@ const generateRecommendation = (airport, scores, rank) => {
  * Détermine si un aérodrome a un service ATC/AFIS
  */
 const hasATCService = (airport) => {
-  // Vérifier les fréquences
-  if (airport.frequencies) {
+  // Vérifier les fréquences (tableau GeoJSON [{type,frequency,…}] — 🔧 R2 :
+  // ajout FIS/ATIS, présents dans les données SIA des terrains contrôlés)
+  if (Array.isArray(airport.frequencies) && airport.frequencies.length > 0) {
     return airport.frequencies.some(freq =>
-      ['TWR', 'APP', 'AFIS', 'INFO', 'APRON'].includes(freq.type)
+      ['TWR', 'APP', 'AFIS', 'INFO', 'APRON', 'FIS', 'ATIS'].includes(freq.type)
     );
   }
 

@@ -3,11 +3,21 @@
 // (demande pilote). Un bouton unique Sélectionner/Désélectionner par aérodrome,
 // plusieurs déroutements possibles. La liste est triée par pertinence (score),
 // la distance affichée est la distance à la ROUTE (corridor).
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { MapPin, Navigation } from 'lucide-react';
 import { sx } from '@shared/styles/styleSystem';
 import { calculateDistance } from '@utils/navigationCalculations';
 import { DataSourceBadge } from '@shared/components';
+
+// 🔧 R6 (audit score) — libellés et poids du barème, affichés dans le détail
+// du score (fin du « % mystère » : le pilote voit les 5 critères).
+const SCORE_CRITERIA = [
+  { key: 'distance', label: 'Distance à la route', weight: 30 },
+  { key: 'infrastructure', label: 'Infrastructure (piste)', weight: 25 },
+  { key: 'services', label: 'Services (carburant, ATC…)', weight: 20 },
+  { key: 'weather', label: 'Météo', weight: 15 },
+  { key: 'strategic', label: 'Position sur la route', weight: 10 },
+];
 
 export const AlternateSelectorUnified = memo(({
   candidates = [],
@@ -16,6 +26,9 @@ export const AlternateSelectorUnified = memo(({
   selection = [],
   filters = {}
 }) => {
+
+  // 🔧 R6 : ICAO dont le détail de score est déplié (null = aucun)
+  const [openBreakdown, setOpenBreakdown] = useState(null);
 
   const selectedIcaos = useMemo(
     () => new Set((selection || []).map(alt => alt?.icao).filter(Boolean)),
@@ -306,17 +319,65 @@ export const AlternateSelectorUnified = memo(({
                       </span>
                       {airport.services?.fuel && <span style={sx.spacing.mr(2)}>⛽</span>}
                       {airport.services?.atc && <span style={sx.spacing.mr(2)}>🗼</span>}
-                      <span style={{
-                        padding: '2px 6px',
-                        backgroundColor: getScoreColor(airport.score) + '20',
-                        color: getScoreColor(airport.score),
+                      {/* 🔧 R6 : le score devient cliquable → détail des 5 critères */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenBreakdown(openBreakdown === airport.icao ? null : airport.icao);
+                        }}
+                        title="Voir le détail du score"
+                        style={{
+                          padding: '2px 6px',
+                          backgroundColor: getScoreColor(airport.score) + '20',
+                          color: getScoreColor(airport.score),
+                          border: 'none',
+                          borderRadius: 'var(--radius-sm)',
+                          fontWeight: 'bold',
+                          fontSize: 'var(--fs-caption)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Score: {((airport.score || 0) * 100).toFixed(0)}% {openBreakdown === airport.icao ? '▴' : '▾'}
+                      </button>
+                      {airport.weatherUnverified && (
+                        <span
+                          title="Aucun METAR disponible : le critère météo est noté 0,5/1 par prudence"
+                          style={sx.combine(sx.spacing.ml(2), { fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' })}
+                        >
+                          🌦 non vérifiée
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 🔧 R6 : détail du score (5 critères × poids) */}
+                    {openBreakdown === airport.icao && airport.scoreBreakdown && (
+                      <div style={{
+                        marginTop: '8px',
+                        padding: '8px 10px',
+                        backgroundColor: 'var(--bg-overlay)',
+                        border: '1px solid var(--border-subtle)',
                         borderRadius: 'var(--radius-sm)',
-                        fontWeight: 'bold',
                         fontSize: 'var(--fs-caption)'
                       }}>
-                        Score: {((airport.score || 0) * 100).toFixed(0)}%
-                      </span>
-                    </div>
+                        {SCORE_CRITERIA.map(({ key, label, weight }) => {
+                          const v = airport.scoreBreakdown[key];
+                          const pct = typeof v === 'number' ? Math.round(v * 100) : null;
+                          return (
+                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '2px' }}>
+                              <span>{label} <span style={{ color: 'var(--text-secondary)' }}>({weight}%)</span></span>
+                              <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                                {pct != null ? `${pct}/100` : '—'}
+                                {key === 'weather' && airport.weatherUnverified ? ' (sans METAR)' : ''}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {airport.recommendation && (
+                          <p style={{ marginTop: '6px', color: 'var(--text-secondary)' }}>{airport.recommendation}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Bouton de sélection unique (plus de menu départ/arrivée) */}

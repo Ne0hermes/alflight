@@ -40,3 +40,19 @@ export function getFuelCapacityLtr(aircraft) {
   const raw = parseFloat(aircraft.fuelCapacity ?? aircraft.fuel?.capacity);
   return Number.isFinite(raw) && raw > 0 ? raw : null;
 }
+
+/**
+ * 🔧 R3 (audit score déroutements) — Distance d'atterrissage POH en MÈTRES.
+ * Source : aircraft.distances.landingDistance50ft (convention POH en PIEDS,
+ * cf. RunwayAnalyzer/runwayCompatibility qui comparent ces champs à des ft),
+ * repli landingDistance15m. Null si absente/≤0 (fail-closed) : l'appelant
+ * choisit son propre repli ET le signale — pas de valeur inventée ici.
+ * @returns {number|null} mètres, ou null.
+ */
+export function getLandingDistanceM(aircraft) {
+  if (!aircraft) return null;
+  const ft = parseFloat(
+    aircraft.distances?.landingDistance50ft ?? aircraft.distances?.landingDistance15m
+  );
+  return Number.isFinite(ft) && ft > 0 ? ft * 0.3048 : null;
+}
