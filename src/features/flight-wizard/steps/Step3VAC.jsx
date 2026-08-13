@@ -639,10 +639,31 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
                     {/* Section Pistes */}
                     {currentSection === 'runways' && (
                       <div style={styles.section}>
-                        {/* Verdict de compatibilité piste ↔ avion sélectionné
-                            (distances POH de l'avion + surface). Complète la
-                            liste brute des pistes ci-dessous. */}
-                        <RunwayAnalyzer icao={aerodrome.icao} />
+                        {/* Verdict de compatibilité piste ↔ avion sélectionné.
+                            PRIORITÉ aux distances CALCULÉES par le moteur de
+                            performances (conditions du jour, facteur inclus),
+                            matchées par ICAO strict : décollage pour le terrain
+                            de départ, atterrissage pour l'arrivée. Les autres
+                            terrains (déroutements) restent en POH statique —
+                            on n'applique jamais une distance calculée pour un
+                            AUTRE aérodrome. */}
+                        <RunwayAnalyzer
+                          icao={aerodrome.icao}
+                          perfDistances={(() => {
+                            const perf = flightPlan?.performance;
+                            if (!perf) return null;
+                            const factorLabel = perf.safetyFactor?.value > 1
+                              ? `×${perf.safetyFactor.value}` : null;
+                            const takeoffM = perf.departure?.icao === aerodrome.icao
+                              ? (perf.departure.takeoff?.toda50ftFactored ?? perf.departure.takeoff?.toda50ft ?? null)
+                              : null;
+                            const landingM = perf.arrival?.icao === aerodrome.icao
+                              ? (perf.arrival.landing?.lda50ftFactored ?? perf.arrival.landing?.lda50ft ?? null)
+                              : null;
+                            if (takeoffM == null && landingM == null) return null;
+                            return { takeoffM, landingM, factorLabel };
+                          })()}
+                        />
                         {aerodrome.runways && aerodrome.runways.length > 0 ? (
                           aerodrome.runways.flatMap(separateRunwayDirections).map((rwy, idx) => (
                             <div key={idx} style={styles.runwayCard}>

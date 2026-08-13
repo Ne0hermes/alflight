@@ -3,95 +3,13 @@ import { Plane, AlertTriangle, CheckCircle, Info, Ruler, Wind, ChevronDown, Chev
 import { sx } from '@shared/styles/styleSystem';
 import { aeroDataProvider } from '@core/data';
 import { useAircraft } from '@core/contexts';
-import { isSurfaceCompatible } from '@utils/runwaySurface';
+// Logique de verdict extraite dans un util PUR (testable sans le graphe UI/
+// Supabase, et candidate au futur @alflight/calc-engine).
+import { analyzeRunwayCompatibility, SURFACE_TYPES, metersToFeet } from '@utils/runwayCompatibility';
 
-const SURFACE_TYPES = {
-  'ASPH': { name: 'Asphalte', icon: '🛣️', quality: 1 },
-  'CONC': { name: 'Béton', icon: '🏗️', quality: 1 },
-  'GRASS': { name: 'Herbe', icon: '🌿', quality: 0.8 },
-  'GRAVEL': { name: 'Gravier', icon: '🪨', quality: 0.7 },
-  'SAND': { name: 'Sable', icon: '🏖️', quality: 0.6 },
-  'DIRT': { name: 'Terre', icon: '🟫', quality: 0.6 },
-  'WATER': { name: 'Eau', icon: '💧', quality: 0 },
-  'SNOW': { name: 'Neige', icon: '❄️', quality: 0.5 },
-  'ICE': { name: 'Glace', icon: '🧊', quality: 0.3 }
-};
+export { analyzeRunwayCompatibility };
 
-const metersToFeet = (meters) => Math.round(meters * 3.28084);
-
-const analyzeRunwayCompatibility = (runway, aircraft) => {
-  if (!aircraft) {
-    return { compatible: 'unknown', reasons: ['Avion non sélectionné'] };
-  }
-
-  const reasons = [];
-  let compatible = true;
-
-  // Forme de données SIA/AIXM actuelle : distances déclarées À PLAT (m) sur la
-  // piste (tora/toda/asda/lda), longueur en runway.length. Repli sur la
-  // longueur brute si la distance déclarée est absente.
-  const todaM = runway.toda ?? runway.length ?? runway.dimensions?.length ?? 0;
-  const ldaM = runway.lda ?? runway.length ?? runway.dimensions?.length ?? 0;
-
-  // 🛫 Vérification distance de décollage (TODA)
-  const todaFeet = metersToFeet(todaM);
-  const requiredTakeoffDistance = aircraft.distances?.takeoffDistance50ft || aircraft.distances?.takeoffDistance15m;
-
-  if (requiredTakeoffDistance && todaFeet > 0) {
-    if (todaFeet < requiredTakeoffDistance) {
-      compatible = false;
-      reasons.push(`❌ TODA insuffisante: ${todaFeet} ft < ${requiredTakeoffDistance} ft requis`);
-    }
-  }
-
-  // 🛬 Vérification distance d'atterrissage (LDA)
-  const ldaFeet = metersToFeet(ldaM);
-  const requiredLandingDistance = aircraft.distances?.landingDistance50ft || aircraft.distances?.landingDistance15m;
-
-  if (requiredLandingDistance && ldaFeet > 0) {
-    if (ldaFeet < requiredLandingDistance) {
-      compatible = false;
-      reasons.push(`❌ LDA insuffisante: ${ldaFeet} ft < ${requiredLandingDistance} ft requis`);
-    }
-  }
-
-  // 🏗️ Vérification surface de piste — surface est désormais une chaîne directe
-  const surfaceRaw = typeof runway.surface === 'string' ? runway.surface : (runway.surface?.type || 'UNKNOWN');
-  const surfaceInfo = SURFACE_TYPES[surfaceRaw] || { name: surfaceRaw, icon: '❓', quality: 0.5 };
-
-  // Utiliser compatibleRunwaySurfaces depuis les données d'avion
-  if (aircraft.compatibleRunwaySurfaces && aircraft.compatibleRunwaySurfaces.length > 0) {
-    if (!isSurfaceCompatible(runway.surface, aircraft.compatibleRunwaySurfaces)) {
-      compatible = false;
-      reasons.push(`❌ Surface ${surfaceInfo.name || surfaceRaw} non autorisée pour cet avion`);
-    } else {
-      // Surface autorisée mais performances réduites si qualité < 0.8
-      if (surfaceInfo.quality < 0.8) {
-        reasons.push(`⚠️ Surface ${surfaceInfo.name} autorisée - performances réduites (${Math.round(surfaceInfo.quality * 100)}%)`);
-      }
-    }
-  } else {
-    // Pas de restriction définie - avertissement si surface de faible qualité
-    if (surfaceInfo.quality < 0.8) {
-      reasons.push(`⚠️ Surface ${surfaceInfo.name} - performances réduites (${Math.round(surfaceInfo.quality * 100)}%)`);
-    }
-  }
-
-  // Message si compatible
-  if (compatible && reasons.length === 0) {
-    reasons.push(`✅ Piste compatible avec ${aircraft.registration || 'l\'avion'}`);
-  }
-
-  return {
-    compatible,
-    reasons,
-    todaFeet,
-    ldaFeet,
-    surface: surfaceInfo
-  };
-};
-
-export const RunwayAnalyzer = ({ icao }) => {
+export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
   const { selectedAircraft } = useAircraft();
   const [runways, setRunways] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -238,7 +156,7 @@ export const RunwayAnalyzer = ({ icao }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {runways.map((runway, index) => {
             const isExpanded = expandedRunway === runway.id || expandedRunway === index;
-            const analysis = selectedAircraft ? analyzeRunwayCompatibility(runway, selectedAircraft) : null;
+            const analysis = selectedAircraft ? analyzeRunwayCompatibility(runway, selectedAircraft, perfDistances) : null;
             
             return (
               <div 
@@ -406,19 +324,35 @@ export const RunwayAnalyzer = ({ icao }) => {
         </div>
       )}
 
-      {/* Résumé de compatibilité */}
-      {selectedAircraft && runways.length > 0 && (
-        <div style={sx.combine(sx.components.alert.base, sx.components.alert.info, sx.spacing.mt(4))}>
-          <Info size={16} />
-          <div style={sx.text.sm}>
-            <p>
-              <strong>
-                {runways.filter(r => analyzeRunwayCompatibility(r, selectedAircraft).compatible).length}
-              </strong> piste(s) compatible(s) sur {runways.length}
-            </p>
+      {/* Verdict agrégé GO / NO-GO */}
+      {selectedAircraft && runways.length > 0 && (() => {
+        const analyses = runways.map(r => analyzeRunwayCompatibility(r, selectedAircraft, perfDistances));
+        const compatibleCount = analyses.filter(a => a.compatible).length;
+        const usedCalculated = analyses.some(a => a.usedCalculated);
+        const go = compatibleCount > 0;
+        return (
+          <div style={sx.combine(
+            sx.components.alert.base,
+            go ? sx.components.alert.success : sx.components.alert.danger,
+            sx.spacing.mt(4)
+          )}>
+            {go ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+            <div style={sx.text.sm}>
+              <p style={sx.text.bold}>
+                {go
+                  ? `GO — ${compatibleCount} piste(s) compatible(s) sur ${runways.length}`
+                  : `NO-GO — aucune piste compatible sur ${runways.length} (avec ${usedCalculated ? 'les distances calculées du jour' : 'les distances POH statiques'})`}
+              </p>
+              <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                {usedCalculated
+                  ? `Base : distances calculées par le moteur de performances (conditions du jour${perfDistances?.factorLabel ? `, facteur ${perfDistances.factorLabel}` : ''}).`
+                  : 'Base : distances POH statiques de la fiche avion (conditions standard). Calculez les performances (étape Performances) pour un verdict aux conditions du jour.'}
+                {' '}Décision finale : commandant de bord.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
