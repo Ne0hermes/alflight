@@ -1,5 +1,5 @@
 {
-  "airac": "2026-05-14",
+  "airac": "2026-08-06",
   "count": 31,
   "items": [
     {
@@ -8,7 +8,7 @@
       "name": "POLYNESIE FRANCAISE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520776"
     },
     {
@@ -17,7 +17,7 @@
       "name": "ALGERIE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520778"
     },
     {
@@ -26,7 +26,7 @@
       "name": "ALLEMAGNE/SUISSE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520780"
     },
     {
@@ -35,7 +35,7 @@
       "name": "ST PIERRE ET MIQUELON",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520782"
     },
     {
@@ -44,7 +44,7 @@
       "name": "ALLEMAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520784"
     },
     {
@@ -53,7 +53,7 @@
       "name": "ALLEMAGNE/LUXEMBOURG",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520786"
     },
     {
@@ -62,7 +62,7 @@
       "name": "ANTILLES FRANCAISES",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520788"
     },
     {
@@ -71,7 +71,7 @@
       "name": "REUNION",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520790"
     },
     {
@@ -80,7 +80,7 @@
       "name": "ESPAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520792"
     },
     {
@@ -89,7 +89,7 @@
       "name": "ITALIE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520794"
     },
     {
@@ -98,7 +98,7 @@
       "name": "FRANCE/ALLEMAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520796"
     },
     {
@@ -107,7 +107,7 @@
       "name": "FRANCE/LUXEMBOURG",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520798"
     },
     {
@@ -116,7 +116,7 @@
       "name": "FRANCE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520800"
     },
     {
@@ -125,7 +125,7 @@
       "name": "FRANCE/BELGIQUE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520802"
     },
     {
@@ -134,7 +134,7 @@
       "name": "GUYANE FRANCAISE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520804"
     },
     {
@@ -143,7 +143,7 @@
       "name": "WALLIS ET FUTUNA",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520806"
     },
     {
@@ -152,7 +152,7 @@
       "name": "GRANDE BRETAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520808"
     },
     {
@@ -161,7 +161,7 @@
       "name": "FRANCE/SUISSE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520810"
     },
     {
@@ -170,7 +170,7 @@
       "name": "FRANCE/ESPAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520812"
     },
     {
@@ -179,7 +179,7 @@
       "name": "FRANCE/ITALIE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520814"
     },
     {
@@ -188,7 +188,7 @@
       "name": "NOUVELLE CALEDONIE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520816"
     },
     {
@@ -197,7 +197,7 @@
       "name": "AUTRES",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520818"
     },
     {
@@ -206,7 +206,7 @@
       "name": "LUXEMBOURG",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520820"
     },
     {
@@ -215,7 +215,7 @@
       "name": "SUISSE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520822"
     },
     {
@@ -224,7 +224,7 @@
       "name": "BELGIQUE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520824"
     },
     {
@@ -233,7 +233,7 @@
       "name": "BELGIQUE/ALLEMAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520826"
     },
     {
@@ -242,7 +242,7 @@
       "name": "BELGIQUE/LUXEMBOURG",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1520828"
     },
     {
@@ -251,7 +251,7 @@
       "name": "FRANCE/GRANDE BRETAGNE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25181924"
     },
     {
@@ -260,7 +260,7 @@
       "name": "REUNION/COMORES",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25181951"
     },
     {
@@ -269,7 +269,7 @@
       "name": "ANTILLES FRANCAISES/ANTILLES NEERLANDAISES",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25181953"
     },
     {
@@ -278,7 +278,7 @@
       "name": "ANTILLES FRANCAISES/SAINTE LUCIE",
       "type": "O",
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25181956"
     }
   ]

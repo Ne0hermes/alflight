@@ -73,3 +73,6 @@ server/vac-cache/
 src/data/*.xml
 public/data/*.xml
 .vercel
+
+# Mise a jour AIRAC (extraction temporaire)
+scripts/.airac-tmp/

@@ -31,7 +31,8 @@
 export const AIXM_FILE_CANDIDATES = [
   // ⚠️ Doit correspondre EXACTEMENT aux fichiers présents dans public/data/.
   // Le plus récent en tête. Anciens cycles retirés (fichiers supprimés du disque).
-  'AIXM4.5_all_FR_OM_2026-05-14.xml',
+  // (Mis à jour automatiquement par scripts/update-airac.mjs)
+  'AIXM4.5_all_FR_OM_2026-08-06.xml',
 ];
 
 // Fichier « courant » par défaut (= premier candidat disponible).

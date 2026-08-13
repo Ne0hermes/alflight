@@ -34,6 +34,8 @@
     "sia:validate": "node scripts/validate-geojson.mjs",
     "sia:sync": "node scripts/sync-geojson.mjs",
     "sia:build": "npm run sia:etl && npm run sia:validate && npm run sia:sync",
+    "airac:check": "node scripts/update-airac.mjs --check",
+    "airac:install": "node scripts/update-airac.mjs",
     "build:mobile": "vite build && npx cap sync",
     "android": "npx cap add android && npx cap open android",
     "ios": "npx cap add ios && npx cap open ios",

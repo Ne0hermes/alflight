@@ -1,7 +1,51 @@
 {
-  "airac": "2026-05-14",
-  "count": 898,
+  "airac": "2026-08-06",
+  "count": 904,
   "items": [
+    {
+      "id": "SER_1526166",
+      "unit_name": "LFOB BEAUVAIS",
+      "type": "TWR",
+      "sequence": 10,
+      "latitude": 49.454422,
+      "longitude": 2.112814,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "1526166"
+    },
+    {
+      "id": "SER_1526320",
+      "unit_name": "LFOB BEAUVAIS",
+      "type": "VDF",
+      "sequence": 10,
+      "latitude": 49.454422,
+      "longitude": 2.112814,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "1526320"
+    },
+    {
+      "id": "SER_1526228",
+      "unit_name": "LFOB BEAUVAIS",
+      "type": "APP",
+      "sequence": 10,
+      "latitude": 49.454422,
+      "longitude": 2.112814,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "1526228"
+    },
+    {
+      "id": "SER_1526488",
+      "unit_name": "LFBZ BIARRITZ",
+      "type": "VDF",
+      "sequence": 10,
+      "latitude": 43.468308,
+      "longitude": -1.531161,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "1526488"
+    },
     {
       "id": "SER_1526680",
       "unit_name": "LFEF AMBOISE",
@@ -10,7 +54,7 @@
       "latitude": 47.340556,
       "longitude": 0.941111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526680"
     },
     {
@@ -21,7 +65,7 @@
       "latitude": 44.453889,
       "longitude": 6.036667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526682"
     },
     {
@@ -32,7 +76,7 @@
       "latitude": 43.554961,
       "longitude": 2.290592,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526686"
     },
     {
@@ -43,7 +87,7 @@
       "latitude": 43.215817,
       "longitude": 2.308544,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526692"
     },
     {
@@ -54,7 +98,7 @@
       "latitude": 49.390953,
       "longitude": 1.183936,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526694"
     },
     {
@@ -65,7 +109,7 @@
       "latitude": 16.257778,
       "longitude": -61.2625,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526704"
     },
     {
@@ -76,7 +120,7 @@
       "latitude": 44.755,
       "longitude": -1.065,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526706"
     },
     {
@@ -87,7 +131,7 @@
       "latitude": -15.246389,
       "longitude": -146.620278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526708"
     },
     {
@@ -98,7 +142,7 @@
       "latitude": 46.191944,
       "longitude": 6.268333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526712"
     },
     {
@@ -109,7 +153,7 @@
       "latitude": 43.546389,
       "longitude": 6.954167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526714"
     },
     {
@@ -120,7 +164,7 @@
       "latitude": 43.996111,
       "longitude": 4.754444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526724"
     },
     {
@@ -131,7 +175,7 @@
       "latitude": 48.810278,
       "longitude": 2.073333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526728"
     },
     {
@@ -142,7 +186,7 @@
       "latitude": 49.390953,
       "longitude": 1.183936,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526730"
     },
     {
@@ -153,7 +197,7 @@
       "latitude": 43.546389,
       "longitude": 6.954167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526740"
     },
     {
@@ -164,7 +208,7 @@
       "latitude": 43.546389,
       "longitude": 6.954167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526742"
     },
     {
@@ -175,7 +219,7 @@
       "latitude": 45.889528,
       "longitude": -0.982394,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526744"
     },
     {
@@ -186,7 +230,7 @@
       "latitude": -15.573611,
       "longitude": -146.415,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526746"
     },
     {
@@ -197,7 +241,7 @@
       "latitude": -17.556667,
       "longitude": -149.611389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526748"
     },
     {
@@ -208,7 +252,7 @@
       "latitude": 48.03225,
       "longitude": -0.742781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526752"
     },
     {
@@ -219,7 +263,7 @@
       "latitude": 48.587706,
       "longitude": -2.07995,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526754"
     },
     {
@@ -230,7 +274,7 @@
       "latitude": 46.052778,
       "longitude": 3.999722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526758"
     },
     {
@@ -241,7 +285,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526760"
     },
     {
@@ -252,7 +296,7 @@
       "latitude": 47.407222,
       "longitude": -1.178889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526762"
     },
     {
@@ -263,7 +307,7 @@
       "latitude": 4.283333,
       "longitude": -54.381111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526768"
     },
     {
@@ -274,7 +318,7 @@
       "latitude": 46.205619,
       "longitude": 5.291794,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526770"
     },
     {
@@ -285,7 +329,7 @@
       "latitude": 44.407489,
       "longitude": 2.483314,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526772"
     },
     {
@@ -296,7 +340,7 @@
       "latitude": -17.556667,
       "longitude": -149.611389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526774"
     },
     {
@@ -307,7 +351,7 @@
       "latitude": 44.407489,
       "longitude": 2.483314,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526780"
     },
     {
@@ -318,7 +362,7 @@
       "latitude": -17.556667,
       "longitude": -149.611389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526782"
     },
     {
@@ -329,7 +373,7 @@
       "latitude": 43.770833,
       "longitude": 4.894444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525328"
     },
     {
@@ -340,7 +384,7 @@
       "latitude": 46.534383,
       "longitude": 3.421606,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525332"
     },
     {
@@ -351,7 +395,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525334"
     },
     {
@@ -362,7 +406,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525338"
     },
     {
@@ -373,7 +417,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525340"
     },
     {
@@ -384,7 +428,7 @@
       "latitude": 47.787222,
       "longitude": 6.365,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525342"
     },
     {
@@ -395,7 +439,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525346"
     },
     {
@@ -406,7 +450,7 @@
       "latitude": 49.363394,
       "longitude": 0.159997,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525350"
     },
     {
@@ -417,7 +461,7 @@
       "latitude": 46.179211,
       "longitude": -1.195236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525352"
     },
     {
@@ -428,7 +472,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525354"
     },
     {
@@ -439,7 +483,7 @@
       "latitude": 44.174714,
       "longitude": 0.590619,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525356"
     },
     {
@@ -450,7 +494,7 @@
       "latitude": 43.252222,
       "longitude": 5.786111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525358"
     },
     {
@@ -461,7 +505,7 @@
       "latitude": 44.058611,
       "longitude": 5.990833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525360"
     },
     {
@@ -472,7 +516,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525362"
     },
     {
@@ -483,7 +527,7 @@
       "latitude": 46.253056,
       "longitude": 3.5875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525366"
     },
     {
@@ -494,19 +538,8 @@
       "latitude": 48.749756,
       "longitude": 2.111178,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525368"
-    },
-    {
-      "id": "SER_1525370",
-      "unit_name": "LFBA AGEN",
-      "type": "VDF",
-      "sequence": 10,
-      "latitude": 44.174714,
-      "longitude": 0.590619,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1525370"
     },
     {
       "id": "SER_1525372",
@@ -516,7 +549,7 @@
       "latitude": 49.785053,
       "longitude": 4.642808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525372"
     },
     {
@@ -527,7 +560,7 @@
       "latitude": 49.595833,
       "longitude": 3.631667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525374"
     },
     {
@@ -538,7 +571,7 @@
       "latitude": 48.600747,
       "longitude": -3.816669,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525380"
     },
     {
@@ -549,7 +582,7 @@
       "latitude": 48.537492,
       "longitude": -2.856542,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525384"
     },
     {
@@ -560,7 +593,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525386"
     },
     {
@@ -571,7 +604,7 @@
       "latitude": 43.505278,
       "longitude": 5.367222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525388"
     },
     {
@@ -582,7 +615,7 @@
       "latitude": 50.6166,
       "longitude": 2.640094,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525390"
     },
     {
@@ -593,7 +626,7 @@
       "latitude": 46.295922,
       "longitude": 4.795858,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525394"
     },
     {
@@ -604,7 +637,7 @@
       "latitude": 43.757428,
       "longitude": 4.416344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525402"
     },
     {
@@ -615,7 +648,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525404"
     },
     {
@@ -626,7 +659,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525406"
     },
     {
@@ -637,7 +670,7 @@
       "latitude": 48.7575,
       "longitude": 3.278889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525408"
     },
     {
@@ -648,7 +681,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525410"
     },
     {
@@ -659,7 +692,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525412"
     },
     {
@@ -670,7 +703,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525414"
     },
     {
@@ -681,7 +714,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525416"
     },
     {
@@ -692,7 +725,7 @@
       "latitude": 45.483056,
       "longitude": -0.423056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525418"
     },
     {
@@ -703,7 +736,7 @@
       "latitude": 43.587778,
       "longitude": 1.498611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525420"
     },
     {
@@ -714,7 +747,7 @@
       "latitude": 46.860314,
       "longitude": 1.721125,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525422"
     },
     {
@@ -725,7 +758,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525430"
     },
     {
@@ -736,7 +769,7 @@
       "latitude": 45.513889,
       "longitude": 3.266111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525434"
     },
     {
@@ -747,7 +780,7 @@
       "latitude": 45.362936,
       "longitude": 5.332664,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525436"
     },
     {
@@ -758,7 +791,7 @@
       "latitude": 14.592222,
       "longitude": -60.996389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525438"
     },
     {
@@ -767,7 +800,7 @@
       "type": "FIS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525542"
     },
     {
@@ -778,7 +811,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525544"
     },
     {
@@ -789,7 +822,7 @@
       "latitude": 43.608056,
       "longitude": 6.701667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525550"
     },
     {
@@ -800,7 +833,7 @@
       "latitude": 45.362936,
       "longitude": 5.332664,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525442"
     },
     {
@@ -811,7 +844,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525444"
     },
     {
@@ -822,7 +855,7 @@
       "latitude": 48.796944,
       "longitude": 7.819167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525446"
     },
     {
@@ -833,7 +866,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525448"
     },
     {
@@ -844,7 +877,7 @@
       "latitude": 45.729519,
       "longitude": 4.938844,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525450"
     },
     {
@@ -855,7 +888,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525452"
     },
     {
@@ -866,7 +899,7 @@
       "latitude": 44.174714,
       "longitude": 0.590619,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525454"
     },
     {
@@ -877,7 +910,7 @@
       "latitude": 45.729519,
       "longitude": 4.938844,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525456"
     },
     {
@@ -888,7 +921,7 @@
       "latitude": 14.592222,
       "longitude": -60.996389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525458"
     },
     {
@@ -899,7 +932,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525464"
     },
     {
@@ -910,7 +943,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525470"
     },
     {
@@ -921,7 +954,7 @@
       "latitude": 48.053736,
       "longitude": -3.664036,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525472"
     },
     {
@@ -932,7 +965,7 @@
       "latitude": 45.362936,
       "longitude": 5.332664,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525474"
     },
     {
@@ -943,7 +976,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525480"
     },
     {
@@ -954,7 +987,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525482"
     },
     {
@@ -965,7 +998,7 @@
       "latitude": 47.614581,
       "longitude": 2.78185,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525484"
     },
     {
@@ -976,7 +1009,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525486"
     },
     {
@@ -987,7 +1020,7 @@
       "latitude": 43.768611,
       "longitude": 2.007778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525488"
     },
     {
@@ -998,7 +1031,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525498"
     },
     {
@@ -1009,7 +1042,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525502"
     },
     {
@@ -1020,7 +1053,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525506"
     },
     {
@@ -1031,7 +1064,7 @@
       "latitude": -22.588611,
       "longitude": 167.455278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525508"
     },
     {
@@ -1042,7 +1075,7 @@
       "latitude": 45.362936,
       "longitude": 5.332664,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525510"
     },
     {
@@ -1053,7 +1086,7 @@
       "latitude": 43.587778,
       "longitude": 1.498611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525512"
     },
     {
@@ -1064,7 +1097,7 @@
       "latitude": 47.042694,
       "longitude": 5.434928,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525514"
     },
     {
@@ -1075,7 +1108,7 @@
       "latitude": 43.883056,
       "longitude": 1.874167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525516"
     },
     {
@@ -1086,7 +1119,7 @@
       "latitude": 41.923897,
       "longitude": 8.802436,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525518"
     },
     {
@@ -1097,7 +1130,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525520"
     },
     {
@@ -1108,7 +1141,7 @@
       "latitude": 46.171783,
       "longitude": 3.404033,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525522"
     },
     {
@@ -1119,7 +1152,7 @@
       "latitude": 41.502108,
       "longitude": 9.096747,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525524"
     },
     {
@@ -1130,7 +1163,7 @@
       "latitude": 43.913278,
       "longitude": 2.11675,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525526"
     },
     {
@@ -1141,7 +1174,7 @@
       "latitude": 48.706111,
       "longitude": 2.902778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525530"
     },
     {
@@ -1152,7 +1185,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525534"
     },
     {
@@ -1163,7 +1196,7 @@
       "latitude": 43.164722,
       "longitude": -0.560278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525536"
     },
     {
@@ -1174,7 +1207,7 @@
       "latitude": 41.502108,
       "longitude": 9.096747,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525552"
     },
     {
@@ -1185,7 +1218,7 @@
       "latitude": 44.566947,
       "longitude": -0.05725,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525556"
     },
     {
@@ -1196,7 +1229,7 @@
       "latitude": 44.285556,
       "longitude": 3.465556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525558"
     },
     {
@@ -1207,7 +1240,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525560"
     },
     {
@@ -1218,7 +1251,7 @@
       "latitude": 50.324792,
       "longitude": 3.465444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525568"
     },
     {
@@ -1229,7 +1262,7 @@
       "latitude": 45.218056,
       "longitude": 5.848611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525570"
     },
     {
@@ -1240,7 +1273,7 @@
       "latitude": 48.926944,
       "longitude": -0.144722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525572"
     },
     {
@@ -1251,7 +1284,7 @@
       "latitude": 46.179211,
       "longitude": -1.195236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525582"
     },
     {
@@ -1262,7 +1295,7 @@
       "latitude": 48.705833,
       "longitude": 1.361389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525592"
     },
     {
@@ -1273,7 +1306,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525594"
     },
     {
@@ -1284,7 +1317,7 @@
       "latitude": 48.583186,
       "longitude": 5.954525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525600"
     },
     {
@@ -1295,7 +1328,7 @@
       "latitude": 49.045556,
       "longitude": 2.351944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525602"
     },
     {
@@ -1306,7 +1339,7 @@
       "latitude": 44.453889,
       "longitude": 6.036667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525604"
     },
     {
@@ -1317,7 +1350,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525606"
     },
     {
@@ -1328,7 +1361,7 @@
       "latitude": 44.397778,
       "longitude": 4.716944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525612"
     },
     {
@@ -1339,7 +1372,7 @@
       "latitude": 48.8375,
       "longitude": 3.014444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525614"
     },
     {
@@ -1350,7 +1383,7 @@
       "latitude": 43.425278,
       "longitude": -0.286944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525618"
     },
     {
@@ -1361,7 +1394,7 @@
       "latitude": 46.828275,
       "longitude": 4.817058,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525620"
     },
     {
@@ -1372,7 +1405,7 @@
       "latitude": 48.692086,
       "longitude": 6.22605,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525622"
     },
     {
@@ -1383,7 +1416,7 @@
       "latitude": 41.660278,
       "longitude": 8.893889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525624"
     },
     {
@@ -1394,7 +1427,7 @@
       "latitude": 48.321619,
       "longitude": 4.016622,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525626"
     },
     {
@@ -1405,7 +1438,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525628"
     },
     {
@@ -1416,7 +1449,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525630"
     },
     {
@@ -1427,7 +1460,7 @@
       "latitude": 47.385278,
       "longitude": 4.946944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525634"
     },
     {
@@ -1438,7 +1471,7 @@
       "latitude": 44.596944,
       "longitude": -1.113889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525638"
     },
     {
@@ -1449,7 +1482,7 @@
       "latitude": 49.208689,
       "longitude": 4.156581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525640"
     },
     {
@@ -1460,7 +1493,7 @@
       "latitude": 46.270556,
       "longitude": 0.188333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525642"
     },
     {
@@ -1471,7 +1504,7 @@
       "latitude": 43.449156,
       "longitude": 1.263694,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525646"
     },
     {
@@ -1482,7 +1515,7 @@
       "latitude": 48.321619,
       "longitude": 4.016622,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525650"
     },
     {
@@ -1493,7 +1526,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525654"
     },
     {
@@ -1504,7 +1537,7 @@
       "latitude": 45.930775,
       "longitude": 6.106289,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525658"
     },
     {
@@ -1515,7 +1548,7 @@
       "latitude": 43.449156,
       "longitude": 1.263694,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525660"
     },
     {
@@ -1526,7 +1559,7 @@
       "latitude": 41.502108,
       "longitude": 9.096747,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525662"
     },
     {
@@ -1537,7 +1570,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525734"
     },
     {
@@ -1548,7 +1581,7 @@
       "latitude": 47.846328,
       "longitude": 3.496578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525736"
     },
     {
@@ -1559,7 +1592,7 @@
       "latitude": 43.768889,
       "longitude": -0.034722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525738"
     },
     {
@@ -1570,7 +1603,7 @@
       "latitude": 43.853056,
       "longitude": 4.414444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525746"
     },
     {
@@ -1581,7 +1614,7 @@
       "latitude": 48.773325,
       "longitude": 4.206156,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525748"
     },
     {
@@ -1592,7 +1625,7 @@
       "latitude": 46.179211,
       "longitude": -1.195236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525750"
     },
     {
@@ -1603,7 +1636,7 @@
       "latitude": -21.053333,
       "longitude": 164.837778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525752"
     },
     {
@@ -1614,7 +1647,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525756"
     },
     {
@@ -1625,7 +1658,7 @@
       "latitude": 49.165,
       "longitude": 2.311667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525764"
     },
     {
@@ -1636,7 +1669,7 @@
       "latitude": 46.179211,
       "longitude": -1.195236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525768"
     },
     {
@@ -1647,7 +1680,7 @@
       "latitude": 47.060786,
       "longitude": 2.370083,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525774"
     },
     {
@@ -1658,7 +1691,7 @@
       "latitude": 43.505278,
       "longitude": 5.367222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525666"
     },
     {
@@ -1669,7 +1702,7 @@
       "latitude": 48.091667,
       "longitude": 5.05,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525668"
     },
     {
@@ -1680,7 +1713,7 @@
       "latitude": 48.749756,
       "longitude": 2.111178,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525672"
     },
     {
@@ -1691,7 +1724,7 @@
       "latitude": 45.639272,
       "longitude": 5.880122,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525674"
     },
     {
@@ -1702,7 +1735,7 @@
       "latitude": 43.449156,
       "longitude": 1.263694,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525676"
     },
     {
@@ -1713,7 +1746,7 @@
       "latitude": 48.896667,
       "longitude": 2.606111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525678"
     },
     {
@@ -1724,7 +1757,7 @@
       "latitude": 45.639272,
       "longitude": 5.880122,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525682"
     },
     {
@@ -1735,7 +1768,7 @@
       "latitude": 48.749756,
       "longitude": 2.111178,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525684"
     },
     {
@@ -1746,7 +1779,7 @@
       "latitude": 44.897583,
       "longitude": 2.416719,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525686"
     },
     {
@@ -1757,7 +1790,7 @@
       "latitude": 48.749756,
       "longitude": 2.111178,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525690"
     },
     {
@@ -1768,7 +1801,7 @@
       "latitude": 46.780278,
       "longitude": 0.550556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525692"
     },
     {
@@ -1779,7 +1812,7 @@
       "latitude": 43.686839,
       "longitude": 0.600047,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525694"
     },
     {
@@ -1790,7 +1823,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525696"
     },
     {
@@ -1801,7 +1834,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525698"
     },
     {
@@ -1812,7 +1845,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525700"
     },
     {
@@ -1823,7 +1856,7 @@
       "latitude": 42.796667,
       "longitude": 0.435556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525702"
     },
     {
@@ -1834,7 +1867,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525706"
     },
     {
@@ -1845,7 +1878,7 @@
       "latitude": 45.919983,
       "longitude": 4.634931,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525710"
     },
     {
@@ -1856,7 +1889,7 @@
       "latitude": 43.906581,
       "longitude": 4.902028,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525712"
     },
     {
@@ -1867,7 +1900,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525716"
     },
     {
@@ -1878,7 +1911,7 @@
       "latitude": 47.288333,
       "longitude": -2.346944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525720"
     },
     {
@@ -1889,7 +1922,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525722"
     },
     {
@@ -1900,7 +1933,7 @@
       "latitude": 48.056944,
       "longitude": -2.923333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525724"
     },
     {
@@ -1911,7 +1944,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525728"
     },
     {
@@ -1922,7 +1955,7 @@
       "latitude": 46.908333,
       "longitude": 6.329167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525730"
     },
     {
@@ -1933,7 +1966,7 @@
       "latitude": 46.702383,
       "longitude": -1.381758,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525732"
     },
     {
@@ -1944,7 +1977,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525884"
     },
     {
@@ -1955,7 +1988,7 @@
       "latitude": 48.773325,
       "longitude": 4.206156,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525778"
     },
     {
@@ -1966,7 +1999,7 @@
       "latitude": 49.868861,
       "longitude": 3.0296,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525780"
     },
     {
@@ -1977,7 +2010,7 @@
       "latitude": 48.723611,
       "longitude": 6.206389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525784"
     },
     {
@@ -1988,7 +2021,7 @@
       "latitude": 16.264167,
       "longitude": -61.525833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525790"
     },
     {
@@ -1999,7 +2032,7 @@
       "latitude": 46.763056,
       "longitude": -56.174167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525796"
     },
     {
@@ -2010,7 +2043,7 @@
       "latitude": 47.974947,
       "longitude": -4.167875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525800"
     },
     {
@@ -2021,7 +2054,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525802"
     },
     {
@@ -2032,7 +2065,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525806"
     },
     {
@@ -2043,7 +2076,7 @@
       "latitude": 48.596944,
       "longitude": 3.008056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525808"
     },
     {
@@ -2054,7 +2087,7 @@
       "latitude": 46.763056,
       "longitude": -56.174167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525810"
     },
     {
@@ -2065,7 +2098,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525812"
     },
     {
@@ -2076,7 +2109,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525814"
     },
     {
@@ -2087,7 +2120,7 @@
       "latitude": 48.774172,
       "longitude": 2.191389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525816"
     },
     {
@@ -2098,7 +2131,7 @@
       "latitude": 44.026667,
       "longitude": 1.376944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525820"
     },
     {
@@ -2109,7 +2142,7 @@
       "latitude": 50.6166,
       "longitude": 2.640094,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525824"
     },
     {
@@ -2120,7 +2153,7 @@
       "latitude": 16.264167,
       "longitude": -61.525833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525826"
     },
     {
@@ -2131,7 +2164,7 @@
       "latitude": 43.406389,
       "longitude": 1.989167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525828"
     },
     {
@@ -2142,7 +2175,7 @@
       "latitude": 44.504081,
       "longitude": 3.527633,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525830"
     },
     {
@@ -2153,7 +2186,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525840"
     },
     {
@@ -2164,7 +2197,7 @@
       "latitude": 16.264167,
       "longitude": -61.525833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525842"
     },
     {
@@ -2175,7 +2208,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525844"
     },
     {
@@ -2186,7 +2219,7 @@
       "latitude": 43.610172,
       "longitude": 4.070161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525846"
     },
     {
@@ -2197,7 +2230,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525850"
     },
     {
@@ -2208,7 +2241,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525852"
     },
     {
@@ -2219,7 +2252,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525854"
     },
     {
@@ -2230,7 +2263,7 @@
       "latitude": 16.264167,
       "longitude": -61.525833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525856"
     },
     {
@@ -2241,7 +2274,7 @@
       "latitude": 50.563425,
       "longitude": 3.086822,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525860"
     },
     {
@@ -2252,7 +2285,7 @@
       "latitude": 50.6166,
       "longitude": 2.640094,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525862"
     },
     {
@@ -2263,7 +2296,7 @@
       "latitude": 48.774172,
       "longitude": 2.191389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525864"
     },
     {
@@ -2274,7 +2307,7 @@
       "latitude": 47.481389,
       "longitude": -3.101667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525866"
     },
     {
@@ -2285,7 +2318,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525868"
     },
     {
@@ -2296,7 +2329,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525870"
     },
     {
@@ -2307,7 +2340,7 @@
       "latitude": 46.226094,
       "longitude": 2.362817,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525872"
     },
     {
@@ -2318,7 +2351,7 @@
       "latitude": 48.821944,
       "longitude": 2.622778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525874"
     },
     {
@@ -2329,7 +2362,7 @@
       "latitude": 45.823611,
       "longitude": 6.649167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525876"
     },
     {
@@ -2340,7 +2373,7 @@
       "latitude": 48.821944,
       "longitude": 2.622778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525878"
     },
     {
@@ -2351,7 +2384,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525882"
     },
     {
@@ -2362,7 +2395,7 @@
       "latitude": 50.687222,
       "longitude": 3.075556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525984"
     },
     {
@@ -2373,7 +2406,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525986"
     },
     {
@@ -2384,7 +2417,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525988"
     },
     {
@@ -2395,7 +2428,7 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525990"
     },
     {
@@ -2406,7 +2439,7 @@
       "latitude": 45.652778,
       "longitude": 4.912222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525992"
     },
     {
@@ -2417,7 +2450,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525994"
     },
     {
@@ -2428,7 +2461,7 @@
       "latitude": 49.096628,
       "longitude": 2.040722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525996"
     },
     {
@@ -2439,7 +2472,7 @@
       "latitude": 45.4075,
       "longitude": 6.5775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525888"
     },
     {
@@ -2450,7 +2483,7 @@
       "latitude": 48.842222,
       "longitude": 1.980278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525892"
     },
     {
@@ -2461,7 +2494,7 @@
       "latitude": 48.821944,
       "longitude": 2.622778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525894"
     },
     {
@@ -2472,7 +2505,7 @@
       "latitude": -21.321536,
       "longitude": 55.425678,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525896"
     },
     {
@@ -2483,7 +2516,7 @@
       "latitude": 44.824431,
       "longitude": 0.520525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525900"
     },
     {
@@ -2494,7 +2527,7 @@
       "latitude": 44.145833,
       "longitude": -1.164722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525902"
     },
     {
@@ -2505,7 +2538,7 @@
       "latitude": 48.842222,
       "longitude": 1.980278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525904"
     },
     {
@@ -2516,7 +2549,7 @@
       "latitude": 49.096628,
       "longitude": 2.040722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525906"
     },
     {
@@ -2527,7 +2560,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525908"
     },
     {
@@ -2538,7 +2571,7 @@
       "latitude": 43.583261,
       "longitude": 3.961378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525910"
     },
     {
@@ -2549,7 +2582,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525914"
     },
     {
@@ -2560,7 +2593,7 @@
       "latitude": -12.806681,
       "longitude": 45.280586,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525916"
     },
     {
@@ -2571,7 +2604,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525918"
     },
     {
@@ -2582,7 +2615,7 @@
       "latitude": 48.842222,
       "longitude": 1.980278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525920"
     },
     {
@@ -2593,7 +2626,7 @@
       "latitude": 49.078889,
       "longitude": 1.689722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525922"
     },
     {
@@ -2604,7 +2637,7 @@
       "latitude": 48.758889,
       "longitude": 0.657778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525926"
     },
     {
@@ -2615,7 +2648,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525930"
     },
     {
@@ -2626,7 +2659,7 @@
       "latitude": 49.096628,
       "longitude": 2.040722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525932"
     },
     {
@@ -2637,7 +2670,7 @@
       "latitude": 14.592222,
       "longitude": -60.996389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525936"
     },
     {
@@ -2648,7 +2681,7 @@
       "latitude": 44.499167,
       "longitude": 0.200278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525938"
     },
     {
@@ -2659,7 +2692,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525940"
     },
     {
@@ -2670,7 +2703,7 @@
       "latitude": 14.592222,
       "longitude": -60.996389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525944"
     },
     {
@@ -2681,7 +2714,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525948"
     },
     {
@@ -2692,7 +2725,7 @@
       "latitude": 47.486661,
       "longitude": 6.791469,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525950"
     },
     {
@@ -2703,7 +2736,7 @@
       "latitude": 50.308333,
       "longitude": 4.03,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525952"
     },
     {
@@ -2714,7 +2747,7 @@
       "latitude": 46.7175,
       "longitude": -2.3925,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525956"
     },
     {
@@ -2725,7 +2758,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525960"
     },
     {
@@ -2736,7 +2769,7 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525962"
     },
     {
@@ -2747,7 +2780,7 @@
       "latitude": 47.081906,
       "longitude": -0.877217,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525964"
     },
     {
@@ -2758,7 +2791,7 @@
       "latitude": 17.904444,
       "longitude": -62.843889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525966"
     },
     {
@@ -2769,7 +2802,7 @@
       "latitude": 49.203333,
       "longitude": -1.504722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525968"
     },
     {
@@ -2780,7 +2813,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525972"
     },
     {
@@ -2791,7 +2824,7 @@
       "latitude": -21.481111,
       "longitude": 168.0375,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525974"
     },
     {
@@ -2802,7 +2835,7 @@
       "latitude": 44.985,
       "longitude": -0.136111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525976"
     },
     {
@@ -2813,7 +2846,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525980"
     },
     {
@@ -2824,7 +2857,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526000"
     },
     {
@@ -2835,7 +2868,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526002"
     },
     {
@@ -2846,7 +2879,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526004"
     },
     {
@@ -2857,7 +2890,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526006"
     },
     {
@@ -2868,7 +2901,7 @@
       "latitude": -20.640556,
       "longitude": 166.572778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526012"
     },
     {
@@ -2879,7 +2912,7 @@
       "latitude": 50.466389,
       "longitude": 2.819722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526014"
     },
     {
@@ -2890,7 +2923,7 @@
       "latitude": 49.109167,
       "longitude": 2.736944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526016"
     },
     {
@@ -2901,7 +2934,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526020"
     },
     {
@@ -2912,7 +2945,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526022"
     },
     {
@@ -2923,7 +2956,7 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526024"
     },
     {
@@ -2934,7 +2967,7 @@
       "latitude": 18.100556,
       "longitude": -63.048889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526026"
     },
     {
@@ -2945,7 +2978,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526028"
     },
     {
@@ -2956,7 +2989,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526032"
     },
     {
@@ -2967,7 +3000,7 @@
       "latitude": 47.095833,
       "longitude": -56.384444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526034"
     },
     {
@@ -2978,7 +3011,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526036"
     },
     {
@@ -2989,7 +3022,7 @@
       "latitude": -12.806681,
       "longitude": 45.280586,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526038"
     },
     {
@@ -3000,19 +3033,8 @@
       "latitude": 48.998611,
       "longitude": 1.941667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526040"
-    },
-    {
-      "id": "SER_1526042",
-      "unit_name": "LFBI POITIERS",
-      "type": "VDF",
-      "sequence": 10,
-      "latitude": 46.587397,
-      "longitude": 0.306786,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1526042"
     },
     {
       "id": "SER_1526044",
@@ -3022,7 +3044,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526044"
     },
     {
@@ -3033,7 +3055,7 @@
       "latitude": -20.79,
       "longitude": 165.259444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526046"
     },
     {
@@ -3044,7 +3066,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526048"
     },
     {
@@ -3055,7 +3077,7 @@
       "latitude": 46.587397,
       "longitude": 0.306786,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526050"
     },
     {
@@ -3066,7 +3088,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526052"
     },
     {
@@ -3077,7 +3099,7 @@
       "latitude": 43.436633,
       "longitude": 5.215119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526054"
     },
     {
@@ -3088,7 +3110,7 @@
       "latitude": 43.215,
       "longitude": 0.0775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526056"
     },
     {
@@ -3099,7 +3121,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526058"
     },
     {
@@ -3110,7 +3132,7 @@
       "latitude": 42.740833,
       "longitude": 2.869722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526066"
     },
     {
@@ -3121,7 +3143,7 @@
       "latitude": 46.313422,
       "longitude": -0.394433,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526068"
     },
     {
@@ -3132,7 +3154,7 @@
       "latitude": -23.886389,
       "longitude": -147.665278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526070"
     },
     {
@@ -3143,7 +3165,7 @@
       "latitude": 43.989058,
       "longitude": 3.183303,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526078"
     },
     {
@@ -3154,7 +3176,7 @@
       "latitude": 46.961944,
       "longitude": -0.152778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526080"
     },
     {
@@ -3165,7 +3187,7 @@
       "latitude": 49.622778,
       "longitude": -1.83,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526082"
     },
     {
@@ -3176,7 +3198,7 @@
       "latitude": -8.793333,
       "longitude": -140.223056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526090"
     },
     {
@@ -3187,7 +3209,7 @@
       "latitude": 48.553611,
       "longitude": 7.7775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526094"
     },
     {
@@ -3198,7 +3220,7 @@
       "latitude": -16.723056,
       "longitude": -151.466944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526096"
     },
     {
@@ -3209,7 +3231,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526098"
     },
     {
@@ -3220,7 +3242,7 @@
       "latitude": 45.535833,
       "longitude": 2.424722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526104"
     },
     {
@@ -3231,7 +3253,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526106"
     },
     {
@@ -3242,7 +3264,7 @@
       "latitude": -17.489444,
       "longitude": -149.762222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526108"
     },
     {
@@ -3253,7 +3275,7 @@
       "latitude": 49.122181,
       "longitude": 5.470853,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526114"
     },
     {
@@ -3264,7 +3286,7 @@
       "latitude": 43.689167,
       "longitude": -1.068889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526118"
     },
     {
@@ -3275,7 +3297,7 @@
       "latitude": 45.039639,
       "longitude": 1.485667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526120"
     },
     {
@@ -3286,7 +3308,7 @@
       "latitude": 43.689167,
       "longitude": -1.068889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526122"
     },
     {
@@ -3297,7 +3319,7 @@
       "latitude": 45.039639,
       "longitude": 1.485667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526128"
     },
     {
@@ -3308,7 +3330,7 @@
       "latitude": -14.869444,
       "longitude": -148.712778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526132"
     },
     {
@@ -3319,7 +3341,7 @@
       "latitude": 43.611111,
       "longitude": 1.724167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526134"
     },
     {
@@ -3330,7 +3352,7 @@
       "latitude": -16.426389,
       "longitude": -152.2425,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526136"
     },
     {
@@ -3341,7 +3363,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526138"
     },
     {
@@ -3352,7 +3374,7 @@
       "latitude": 43.689167,
       "longitude": -1.068889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526144"
     },
     {
@@ -3363,7 +3385,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526148"
     },
     {
@@ -3374,7 +3396,7 @@
       "latitude": 49.970061,
       "longitude": 2.692617,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526152"
     },
     {
@@ -3385,7 +3407,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526154"
     },
     {
@@ -3396,7 +3418,7 @@
       "latitude": 48.499528,
       "longitude": 2.329964,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526162"
     },
     {
@@ -3407,19 +3429,8 @@
       "latitude": 44.399178,
       "longitude": 0.759533,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526164"
-    },
-    {
-      "id": "SER_1526166",
-      "unit_name": "LFOB BEAUVAIS",
-      "type": "TWR",
-      "sequence": 10,
-      "latitude": 49.454422,
-      "longitude": 2.112814,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1526166"
     },
     {
       "id": "SER_1526172",
@@ -3429,7 +3440,7 @@
       "latitude": 47.638611,
       "longitude": 6.204167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526172"
     },
     {
@@ -3440,7 +3451,7 @@
       "latitude": -15.666944,
       "longitude": -146.886944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526174"
     },
     {
@@ -3451,7 +3462,7 @@
       "latitude": 45.785972,
       "longitude": 3.16245,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526176"
     },
     {
@@ -3462,7 +3473,7 @@
       "latitude": 46.406492,
       "longitude": 4.021097,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526178"
     },
     {
@@ -3473,7 +3484,7 @@
       "latitude": 45.0875,
       "longitude": 6.083611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526180"
     },
     {
@@ -3484,7 +3495,7 @@
       "latitude": 47.194722,
       "longitude": 2.066667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526182"
     },
     {
@@ -3495,7 +3506,7 @@
       "latitude": 43.206389,
       "longitude": 6.4825,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526184"
     },
     {
@@ -3506,7 +3517,7 @@
       "latitude": -16.586667,
       "longitude": -143.653889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526186"
     },
     {
@@ -3517,7 +3528,7 @@
       "latitude": 49.363394,
       "longitude": 0.159997,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526188"
     },
     {
@@ -3528,7 +3539,7 @@
       "latitude": 47.256731,
       "longitude": -0.113553,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526190"
     },
     {
@@ -3539,7 +3550,7 @@
       "latitude": 45.639272,
       "longitude": 5.880122,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526192"
     },
     {
@@ -3550,7 +3561,7 @@
       "latitude": -9.768056,
       "longitude": -139.011111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526194"
     },
     {
@@ -3561,7 +3572,7 @@
       "latitude": 46.406492,
       "longitude": 4.021097,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526196"
     },
     {
@@ -3572,7 +3583,7 @@
       "latitude": 46.587397,
       "longitude": 0.306786,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526202"
     },
     {
@@ -3583,7 +3594,7 @@
       "latitude": 43.757428,
       "longitude": 4.416344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526204"
     },
     {
@@ -3594,7 +3605,7 @@
       "latitude": 46.406492,
       "longitude": 4.021097,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526208"
     },
     {
@@ -3605,7 +3616,7 @@
       "latitude": 46.587397,
       "longitude": 0.306786,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526218"
     },
     {
@@ -3616,7 +3627,7 @@
       "latitude": -18.064167,
       "longitude": -140.957222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526222"
     },
     {
@@ -3627,19 +3638,8 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526316"
-    },
-    {
-      "id": "SER_1526320",
-      "unit_name": "LFOB BEAUVAIS",
-      "type": "VDF",
-      "sequence": 10,
-      "latitude": 49.454422,
-      "longitude": 2.112814,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1526320"
     },
     {
       "id": "SER_1526324",
@@ -3649,7 +3649,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526324"
     },
     {
@@ -3660,7 +3660,7 @@
       "latitude": -23.369722,
       "longitude": -149.529722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526326"
     },
     {
@@ -3671,7 +3671,7 @@
       "latitude": 43.549061,
       "longitude": 1.357261,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526328"
     },
     {
@@ -3682,7 +3682,7 @@
       "latitude": 46.406492,
       "longitude": 4.021097,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526330"
     },
     {
@@ -3693,7 +3693,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526332"
     },
     {
@@ -3704,19 +3704,8 @@
       "latitude": 43.736389,
       "longitude": 5.783056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526224"
-    },
-    {
-      "id": "SER_1526228",
-      "unit_name": "LFOB BEAUVAIS",
-      "type": "APP",
-      "sequence": 10,
-      "latitude": 49.454422,
-      "longitude": 2.112814,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1526228"
     },
     {
       "id": "SER_1526230",
@@ -3726,7 +3715,7 @@
       "latitude": 46.406492,
       "longitude": 4.021097,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526230"
     },
     {
@@ -3737,7 +3726,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526232"
     },
     {
@@ -3748,7 +3737,7 @@
       "latitude": 43.757428,
       "longitude": 4.416344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526234"
     },
     {
@@ -3759,7 +3748,7 @@
       "latitude": 43.480278,
       "longitude": 1.978889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526236"
     },
     {
@@ -3770,7 +3759,7 @@
       "latitude": 49.173281,
       "longitude": -0.449875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526238"
     },
     {
@@ -3781,7 +3770,7 @@
       "latitude": 48.926944,
       "longitude": 2.833889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526240"
     },
     {
@@ -3792,7 +3781,7 @@
       "latitude": 44.824431,
       "longitude": 0.520525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526244"
     },
     {
@@ -3803,7 +3792,7 @@
       "latitude": 43.090683,
       "longitude": 1.695853,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526246"
     },
     {
@@ -3814,7 +3803,7 @@
       "latitude": 43.18545,
       "longitude": -0.002894,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526250"
     },
     {
@@ -3825,7 +3814,7 @@
       "latitude": 49.173281,
       "longitude": -0.449875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526252"
     },
     {
@@ -3836,7 +3825,7 @@
       "latitude": 45.53405,
       "longitude": 4.297311,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526256"
     },
     {
@@ -3847,7 +3836,7 @@
       "latitude": 45.395833,
       "longitude": 6.6325,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526258"
     },
     {
@@ -3856,7 +3845,7 @@
       "type": "FIS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526260"
     },
     {
@@ -3867,7 +3856,7 @@
       "latitude": 45.639272,
       "longitude": 5.880122,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526262"
     },
     {
@@ -3878,7 +3867,7 @@
       "latitude": 48.926944,
       "longitude": 2.833889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526264"
     },
     {
@@ -3889,7 +3878,7 @@
       "latitude": 43.505278,
       "longitude": 5.367222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526268"
     },
     {
@@ -3900,7 +3889,7 @@
       "latitude": 43.587778,
       "longitude": 1.498611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526270"
     },
     {
@@ -3911,7 +3900,7 @@
       "latitude": 49.433611,
       "longitude": 2.804722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526272"
     },
     {
@@ -3922,7 +3911,7 @@
       "latitude": 43.323428,
       "longitude": 3.353397,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526274"
     },
     {
@@ -3933,7 +3922,7 @@
       "latitude": 47.897617,
       "longitude": 2.164208,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526276"
     },
     {
@@ -3944,7 +3933,7 @@
       "latitude": 44.350542,
       "longitude": 1.478586,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526280"
     },
     {
@@ -3955,7 +3944,7 @@
       "latitude": 47.589878,
       "longitude": 7.529222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526282"
     },
     {
@@ -3966,7 +3955,7 @@
       "latitude": 48.463214,
       "longitude": -5.063583,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526284"
     },
     {
@@ -3977,7 +3966,7 @@
       "latitude": -9.350556,
       "longitude": -140.078056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526288"
     },
     {
@@ -3988,7 +3977,7 @@
       "latitude": 48.289444,
       "longitude": 3.248889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526290"
     },
     {
@@ -3999,7 +3988,7 @@
       "latitude": 47.205308,
       "longitude": 6.08055,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526292"
     },
     {
@@ -4010,7 +3999,7 @@
       "latitude": 43.007778,
       "longitude": 1.103056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526302"
     },
     {
@@ -4021,7 +4010,7 @@
       "latitude": -8.936111,
       "longitude": -139.555,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526312"
     },
     {
@@ -4032,7 +4021,7 @@
       "latitude": 48.8975,
       "longitude": 1.250833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526338"
     },
     {
@@ -4043,7 +4032,7 @@
       "latitude": -23.082778,
       "longitude": -134.887222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526340"
     },
     {
@@ -4054,7 +4043,7 @@
       "latitude": 47.326111,
       "longitude": -3.198889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526342"
     },
     {
@@ -4065,7 +4054,7 @@
       "latitude": 47.31065,
       "longitude": -2.156803,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526346"
     },
     {
@@ -4076,7 +4065,7 @@
       "latitude": 47.320833,
       "longitude": 1.688889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526350"
     },
     {
@@ -4087,7 +4076,7 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526352"
     },
     {
@@ -4098,7 +4087,7 @@
       "latitude": -15.120278,
       "longitude": -148.233611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526356"
     },
     {
@@ -4109,7 +4098,7 @@
       "latitude": 43.468308,
       "longitude": -1.531161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526358"
     },
     {
@@ -4120,7 +4109,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526362"
     },
     {
@@ -4131,7 +4120,7 @@
       "latitude": 43.6575,
       "longitude": 5.012778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526366"
     },
     {
@@ -4142,7 +4131,7 @@
       "latitude": 47.265817,
       "longitude": 5.094978,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526372"
     },
     {
@@ -4153,7 +4142,7 @@
       "latitude": 45.701944,
       "longitude": -0.636111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526378"
     },
     {
@@ -4164,7 +4153,7 @@
       "latitude": 43.468308,
       "longitude": -1.531161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526380"
     },
     {
@@ -4175,7 +4164,7 @@
       "latitude": 43.247589,
       "longitude": 6.127294,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526386"
     },
     {
@@ -4186,7 +4175,7 @@
       "latitude": 47.987778,
       "longitude": 1.760556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526388"
     },
     {
@@ -4197,7 +4186,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526390"
     },
     {
@@ -4208,7 +4197,7 @@
       "latitude": -14.709722,
       "longitude": -145.247778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526394"
     },
     {
@@ -4219,7 +4208,7 @@
       "latitude": 45.957778,
       "longitude": -1.311389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526396"
     },
     {
@@ -4230,7 +4219,7 @@
       "latitude": 48.605283,
       "longitude": 2.670781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526400"
     },
     {
@@ -4241,7 +4230,7 @@
       "latitude": 43.18545,
       "longitude": -0.002894,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526402"
     },
     {
@@ -4252,7 +4241,7 @@
       "latitude": 45.493889,
       "longitude": -1.083889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526404"
     },
     {
@@ -4263,7 +4252,7 @@
       "latitude": -22.431667,
       "longitude": -151.367222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526408"
     },
     {
@@ -4274,7 +4263,7 @@
       "latitude": 49.345,
       "longitude": 3.283056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526410"
     },
     {
@@ -4285,7 +4274,7 @@
       "latitude": 47.560211,
       "longitude": -0.312128,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526416"
     },
     {
@@ -4296,7 +4285,7 @@
       "latitude": 45.53405,
       "longitude": 4.297311,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526418"
     },
     {
@@ -4307,7 +4296,7 @@
       "latitude": 43.323428,
       "longitude": 3.353397,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526422"
     },
     {
@@ -4318,7 +4307,7 @@
       "latitude": 43.1075,
       "longitude": 0.619167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526424"
     },
     {
@@ -4329,7 +4318,7 @@
       "latitude": 44.286667,
       "longitude": 5.929167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526432"
     },
     {
@@ -4340,7 +4329,7 @@
       "latitude": 42.740833,
       "longitude": 2.869722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526438"
     },
     {
@@ -4351,7 +4340,7 @@
       "latitude": 43.323428,
       "longitude": 3.353397,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526440"
     },
     {
@@ -4362,7 +4351,7 @@
       "latitude": 44.792222,
       "longitude": 1.243611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526448"
     },
     {
@@ -4373,7 +4362,7 @@
       "latitude": 43.311111,
       "longitude": 1.92,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526452"
     },
     {
@@ -4384,7 +4373,7 @@
       "latitude": 44.368056,
       "longitude": -1.132222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526454"
     },
     {
@@ -4395,7 +4384,7 @@
       "latitude": 45.218056,
       "longitude": 5.848611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526458"
     },
     {
@@ -4406,7 +4395,7 @@
       "latitude": 48.810278,
       "longitude": 2.073333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526462"
     },
     {
@@ -4417,7 +4406,7 @@
       "latitude": 47.003731,
       "longitude": 3.110742,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526466"
     },
     {
@@ -4428,7 +4417,7 @@
       "latitude": 47.042694,
       "longitude": 5.434928,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526468"
     },
     {
@@ -4439,7 +4428,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526472"
     },
     {
@@ -4450,7 +4439,7 @@
       "latitude": 50.1425,
       "longitude": 3.265,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526476"
     },
     {
@@ -4461,7 +4450,7 @@
       "latitude": 50.514847,
       "longitude": 1.627578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526478"
     },
     {
@@ -4472,7 +4461,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526480"
     },
     {
@@ -4483,19 +4472,8 @@
       "latitude": 48.325006,
       "longitude": 6.066742,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526486"
-    },
-    {
-      "id": "SER_1526488",
-      "unit_name": "LFBZ BIARRITZ",
-      "type": "VDF",
-      "sequence": 10,
-      "latitude": 43.468308,
-      "longitude": -1.531161,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "1526488"
     },
     {
       "id": "SER_1526490",
@@ -4505,7 +4483,7 @@
       "latitude": 50.6166,
       "longitude": 2.640094,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526490"
     },
     {
@@ -4516,7 +4494,7 @@
       "latitude": 48.810278,
       "longitude": 2.073333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526492"
     },
     {
@@ -4527,7 +4505,7 @@
       "latitude": 44.085833,
       "longitude": 1.126944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526494"
     },
     {
@@ -4538,7 +4516,7 @@
       "latitude": 49.970061,
       "longitude": 2.692617,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526498"
     },
     {
@@ -4549,7 +4527,7 @@
       "latitude": 43.468308,
       "longitude": -1.531161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526500"
     },
     {
@@ -4560,7 +4538,7 @@
       "latitude": 45.560556,
       "longitude": 5.975833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526502"
     },
     {
@@ -4571,7 +4549,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526504"
     },
     {
@@ -4582,7 +4560,7 @@
       "latitude": 48.587706,
       "longitude": -2.07995,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526506"
     },
     {
@@ -4593,7 +4571,7 @@
       "latitude": 5.483056,
       "longitude": -54.034444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526514"
     },
     {
@@ -4604,7 +4582,7 @@
       "latitude": 48.905556,
       "longitude": 4.352778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526516"
     },
     {
@@ -4615,7 +4593,7 @@
       "latitude": 49.066667,
       "longitude": 3.355556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526518"
     },
     {
@@ -4626,7 +4604,7 @@
       "latitude": 50.514847,
       "longitude": 1.627578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526520"
     },
     {
@@ -4637,7 +4615,7 @@
       "latitude": 3.613611,
       "longitude": -53.204167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526522"
     },
     {
@@ -4648,7 +4626,7 @@
       "latitude": 43.468308,
       "longitude": -1.531161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526524"
     },
     {
@@ -4659,7 +4637,7 @@
       "latitude": 48.458889,
       "longitude": 1.523889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526534"
     },
     {
@@ -4670,7 +4648,7 @@
       "latitude": 43.468308,
       "longitude": -1.531161,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526536"
     },
     {
@@ -4681,7 +4659,7 @@
       "latitude": 48.071933,
       "longitude": -1.732233,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526538"
     },
     {
@@ -4692,7 +4670,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526540"
     },
     {
@@ -4703,7 +4681,7 @@
       "latitude": 48.587706,
       "longitude": -2.07995,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526542"
     },
     {
@@ -4714,7 +4692,7 @@
       "latitude": 50.514847,
       "longitude": 1.627578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526546"
     },
     {
@@ -4725,7 +4703,7 @@
       "latitude": 15.864444,
       "longitude": -61.580556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526550"
     },
     {
@@ -4736,7 +4714,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526552"
     },
     {
@@ -4747,7 +4725,7 @@
       "latitude": 3.6575,
       "longitude": -54.037222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526558"
     },
     {
@@ -4758,7 +4736,7 @@
       "latitude": 48.514722,
       "longitude": 1.638611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526562"
     },
     {
@@ -4769,7 +4747,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526568"
     },
     {
@@ -4780,7 +4758,7 @@
       "latitude": 48.843611,
       "longitude": 1.908889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526570"
     },
     {
@@ -4791,7 +4769,7 @@
       "latitude": 4.314722,
       "longitude": -52.131667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526572"
     },
     {
@@ -4802,7 +4780,7 @@
       "latitude": 49.390953,
       "longitude": 1.183936,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526576"
     },
     {
@@ -4813,7 +4791,7 @@
       "latitude": 49.1025,
       "longitude": 0.565556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526580"
     },
     {
@@ -4824,7 +4802,7 @@
       "latitude": 42.524356,
       "longitude": 8.793011,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526586"
     },
     {
@@ -4835,7 +4813,7 @@
       "latitude": 45.079656,
       "longitude": 3.763442,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526588"
     },
     {
@@ -4846,7 +4824,7 @@
       "latitude": 3.893333,
       "longitude": -51.805556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526590"
     },
     {
@@ -4857,7 +4835,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526592"
     },
     {
@@ -4868,7 +4846,7 @@
       "latitude": 46.763056,
       "longitude": -56.174167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526596"
     },
     {
@@ -4879,7 +4857,7 @@
       "latitude": 48.773325,
       "longitude": 4.206156,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526598"
     },
     {
@@ -4890,7 +4868,7 @@
       "latitude": 42.524356,
       "longitude": 8.793011,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526600"
     },
     {
@@ -4901,7 +4879,7 @@
       "latitude": 44.877222,
       "longitude": -0.479167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526602"
     },
     {
@@ -4912,7 +4890,7 @@
       "latitude": 49.229089,
       "longitude": 5.67605,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526604"
     },
     {
@@ -4923,7 +4901,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526606"
     },
     {
@@ -4934,7 +4912,7 @@
       "latitude": 42.524356,
       "longitude": 8.793011,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526614"
     },
     {
@@ -4945,7 +4923,7 @@
       "latitude": 16.013333,
       "longitude": -61.742222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526618"
     },
     {
@@ -4956,7 +4934,7 @@
       "latitude": 44.699167,
       "longitude": -0.597222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526620"
     },
     {
@@ -4967,7 +4945,7 @@
       "latitude": 48.350278,
       "longitude": 2.424444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526622"
     },
     {
@@ -4978,7 +4956,7 @@
       "latitude": 16.296944,
       "longitude": -61.084444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526624"
     },
     {
@@ -4989,7 +4967,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526626"
     },
     {
@@ -5000,7 +4978,7 @@
       "latitude": 43.800278,
       "longitude": 3.781667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526630"
     },
     {
@@ -5011,7 +4989,7 @@
       "latitude": 47.679833,
       "longitude": 1.205775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526636"
     },
     {
@@ -5022,7 +5000,7 @@
       "latitude": 47.157019,
       "longitude": -1.607808,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526642"
     },
     {
@@ -5033,7 +5011,7 @@
       "latitude": -16.443611,
       "longitude": -151.7525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526644"
     },
     {
@@ -5044,7 +5022,7 @@
       "latitude": 43.708611,
       "longitude": -0.247222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526646"
     },
     {
@@ -5055,7 +5033,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526652"
     },
     {
@@ -5066,7 +5044,7 @@
       "latitude": 48.821944,
       "longitude": 2.622778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526654"
     },
     {
@@ -5077,7 +5055,7 @@
       "latitude": 44.534883,
       "longitude": -1.13145,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526658"
     },
     {
@@ -5088,7 +5066,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526662"
     },
     {
@@ -5099,7 +5077,7 @@
       "latitude": -16.0525,
       "longitude": -145.653056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526668"
     },
     {
@@ -5110,7 +5088,7 @@
       "latitude": 45.979722,
       "longitude": 5.337778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526670"
     },
     {
@@ -5121,7 +5099,7 @@
       "latitude": 44.0225,
       "longitude": 5.09,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526784"
     },
     {
@@ -5132,7 +5110,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526786"
     },
     {
@@ -5143,7 +5121,7 @@
       "latitude": -17.556667,
       "longitude": -149.611389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526790"
     },
     {
@@ -5154,7 +5132,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526792"
     },
     {
@@ -5165,7 +5143,7 @@
       "latitude": 44.539419,
       "longitude": 4.371733,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526794"
     },
     {
@@ -5176,7 +5154,7 @@
       "latitude": 45.064722,
       "longitude": 5.101389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526796"
     },
     {
@@ -5187,7 +5165,7 @@
       "latitude": 15.868611,
       "longitude": -61.272222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526806"
     },
     {
@@ -5198,7 +5176,7 @@
       "latitude": -22.016389,
       "longitude": 166.216111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1605508"
     },
     {
@@ -5209,7 +5187,7 @@
       "latitude": 45.074919,
       "longitude": 2.992636,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1605793"
     },
     {
@@ -5220,7 +5198,7 @@
       "latitude": -20.889917,
       "longitude": 55.516344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1607148"
     },
     {
@@ -5231,7 +5209,7 @@
       "latitude": 4.819722,
       "longitude": -52.361944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1608557"
     },
     {
@@ -5242,7 +5220,7 @@
       "latitude": 44.072733,
       "longitude": 4.142919,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1611437"
     },
     {
@@ -5253,7 +5231,7 @@
       "latitude": 44.3,
       "longitude": 1.083333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612950"
     },
     {
@@ -5264,7 +5242,7 @@
       "latitude": 46.62,
       "longitude": 1.085833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612954"
     },
     {
@@ -5275,7 +5253,7 @@
       "latitude": 48.11035,
       "longitude": 7.359147,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612958"
     },
     {
@@ -5286,7 +5264,7 @@
       "latitude": 48.11035,
       "longitude": 7.359147,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612962"
     },
     {
@@ -5297,7 +5275,7 @@
       "latitude": 46.475556,
       "longitude": -1.725,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1613984"
     },
     {
@@ -5308,7 +5286,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "2192431"
     },
     {
@@ -5319,7 +5297,7 @@
       "latitude": 45.729475,
       "longitude": 0.219153,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525608"
     },
     {
@@ -5330,7 +5308,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525396"
     },
     {
@@ -5341,7 +5319,7 @@
       "latitude": -20.546389,
       "longitude": 164.255556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "5255103"
     },
     {
@@ -5352,7 +5330,7 @@
       "latitude": -19.720556,
       "longitude": 163.661111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "5255097"
     },
     {
@@ -5363,7 +5341,7 @@
       "latitude": 46.860314,
       "longitude": 1.721125,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525504"
     },
     {
@@ -5374,7 +5352,7 @@
       "latitude": -12.806681,
       "longitude": 45.280586,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "7530121"
     },
     {
@@ -5385,7 +5363,7 @@
       "latitude": -14.955278,
       "longitude": -147.657778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526420"
     },
     {
@@ -5396,7 +5374,7 @@
       "latitude": 48.773325,
       "longitude": 4.206156,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1606641"
     },
     {
@@ -5407,7 +5385,7 @@
       "latitude": 47.719244,
       "longitude": -2.723378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525584"
     },
     {
@@ -5418,7 +5396,7 @@
       "latitude": 48.754444,
       "longitude": -3.471944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526200"
     },
     {
@@ -5429,7 +5407,7 @@
       "latitude": 48.882875,
       "longitude": -1.563833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525500"
     },
     {
@@ -5440,7 +5418,7 @@
       "latitude": 45.979722,
       "longitude": 5.337778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "15617872"
     },
     {
@@ -5451,7 +5429,7 @@
       "latitude": 44.915558,
       "longitude": 4.968744,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "16475259"
     },
     {
@@ -5462,7 +5440,7 @@
       "latitude": 50.960933,
       "longitude": 1.951433,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526294"
     },
     {
@@ -5473,7 +5451,7 @@
       "latitude": 43.449156,
       "longitude": 1.263694,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525392"
     },
     {
@@ -5484,7 +5462,7 @@
       "latitude": -21.819722,
       "longitude": 165.860833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17782513"
     },
     {
@@ -5495,7 +5473,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17524714"
     },
     {
@@ -5506,7 +5484,7 @@
       "latitude": -21.609722,
       "longitude": 165.397222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17782790"
     },
     {
@@ -5517,7 +5495,7 @@
       "latitude": 49.650775,
       "longitude": -1.4753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18293237"
     },
     {
@@ -5528,7 +5506,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526084"
     },
     {
@@ -5539,7 +5517,7 @@
       "latitude": 47.042694,
       "longitude": 5.434928,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19322172"
     },
     {
@@ -5550,7 +5528,7 @@
       "latitude": 41.926389,
       "longitude": 9.405278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526214"
     },
     {
@@ -5561,7 +5539,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526116"
     },
     {
@@ -5572,7 +5550,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19576904"
     },
     {
@@ -5583,7 +5561,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19576937"
     },
     {
@@ -5594,7 +5572,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19576926"
     },
     {
@@ -5605,7 +5583,7 @@
       "latitude": 43.602908,
       "longitude": 5.108167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526158"
     },
     {
@@ -5616,7 +5594,7 @@
       "latitude": 49.533847,
       "longitude": 0.088119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526702"
     },
     {
@@ -5627,7 +5605,7 @@
       "latitude": -16.688333,
       "longitude": -151.028611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526206"
     },
     {
@@ -5638,7 +5616,7 @@
       "latitude": 43.757428,
       "longitude": 4.416344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "21043743"
     },
     {
@@ -5649,7 +5627,7 @@
       "latitude": 50.514847,
       "longitude": 1.627578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "22142768"
     },
     {
@@ -5660,7 +5638,7 @@
       "latitude": 47.960556,
       "longitude": 2.685833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "23518455"
     },
     {
@@ -5671,7 +5649,7 @@
       "latitude": 45.729475,
       "longitude": 0.219153,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17391554"
     },
     {
@@ -5682,7 +5660,7 @@
       "latitude": -14.437222,
       "longitude": -146.071111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526156"
     },
     {
@@ -5693,7 +5671,7 @@
       "latitude": 49.025469,
       "longitude": 5.876092,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526242"
     },
     {
@@ -5704,7 +5682,7 @@
       "latitude": 47.948492,
       "longitude": 0.201647,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526564"
     },
     {
@@ -5715,7 +5693,7 @@
       "latitude": 44.407489,
       "longitude": 2.483314,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25090248"
     },
     {
@@ -5726,7 +5704,7 @@
       "latitude": 48.001944,
       "longitude": -2.378611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25362810"
     },
     {
@@ -5737,7 +5715,7 @@
       "latitude": 43.505278,
       "longitude": 5.367222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "26372443"
     },
     {
@@ -5748,19 +5726,8 @@
       "latitude": -21.321536,
       "longitude": 55.425678,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "26372751"
-    },
-    {
-      "id": "SER_26869389",
-      "unit_name": "LFMD CANNES",
-      "type": "TWR",
-      "sequence": 30,
-      "latitude": 43.546389,
-      "longitude": 6.954167,
-      "source": "SIA",
-      "airac": "2026-05-14",
-      "sia_uid": "26869389"
     },
     {
       "id": "SER_1526212",
@@ -5770,8 +5737,19 @@
       "latitude": 49.454422,
       "longitude": 2.112814,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526212"
+    },
+    {
+      "id": "SER_26869389",
+      "unit_name": "LFMD CANNES",
+      "type": "TWR",
+      "sequence": 30,
+      "latitude": 43.546389,
+      "longitude": 6.954167,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "26869389"
     },
     {
       "id": "SER_27271148",
@@ -5781,7 +5759,7 @@
       "latitude": 48.749756,
       "longitude": 2.111178,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "27271148"
     },
     {
@@ -5792,7 +5770,7 @@
       "latitude": 48.446667,
       "longitude": 0.108333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526666"
     },
     {
@@ -5801,7 +5779,7 @@
       "type": "OTHER",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526010"
     },
     {
@@ -5812,7 +5790,7 @@
       "latitude": 49.882633,
       "longitude": 1.085331,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526150"
     },
     {
@@ -5823,7 +5801,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526464"
     },
     {
@@ -5834,7 +5812,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259046"
     },
     {
@@ -5845,7 +5823,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526612"
     },
     {
@@ -5856,7 +5834,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526804"
     },
     {
@@ -5867,7 +5845,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259064"
     },
     {
@@ -5878,7 +5856,7 @@
       "latitude": 47.737222,
       "longitude": 7.429722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612745"
     },
     {
@@ -5889,7 +5867,7 @@
       "latitude": 48.605283,
       "longitude": 2.670781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259207"
     },
     {
@@ -5900,7 +5878,7 @@
       "latitude": 43.906581,
       "longitude": 4.902028,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525744"
     },
     {
@@ -5911,7 +5889,7 @@
       "latitude": 43.906581,
       "longitude": 4.902028,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525782"
     },
     {
@@ -5922,7 +5900,7 @@
       "latitude": 43.215817,
       "longitude": 2.308544,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526678"
     },
     {
@@ -5933,7 +5911,7 @@
       "latitude": 43.215817,
       "longitude": 2.308544,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526700"
     },
     {
@@ -5944,7 +5922,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259309"
     },
     {
@@ -5955,7 +5933,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525788"
     },
     {
@@ -5966,7 +5944,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525794"
     },
     {
@@ -5977,7 +5955,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259320"
     },
     {
@@ -5988,7 +5966,7 @@
       "latitude": 4.819722,
       "longitude": -52.361944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1608559"
     },
     {
@@ -5999,7 +5977,7 @@
       "latitude": 4.819722,
       "longitude": -52.361944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1608561"
     },
     {
@@ -6010,7 +5988,7 @@
       "latitude": 4.819722,
       "longitude": -52.361944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1608563"
     },
     {
@@ -6021,7 +5999,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526776"
     },
     {
@@ -6032,7 +6010,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525398"
     },
     {
@@ -6043,7 +6021,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525494"
     },
     {
@@ -6054,7 +6032,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259425"
     },
     {
@@ -6063,7 +6041,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526578"
     },
     {
@@ -6072,7 +6050,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526482"
     },
     {
@@ -6081,7 +6059,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526318"
     },
     {
@@ -6090,7 +6068,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525762"
     },
     {
@@ -6101,7 +6079,7 @@
       "latitude": -20.889917,
       "longitude": 55.516344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29361466"
     },
     {
@@ -6112,7 +6090,7 @@
       "latitude": -20.889917,
       "longitude": 55.516344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1607146"
     },
     {
@@ -6123,7 +6101,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18336942"
     },
     {
@@ -6134,7 +6112,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18336931"
     },
     {
@@ -6145,7 +6123,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18293589"
     },
     {
@@ -6156,7 +6134,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525336"
     },
     {
@@ -6167,7 +6145,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526018"
     },
     {
@@ -6178,7 +6156,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526560"
     },
     {
@@ -6189,7 +6167,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29565714"
     },
     {
@@ -6200,7 +6178,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29565725"
     },
     {
@@ -6211,7 +6189,7 @@
       "latitude": 43.906581,
       "longitude": 4.902028,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697077"
     },
     {
@@ -6222,7 +6200,7 @@
       "latitude": 44.828653,
       "longitude": -0.715344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697092"
     },
     {
@@ -6233,7 +6211,7 @@
       "latitude": 49.229089,
       "longitude": 5.67605,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526638"
     },
     {
@@ -6244,7 +6222,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697115"
     },
     {
@@ -6255,7 +6233,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697153"
     },
     {
@@ -6266,7 +6244,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697161"
     },
     {
@@ -6277,7 +6255,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697169"
     },
     {
@@ -6288,7 +6266,7 @@
       "latitude": 48.583186,
       "longitude": 5.954525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697177"
     },
     {
@@ -6299,7 +6277,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697193"
     },
     {
@@ -6310,7 +6288,7 @@
       "latitude": 43.18545,
       "longitude": -0.002894,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697215"
     },
     {
@@ -6321,7 +6299,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697223"
     },
     {
@@ -6332,7 +6310,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259052"
     },
     {
@@ -6343,7 +6321,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259140"
     },
     {
@@ -6354,7 +6332,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259166"
     },
     {
@@ -6365,7 +6343,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525424"
     },
     {
@@ -6376,7 +6354,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525680"
     },
     {
@@ -6387,7 +6365,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525548"
     },
     {
@@ -6398,7 +6376,7 @@
       "latitude": 48.605283,
       "longitude": 2.670781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259217"
     },
     {
@@ -6409,7 +6387,7 @@
       "latitude": 48.605283,
       "longitude": 2.670781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526348"
     },
     {
@@ -6420,7 +6398,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526278"
     },
     {
@@ -6431,7 +6409,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526310"
     },
     {
@@ -6442,7 +6420,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526354"
     },
     {
@@ -6453,7 +6431,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259238"
     },
     {
@@ -6464,7 +6442,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29259244"
     },
     {
@@ -6475,7 +6453,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697225"
     },
     {
@@ -6486,7 +6464,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526374"
     },
     {
@@ -6497,7 +6475,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526126"
     },
     {
@@ -6508,7 +6486,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526210"
     },
     {
@@ -6519,7 +6497,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526384"
     },
     {
@@ -6530,7 +6508,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697275"
     },
     {
@@ -6541,7 +6519,7 @@
       "latitude": 43.635128,
       "longitude": 1.367856,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697261"
     },
     {
@@ -6552,7 +6530,7 @@
       "latitude": -20.889917,
       "longitude": 55.516344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697358"
     },
     {
@@ -6563,7 +6541,7 @@
       "latitude": 16.264167,
       "longitude": -61.525833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29598336"
     },
     {
@@ -6574,7 +6552,7 @@
       "latitude": 14.592222,
       "longitude": -60.996389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29963040"
     },
     {
@@ -6585,7 +6563,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526508"
     },
     {
@@ -6596,7 +6574,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19185457"
     },
     {
@@ -6607,7 +6585,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19185425"
     },
     {
@@ -6618,7 +6596,7 @@
       "latitude": 41.926389,
       "longitude": 9.405278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526528"
     },
     {
@@ -6629,7 +6607,7 @@
       "latitude": 41.926389,
       "longitude": 9.405278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526062"
     },
     {
@@ -6640,7 +6618,7 @@
       "latitude": 44.534883,
       "longitude": -1.13145,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526718"
     },
     {
@@ -6651,7 +6629,7 @@
       "latitude": 44.534883,
       "longitude": -1.13145,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525532"
     },
     {
@@ -6662,7 +6640,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18336909"
     },
     {
@@ -6673,7 +6651,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18293635"
     },
     {
@@ -6684,7 +6662,7 @@
       "latitude": 48.583186,
       "longitude": 5.954525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18337604"
     },
     {
@@ -6695,7 +6673,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "19185477"
     },
     {
@@ -6706,7 +6684,7 @@
       "latitude": 47.987778,
       "longitude": 1.760556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526474"
     },
     {
@@ -6717,7 +6695,7 @@
       "latitude": 47.987778,
       "longitude": 1.760556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526436"
     },
     {
@@ -6728,7 +6706,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18517709"
     },
     {
@@ -6739,7 +6717,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18517730"
     },
     {
@@ -6750,7 +6728,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526112"
     },
     {
@@ -6761,7 +6739,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526382"
     },
     {
@@ -6772,7 +6750,7 @@
       "latitude": 44.140089,
       "longitude": 4.868581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18517658"
     },
     {
@@ -6783,7 +6761,7 @@
       "latitude": 48.633536,
       "longitude": 4.908189,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526530"
     },
     {
@@ -6794,7 +6772,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526688"
     },
     {
@@ -6805,7 +6783,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "15813414"
     },
     {
@@ -6816,7 +6794,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525786"
     },
     {
@@ -6827,7 +6805,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525792"
     },
     {
@@ -6838,7 +6816,7 @@
       "latitude": 47.056944,
       "longitude": 2.638889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "15813440"
     },
     {
@@ -6849,7 +6827,7 @@
       "latitude": 47.787222,
       "longitude": 6.365,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18517553"
     },
     {
@@ -6860,7 +6838,7 @@
       "latitude": 47.787222,
       "longitude": 6.365,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525496"
     },
     {
@@ -6871,7 +6849,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17105998"
     },
     {
@@ -6882,7 +6860,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525616"
     },
     {
@@ -6893,7 +6871,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1605270"
     },
     {
@@ -6904,7 +6882,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17106061"
     },
     {
@@ -6915,7 +6893,7 @@
       "latitude": 49.028611,
       "longitude": 1.22,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526360"
     },
     {
@@ -6926,7 +6904,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525798"
     },
     {
@@ -6937,7 +6915,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525924"
     },
     {
@@ -6948,7 +6926,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526584"
     },
     {
@@ -6959,7 +6937,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525772"
     },
     {
@@ -6970,7 +6948,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525838"
     },
     {
@@ -6981,7 +6959,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526650"
     },
     {
@@ -6992,7 +6970,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526710"
     },
     {
@@ -7003,7 +6981,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17322130"
     },
     {
@@ -7014,7 +6992,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17322136"
     },
     {
@@ -7025,7 +7003,7 @@
       "latitude": 43.384722,
       "longitude": 6.386944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526610"
     },
     {
@@ -7036,7 +7014,7 @@
       "latitude": 49.229089,
       "longitude": 5.67605,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526556"
     },
     {
@@ -7047,7 +7025,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526170"
     },
     {
@@ -7058,7 +7036,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526124"
     },
     {
@@ -7069,7 +7047,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18991858"
     },
     {
@@ -7080,7 +7058,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18991866"
     },
     {
@@ -7091,7 +7069,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526110"
     },
     {
@@ -7102,7 +7080,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18991848"
     },
     {
@@ -7113,7 +7091,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1948360"
     },
     {
@@ -7124,7 +7102,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526102"
     },
     {
@@ -7135,7 +7113,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526130"
     },
     {
@@ -7146,7 +7124,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526738"
     },
     {
@@ -7157,7 +7135,7 @@
       "latitude": 48.282531,
       "longitude": -4.443692,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17264809"
     },
     {
@@ -7168,7 +7146,7 @@
       "latitude": 49.173281,
       "longitude": -0.449875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "31346074"
     },
     {
@@ -7179,7 +7157,7 @@
       "latitude": 47.560211,
       "longitude": -0.312128,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "33369663"
     },
     {
@@ -7190,7 +7168,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526248"
     },
     {
@@ -7201,7 +7179,7 @@
       "latitude": 43.522394,
       "longitude": 4.924236,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29565667"
     },
     {
@@ -7212,7 +7190,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "35095437"
     },
     {
@@ -7223,7 +7201,7 @@
       "latitude": 48.541944,
       "longitude": 7.634444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "35095447"
     },
     {
@@ -7234,7 +7212,7 @@
       "latitude": 48.447131,
       "longitude": -4.421753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "35359803"
     },
     {
@@ -7245,7 +7223,7 @@
       "latitude": 49.454422,
       "longitude": 2.112814,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "35848443"
     },
     {
@@ -7256,7 +7234,7 @@
       "latitude": 46.587397,
       "longitude": 0.306786,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526160"
     },
     {
@@ -7267,7 +7245,7 @@
       "latitude": 3.172778,
       "longitude": -52.334444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "35912714"
     },
     {
@@ -7278,7 +7256,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525804"
     },
     {
@@ -7289,7 +7267,7 @@
       "latitude": 45.218056,
       "longitude": 5.848611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525586"
     },
     {
@@ -7298,7 +7276,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525564"
     },
     {
@@ -7307,7 +7285,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525656"
     },
     {
@@ -7316,7 +7294,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526664"
     },
     {
@@ -7327,7 +7305,7 @@
       "latitude": 43.546389,
       "longitude": 6.954167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526766"
     },
     {
@@ -7338,7 +7316,7 @@
       "latitude": 44.335833,
       "longitude": 4.906944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "39847491"
     },
     {
@@ -7349,7 +7327,7 @@
       "latitude": -20.775,
       "longitude": 167.239722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525770"
     },
     {
@@ -7360,7 +7338,7 @@
       "latitude": -20.775,
       "longitude": 167.239722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "5255081"
     },
     {
@@ -7371,7 +7349,7 @@
       "latitude": -20.775,
       "longitude": 167.239722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "41704512"
     },
     {
@@ -7382,7 +7360,7 @@
       "latitude": 45.631161,
       "longitude": -0.975489,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "41853902"
     },
     {
@@ -7393,7 +7371,7 @@
       "latitude": 45.631161,
       "longitude": -0.975489,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526582"
     },
     {
@@ -7404,7 +7382,7 @@
       "latitude": 49.208689,
       "longitude": 4.156581,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42019304"
     },
     {
@@ -7415,7 +7393,7 @@
       "latitude": 46.702383,
       "longitude": -1.381758,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42081978"
     },
     {
@@ -7426,7 +7404,7 @@
       "latitude": 47.31065,
       "longitude": -2.156803,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42082101"
     },
     {
@@ -7437,7 +7415,7 @@
       "latitude": 47.974947,
       "longitude": -4.167875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42234498"
     },
     {
@@ -7448,7 +7426,7 @@
       "latitude": 48.381111,
       "longitude": 2.073889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525636"
     },
     {
@@ -7459,7 +7437,7 @@
       "latitude": -16.426389,
       "longitude": -152.2425,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42234763"
     },
     {
@@ -7470,7 +7448,7 @@
       "latitude": 42.740833,
       "longitude": 2.869722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526406"
     },
     {
@@ -7481,7 +7459,7 @@
       "latitude": 43.323428,
       "longitude": 3.353397,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42234601"
     },
     {
@@ -7492,7 +7470,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42384395"
     },
     {
@@ -7503,7 +7481,7 @@
       "latitude": 47.265817,
       "longitude": 5.094978,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42710128"
     },
     {
@@ -7514,7 +7492,7 @@
       "latitude": 47.081906,
       "longitude": -0.877217,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42416628"
     },
     {
@@ -7525,7 +7503,7 @@
       "latitude": 47.846328,
       "longitude": 3.496578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42710180"
     },
     {
@@ -7536,7 +7514,7 @@
       "latitude": 43.175,
       "longitude": 2.732778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42710528"
     },
     {
@@ -7547,7 +7525,7 @@
       "latitude": 43.175,
       "longitude": 2.732778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525776"
     },
     {
@@ -7558,7 +7536,7 @@
       "latitude": 48.11035,
       "longitude": 7.359147,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42710764"
     },
     {
@@ -7569,7 +7547,7 @@
       "latitude": 48.11035,
       "longitude": 7.359147,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42710225"
     },
     {
@@ -7580,7 +7558,7 @@
       "latitude": 48.321619,
       "longitude": 4.016622,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42711017"
     },
     {
@@ -7591,7 +7569,7 @@
       "latitude": 48.266389,
       "longitude": 7.0075,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42860745"
     },
     {
@@ -7602,7 +7580,7 @@
       "latitude": 47.546389,
       "longitude": 5.210833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42860682"
     },
     {
@@ -7613,7 +7591,7 @@
       "latitude": 47.791667,
       "longitude": -1.643611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42860690"
     },
     {
@@ -7624,7 +7602,7 @@
       "latitude": 47.698611,
       "longitude": -2.038056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "42860736"
     },
     {
@@ -7635,7 +7613,7 @@
       "latitude": 47.15,
       "longitude": 0.712778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099302"
     },
     {
@@ -7646,7 +7624,7 @@
       "latitude": 47.266414,
       "longitude": 0.699033,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099252"
     },
     {
@@ -7657,7 +7635,7 @@
       "latitude": 47.010278,
       "longitude": 4.896389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099293"
     },
     {
@@ -7668,7 +7646,7 @@
       "latitude": 46.888611,
       "longitude": 2.041389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099581"
     },
     {
@@ -7679,7 +7657,7 @@
       "latitude": 44.580278,
       "longitude": 4.739167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099266"
     },
     {
@@ -7690,7 +7668,7 @@
       "latitude": -14.709722,
       "longitude": -145.247778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43221243"
     },
     {
@@ -7701,7 +7679,7 @@
       "latitude": 50.960933,
       "longitude": 1.951433,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43221810"
     },
     {
@@ -7712,7 +7690,7 @@
       "latitude": 49.305278,
       "longitude": 1.637778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099567"
     },
     {
@@ -7723,7 +7701,7 @@
       "latitude": 49.390953,
       "longitude": 1.183936,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43221840"
     },
     {
@@ -7734,7 +7712,7 @@
       "latitude": 49.873103,
       "longitude": 2.386986,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525574"
     },
     {
@@ -7745,7 +7723,7 @@
       "latitude": 47.205308,
       "longitude": 6.08055,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43496727"
     },
     {
@@ -7756,7 +7734,7 @@
       "latitude": 47.060786,
       "longitude": 2.370083,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43377421"
     },
     {
@@ -7767,7 +7745,7 @@
       "latitude": 46.828275,
       "longitude": 4.817058,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43377856"
     },
     {
@@ -7778,7 +7756,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43377813"
     },
     {
@@ -7789,7 +7767,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43377823"
     },
     {
@@ -7800,7 +7778,7 @@
       "latitude": 42.543461,
       "longitude": 2.120022,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43374100"
     },
     {
@@ -7811,7 +7789,7 @@
       "latitude": 42.447222,
       "longitude": 2.010833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525670"
     },
     {
@@ -7822,7 +7800,7 @@
       "latitude": 45.930775,
       "longitude": 6.106289,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43378547"
     },
     {
@@ -7833,7 +7811,7 @@
       "latitude": 45.930775,
       "longitude": 6.106289,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43378553"
     },
     {
@@ -7844,7 +7822,7 @@
       "latitude": 42.55,
       "longitude": 9.484847,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43727242"
     },
     {
@@ -7855,7 +7833,7 @@
       "latitude": 48.340833,
       "longitude": 2.797778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43530634"
     },
     {
@@ -7866,7 +7844,7 @@
       "latitude": -23.369722,
       "longitude": -149.529722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43726540"
     },
     {
@@ -7877,7 +7855,7 @@
       "latitude": 42.910278,
       "longitude": 2.054722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43726762"
     },
     {
@@ -7888,7 +7866,7 @@
       "latitude": 48.978281,
       "longitude": 6.246531,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43726842"
     },
     {
@@ -7899,7 +7877,7 @@
       "latitude": 50.324792,
       "longitude": 3.465444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43726916"
     },
     {
@@ -7910,7 +7888,7 @@
       "latitude": 45.639272,
       "longitude": 5.880122,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879667"
     },
     {
@@ -7921,7 +7899,7 @@
       "latitude": 48.03225,
       "longitude": -0.742781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879701"
     },
     {
@@ -7932,7 +7910,7 @@
       "latitude": 49.1275,
       "longitude": 7.106667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879609"
     },
     {
@@ -7943,7 +7921,7 @@
       "latitude": 48.591944,
       "longitude": 6.239722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879591"
     },
     {
@@ -7954,7 +7932,7 @@
       "latitude": 43.686839,
       "longitude": 0.600047,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879420"
     },
     {
@@ -7965,7 +7943,7 @@
       "latitude": 47.948492,
       "longitude": 0.201647,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879747"
     },
     {
@@ -7976,7 +7954,7 @@
       "latitude": 48.926944,
       "longitude": 2.833889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879950"
     },
     {
@@ -7987,7 +7965,7 @@
       "latitude": 48.773325,
       "longitude": 4.206156,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43879818"
     },
     {
@@ -7998,7 +7976,7 @@
       "latitude": 47.897617,
       "longitude": 2.164208,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44032521"
     },
     {
@@ -8009,7 +7987,7 @@
       "latitude": 49.533847,
       "longitude": 0.088119,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44032720"
     },
     {
@@ -8020,7 +7998,7 @@
       "latitude": 48.810278,
       "longitude": 2.073333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44099611"
     },
     {
@@ -8031,7 +8009,7 @@
       "latitude": 47.719244,
       "longitude": -2.723378,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44268331"
     },
     {
@@ -8042,7 +8020,7 @@
       "latitude": 47.042694,
       "longitude": 5.434928,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44268668"
     },
     {
@@ -8053,7 +8031,7 @@
       "latitude": 46.890556,
       "longitude": -2.088611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44269304"
     },
     {
@@ -8064,7 +8042,7 @@
       "latitude": 46.603333,
       "longitude": 4.332778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44269294"
     },
     {
@@ -8075,7 +8053,7 @@
       "latitude": 47.981389,
       "longitude": 3.776944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44269269"
     },
     {
@@ -8084,7 +8062,7 @@
       "type": "OTHER",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44501664"
     },
     {
@@ -8095,7 +8073,7 @@
       "latitude": 49.173281,
       "longitude": -0.449875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44683065"
     },
     {
@@ -8106,7 +8084,7 @@
       "latitude": 49.173281,
       "longitude": -0.449875,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44683492"
     },
     {
@@ -8117,7 +8095,7 @@
       "latitude": 48.605283,
       "longitude": 2.670781,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44502739"
     },
     {
@@ -8128,7 +8106,7 @@
       "latitude": 44.407489,
       "longitude": 2.483314,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44269480"
     },
     {
@@ -8139,7 +8117,7 @@
       "latitude": 45.565833,
       "longitude": -0.513611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44683646"
     },
     {
@@ -8150,7 +8128,7 @@
       "latitude": 45.273611,
       "longitude": -0.453333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45151179"
     },
     {
@@ -8161,7 +8139,7 @@
       "latitude": 50.142222,
       "longitude": 1.831111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45151170"
     },
     {
@@ -8172,7 +8150,7 @@
       "latitude": 46.440833,
       "longitude": -0.793889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45151191"
     },
     {
@@ -8183,7 +8161,7 @@
       "latitude": 47.003731,
       "longitude": 3.110742,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45152437"
     },
     {
@@ -8194,7 +8172,7 @@
       "latitude": -21.481111,
       "longitude": 168.0375,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45151133"
     },
     {
@@ -8205,7 +8183,7 @@
       "latitude": -20.79,
       "longitude": 165.259444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45151465"
     },
     {
@@ -8216,7 +8194,7 @@
       "latitude": 43.554961,
       "longitude": 2.290592,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45727028"
     },
     {
@@ -8227,7 +8205,7 @@
       "latitude": 46.171783,
       "longitude": 3.404033,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "45619323"
     },
     {
@@ -8238,7 +8216,7 @@
       "latitude": 43.665406,
       "longitude": 7.214983,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17018468"
     },
     {
@@ -8249,7 +8227,7 @@
       "latitude": 43.3799,
       "longitude": -0.418511,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525432"
     },
     {
@@ -8260,7 +8238,7 @@
       "latitude": 49.009747,
       "longitude": 2.547819,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525440"
     },
     {
@@ -8271,7 +8249,7 @@
       "latitude": 45.725639,
       "longitude": 5.081106,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25092300"
     },
     {
@@ -8282,7 +8260,7 @@
       "latitude": 48.660833,
       "longitude": -1.405833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46333231"
     },
     {
@@ -8293,7 +8271,7 @@
       "latitude": -16.0525,
       "longitude": -145.653056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46332936"
     },
     {
@@ -8304,7 +8282,7 @@
       "latitude": -17.355278,
       "longitude": -138.445,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46332950"
     },
     {
@@ -8315,7 +8293,7 @@
       "latitude": 47.486661,
       "longitude": 6.791469,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46333451"
     },
     {
@@ -8326,7 +8304,7 @@
       "latitude": -15.666944,
       "longitude": -146.886944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46332959"
     },
     {
@@ -8337,7 +8315,7 @@
       "latitude": 43.909167,
       "longitude": 0.386111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46332875"
     },
     {
@@ -8348,7 +8326,7 @@
       "latitude": 49.970061,
       "longitude": 2.692617,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46333687"
     },
     {
@@ -8359,7 +8337,7 @@
       "latitude": 48.463214,
       "longitude": -5.063583,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46583820"
     },
     {
@@ -8368,7 +8346,7 @@
       "type": "OTHER",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46583732"
     },
     {
@@ -8379,7 +8357,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525610"
     },
     {
@@ -8390,7 +8368,7 @@
       "latitude": 48.969525,
       "longitude": 2.441492,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "22125314"
     },
     {
@@ -8401,7 +8379,7 @@
       "latitude": 47.481389,
       "longitude": -3.101667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526254"
     },
     {
@@ -8412,7 +8390,7 @@
       "latitude": 45.53405,
       "longitude": 4.297311,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46739354"
     },
     {
@@ -8423,7 +8401,7 @@
       "latitude": 45.53405,
       "longitude": 4.297311,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46738980"
     },
     {
@@ -8434,7 +8412,7 @@
       "latitude": 45.860764,
       "longitude": 1.180306,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46739517"
     },
     {
@@ -8445,7 +8423,7 @@
       "latitude": 42.740833,
       "longitude": 2.869722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46739588"
     },
     {
@@ -8456,7 +8434,7 @@
       "latitude": 43.906581,
       "longitude": 4.902028,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46894683"
     },
     {
@@ -8467,7 +8445,7 @@
       "latitude": 42.740833,
       "longitude": 2.869722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46894578"
     },
     {
@@ -8478,7 +8456,7 @@
       "latitude": 45.729519,
       "longitude": 4.938844,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525490"
     },
     {
@@ -8489,7 +8467,7 @@
       "latitude": -18.064167,
       "longitude": -140.957222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47051273"
     },
     {
@@ -8500,7 +8478,7 @@
       "latitude": 45.039639,
       "longitude": 1.485667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47051827"
     },
     {
@@ -8511,7 +8489,7 @@
       "latitude": -14.869444,
       "longitude": -148.712778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47051984"
     },
     {
@@ -8522,7 +8500,7 @@
       "latitude": 44.824431,
       "longitude": 0.520525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47328243"
     },
     {
@@ -8533,7 +8511,7 @@
       "latitude": 45.197489,
       "longitude": 0.815217,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47328794"
     },
     {
@@ -8544,7 +8522,7 @@
       "latitude": 45.197489,
       "longitude": 0.815217,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526364"
     },
     {
@@ -8555,7 +8533,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329176"
     },
     {
@@ -8566,7 +8544,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329192"
     },
     {
@@ -8577,7 +8555,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329168"
     },
     {
@@ -8588,7 +8566,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329200"
     },
     {
@@ -8599,7 +8577,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329139"
     },
     {
@@ -8610,7 +8588,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329184"
     },
     {
@@ -8621,7 +8599,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329147"
     },
     {
@@ -8632,7 +8610,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329208"
     },
     {
@@ -8643,7 +8621,7 @@
       "latitude": -14.311667,
       "longitude": -178.066389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329160"
     },
     {
@@ -8654,7 +8632,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329275"
     },
     {
@@ -8665,7 +8643,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329267"
     },
     {
@@ -8676,7 +8654,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329259"
     },
     {
@@ -8687,7 +8665,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329251"
     },
     {
@@ -8698,7 +8676,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329235"
     },
     {
@@ -8709,7 +8687,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329227"
     },
     {
@@ -8720,7 +8698,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329219"
     },
     {
@@ -8731,7 +8709,7 @@
       "latitude": -13.238333,
       "longitude": -176.199167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47329243"
     },
     {
@@ -8742,7 +8720,7 @@
       "latitude": 47.700975,
       "longitude": 6.830833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47365428"
     },
     {
@@ -8753,7 +8731,7 @@
       "latitude": 48.057875,
       "longitude": 1.379442,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43726795"
     },
     {
@@ -8764,7 +8742,7 @@
       "latitude": 45.218056,
       "longitude": 5.848611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47365455"
     },
     {
@@ -8775,7 +8753,7 @@
       "latitude": 49.363394,
       "longitude": 0.159997,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47365502"
     },
     {
@@ -8786,7 +8764,7 @@
       "latitude": 45.868611,
       "longitude": 5.186111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47724883"
     },
     {
@@ -8797,7 +8775,7 @@
       "latitude": -22.258333,
       "longitude": 166.472778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47803069"
     },
     {
@@ -8806,7 +8784,7 @@
       "type": "ACS",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526634"
     },
     {
@@ -8817,7 +8795,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525378"
     },
     {
@@ -8828,7 +8806,7 @@
       "latitude": 43.3375,
       "longitude": -1.422222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47802821"
     },
     {
@@ -8839,7 +8817,7 @@
       "latitude": -20.640556,
       "longitude": 166.572778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47802778"
     },
     {
@@ -8850,7 +8828,7 @@
       "latitude": 47.679833,
       "longitude": 1.205775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47802835"
     },
     {
@@ -8861,7 +8839,7 @@
       "latitude": 44.915558,
       "longitude": 4.968744,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "48387632"
     },
     {
@@ -8872,7 +8850,7 @@
       "latitude": -16.586667,
       "longitude": -143.653889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "48268042"
     },
     {
@@ -8883,7 +8861,7 @@
       "latitude": -20.889917,
       "longitude": 55.516344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "48387831"
     },
     {
@@ -8894,7 +8872,7 @@
       "latitude": 43.097344,
       "longitude": 6.146031,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "48888234"
     },
     {
@@ -8905,7 +8883,7 @@
       "latitude": -21.321536,
       "longitude": 55.425678,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49963247"
     },
     {
@@ -8916,7 +8894,7 @@
       "latitude": 50.514847,
       "longitude": 1.627578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49963268"
     },
     {
@@ -8927,7 +8905,7 @@
       "latitude": 48.11035,
       "longitude": 7.359147,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1612960"
     },
     {
@@ -8938,7 +8916,7 @@
       "latitude": 43.689167,
       "longitude": -1.068889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49962444"
     },
     {
@@ -8949,7 +8927,7 @@
       "latitude": 43.689167,
       "longitude": -1.068889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49842546"
     },
     {
@@ -8960,7 +8938,7 @@
       "latitude": 48.600747,
       "longitude": -3.816669,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49963290"
     },
     {
@@ -8971,7 +8949,7 @@
       "latitude": 46.226094,
       "longitude": 2.362817,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122279"
     },
     {
@@ -8982,7 +8960,7 @@
       "latitude": 43.194167,
       "longitude": 3.051667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122453"
     },
     {
@@ -8993,7 +8971,7 @@
       "latitude": 44.083472,
       "longitude": 4.393833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49963687"
     },
     {
@@ -9004,7 +8982,7 @@
       "latitude": 49.835278,
       "longitude": 0.655556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122544"
     },
     {
@@ -9015,7 +8993,7 @@
       "latitude": 43.913278,
       "longitude": 2.11675,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122731"
     },
     {
@@ -9026,7 +9004,7 @@
       "latitude": 46.313422,
       "longitude": -0.394433,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47051966"
     },
     {
@@ -9037,7 +9015,7 @@
       "latitude": 46.534383,
       "longitude": 3.421606,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "46895434"
     },
     {
@@ -9048,7 +9026,7 @@
       "latitude": 47.288333,
       "longitude": -2.346944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122738"
     },
     {
@@ -9059,7 +9037,7 @@
       "latitude": 49.970061,
       "longitude": 2.692617,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50462045"
     },
     {
@@ -9070,7 +9048,7 @@
       "latitude": 45.079656,
       "longitude": 3.763442,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50464120"
     },
     {
@@ -9081,7 +9059,7 @@
       "latitude": 43.252222,
       "longitude": 5.786111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50463768"
     },
     {
@@ -9092,7 +9070,7 @@
       "latitude": 49.650775,
       "longitude": -1.4753,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50463150"
     },
     {
@@ -9103,7 +9081,7 @@
       "latitude": 48.537492,
       "longitude": -2.856542,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50463132"
     },
     {
@@ -9114,7 +9092,7 @@
       "latitude": 45.729519,
       "longitude": 4.938844,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50623667"
     },
     {
@@ -9125,7 +9103,7 @@
       "latitude": 47.431842,
       "longitude": 0.723181,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525376"
     },
     {
@@ -9136,7 +9114,7 @@
       "latitude": 44.504081,
       "longitude": 3.527633,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51061812"
     },
     {
@@ -9147,7 +9125,7 @@
       "latitude": 44.368056,
       "longitude": -1.132222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515493"
     },
     {
@@ -9158,7 +9136,7 @@
       "latitude": 48.325006,
       "longitude": 6.066742,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515560"
     },
     {
@@ -9169,7 +9147,7 @@
       "latitude": 44.453889,
       "longitude": 6.036667,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515478"
     },
     {
@@ -9180,7 +9158,7 @@
       "latitude": 45.729475,
       "longitude": 0.219153,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515228"
     },
     {
@@ -9191,7 +9169,7 @@
       "latitude": 43.915833,
       "longitude": -0.949167,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51062763"
     },
     {
@@ -9202,7 +9180,7 @@
       "latitude": 48.754444,
       "longitude": -3.471944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515413"
     },
     {
@@ -9213,7 +9191,7 @@
       "latitude": 43.090683,
       "longitude": 1.695853,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51515396"
     },
     {
@@ -9224,7 +9202,7 @@
       "latitude": 45.267078,
       "longitude": 0.015833,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51062264"
     },
     {
@@ -9235,7 +9213,7 @@
       "latitude": -12.806681,
       "longitude": 45.280586,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51694781"
     },
     {
@@ -9246,7 +9224,7 @@
       "latitude": 46.860314,
       "longitude": 1.721125,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51573969"
     },
     {
@@ -9257,7 +9235,7 @@
       "latitude": 45.9025,
       "longitude": 0.918889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51694909"
     },
     {
@@ -9268,7 +9246,7 @@
       "latitude": 43.587778,
       "longitude": 1.498611,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51695120"
     },
     {
@@ -9279,7 +9257,7 @@
       "latitude": 49.454422,
       "longitude": 2.112814,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "52158287"
     },
     {
@@ -9290,7 +9268,7 @@
       "latitude": 47.326111,
       "longitude": -3.198889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "52157959"
     },
     {
@@ -9301,7 +9279,7 @@
       "latitude": 50.6166,
       "longitude": 2.640094,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "52279279"
     },
     {
@@ -9312,7 +9290,7 @@
       "latitude": 45.558889,
       "longitude": 5.383889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "52380034"
     },
     {
@@ -9323,7 +9301,7 @@
       "latitude": 44.596944,
       "longitude": -1.113889,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "53145407"
     },
     {
@@ -9334,7 +9312,7 @@
       "latitude": 48.537492,
       "longitude": -2.856542,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "54448502"
     },
     {
@@ -9345,7 +9323,7 @@
       "latitude": 48.587706,
       "longitude": -2.07995,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "53681501"
     },
     {
@@ -9356,7 +9334,7 @@
       "latitude": -14.955278,
       "longitude": -147.657778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "55257723"
     },
     {
@@ -9367,7 +9345,7 @@
       "latitude": -16.723056,
       "longitude": -151.466944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "56056990"
     },
     {
@@ -9378,7 +9356,7 @@
       "latitude": -16.723056,
       "longitude": -151.466944,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526060"
     },
     {
@@ -9389,7 +9367,7 @@
       "latitude": 45.965203,
       "longitude": -0.524358,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "55934528"
     },
     {
@@ -9400,7 +9378,7 @@
       "latitude": -17.489444,
       "longitude": -149.762222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "55914299"
     },
     {
@@ -9411,7 +9389,7 @@
       "latitude": 45.823889,
       "longitude": -1.077222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "56240129"
     },
     {
@@ -9422,7 +9400,7 @@
       "latitude": 45.255,
       "longitude": 4.824722,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "55729722"
     },
     {
@@ -9433,7 +9411,7 @@
       "latitude": 44.6725,
       "longitude": 1.788056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "56710301"
     },
     {
@@ -9444,7 +9422,7 @@
       "latitude": 48.723281,
       "longitude": 2.379578,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "56300571"
     },
     {
@@ -9455,7 +9433,7 @@
       "latitude": 45.729475,
       "longitude": 0.219153,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "56710273"
     },
     {
@@ -9466,7 +9444,7 @@
       "latitude": 46.175556,
       "longitude": 1.953056,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "58181701"
     },
     {
@@ -9477,7 +9455,7 @@
       "latitude": 44.459167,
       "longitude": 1.007222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "58181821"
     },
     {
@@ -9488,7 +9466,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17018476"
     },
     {
@@ -9499,7 +9477,7 @@
       "latitude": 48.396694,
       "longitude": -4.323527,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525978"
     },
     {
@@ -9510,7 +9488,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "16780418"
     },
     {
@@ -9521,7 +9499,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "16780486"
     },
     {
@@ -9532,7 +9510,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "16780439"
     },
     {
@@ -9543,7 +9521,7 @@
       "latitude": 45.889528,
       "longitude": -0.982394,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "47664931"
     },
     {
@@ -9554,7 +9532,7 @@
       "latitude": 43.2775,
       "longitude": 0.519444,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122199"
     },
     {
@@ -9565,7 +9543,7 @@
       "latitude": 46.583333,
       "longitude": 0.642222,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44683672"
     },
     {
@@ -9576,7 +9554,7 @@
       "latitude": 47.432222,
       "longitude": 5.621389,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "33607598"
     },
     {
@@ -9587,7 +9565,7 @@
       "latitude": 49.151972,
       "longitude": 5.931278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44032209"
     },
     {
@@ -9598,7 +9576,7 @@
       "latitude": 45.686944,
       "longitude": 5.4525,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "43099278"
     },
     {
@@ -9609,7 +9587,7 @@
       "latitude": 43.536667,
       "longitude": 5.1775,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "25362790"
     },
     {
@@ -9620,7 +9598,7 @@
       "latitude": 47.431842,
       "longitude": 0.723181,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "40504108"
     },
     {
@@ -9631,7 +9609,7 @@
       "latitude": 47.431842,
       "longitude": 0.723181,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "51062864"
     },
     {
@@ -9642,7 +9620,7 @@
       "latitude": 49.229089,
       "longitude": 5.67605,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "29697106"
     },
     {
@@ -9653,7 +9631,7 @@
       "latitude": 47.760533,
       "longitude": -3.439953,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "18337322"
     },
     {
@@ -9664,7 +9642,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17264472"
     },
     {
@@ -9675,7 +9653,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17264449"
     },
     {
@@ -9686,7 +9664,7 @@
       "latitude": 48.530261,
       "longitude": -4.151644,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17264500"
     },
     {
@@ -9697,7 +9675,7 @@
       "latitude": 49.004444,
       "longitude": 4.085278,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "44269283"
     },
     {
@@ -9708,7 +9686,7 @@
       "latitude": -14.437222,
       "longitude": -146.071111,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "49526040"
     },
     {
@@ -9719,7 +9697,7 @@
       "latitude": -21.053333,
       "longitude": 164.837778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "50122214"
     },
     {
@@ -9730,7 +9708,7 @@
       "latitude": 45.658333,
       "longitude": -0.3175,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "17018511"
     },
     {
@@ -9741,7 +9719,7 @@
       "latitude": 48.396694,
       "longitude": -4.323527,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1525886"
     },
     {
@@ -9752,7 +9730,7 @@
       "latitude": 43.911389,
       "longitude": -0.51,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "16780395"
     },
     {
@@ -9763,7 +9741,7 @@
       "latitude": 48.821944,
       "longitude": 2.622778,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "59497060"
     },
     {
@@ -9774,7 +9752,7 @@
       "latitude": 48.443333,
       "longitude": -2.103333,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "59006112"
     },
     {
@@ -9785,7 +9763,7 @@
       "latitude": 44.8525,
       "longitude": 0.175556,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "59006093"
     },
     {
@@ -9796,7 +9774,7 @@
       "latitude": 49.363394,
       "longitude": 0.159997,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "59619426"
     },
     {
@@ -9807,7 +9785,7 @@
       "latitude": 49.363394,
       "longitude": 0.159997,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "1526198"
     },
     {
@@ -9818,7 +9796,7 @@
       "latitude": 43.757428,
       "longitude": 4.416344,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "60007919"
     },
     {
@@ -9829,7 +9807,7 @@
       "latitude": 48.768153,
       "longitude": 7.205131,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "61232047"
     },
     {
@@ -9838,7 +9816,7 @@
       "type": "OTHER",
       "sequence": 10,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "61325794"
     },
     {
@@ -9849,8 +9827,96 @@
       "latitude": 47.760556,
       "longitude": -3.44,
       "source": "SIA",
-      "airac": "2026-05-14",
+      "airac": "2026-08-06",
       "sia_uid": "61673511"
+    },
+    {
+      "id": "SER_62490888",
+      "unit_name": "LFPM MELUN SEINE",
+      "type": "OTHER",
+      "sequence": 60,
+      "latitude": 48.605283,
+      "longitude": 2.670781,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62490888"
+    },
+    {
+      "id": "SER_62717054",
+      "unit_name": "LFBA AGEN",
+      "type": "OTHER",
+      "sequence": 10,
+      "latitude": 44.174714,
+      "longitude": 0.590619,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62717054"
+    },
+    {
+      "id": "SER_62716822",
+      "unit_name": "LFEJ CHATEAUROUX VILLERS",
+      "type": "OTHER",
+      "sequence": 10,
+      "latitude": 46.840833,
+      "longitude": 1.62,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62716822"
+    },
+    {
+      "id": "SER_62717061",
+      "unit_name": "LFBI POITIERS",
+      "type": "OTHER",
+      "sequence": 10,
+      "latitude": 46.587397,
+      "longitude": 0.306786,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62717061"
+    },
+    {
+      "id": "SER_62716990",
+      "unit_name": "LFBH LA ROCHELLE",
+      "type": "OTHER",
+      "sequence": 10,
+      "latitude": 46.179208,
+      "longitude": -1.195181,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62716990"
+    },
+    {
+      "id": "SER_62881613",
+      "unit_name": "LFLW AURILLAC",
+      "type": "OTHER",
+      "sequence": 20,
+      "latitude": 44.897583,
+      "longitude": 2.416719,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62881613"
+    },
+    {
+      "id": "SER_62881537",
+      "unit_name": "LFLS GRENOBLE",
+      "type": "OTHER",
+      "sequence": 30,
+      "latitude": 45.362936,
+      "longitude": 5.332664,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62881537"
+    },
+    {
+      "id": "SER_62881375",
+      "unit_name": "LFLP ANNECY",
+      "type": "TWR",
+      "sequence": 5,
+      "latitude": 45.930775,
+      "longitude": 6.106289,
+      "source": "SIA",
+      "airac": "2026-08-06",
+      "sia_uid": "62881375"
     }
   ]
 }

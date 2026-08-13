@@ -33,7 +33,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "DO",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543314"
       }
     },
@@ -69,7 +69,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "ENT",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543484"
       }
     },
@@ -105,7 +105,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "STZ",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543422"
       }
     },
@@ -141,7 +141,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "RDE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543414"
       }
     },
@@ -177,7 +177,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BVT",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543534"
       }
     },
@@ -213,7 +213,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BI",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543520"
       }
     },
@@ -247,7 +247,7 @@
         "gp_hours_code": "HO",
         "dme_ident": "LD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543326"
       }
     },
@@ -283,7 +283,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "LSS",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543348"
       }
     },
@@ -317,7 +317,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "LT",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543506"
       }
     },
@@ -351,7 +351,7 @@
         "gp_longitude": -0.304147,
         "gp_elevation_ft": 104,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543296"
       }
     },
@@ -387,7 +387,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "OLW",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543400"
       }
     },
@@ -423,7 +423,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "SAN",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543346"
       }
     },
@@ -459,7 +459,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "LSN",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543350"
       }
     },
@@ -495,7 +495,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "RGE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543378"
       }
     },
@@ -529,7 +529,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "VVE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543458"
       }
     },
@@ -563,7 +563,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "VVO",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543456"
       }
     },
@@ -599,7 +599,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543276"
       }
     },
@@ -635,7 +635,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BEI",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543274"
       }
     },
@@ -668,7 +668,7 @@
         "gp_longitude": 6.381278,
         "dme_ident": "LC",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543470"
       }
     },
@@ -702,44 +702,8 @@
         "gp_longitude": 5.107303,
         "gp_elevation_ft": 193,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543426"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFRK_13/31_31",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -0.467997,
-          49.181681
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFRK_13/31_31",
-        "runway_id": "RWY_LFRK_13/31",
-        "aerodrome_icao": "LFRK",
-        "runway_designator": "13/31",
-        "runway_direction": "31",
-        "category": "I",
-        "loc_ident": "CN",
-        "loc_frequency_mhz": 110.95,
-        "loc_latitude": 49.181681,
-        "loc_longitude": -0.467997,
-        "loc_elevation_ft": 234,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 330.65,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 18.3,
-        "gp_latitude": 49.173322,
-        "gp_longitude": -0.447117,
-        "gp_elevation_ft": 233,
-        "gp_hours_code": "H24",
-        "dme_ident": "CN",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543280"
       }
     },
     {
@@ -773,7 +737,7 @@
         "gp_elevation_ft": 23,
         "gp_hours_code": "H24",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543428"
       }
     },
@@ -807,7 +771,7 @@
         "gp_longitude": 1.232444,
         "gp_elevation_ft": 459,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543320"
       }
     },
@@ -842,7 +806,7 @@
         "gp_elevation_ft": 4,
         "dme_ident": "HY",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543512"
       }
     },
@@ -877,7 +841,7 @@
         "gp_elevation_ft": 75,
         "dme_ident": "IST",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1613958"
       }
     },
@@ -912,7 +876,7 @@
         "gp_elevation_ft": 578,
         "gp_hours_code": "H24",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543262"
       }
     },
@@ -948,7 +912,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "GR",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543322"
       }
     },
@@ -983,7 +947,7 @@
         "gp_elevation_ft": 1005,
         "dme_ident": "PB",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543398"
       }
     },
@@ -1017,7 +981,7 @@
         "gp_longitude": 4.861772,
         "gp_elevation_ft": 191,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543366"
       }
     },
@@ -1051,7 +1015,7 @@
         "gp_longitude": 4.909989,
         "gp_elevation_ft": 455,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543434"
       }
     },
@@ -1087,44 +1051,8 @@
         "gp_hours_code": "H24",
         "dme_ident": "PL",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543394"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFLS_09/27_09",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          5.352019,
-          45.362881
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFLS_09/27_09",
-        "runway_id": "RWY_LFLS_09/27",
-        "aerodrome_icao": "LFLS",
-        "runway_designator": "09/27",
-        "runway_direction": "09",
-        "category": "I",
-        "loc_ident": "SG",
-        "loc_frequency_mhz": 109.3,
-        "loc_latitude": 45.362881,
-        "loc_longitude": 5.352019,
-        "loc_elevation_ft": 1308,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 332,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 15.8,
-        "gp_latitude": 45.364122,
-        "gp_longitude": 5.313108,
-        "gp_elevation_ft": 1231,
-        "gp_hours_code": "H24",
-        "dme_ident": "SG",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543316"
       }
     },
     {
@@ -1159,7 +1087,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "DV",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543304"
       }
     },
@@ -1194,7 +1122,7 @@
         "gp_elevation_ft": 194,
         "gp_hours_code": "H24",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543362"
       }
     },
@@ -1230,7 +1158,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BLU",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543504"
       }
     },
@@ -1266,7 +1194,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "MH",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543264"
       }
     },
@@ -1302,7 +1230,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "MLY",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543360"
       }
     },
@@ -1335,7 +1263,7 @@
         "gp_longitude": 1.771972,
         "gp_elevation_ft": 401,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543368"
       }
     },
@@ -1369,7 +1297,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "PP",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543530"
       }
     },
@@ -1403,7 +1331,7 @@
         "gp_longitude": 5.960306,
         "gp_elevation_ft": 1083,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543372"
       }
     },
@@ -1439,7 +1367,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "OS",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543424"
       }
     },
@@ -1475,7 +1403,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "LBG",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543390"
       }
     },
@@ -1511,7 +1439,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "CVD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543488"
       }
     },
@@ -1547,7 +1475,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "CVL",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543486"
       }
     },
@@ -1583,7 +1511,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BH",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543340"
       }
     },
@@ -1617,44 +1545,8 @@
         "gp_longitude": 6.337056,
         "gp_elevation_ft": 864,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543338"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFBL_03/21_21",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.171128,
-          45.850983
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFBL_03/21_21",
-        "runway_id": "RWY_LFBL_03/21",
-        "aerodrome_icao": "LFBL",
-        "runway_designator": "03/21",
-        "runway_direction": "21",
-        "category": "III",
-        "loc_ident": "LG",
-        "loc_frequency_mhz": 110.1,
-        "loc_latitude": 45.850983,
-        "loc_longitude": 1.171128,
-        "loc_elevation_ft": 1271,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 334.4,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 16.5,
-        "gp_latitude": 45.868611,
-        "gp_longitude": 1.185833,
-        "gp_elevation_ft": 1292,
-        "gp_hours_code": "H24",
-        "dme_ident": "LG",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543342"
       }
     },
     {
@@ -1689,7 +1581,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "RS",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543416"
       }
     },
@@ -1725,7 +1617,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "MCE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543466"
       }
     },
@@ -1761,7 +1653,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "ML",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543452"
       }
     },
@@ -1797,7 +1689,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "CY",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543294"
       }
     },
@@ -1831,7 +1723,7 @@
         "gp_longitude": -1.115222,
         "gp_elevation_ft": 131,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543290"
       }
     },
@@ -1865,7 +1757,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "SP",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543502"
       }
     },
@@ -1900,7 +1792,7 @@
         "gp_elevation_ft": 738,
         "dme_ident": "MCY",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543310"
       }
     },
@@ -1936,7 +1828,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "OLO",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543402"
       }
     },
@@ -1972,43 +1864,8 @@
         "gp_hours_code": "H24",
         "dme_ident": "ORE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543382"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFPN_07L/25R_25R",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          2.0915,
-          48.749583
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFPN_07L/25R_25R",
-        "runway_id": "RWY_LFPN_07L/25R",
-        "aerodrome_icao": "LFPN",
-        "runway_designator": "07L/25R",
-        "runway_direction": "25R",
-        "category": "I",
-        "loc_ident": "TNO",
-        "loc_frequency_mhz": 110.15,
-        "loc_latitude": 48.749583,
-        "loc_longitude": 2.0915,
-        "loc_elevation_ft": 547,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 334.25,
-        "gp_slope_deg": 3.5,
-        "gp_rdh_m": 17.85,
-        "gp_latitude": 48.754661,
-        "gp_longitude": 2.109028,
-        "gp_elevation_ft": 508,
-        "dme_ident": "TNO",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543440"
       }
     },
     {
@@ -2043,7 +1900,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "OLE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543406"
       }
     },
@@ -2072,7 +1929,7 @@
         "loc_hours_code": "H24",
         "dme_ident": "CLI",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543282"
       }
     },
@@ -2108,7 +1965,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "OLN",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543384"
       }
     },
@@ -2144,44 +2001,8 @@
         "gp_hours_code": "H24",
         "dme_ident": "RN",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543408"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFLN_15L/33R_33R",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          4.0048,
-          46.424606
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFLN_15L/33R_33R",
-        "runway_id": "RWY_LFLN_15L/33R",
-        "aerodrome_icao": "LFLN",
-        "runway_designator": "15L/33R",
-        "runway_direction": "33R",
-        "category": "I",
-        "loc_ident": "SN",
-        "loc_frequency_mhz": 111.75,
-        "loc_latitude": 46.424606,
-        "loc_longitude": 4.0048,
-        "loc_elevation_ft": 783,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 333.35,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 15.9,
-        "gp_latitude": 46.408072,
-        "gp_longitude": 4.017378,
-        "gp_elevation_ft": 794,
-        "gp_hours_code": "H24",
-        "dme_ident": "SN",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543432"
       }
     },
     {
@@ -2216,44 +2037,44 @@
         "gp_hours_code": "H24",
         "dme_ident": "LT",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543330"
       }
     },
     {
       "type": "Feature",
-      "id": "ILS_LFSL_11/29_29",
+      "id": "ILS_LFLN_15L/33R_33R",
       "geometry": {
         "type": "Point",
         "coordinates": [
-          1.468739,
-          45.045142
+          4.0048,
+          46.424606
         ]
       },
       "properties": {
-        "id": "ILS_LFSL_11/29_29",
-        "runway_id": "RWY_LFSL_11/29",
-        "aerodrome_icao": "LFSL",
-        "runway_designator": "11/29",
-        "runway_direction": "29",
+        "id": "ILS_LFLN_15L/33R_33R",
+        "runway_id": "RWY_LFLN_15L/33R",
+        "aerodrome_icao": "LFLN",
+        "runway_designator": "15L/33R",
+        "runway_direction": "33R",
         "category": "I",
-        "loc_ident": "BVC",
-        "loc_frequency_mhz": 109.95,
-        "loc_latitude": 45.045142,
-        "loc_longitude": 1.468739,
-        "loc_elevation_ft": 1012,
+        "loc_ident": "SN",
+        "loc_frequency_mhz": 111.75,
+        "loc_latitude": 46.424606,
+        "loc_longitude": 4.0048,
+        "loc_elevation_ft": 783,
         "loc_hours_code": "H24",
-        "gp_frequency_mhz": 333.65,
-        "gp_slope_deg": 3.15,
+        "gp_frequency_mhz": 333.35,
+        "gp_slope_deg": 3,
         "gp_rdh_m": 15.9,
-        "gp_latitude": 45.036347,
-        "gp_longitude": 1.492214,
-        "gp_elevation_ft": 969,
+        "gp_latitude": 46.408072,
+        "gp_longitude": 4.017378,
+        "gp_elevation_ft": 794,
         "gp_hours_code": "H24",
-        "dme_ident": "BVC",
+        "dme_ident": "SN",
         "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543522"
+        "airac": "2026-08-06",
+        "sia_uid": "1543432"
       }
     },
     {
@@ -2288,7 +2109,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "PYR",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543404"
       }
     },
@@ -2322,7 +2143,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "CA",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543498"
       }
     },
@@ -2356,7 +2177,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "FF",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543500"
       }
     },
@@ -2390,7 +2211,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "PT",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543496"
       }
     },
@@ -2426,7 +2247,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "PNE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543490"
       }
     },
@@ -2462,44 +2283,8 @@
         "gp_hours_code": "HX",
         "dme_ident": "CGE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543386"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFPG_09L/27R_27R",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          2.509222,
-          49.023889
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFPG_09L/27R_27R",
-        "runway_id": "RWY_LFPG_09L/27R",
-        "aerodrome_icao": "LFPG",
-        "runway_designator": "09L/27R",
-        "runway_direction": "27R",
-        "category": "III",
-        "loc_ident": "PNW",
-        "loc_frequency_mhz": 110.35,
-        "loc_latitude": 49.023889,
-        "loc_longitude": 2.509222,
-        "loc_elevation_ft": 365,
-        "loc_hours_code": "HX",
-        "gp_frequency_mhz": 334.85,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 16.5,
-        "gp_latitude": 49.02765,
-        "gp_longitude": 2.556769,
-        "gp_elevation_ft": 386,
-        "gp_hours_code": "HX",
-        "dme_ident": "PNW",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543468"
       }
     },
     {
@@ -2534,7 +2319,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "DSU",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543478"
       }
     },
@@ -2570,7 +2355,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "GAU",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543370"
       }
     },
@@ -2606,7 +2391,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "DSE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543480"
       }
     },
@@ -2642,7 +2427,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "GLE",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543388"
       }
     },
@@ -2678,7 +2463,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "CGW",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543392"
       }
     },
@@ -2712,7 +2497,7 @@
         "gp_longitude": 6.081181,
         "gp_elevation_ft": 1030,
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1606889"
       }
     },
@@ -2748,7 +2533,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "MER",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543508"
       }
     },
@@ -2784,7 +2569,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "FG",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543516"
       }
     },
@@ -2820,7 +2605,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BG",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543278"
       }
     },
@@ -2856,7 +2641,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "AM",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543252"
       }
     },
@@ -2885,7 +2670,7 @@
         "loc_hours_code": "H24",
         "dme_ident": "CMD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543476"
       }
     },
@@ -2921,7 +2706,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BAS",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543266"
       }
     },
@@ -2957,7 +2742,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "AC",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543248"
       }
     },
@@ -2993,7 +2778,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "MPV",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543454"
       }
     },
@@ -3029,44 +2814,8 @@
         "gp_hours_code": "H24",
         "dme_ident": "SD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543514"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFBH_09/27_27",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.212247,
-          46.179711
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFBH_09/27_27",
-        "runway_id": "RWY_LFBH_09/27",
-        "aerodrome_icao": "LFBH",
-        "runway_designator": "09/27",
-        "runway_direction": "27",
-        "category": "I",
-        "loc_ident": "RL",
-        "loc_frequency_mhz": 109.55,
-        "loc_latitude": 46.179711,
-        "loc_longitude": -1.212247,
-        "loc_elevation_ft": 59,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 332.45,
-        "gp_slope_deg": 3.2,
-        "gp_rdh_m": 13.8,
-        "gp_latitude": 46.177953,
-        "gp_longitude": -1.191053,
-        "gp_elevation_ft": 67,
-        "gp_hours_code": "H24",
-        "dme_ident": "RL",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543524"
       }
     },
     {
@@ -3101,7 +2850,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "BZ",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543272"
       }
     },
@@ -3137,80 +2886,8 @@
         "gp_hours_code": "H24",
         "dme_ident": "RM",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543268"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFLX_03/21_21",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          1.716042,
-          46.847469
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFLX_03/21_21",
-        "runway_id": "RWY_LFLX_03/21",
-        "aerodrome_icao": "LFLX",
-        "runway_designator": "03/21",
-        "runway_direction": "21",
-        "category": "I",
-        "loc_ident": "CX",
-        "loc_frequency_mhz": 110.3,
-        "loc_latitude": 46.847469,
-        "loc_longitude": 1.716042,
-        "loc_elevation_ft": 522,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 335,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 13.9,
-        "gp_latitude": 46.872922,
-        "gp_longitude": 1.742697,
-        "gp_elevation_ft": 517,
-        "gp_hours_code": "H24",
-        "dme_ident": "CX",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543528"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": "ILS_LFRS_03/21_03",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -1.601194,
-          47.165694
-        ]
-      },
-      "properties": {
-        "id": "ILS_LFRS_03/21_03",
-        "runway_id": "RWY_LFRS_03/21",
-        "aerodrome_icao": "LFRS",
-        "runway_designator": "03/21",
-        "runway_direction": "03",
-        "category": "III",
-        "loc_ident": "NT",
-        "loc_frequency_mhz": 109.9,
-        "loc_latitude": 47.165694,
-        "loc_longitude": -1.601194,
-        "loc_elevation_ft": 86,
-        "loc_hours_code": "H24",
-        "gp_frequency_mhz": 333.8,
-        "gp_slope_deg": 3,
-        "gp_rdh_m": 16.9,
-        "gp_latitude": 47.144219,
-        "gp_longitude": -1.619333,
-        "gp_elevation_ft": 76,
-        "gp_hours_code": "H24",
-        "dme_ident": "NT",
-        "source": "SIA",
-        "airac": "2026-05-14",
-        "sia_uid": "1543374"
       }
     },
     {
@@ -3245,7 +2922,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "LIL",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543328"
       }
     },
@@ -3281,7 +2958,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "NA",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543376"
       }
     },
@@ -3317,7 +2994,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "NI",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543482"
       }
     },
@@ -3351,7 +3028,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "CF",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543302"
       }
     },
@@ -3387,7 +3064,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "TD",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543492"
       }
     },
@@ -3423,7 +3100,7 @@
         "gp_hours_code": "H24",
         "dme_ident": "TG",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543444"
       }
     },
@@ -3459,7 +3136,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "TBN",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543446"
       }
     },
@@ -3495,7 +3172,7 @@
         "gp_hours_code": "HX",
         "dme_ident": "TBS",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543448"
       }
     },
@@ -3523,8 +3200,331 @@
         "loc_elevation_ft": 215,
         "loc_hours_code": "H24",
         "source": "SIA",
-        "airac": "2026-05-14",
+        "airac": "2026-08-06",
         "sia_uid": "1543380"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFPG_09L/27R_27R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.509139,
+          49.023861
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFPG_09L/27R_27R",
+        "runway_id": "RWY_LFPG_09L/27R",
+        "aerodrome_icao": "LFPG",
+        "runway_designator": "09L/27R",
+        "runway_direction": "27R",
+        "category": "III",
+        "loc_ident": "PNW",
+        "loc_frequency_mhz": 110.35,
+        "loc_latitude": 49.023861,
+        "loc_longitude": 2.509139,
+        "loc_elevation_ft": 365,
+        "loc_hours_code": "HX",
+        "gp_frequency_mhz": 334.85,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 16.5,
+        "gp_latitude": 49.02765,
+        "gp_longitude": 2.556769,
+        "gp_elevation_ft": 386,
+        "gp_hours_code": "HX",
+        "dme_ident": "PNW",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543468"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFRK_12/30_30",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.467997,
+          49.181681
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFRK_12/30_30",
+        "runway_id": "RWY_LFRK_12/30",
+        "aerodrome_icao": "LFRK",
+        "runway_designator": "12/30",
+        "runway_direction": "30",
+        "category": "I",
+        "loc_ident": "CN",
+        "loc_frequency_mhz": 110.95,
+        "loc_latitude": 49.181681,
+        "loc_longitude": -0.467997,
+        "loc_elevation_ft": 246,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 330.65,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 18.3,
+        "gp_latitude": 49.173322,
+        "gp_longitude": -0.447117,
+        "gp_elevation_ft": 233,
+        "gp_hours_code": "H24",
+        "dme_ident": "CN",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543280"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFPN_07L/25R_25R",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.0915,
+          48.749583
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFPN_07L/25R_25R",
+        "runway_id": "RWY_LFPN_07L/25R",
+        "aerodrome_icao": "LFPN",
+        "runway_designator": "07L/25R",
+        "runway_direction": "25R",
+        "category": "I",
+        "loc_ident": "TNO",
+        "loc_frequency_mhz": 110.15,
+        "loc_latitude": 48.749583,
+        "loc_longitude": 2.0915,
+        "loc_elevation_ft": 547,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 334.25,
+        "gp_slope_deg": 3.5,
+        "gp_rdh_m": 17.85,
+        "gp_latitude": 48.754661,
+        "gp_longitude": 2.109028,
+        "gp_elevation_ft": 508,
+        "dme_ident": "TNO",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543440"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFLX_03/21_21",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.716042,
+          46.847469
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFLX_03/21_21",
+        "runway_id": "RWY_LFLX_03/21",
+        "aerodrome_icao": "LFLX",
+        "runway_designator": "03/21",
+        "runway_direction": "21",
+        "category": "I",
+        "loc_ident": "CX",
+        "loc_frequency_mhz": 110.3,
+        "loc_latitude": 46.847469,
+        "loc_longitude": 1.716042,
+        "loc_elevation_ft": 535,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 335,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 13.9,
+        "gp_latitude": 46.872922,
+        "gp_longitude": 1.742697,
+        "gp_elevation_ft": 572,
+        "gp_hours_code": "H24",
+        "dme_ident": "CX",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543528"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFBH_09/27_27",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.212247,
+          46.179711
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFBH_09/27_27",
+        "runway_id": "RWY_LFBH_09/27",
+        "aerodrome_icao": "LFBH",
+        "runway_designator": "09/27",
+        "runway_direction": "27",
+        "category": "I",
+        "loc_ident": "RL",
+        "loc_frequency_mhz": 109.55,
+        "loc_latitude": 46.179711,
+        "loc_longitude": -1.212247,
+        "loc_elevation_ft": 72,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 332.45,
+        "gp_slope_deg": 3.2,
+        "gp_rdh_m": 13.8,
+        "gp_latitude": 46.177953,
+        "gp_longitude": -1.191053,
+        "gp_elevation_ft": 119,
+        "gp_hours_code": "H24",
+        "dme_ident": "RL",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543524"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFBL_03/21_21",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.171128,
+          45.850983
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFBL_03/21_21",
+        "runway_id": "RWY_LFBL_03/21",
+        "aerodrome_icao": "LFBL",
+        "runway_designator": "03/21",
+        "runway_direction": "21",
+        "category": "III",
+        "loc_ident": "LG",
+        "loc_frequency_mhz": 110.1,
+        "loc_latitude": 45.850983,
+        "loc_longitude": 1.171128,
+        "loc_elevation_ft": 1271,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 334.4,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 16.5,
+        "gp_latitude": 45.868611,
+        "gp_longitude": 1.185833,
+        "gp_elevation_ft": 1292,
+        "gp_hours_code": "H24",
+        "dme_ident": "LG",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543342"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFRS_03/21_03",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.601194,
+          47.165694
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFRS_03/21_03",
+        "runway_id": "RWY_LFRS_03/21",
+        "aerodrome_icao": "LFRS",
+        "runway_designator": "03/21",
+        "runway_direction": "03",
+        "category": "III",
+        "loc_ident": "NT",
+        "loc_frequency_mhz": 109.9,
+        "loc_latitude": 47.165694,
+        "loc_longitude": -1.601194,
+        "loc_elevation_ft": 86,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 333.8,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 16.9,
+        "gp_latitude": 47.144219,
+        "gp_longitude": -1.619333,
+        "gp_elevation_ft": 76,
+        "gp_hours_code": "H24",
+        "dme_ident": "NT",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543374"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFSL_11/29_29",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          1.468639,
+          45.045167
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFSL_11/29_29",
+        "runway_id": "RWY_LFSL_11/29",
+        "aerodrome_icao": "LFSL",
+        "runway_designator": "11/29",
+        "runway_direction": "29",
+        "category": "I",
+        "loc_ident": "BVC",
+        "loc_frequency_mhz": 109.95,
+        "loc_latitude": 45.045167,
+        "loc_longitude": 1.468639,
+        "loc_elevation_ft": 1012,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 333.65,
+        "gp_slope_deg": 3.15,
+        "gp_rdh_m": 15.9,
+        "gp_latitude": 45.036347,
+        "gp_longitude": 1.492214,
+        "gp_elevation_ft": 969,
+        "gp_hours_code": "H24",
+        "dme_ident": "BVC",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543522"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ILS_LFLS_09/27_09",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.352019,
+          45.362881
+        ]
+      },
+      "properties": {
+        "id": "ILS_LFLS_09/27_09",
+        "runway_id": "RWY_LFLS_09/27",
+        "aerodrome_icao": "LFLS",
+        "runway_designator": "09/27",
+        "runway_direction": "09",
+        "category": "I",
+        "loc_ident": "SG",
+        "loc_frequency_mhz": 109.3,
+        "loc_latitude": 45.362881,
+        "loc_longitude": 5.352019,
+        "loc_elevation_ft": 1308,
+        "loc_hours_code": "H24",
+        "gp_frequency_mhz": 332,
+        "gp_slope_deg": 3,
+        "gp_rdh_m": 15.8,
+        "gp_latitude": 45.364122,
+        "gp_longitude": 5.313108,
+        "gp_elevation_ft": 1231,
+        "gp_hours_code": "H24",
+        "dme_ident": "SG",
+        "source": "SIA",
+        "airac": "2026-08-06",
+        "sia_uid": "1543316"
       }
     }
   ]
