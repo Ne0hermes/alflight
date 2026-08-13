@@ -1,5 +1,6 @@
 // src/features/weight-balance/components/WeightBalanceModule.jsx
 import React, { memo, useMemo, useCallback } from 'react';
+import { getRouteEffectiveSpeedKt } from '@features/navigation/utils/effectiveSpeed';
 import { useAircraft, useFuel, useWeightBalance, useNavigation } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
 import { LoadInput } from './LoadInput';
@@ -46,6 +47,8 @@ export const WeightBalanceModule = memo(() => {
     const plan = computeLegFuelPlans({
       waypoints,
       cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+      effectiveSpeedKt: getRouteEffectiveSpeedKt(waypoints, getCruiseSpeedKt(selectedAircraft)),
       fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
       taxiLtr: fuelData?.roulage?.ltr || 0,
       finalReserveLtr: fuelData?.finalReserve?.ltr || 0,

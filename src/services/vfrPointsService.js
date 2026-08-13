@@ -292,15 +292,13 @@ class VFRPointsService {
         throw new Error('Point VFR introuvable');
       }
 
-      // MODE DEV: Permettre la modification de tous les points
-      // En production, décommenter la vérification ci-dessous
-      /*
-      if (existingPoint.uploaded_by !== userId) {
-        throw new Error('Vous ne pouvez modifier que vos propres points');
+      // 🔒 Lot 0.4 : contrôle de propriété RÉACTIVÉ (était commenté « MODE
+      // DEV » : n'importe quel utilisateur pouvait modifier tous les points).
+      // La défense en profondeur (RLS Supabase stricte) arrive en Phase 1.
+      if (existingPoint.uploaded_by && userId && existingPoint.uploaded_by !== userId) {
+        throw new Error('Vous ne pouvez modifier que vos propres points VFR');
       }
-      */
 
-      // Mise à jour sans filtrage par uploaded_by (mode dev)
       const { data, error } = await supabase
         .from('vfr_points')
         .update(updateData)
@@ -329,12 +327,31 @@ class VFRPointsService {
    */
   async deletePoint(pointId, userId) {
     try {
-      // MODE DEV: Permettre la suppression de tous les points
-      // En production, ajouter .eq('uploaded_by', userId)
-      const { error } = await supabase
+      // 🔒 Lot 0.4 : contrôle de propriété RÉACTIVÉ sur la SUPPRESSION (était
+      // « MODE DEV » sans filtre : n'importe qui pouvait supprimer tous les
+      // points). Vérification préalable + filtre dans la requête (double sûreté
+      // côté client ; la RLS stricte serveur arrive en Phase 1).
+      const { data: existingPoint, error: checkError } = await supabase
+        .from('vfr_points')
+        .select('id, uploaded_by')
+        .eq('id', pointId)
+        .single();
+      if (checkError || !existingPoint) {
+        throw new Error('Point VFR introuvable');
+      }
+      if (existingPoint.uploaded_by && userId && existingPoint.uploaded_by !== userId) {
+        throw new Error('Vous ne pouvez supprimer que vos propres points VFR');
+      }
+
+      let deleteQuery = supabase
         .from('vfr_points')
         .delete()
         .eq('id', pointId);
+      // Filtre propriétaire dans la requête elle-même (si la colonne est renseignée)
+      if (existingPoint.uploaded_by && userId) {
+        deleteQuery = deleteQuery.eq('uploaded_by', userId);
+      }
+      const { error } = await deleteQuery;
 
       if (error) throw error;
 

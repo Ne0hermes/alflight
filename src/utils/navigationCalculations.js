@@ -177,38 +177,11 @@ export const calculateMidpoint = (point1, point2) => {
   };
 };
 
-/**
- * Calcule l'effet du vent
- * @param {number} tas - True airspeed en knots
- * @param {number} heading - Cap en degrés
- * @param {number} windSpeed - Vitesse du vent en knots
- * @param {number} windDirection - Direction du vent en degrés (d'où il vient)
- * @returns {Object} {groundSpeed, windCorrectionAngle, headwind, crosswind}
- */
-export const calculateWindEffect = (tas, heading, windSpeed, windDirection) => {
-  const headingRad = heading * DEG_TO_RAD;
-  const windDirRad = windDirection * DEG_TO_RAD;
-  
-  // Composantes du vent
-  const headwind = windSpeed * Math.cos(windDirRad - headingRad);
-  const crosswind = windSpeed * Math.sin(windDirRad - headingRad);
-  
-  // Angle de correction de dérive
-  const windCorrectionAngle = Math.atan2(crosswind, tas) * RAD_TO_DEG;
-  
-  // Vitesse sol
-  const groundSpeed = Math.sqrt(
-    Math.pow(tas * Math.cos(windCorrectionAngle * DEG_TO_RAD) - headwind, 2) +
-    Math.pow(tas * Math.sin(windCorrectionAngle * DEG_TO_RAD), 2)
-  );
-
-  return {
-    groundSpeed,
-    windCorrectionAngle,
-    headwind,
-    crosswind
-  };
-};
+// 🔧 C3 (Lot 0.4) — calculateWindEffect SUPPRIMÉ (2026-08-13).
+// C'était un second moteur de triangle des vents, sans garde « vent ≥ TAS »,
+// exporté mais sans aucun appelant : une invitation à la re-divergence.
+// SOURCE UNIQUE du triangle des vents : @utils/windTriangle (solveWindTriangle,
+// formule exacte, retourne null si le segment est intenable).
 
 /**
  * Convertit des coordonnées de différents formats en degrés décimaux
@@ -385,7 +358,6 @@ export const NavigationCalculations = {
   calculateFuelRequired,
   calculateDestination,
   calculateMidpoint,
-  calculateWindEffect,
   parseCoordinate,
   interpolatePosition,
   calculateDistanceToSegment,

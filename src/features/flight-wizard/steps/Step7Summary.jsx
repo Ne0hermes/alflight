@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { getRouteEffectiveSpeedKt } from '@features/navigation/utils/effectiveSpeed';
 import { FileText, Plane } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import RouteMapView from '../components/RouteMapView';
@@ -324,6 +325,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     const legPlan = computeLegFuelPlans({
       waypoints,
       cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+      effectiveSpeedKt: getRouteEffectiveSpeedKt(waypoints, getCruiseSpeedKt(selectedAircraft)),
       fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
       taxiLtr: fuelData?.roulage?.ltr || 0,
       finalReserveLtr: fuelData?.finalReserve?.ltr || 0,

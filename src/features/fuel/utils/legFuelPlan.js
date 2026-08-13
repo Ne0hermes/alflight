@@ -29,13 +29,21 @@ const isValidWp = (wp) => Number.isFinite(wp?.lat) && Number.isFinite(wp?.lon);
  *   l'escale (léger sur-provisionnement possible, jamais l'inverse).
  * @param {Array}  [p.alternates]        déroutements sélectionnés (par-tronçon)
  * @param {Object} [p.aircraft]          avion (vitesse/conso pour la diversion)
+ * @param {number|null} [p.effectiveSpeedKt] 🔧 C2 : vitesse SOL moyenne corrigée
+ *   du vent (navigationResults.effectiveSpeedKt). Si fournie, les TEMPS (donc
+ *   le trip par tronçon) l'utilisent — sinon repli TAS (comportement d'avant).
+ *   cruiseSpeedKt reste requis (garde fail-closed A5).
  * @returns {{ legs, worstLeg, isMultiLeg } | null}
  *   legs[i] = { from, to, viaLabel, distanceNM, tripLtr, contingencyLtr,
  *               taxiLtr, finalReserveLtr, alternateLtr, totalLtr }
  */
-export function computeLegFuelPlans({ waypoints, cruiseSpeedKt, fuelConsumptionLph, taxiLtr = 0, finalReserveLtr = 0, alternateLtr = 0, alternates = null, aircraft = null }) {
+export function computeLegFuelPlans({ waypoints, cruiseSpeedKt, fuelConsumptionLph, taxiLtr = 0, finalReserveLtr = 0, alternateLtr = 0, alternates = null, aircraft = null, effectiveSpeedKt = null }) {
   const valid = (waypoints || []).filter(isValidWp);
   if (valid.length < 2 || !cruiseSpeedKt || !fuelConsumptionLph) return null;
+
+  // 🔧 C2 : vitesse utilisée pour les TEMPS — sol effective (vent) si dispo.
+  const speedForTimeKt = (Number.isFinite(effectiveSpeedKt) && effectiveSpeedKt > 0)
+    ? effectiveSpeedKt : cruiseSpeedKt;
 
   const rawLegs = splitLegsAtFuelStops(valid);
   if (rawLegs.length === 0) return null;
@@ -48,7 +56,7 @@ export function computeLegFuelPlans({ waypoints, cruiseSpeedKt, fuelConsumptionL
     for (let i = 0; i < leg.waypoints.length - 1; i++) {
       distanceNM += calculateDistance(leg.waypoints[i], leg.waypoints[i + 1]);
     }
-    const tripLtr = (distanceNM / cruiseSpeedKt) * fuelConsumptionLph;
+    const tripLtr = (distanceNM / speedForTimeKt) * fuelConsumptionLph;
     const contingencyLtr = Math.max(GAL_LTR, tripLtr * 0.05); // 5 %, min 1 gal US
     const isLast = idx === rawLegs.length - 1;
     let legAlternateLtr;

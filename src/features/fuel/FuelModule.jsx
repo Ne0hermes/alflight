@@ -1,6 +1,7 @@
 // src/features/fuel/FuelModule.jsx
 
 import React, { memo, useEffect } from 'react';
+import { getRouteEffectiveSpeedKt } from '@features/navigation/utils/effectiveSpeed';
 import { useFuel, useAircraft, useNavigation } from '@core/contexts';
 import { AlertTriangle } from 'lucide-react';
 import { activeTankIdsFrom } from '@core/stores/fuelStore';
@@ -174,7 +175,13 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
       let tripLtr;
       if (consumptionLph > 0 && cruiseSpeed) {
-        const timeHours = navigationResults.totalDistance / cruiseSpeed;
+        // 🔧 C2 (Lot 0.4) : temps CORRIGÉ DU VENT — priorité au temps total du
+        // moteur de navigation (déjà vent-corrigé), sinon vitesse sol moyenne
+        // effective, en dernier recours TAS. Fin de la divergence « ETE corrigé
+        // du vent à l'écran, trip fuel calculé sans vent ».
+        const timeHours = navigationResults.totalTime > 0
+          ? navigationResults.totalTime / 60
+          : navigationResults.totalDistance / (navigationResults.effectiveSpeedKt || cruiseSpeed);
         tripLtr = timeHours * consumptionLph;
       } else {
         tripLtr = 0;
@@ -511,6 +518,8 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         const plan = computeLegFuelPlans({
           waypoints,
           cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+          // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+          effectiveSpeedKt: getRouteEffectiveSpeedKt(waypoints, getCruiseSpeedKt(selectedAircraft)),
           fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
           taxiLtr: safeFuelData.roulage?.ltr || 0,
           finalReserveLtr: safeFuelData.finalReserve?.ltr || 0,

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { getRouteEffectiveSpeedKt } from '@features/navigation/utils/effectiveSpeed';
 import { Check, AlertTriangle } from 'lucide-react';
 import { FlightPlanData } from './models/FlightPlanData';
 import { WizardConfigProvider } from './contexts/WizardConfigContext';
@@ -63,6 +64,8 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     const plan = computeLegFuelPlans({
       waypoints,
       cruiseSpeedKt: getCruiseSpeedKt(selectedAircraft),
+      // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+      effectiveSpeedKt: getRouteEffectiveSpeedKt(waypoints, getCruiseSpeedKt(selectedAircraft)),
       fuelConsumptionLph: getFuelConsumptionLph(selectedAircraft),
       taxiLtr: fuelData?.roulage?.ltr || 0,
       finalReserveLtr: fuelData?.finalReserve?.ltr || 0,

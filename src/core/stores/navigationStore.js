@@ -5,6 +5,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { computeRegulatoryReserveMinutes, DEFAULT_FLIGHT_TYPE } from '@core/flightType';
+import { computeRouteWindTimes } from '@utils/routeWindTimes';
+import { useWindsAloftStore } from '@core/stores/windsAloftStore';
+
+// 🔧 C2 : altitude par défaut d'échantillonnage du vent (cf. useNavigationResults)
+const DEFAULT_WIND_ALT_FT = 3000;
 
 // Réassigne les rôles départ/arrivée selon la POSITION après un déplacement :
 // premier = 'departure', dernier = 'arrival' ; un ancien départ/arrivée déplacé
@@ -68,7 +73,19 @@ const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => 
   // carburant = null (consommateurs fail-closed : useFuelSync n'écrit pas de trip
   // fuel ; l'UI affiche « — »). cf. utils/aircraftPerf (testé).
   const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
-  const totalTime = (cruiseSpeed && totalDistance > 0) ? Math.round((totalDistance / cruiseSpeed) * 60) : null;
+  // 🔧 C2 (Lot 0.4) : temps de vol CORRIGÉ DU VENT (source unique
+  // routeWindTimes, même vent que le tableau de nav : manuel > Open-Meteo).
+  // Repli TAS si aucun vent en cache (windCorrected: 'none' — le recalcul se
+  // fait au prochain changement de route, une fois les vents chargés).
+  const windTimes = (cruiseSpeed && totalDistance > 0)
+    ? computeRouteWindTimes({
+        waypoints: validWaypoints,
+        cruiseSpeedKt: cruiseSpeed,
+        windProvider: (lat, lon) =>
+          useWindsAloftStore.getState().getWindAt(lat, lon, DEFAULT_WIND_ALT_FT, new Date())
+      })
+    : null;
+  const totalTime = windTimes ? Math.round(windTimes.totalTimeMin) : null;
   const fuelConsumption = getFuelConsumptionLph(selectedAircraft);
   const fuelRequired = (fuelConsumption != null && totalTime != null) ? (totalTime / 60) * fuelConsumption : null;
 
@@ -88,6 +105,11 @@ const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => 
     regulationReserveLiters: regulationReserveLiters != null ? Math.round(regulationReserveLiters * 10) / 10 : null,
     cruiseSpeed,
     fuelConsumption,
+    // 🔧 C2 : vitesse sol moyenne pondérée + statut de correction du vent —
+    // à consommer par la chaîne carburant (trip, tronçons, escales).
+    effectiveSpeedKt: windTimes ? Math.round(windTimes.effectiveSpeedKt * 10) / 10 : null,
+    windCorrected: windTimes ? windTimes.windCorrected : 'none',
+    untenableSegments: windTimes ? windTimes.untenableSegments : 0,
     legs
   };
 };

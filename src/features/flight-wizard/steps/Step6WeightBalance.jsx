@@ -1,5 +1,6 @@
 // src/features/flight-wizard/steps/Step6WeightBalance.jsx
 import React, { memo, useMemo, useCallback, useEffect, useState, useRef } from 'react';
+import { getRouteEffectiveSpeedKt } from '@features/navigation/utils/effectiveSpeed';
 import { useAircraft, useFuel, useWeightBalance, useNavigation } from '@core/contexts';
 import { LoadInput } from '@features/weight-balance/components/LoadInput';
 import { parseDecimalInput, DECIMAL_INPUT_RE, numbersClose } from '@utils/numericInput';
@@ -433,6 +434,8 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         const plan = computeLegFuelPlans({
           waypoints,
           cruiseSpeedKt: getCruiseSpeedKt(aircraft),
+          // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+          effectiveSpeedKt: getRouteEffectiveSpeedKt(waypoints, getCruiseSpeedKt(aircraft)),
           fuelConsumptionLph: getFuelConsumptionLph(aircraft),
           taxiLtr: fuelData?.roulage?.ltr || 0,
           finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
@@ -1360,6 +1363,8 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     const legPlan = computeLegFuelPlans({
       waypoints: routeWaypoints,
       cruiseSpeedKt: getCruiseSpeedKt(aircraft),
+      // 🔧 C2 : vitesse sol corrigée du vent (null si vents non chargés → TAS)
+      effectiveSpeedKt: getRouteEffectiveSpeedKt(routeWaypoints, getCruiseSpeedKt(aircraft)),
       fuelConsumptionLph: getFuelConsumptionLph(aircraft),
       taxiLtr: fuelData?.roulage?.ltr || 0,
       finalReserveLtr: fuelData?.finalReserve?.ltr || 0,
