@@ -13,6 +13,7 @@ import { LandingPage } from './components/LandingPage';
 import { ALFlightSplashScreen } from './components/ALFlightSplashScreen';
 import { IndexedDBChecker } from './components/IndexedDBChecker';
 import { useAuth } from './core/contexts/AuthContext';
+import { isAdminUser, ADMIN_ONLY_TABS } from './core/auth/roles';
 import LoginPage from './components/auth/LoginPage';
 
 // 🔧 FIX OUT OF MEMORY: Lazy loading des modules pour réduire la charge mémoire au démarrage
@@ -74,6 +75,10 @@ const MENU_TABS = TAB_CONFIG.filter((tab) => !HIDDEN_FROM_MENU.has(tab.id));
 
 const MobileApp = () => {
   const { user, loading: authLoading } = useAuth();
+  // 🔐 Phase 1 (RBAC) : le rôle vient d'app_metadata (JWT, non falsifiable
+  // côté client). Masque l'UI admin — la vraie garde est la RLS Postgres.
+  const isAdmin = isAdminUser(user);
+  const visibleMenuTabs = MENU_TABS.filter((t) => isAdmin || !ADMIN_ONLY_TABS.has(t.id));
   const [activeTab, setActiveTab] = useState('landing');
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(false); // Désactivé temporairement
@@ -265,7 +270,7 @@ const MobileApp = () => {
             {/* 🧭 Menu burger PERSISTANT — sur la home aussi, quelle que soit
                 la taille d'écran (desktop / tablette / mobile). */}
             <MobileNavigation
-              tabs={MENU_TABS}
+              tabs={visibleMenuTabs}
               activeTab={activeTab}
               onTabChange={handleNavigate}
               isProfileConfigured={isProfileConfigured}
@@ -302,7 +307,7 @@ const MobileApp = () => {
             est volontairement supprimée — un menu unique pour une UX cohérente
             mobile / tablette / desktop. */}
         <MobileNavigation
-          tabs={MENU_TABS}
+          tabs={visibleMenuTabs}
           activeTab={activeTab}
           onTabChange={handleNavigate}
           isProfileConfigured={isProfileConfigured}
@@ -333,7 +338,23 @@ const MobileApp = () => {
                 Chargement du module…
               </div>
             }>
-              {ActiveComponent && (
+              {/* 🔐 Phase 1 (RBAC) : verrou au RENDU des zones admin — même si
+                  un non-admin force l'onglet (lien, état restauré), il voit un
+                  refus explicite. La RLS Postgres bloque de toute façon l'écriture. */}
+              {ActiveComponent && ADMIN_ONLY_TABS.has(activeTab) && !isAdmin ? (
+                <div style={{
+                  margin: '48px auto', maxWidth: '520px', padding: '24px',
+                  textAlign: 'center', backgroundColor: 'var(--bg-overlay)',
+                  border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)'
+                }}>
+                  <h3 style={{ marginBottom: '8px' }}>Zone réservée à l'administrateur</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
+                    La configuration des avions (paramètres, manuels de vol, fiches de
+                    centrage) est gérée par l'administrateur. Les données de votre
+                    compte restent consultables et vos préparations de vol libres.
+                  </p>
+                </div>
+              ) : ActiveComponent && (
                 activeTab === 'aircraft-wizard' ? (
                   <ActiveComponent
                     onComplete={() => setActiveTab('landing')}
