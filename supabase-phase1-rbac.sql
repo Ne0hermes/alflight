@@ -55,6 +55,32 @@ drop view if exists presets_with_stats;   -- dépend de community_presets.* (sub
 drop view if exists vac_charts_active;    -- dépend de vac_charts.uploaded_by
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 1-pré-b. DÉMONTAGE de TOUTES les policies AVANT la conversion des colonnes :
+--          Postgres refuse aussi « alter type of a column used in a policy
+--          definition » (ex. « Users can update their own VFR points »).
+--          Les policies strictes sont recréées plus bas (sections 5-8).
+-- ─────────────────────────────────────────────────────────────────────────────
+do $$
+declare
+  pol record;
+begin
+  for pol in
+    select schemaname, tablename, policyname
+    from pg_policies
+    where (schemaname = 'public'
+           and tablename in ('community_presets','manex_files','preset_votes',
+                             'preset_downloads','vfr_points','vac_charts',
+                             'vac_download_history','flight_plans',
+                             'validated_flight_pdfs'))
+       or (schemaname = 'storage' and tablename = 'objects')
+  loop
+    execute format('drop policy if exists %I on %I.%I',
+                   pol.policyname, pol.schemaname, pol.tablename);
+  end loop;
+  raise notice 'Toutes les policies existantes démontées (avant conversion).';
+end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 1. COLONNES DE PROPRIÉTÉ : VARCHAR → uuid  (sinon « = auth.uid() » ne matche
 --    jamais). Les valeurs non-UUID héritées (ex. 'anonymous') sont mises à NULL.
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -147,28 +173,10 @@ create index if not exists idx_flight_plans_user on public.flight_plans(user_id)
 create index if not exists idx_validated_pdfs_user on public.validated_flight_pdfs(user_id);
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3. DÉMONTAGE de TOUTES les policies historiques (59 relevées, y compris
---    les « Prototype * » ouvertes à tous et les « dev mode »)
+-- 3. (démontage des policies : déplacé en 1-pré-b, AVANT la conversion des
+--    colonnes — Postgres refuse de changer le type d'une colonne référencée
+--    par une policy.)
 -- ─────────────────────────────────────────────────────────────────────────────
-do $$
-declare
-  pol record;
-begin
-  for pol in
-    select schemaname, tablename, policyname
-    from pg_policies
-    where (schemaname = 'public'
-           and tablename in ('community_presets','manex_files','preset_votes',
-                             'preset_downloads','vfr_points','vac_charts',
-                             'vac_download_history','flight_plans',
-                             'validated_flight_pdfs'))
-       or (schemaname = 'storage' and tablename = 'objects')
-  loop
-    execute format('drop policy if exists %I on %I.%I',
-                   pol.policyname, pol.schemaname, pol.tablename);
-  end loop;
-  raise notice 'Toutes les policies existantes démontées.';
-end $$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 4. RLS ACTIVÉE PARTOUT
