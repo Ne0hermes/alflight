@@ -8,12 +8,20 @@
 --    • UTILISATEUR : référentiel en LECTURE SEULE ; garde ses PROPRES données
 --      (plans de vol, PDF validés, points VFR créés par lui, votes).
 --
---  PRÉREQUIS (à faire AVANT d'exécuter ce script) :
---    Dashboard Supabase → Authentication → Users → votre compte
---    → « … » → Edit user → User Metadata → section app_metadata :
---        { "role": "admin" }
---    (app_metadata est modifiable uniquement côté serveur/dashboard —
---     un utilisateur ne peut PAS s'auto-promouvoir.)
+--  PRÉREQUIS (à faire AVANT d'exécuter ce script) — poser le rôle admin.
+--    Méthode SQL (recommandée — le dashboard n'expose pas toujours
+--    app_metadata) ; exécuter dans le SQL Editor :
+--
+--      update auth.users
+--      set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+--                              || '{"role":"admin"}'::jsonb
+--      where email = 'VOTRE_EMAIL_ADMIN';
+--
+--      -- vérification :
+--      select email, raw_app_meta_data->>'role' as role from auth.users;
+--
+--    (raw_app_meta_data est côté serveur — un utilisateur ne peut PAS
+--     s'auto-promouvoir depuis l'app.)
 --    Puis DÉCONNEXION/RECONNEXION dans l'app (le rôle vit dans le JWT).
 --
 --  À exécuter dans : Supabase → SQL Editor → Run. Idempotent (ré-exécutable).
