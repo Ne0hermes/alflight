@@ -46,6 +46,15 @@ comment on function public.is_admin() is
   'Rôle admin lu depuis app_metadata du JWT (non modifiable par le client). Phase 1 RBAC.';
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- 1-pré. VUES DÉPENDANTES : Postgres refuse de changer le type d'une colonne
+--        référencée par une vue (« cannot alter type of a column used by a
+--        view or rule »). On démonte les 2 vues concernées, elles sont
+--        recréées À L'IDENTIQUE en 1-post.
+-- ─────────────────────────────────────────────────────────────────────────────
+drop view if exists presets_with_stats;   -- dépend de community_presets.* (submitted_by)
+drop view if exists vac_charts_active;    -- dépend de vac_charts.uploaded_by
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- 1. COLONNES DE PROPRIÉTÉ : VARCHAR → uuid  (sinon « = auth.uid() » ne matche
 --    jamais). Les valeurs non-UUID héritées (ex. 'anonymous') sont mises à NULL.
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -79,6 +88,51 @@ begin
     end if;
   end loop;
 end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 1-post. RECRÉATION des vues démontées en 1-pré (définitions d'origine,
+--         reprises de supabase-setup-fixed.sql et supabase-vac-charts-setup.sql)
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace view presets_with_stats as
+select
+  p.*,
+  m.filename as manex_filename,
+  m.file_size as manex_filesize,
+  (p.votes_up - p.votes_down) as net_votes,
+  case
+    when p.admin_verified then 'admin_verified'
+    when p.verified then 'community_verified'
+    else 'not_verified'
+  end as verification_status
+from community_presets p
+left join manex_files m on p.manex_file_id = m.id
+where p.status = 'active'
+order by p.downloads_count desc, net_votes desc;
+
+create or replace view vac_charts_active as
+select
+  id, icao, aerodrome_name, file_name, file_path, file_size, mime_type,
+  chart_type, effective_date, expiration_date, airac_cycle, source,
+  download_url, uploaded_by, uploaded_at, download_count, last_downloaded_at,
+  version, verified, admin_verified, notes,
+  case
+    when expiration_date < current_date then 'expired'
+    when expiration_date <= current_date + interval '7 days' then 'expiring_soon'
+    else 'valid'
+  end as validity_status,
+  case
+    when admin_verified then 'admin_verified'
+    when verified then 'community_verified'
+    else 'not_verified'
+  end as verification_status
+from vac_charts
+where status = 'active'
+order by icao asc;
+
+-- 🔒 Les vues doivent respecter la RLS de l'UTILISATEUR qui interroge (sinon
+-- elles s'exécutent avec les droits du propriétaire et contournent la RLS).
+alter view presets_with_stats set (security_invoker = on);
+alter view vac_charts_active  set (security_invoker = on);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 2. PLANS DE VOL & PDF VALIDÉS : ajout de la colonne propriétaire (absente !)

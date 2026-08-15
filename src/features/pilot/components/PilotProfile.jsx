@@ -1139,6 +1139,9 @@ const PilotProfile = () => {
           Cliquez pour enregistrer toutes vos modifications (profil, licences, medical, etc.)
         </p>
       </div>
+
+      {/* 🔐 Phase 1 (Lot 1.4) — suppression de compte (exigence stores) */}
+      <DeleteAccountSection />
     </div>
   );
 };
