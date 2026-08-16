@@ -417,8 +417,18 @@ export const useAlternateSelection = () => {
     });
 
     // Récupérer les valeurs brutes
-    let fuelCapacity = selectedAircraft.fuelCapacity || selectedAircraft.fuel?.capacity || 0;
-    let fuelConsumption = selectedAircraft.fuelConsumption || selectedAircraft.fuel?.consumption || 0;
+    // 🐛 FIX CRASH (16/08) : ces champs viennent de la fiche avion où ils sont
+    // souvent stockés en CHAÎNE ("110"). Sans conversion, ils ne devenaient des
+    // nombres que si la branche « gallons » les multipliait — sinon le
+    // `.toFixed()` du log plus bas plantait tout le module Déroutements
+    // (« fuelConsumption.toFixed is not a function »). On normalise ICI, en
+    // amont de toute comparaison ou arithmétique.
+    const toNum = (v) => {
+      const n = typeof v === 'number' ? v : parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+    let fuelCapacity = toNum(selectedAircraft.fuelCapacity ?? selectedAircraft.fuel?.capacity);
+    let fuelConsumption = toNum(selectedAircraft.fuelConsumption ?? selectedAircraft.fuel?.consumption);
     const cruiseSpeed = getCruiseSpeedKt(selectedAircraft); // null si absent → coneZoneParams renverra null
 
     // 🔧 DÉTECTION AUTOMATIQUE: Si les valeurs semblent être en gallons (< 50), convertir
@@ -507,11 +517,17 @@ export const useAlternateSelection = () => {
     // 2. fobFuel (contexte React - peut avoir du délai)
     const fobSource = fobFuelStore || fobFuel;
 
-    if (fobSource?.ltr && fobSource.ltr > 0) {
-      fobLiters = fobSource.ltr;
-    } else if (fobSource?.gal && fobSource.gal > 0) {
+    // Même durcissement que fuelDataForRadius : ces valeurs peuvent arriver en
+    // chaîne selon la source (store/contexte) — toFixed() plus bas planterait.
+    const asNum = (v) => {
+      const n = typeof v === 'number' ? v : parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+    if (asNum(fobSource?.ltr) > 0) {
+      fobLiters = asNum(fobSource.ltr);
+    } else if (asNum(fobSource?.gal) > 0) {
       // Convertir les gallons en litres (1 gal = 3.78541 L)
-      fobLiters = fobSource.gal * 3.78541;
+      fobLiters = asNum(fobSource.gal) * 3.78541;
     }
 
     // 🔧 DEBUG: Afficher les valeurs réelles pour diagnostic
