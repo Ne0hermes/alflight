@@ -731,9 +731,28 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           newErrors.registration = "L'immatriculation est requise";
         } else {
           const normalized = String(aircraftData.registration).trim().toUpperCase();
-          const editingId = existingAircraft?.id;
-          const duplicate = (aircraftList || []).some(a =>
-            a.id !== editingId &&
+          // 🔧 Fix F-HDIM (16/08) : l'anti-doublon ne doit JAMAIS bloquer
+          // l'avion qu'on est en train d'ÉDITER. L'exonération couvrait le
+          // seul mode existingAircraft — pas le chemin « Vérifier la
+          // configuration » (import Step0 : la fiche arrive dans aircraftData
+          // sans existingAircraft) → l'admin était bloqué « contre lui-même »
+          // dès que l'avion figurait déjà dans sa flotte locale.
+          const editingIds = new Set([
+            existingAircraft?.id, existingAircraft?.aircraftId,
+            aircraftData.id, aircraftData.aircraftId,
+            aircraftData.communityPresetId,
+            aircraftData.baseAircraft?.id,
+            aircraftData.baseAircraft?.communityPresetId
+          ].filter(Boolean));
+          // Fiche CHARGÉE avec cette immatriculation (édition/ré-import du
+          // même avion, pas une création) : le save remplace en place.
+          const loadedWithSameReg = String(
+            aircraftData.baseAircraft?.registration || existingAircraft?.registration || ''
+          ).trim().toUpperCase() === normalized;
+          const duplicate = !loadedWithSameReg && (aircraftList || []).some(a =>
+            !editingIds.has(a.id) &&
+            !editingIds.has(a.aircraftId) &&
+            !(a.communityPresetId && editingIds.has(a.communityPresetId)) &&
             String(a.registration || '').trim().toUpperCase() === normalized
           );
           if (duplicate) {
