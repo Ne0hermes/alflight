@@ -855,8 +855,15 @@ const ManualWeatherBlock = ({ icao, hasApiWeather, flightPlan, onUpdate }) => {
       setFormError('Température invalide (−60 à +55 °C).');
       return;
     }
-    if (qnh !== null && (!Number.isFinite(qnh) || qnh < 900 || qnh > 1100)) {
-      setFormError('QNH invalide (900 à 1100 hPa).');
+    // QNH — bornes ÉLARGIES (demande César 16/08) : l'ancien plancher de
+    // 900 hPa refusait des QNH réels (dépressions profondes, typhons). On
+    // couvre désormais toute la plage physiquement observée sur Terre :
+    // record bas 870 hPa (typhon Tip, 1979), record haut 1084 hPa (Sibérie,
+    // 1968). La borne subsistante n'est plus une limite opérationnelle mais
+    // un garde-fou anti-faute de frappe : un « 101 » ou « 10130 » saisi à la
+    // place de 1013 fausserait l'altimétrie et donc les altitudes de sécurité.
+    if (qnh !== null && (!Number.isFinite(qnh) || qnh < 850 || qnh > 1090)) {
+      setFormError('QNH invalide — saisie hors du domaine physique observable (850 à 1090 hPa). Vérifiez la valeur.');
       return;
     }
     if (dir === null && temp === null && qnh === null) {
