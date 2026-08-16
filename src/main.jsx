@@ -22,6 +22,41 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// 🔄 PRISE EN COMPTE AUTOMATIQUE D'UNE NOUVELLE VERSION (16/08)
+// ---------------------------------------------------------------------------
+// Le service worker était bien en « autoUpdate », mais RIEN ne rechargeait la
+// page : l'onglet continuait d'exécuter l'ancien JavaScript tant que le pilote
+// ne faisait pas un rechargement forcé. Conséquence observée trois fois : des
+// correctifs déjà déployés (CORS météo, crash déroutements) semblaient encore
+// présents — on diagnostiquait un bug fantôme.
+//
+// Ici : dès qu'un nouveau service worker prend la main, on recharge UNE fois.
+// On vérifie aussi les mises à jour au retour au premier plan et toutes les
+// 30 min, sinon un onglet resté ouvert toute la journée ne les voit jamais.
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  // Une page NON encore contrôlée reçoit aussi « controllerchange » à la
+  // première installation : ce n'est pas une mise à jour, on ne recharge pas.
+  const hadControllerAtStartup = !!navigator.serviceWorker.controller;
+  let reloading = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadControllerAtStartup || reloading) return;
+    reloading = true;
+    console.log('🔄 Nouvelle version d\'ALFlight disponible — rechargement…');
+    window.location.reload();
+  });
+
+  const checkForUpdate = () => {
+    navigator.serviceWorker.getRegistration()
+      .then((reg) => reg?.update())
+      .catch(() => { /* hors ligne : réessai au prochain déclencheur */ });
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) checkForUpdate();
+  });
+  setInterval(checkForUpdate, 30 * 60 * 1000);
+}
+
 // Initialiser le gestionnaire de clés API au démarrage
 apiKeyManager.initialize();
 
