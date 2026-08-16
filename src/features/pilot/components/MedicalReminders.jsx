@@ -125,6 +125,7 @@ const MedicalReminders = () => {
     
     setMedicalRecords(newRecords);
     localStorage.setItem('pilotMedicalRecords', JSON.stringify(newRecords));
+      import('@services/accountSyncService').then(({ syncProfileFromLocal }) => syncProfileFromLocal()).catch(() => {});
     
     resetForm();
     alert(editingRecord ? 'Certificat médical modifié !' : 'Certificat médical enregistré !');
@@ -156,6 +157,7 @@ const MedicalReminders = () => {
       const newRecords = medicalRecords.filter(r => r.id !== id);
       setMedicalRecords(newRecords);
       localStorage.setItem('pilotMedicalRecords', JSON.stringify(newRecords));
+      import('@services/accountSyncService').then(({ syncProfileFromLocal }) => syncProfileFromLocal()).catch(() => {});
     }
   };
 

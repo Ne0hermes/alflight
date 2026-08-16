@@ -605,9 +605,17 @@ const PilotLogbook = ({ showFormProp }) => {
       const newEntries = entries.filter(e => e.id !== id);
       setEntries(newEntries);
       localStorage.setItem('pilotLogbook', JSON.stringify(newEntries));
-    window.dispatchEvent(new Event('logbook-updated'));
-    // 🔄 Lot 2.0 : copie serveur du carnet (mise à jour par vol, jamais destructive)
-    import('@services/accountSyncService').then(({ pushLogbook }) => pushLogbook(newEntries)).catch(() => {});
+      window.dispatchEvent(new Event('logbook-updated'));
+      // 🗑️ Lot 2.0 : la SUPPRESSION doit être propagée au serveur — sinon le
+      // vol effacé ici ressuscitait à la restauration suivante (le serveur en
+      // gardait la trace et la fusion le réinstallait). Suppression LOGIQUE :
+      // un carnet de vol est opposable, on trace, on n'efface pas.
+      import('@services/accountSyncService')
+        .then(async ({ pushLogbook, syncLogbookDeletions }) => {
+          await pushLogbook(newEntries);
+          await syncLogbookDeletions(newEntries);
+        })
+        .catch(() => { /* réessai à la prochaine modification */ });
 
       // Logger vers Google Sheets
       if (entryToDelete) {

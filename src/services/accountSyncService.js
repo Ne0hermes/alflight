@@ -229,6 +229,24 @@ export async function pullProfile() {
   return row ? rowToProfile(row) : null;
 }
 
+/**
+ * Renvoie au serveur l'état LOCAL COURANT du profil et de ses annexes
+ * (licences, médical, unités, favoris). À appeler après TOUTE modification de
+ * ces données — y compris une SUPPRESSION : les annexes étant stockées en bloc,
+ * réécrire le bloc supprime réellement l'élément retiré côté serveur
+ * (retour César 16/08 : une donnée effacée doit l'être aussi dans la base).
+ */
+export async function syncProfileFromLocal() {
+  try {
+    const raw = localStorage.getItem('pilotProfile');
+    if (!raw) return false;
+    return await pushProfile(JSON.parse(raw));
+  } catch (e) {
+    console.warn(`${LOG} synchronisation du profil impossible :`, e?.message);
+    return false;
+  }
+}
+
 // ─── CARNET DE VOL ─────────────────────────────────────────────────────────
 const entryToRow = (e, userId) => ({
   user_id: userId,
@@ -265,6 +283,47 @@ export async function pushLogbook(entries) {
   } catch (e) {
     console.warn(`${LOG} envoi du carnet impossible (conservé en local) :`, e?.message);
     return false;
+  }
+}
+
+/**
+ * 🗑️ SUPPRESSION D'UN VOL — propagée au serveur (retour César 16/08).
+ * Sans cela, un vol supprimé localement RESSUSCITAIT à la restauration : le
+ * serveur en gardait la trace et la fusion le réinstallait.
+ *
+ * Suppression LOGIQUE (deleted_at) et jamais physique : un carnet de vol est
+ * un document opposable — on trace, on n'efface pas.
+ *
+ * @param {Array} remainingEntries liste locale APRÈS suppression (fait foi)
+ */
+export async function syncLogbookDeletions(remainingEntries) {
+  const userId = await currentUserId();
+  if (!userId || !Array.isArray(remainingEntries)) return 0;
+  try {
+    const keep = new Set(remainingEntries.map((e) => entryToRow(e, userId).client_id));
+    const { data: serverRows, error } = await supabase
+      .from('logbook_entries')
+      .select('client_id')
+      .eq('user_id', userId)
+      .is('deleted_at', null);
+    if (error) throw error;
+
+    const toDelete = (serverRows || [])
+      .map((r) => r.client_id)
+      .filter((id) => !keep.has(id));
+    if (toDelete.length === 0) return 0;
+
+    const { error: delErr } = await supabase
+      .from('logbook_entries')
+      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .in('client_id', toDelete);
+    if (delErr) throw delErr;
+    console.log(`${LOG} ${toDelete.length} vol(s) supprimé(s) côté serveur`);
+    return toDelete.length;
+  } catch (e) {
+    console.warn(`${LOG} propagation de la suppression impossible :`, e?.message);
+    return 0;
   }
 }
 

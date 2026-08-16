@@ -437,6 +437,7 @@ const PilotCertifications = () => {
       newCertifications[category] = newCertifications[category].filter(c => c.id !== id);
       setCertifications(newCertifications);
       localStorage.setItem('pilotCertifications', JSON.stringify(newCertifications));
+      import('@services/accountSyncService').then(({ syncProfileFromLocal }) => syncProfileFromLocal()).catch(() => {});
     }
   };
 
