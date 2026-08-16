@@ -112,8 +112,21 @@ export function ensureAccountDataIsolation(userId) {
   if (owner === userId) return false; // même compte : rien à faire
 
   if (owner === null) {
-    // Premier passage : les données locales existantes sont adoptées par ce
-    // compte (cas historique : l'appareil n'avait qu'un utilisateur).
+    // Marqueur absent : premier passage… OU état post-suppression d'un compte
+    // (purgeLocalDataForDeletedAccount retire le marqueur). Bug D4 (16/08) :
+    // adopter les clés courantes (vides à ce stade) faisait écraser le coffre
+    // du compte au prochain échange. Si CE compte possède un coffre → RESTAURER.
+    let hasVault = false;
+    try { hasVault = !!localStorage.getItem(VAULT_PREFIX + userId); } catch { /* ignore */ }
+    if (hasVault) {
+      clearCurrent();
+      const restored = restoreVault(userId);
+      localStorage.setItem(OWNER_KEY, userId);
+      console.warn(`🔐 [Isolation] Marqueur propriétaire absent mais coffre présent — données ${restored ? 'restaurées depuis le coffre' : 'illisibles (repart de zéro)'} ; rechargement…`);
+      return true;
+    }
+    // Vrai premier passage : les données locales existantes sont adoptées par
+    // ce compte (cas historique : l'appareil n'avait qu'un utilisateur).
     localStorage.setItem(OWNER_KEY, userId);
     console.log('🔐 [Isolation] Données locales adoptées par le compte courant');
     return false;

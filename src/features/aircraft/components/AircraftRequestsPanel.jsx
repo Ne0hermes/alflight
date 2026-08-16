@@ -220,16 +220,14 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                   </button>
                   {req.status === 'pending' && (
                     <>
-                      {/* 🪄 Lance le wizard pré-rempli : immat + base d'attache de la
-                          demande, extraction automatique du manuel téléversé. La
-                          sauvegarde finale clôturera la demande (processed). */}
+                      {/* 🪄 SEUL chemin de validation (décision César 16/08) : le
+                          wizard pré-rempli — immat + base d'attache, extraction
+                          automatique du manuel. La SAUVEGARDE FINALE de
+                          l'assistant clôture la demande (« Traitée ») ; plus
+                          aucun bouton ne peut valider sans fiche réelle. */}
                       <button type="button" onClick={() => storeRequestHandoff(req)} disabled={busyId === req.id}
                         style={adminBtn('#7c3aed')}>
                         <Wand2 size={13} /> Créer la fiche
-                      </button>
-                      <button type="button" onClick={() => setStatus(req, 'processed')} disabled={busyId === req.id}
-                        style={adminBtn('#10b981')}>
-                        <CheckCircle size={13} /> Traitée
                       </button>
                       <button type="button" onClick={() => setStatus(req, 'rejected')} disabled={busyId === req.id}
                         style={adminBtn('var(--color-red-critical)')}>
@@ -265,12 +263,14 @@ const adminBtn = (bg) => ({
   fontSize: 'var(--fs-caption)', cursor: 'pointer'
 });
 
-// Croix de masquage : discrète, même hauteur que les boutons d'action
+// Croix de masquage (retour César 16/08) : fond NEUTRE de la charte — sur les
+// lignes teintées (statut), un fond transparent laissait la teinte traverser
+// et la croix devenait illisible. Croix grise + contour discret, sans aplat.
 const dismissBtn = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   width: '26px', height: '26px', padding: 0,
   borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)',
-  backgroundColor: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer'
+  backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', cursor: 'pointer'
 };
 
 export default AircraftRequestsPanel;
