@@ -1039,14 +1039,14 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       </Box>
 
 
-      {/* Option pour créer un nouvel avion */}
+      {/* Création d'un nouvel avion — page ADMIN uniquement (Phase 1 RBAC) :
+          le bouton « Envoyer le manuel de vol » (mailto) et la phrase « Votre
+          avion n'est pas dans la liste » ont été retirés (décision 2026-08-16) —
+          l'admin n'a pas à s'écrire à lui-même. La recherche par immatriculation
+          ci-dessus reste le chemin pour MODIFIER un avion existant ; l'import
+          PDF ci-dessous est le chemin pour CRÉER un avion neuf. */}
       <Box sx={{ mt: 5, mb: 3 }}>
-        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AddIcon color="primary" />
-          Votre avion n'est pas dans la liste ? Pas de problème !
-        </Typography>
         <Box sx={{ display: 'flex', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-          {/* Bouton 1 : Import MANEX automatique (recommandé) */}
           <Button
             variant="contained"
             color="secondary"
@@ -1063,16 +1063,6 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             style={{ display: 'none' }}
             onChange={handleManexFileSelected}
           />
-
-          <Button
-            variant="outlined"
-            onClick={() => {
-              window.location.href = 'mailto:contact@alflight.fr?subject=Demande d\'ajout avion&body=Bonjour, je souhaiterais ajouter mon avion à la liste...';
-            }}
-            sx={{ flex: { sm: 1 } }}
-          >
-            Envoyer le manuel de vol
-          </Button>
         </Box>
         {extractionError && (
           <Alert severity="error" sx={{ mt: 2 }} onClose={() => setExtractionError(null)}>
