@@ -42,7 +42,9 @@ import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { extractCompleteManexData } from '../../services/manexExtractionService';
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
-import { consumeRequestPrefill, downloadRequestManual } from '../../services/aircraftRequestWorkflow';
+import { consumeRequestPrefill, downloadRequestManual, getRequestContext } from '../../services/aircraftRequestWorkflow';
+import { getAirportNameSync } from '@shared/hooks/useAirportNames';
+import { useOpenAIPStore } from '@core/stores/openAIPStore';
 
 /**
  * 🛡️ ANTI-RE-TÉLÉCHARGEMENT DE L'ANNEXE (MANEX)
@@ -165,11 +167,10 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
   }, [manexReviewTrigger]);
 
   // ─── 📥 « Créer la fiche » depuis une demande d'ajout (admin) ─────────────
-  // Consomme le témoin déposé par AircraftRequestsPanel : pré-remplit
-  // immatriculation + base d'attache, télécharge le manuel téléversé par le
-  // demandeur (bucket privé) et lance la même extraction que l'import PDF.
-  // Couvre les 2 chemins : wizard monté après changement d'onglet (effet au
-  // montage) et Step0 déjà affiché (événement aircraft-request-prefill).
+  // Consomme le témoin déposé par AircraftRequestsPanel AU MONTAGE UNIQUEMENT :
+  // storeRequestHandoff purge le brouillon et fait REMONTER le wizard à neuf
+  // (clé React dans MobileApp), donc Step0 monte toujours vierge à l'étape 0 —
+  // plus de fusion avec l'état d'un autre avion (revue 16/08).
   const requestPrefillRef = useRef(null);
   useEffect(() => {
     if (!isAdmin) return undefined;
@@ -177,6 +178,16 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
     const applyRequestPrefill = async () => {
       const prefill = consumeRequestPrefill();
       if (!prefill) return;
+      // 🛡️ Revue 16/08 : la base d'attache vient d'un champ LIBRE — « Aéroclub
+      // de NICE » donnerait le pseudo-OACI « NICE ». On ne garde le code que
+      // s'il existe dans le référentiel SIA (quand celui-ci est déjà chargé).
+      if (prefill.homeBase) {
+        const airportsLoaded = useOpenAIPStore.getState().airports.length > 0;
+        if (airportsLoaded && !getAirportNameSync(prefill.homeBase)) {
+          console.warn(`[Handoff] « ${prefill.homeBase} » n'est pas un aérodrome connu — base laissée vide (saisie du demandeur : « ${prefill.homeBaseRaw} »)`);
+          prefill.homeBase = '';
+        }
+      }
       requestPrefillRef.current = prefill;
       const seed = {};
       if (prefill.registration) seed.registration = prefill.registration;
@@ -194,11 +205,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       }
     };
     applyRequestPrefill();
-    window.addEventListener('aircraft-request-prefill', applyRequestPrefill);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('aircraft-request-prefill', applyRequestPrefill);
-    };
+    return () => { cancelled = true; };
   }, [isAdmin]);
 
   const handleManexFileSelected = async (e) => {
@@ -285,9 +292,14 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
     const payload = buildBulkUpdatePayload(extractionItems);
     // 📥 Fiche issue d'une demande d'ajout : l'immatriculation et la base
     // d'attache SAISIES PAR LE DEMANDEUR font foi sur ce que le PDF contient.
-    const pre = requestPrefillRef.current;
+    // Repli sur le CONTEXTE (sessionStorage, vit jusqu'à la sauvegarde) : le
+    // ref local est perdu si Step0 a été remonté entre-temps (revue 16/08).
+    const pre = requestPrefillRef.current || getRequestContext();
     if (pre?.registration) payload.registration = pre.registration;
-    if (pre?.homeBase) payload.homeBase = pre.homeBase;
+    if (pre?.homeBase) {
+      const airportsLoaded = useOpenAIPStore.getState().airports.length > 0;
+      if (!airportsLoaded || getAirportNameSync(pre.homeBase)) payload.homeBase = pre.homeBase;
+    }
     if (updateDataBulk) {
       updateDataBulk(payload);
     } else if (updateData) {

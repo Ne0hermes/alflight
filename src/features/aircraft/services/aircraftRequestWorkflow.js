@@ -40,26 +40,41 @@ export function storeRequestHandoff(req) {
     homeBaseRaw: req.home_base || '',
     filePath: req.file_path,
     fileName: req.file_name,
+    createdAt: Date.now(), // péremption courte (revue 16/08) : un témoin non
+    // consommé ne doit JAMAIS détourner une création ultérieure sans rapport
   };
   try {
     sessionStorage.setItem(PREFILL_KEY, JSON.stringify(payload));
-    sessionStorage.setItem(CONTEXT_KEY, JSON.stringify({ requestId: req.id, registration }));
+    sessionStorage.setItem(CONTEXT_KEY, JSON.stringify({ requestId: req.id, registration, homeBase: payload.homeBase }));
   } catch (e) {
     console.warn('[RequestWorkflow] sessionStorage indisponible :', e?.message);
   }
+  // 🛡️ Revue 16/08 : un brouillon de wizard à une étape > 0 empêcherait Step0
+  // (le consommateur du témoin) de monter — et mélangerait les données de
+  // DEUX avions. Le handoff démarre TOUJOURS d'un wizard vierge à l'étape 0 :
+  // brouillon purgé + remontage complet du wizard (clé React dans MobileApp).
+  try { localStorage.removeItem('aircraft_wizard_draft'); } catch { /* best effort */ }
   // Onglet « Configurer un avion » (no-op si on y est déjà)…
   window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tabId: 'aircraft-wizard' } }));
-  // …et signal direct pour un Step0 déjà monté (clic depuis la boîte du wizard).
+  // …et remontage à neuf du wizard (MobileApp incrémente sa clé React) : l'état
+  // en cours est jeté, Step0 remonte vierge et consomme le témoin à son montage.
   window.dispatchEvent(new CustomEvent('aircraft-request-prefill'));
 }
 
-/** Lit ET efface le témoin de pré-remplissage (consommation unique). */
+const PREFILL_TTL_MS = 5 * 60 * 1000;
+
+/** Lit ET efface le témoin de pré-remplissage (consommation unique, périmé après 5 min). */
 export function consumeRequestPrefill() {
   try {
     const raw = sessionStorage.getItem(PREFILL_KEY);
     if (!raw) return null;
     sessionStorage.removeItem(PREFILL_KEY);
-    return JSON.parse(raw);
+    const payload = JSON.parse(raw);
+    if (!payload?.createdAt || Date.now() - payload.createdAt > PREFILL_TTL_MS) {
+      console.warn('[RequestWorkflow] Témoin de pré-remplissage périmé — ignoré');
+      return null;
+    }
+    return payload;
   } catch {
     return null;
   }
@@ -106,15 +121,24 @@ export async function markRequestProcessedAfterSave(registration) {
   if (!ctx?.requestId) return false;
   const saved = String(registration || '').trim().toUpperCase();
   if (!saved || saved !== ctx.registration) return false; // autre avion : ne rien clôturer
-  const { error } = await supabase
+  // 🛡️ Revue 16/08 : garde .eq(status,'pending') — un contexte périmé ne doit
+  // JAMAIS faire repasser une demande « Refusée » à « Traitée ». .select()
+  // permet de détecter 0 ligne affectée (demande déjà traitée/refusée).
+  const { data: updated, error } = await supabase
     .from('aircraft_requests')
     .update({ status: 'processed', processed_at: new Date().toISOString() })
-    .eq('id', ctx.requestId);
+    .eq('id', ctx.requestId)
+    .eq('status', 'pending')
+    .select();
   if (error) {
     console.warn('[RequestWorkflow] Clôture de la demande échouée :', error.message);
     return false;
   }
-  clearRequestContext();
+  clearRequestContext(); // contexte consommé dans tous les cas (succès ou déjà traité)
+  if (!updated || updated.length === 0) {
+    console.warn('[RequestWorkflow] Demande déjà traitée/refusée — statut inchangé');
+    return false;
+  }
   console.log(`✅ [RequestWorkflow] Demande clôturée — ${saved} disponible pour le demandeur`);
   return true;
 }

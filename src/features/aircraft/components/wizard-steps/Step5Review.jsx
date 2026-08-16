@@ -1271,7 +1271,7 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                 data.advancedPerformance.tables.map((table, tableIndex) => (
                 <Box key={tableIndex} sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                    {perfTableLabel({ ...table, table_name: table.title }, tableIndex)}
+                    {perfTableLabel({ ...table, table_name: table.table_name || table.title }, tableIndex)}
                   </Typography>
                   {table.headers && (
                     <Box sx={{ 
@@ -1328,16 +1328,32 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                 // 📊 Tableaux de performances — refonte lisibilité (César 16/08) :
                 // nom COMPRÉHENSIBLE (catalogue FR, plus de « takeoff_ground_roll »)
                 // + VALEURS affichées (avant : simple compteur « N entrées »).
-                data.performanceTables.map((table, tableIndex) => {
-                  const rows = Array.isArray(table.data) ? table.data : [];
+                (() => {
+                  // Revue 16/08 : plusieurs tableaux peuvent porter la MÊME
+                  // opération (variantes de masse) — on désambiguïse le titre.
+                  const labelCounts = {};
+                  data.performanceTables.forEach((t, i) => {
+                    const l = perfTableLabel(t, i);
+                    labelCounts[l] = (labelCounts[l] || 0) + 1;
+                  });
+                  return data.performanceTables.map((table, tableIndex) => {
+                  // Revue 16/08 : lignes null/non-objet possibles dans le JSON
+                  // d'extraction stocké — filtrées pour ne pas crasher le rendu.
+                  const rows = (Array.isArray(table.data) ? table.data : [])
+                    .filter((r) => r && typeof r === 'object');
                   const inputKeys = rows.length > 0
                     ? Object.keys(rows[0]).filter((k) => k !== 'value')
                     : [];
                   const colLabel = (k) => PERF_COLUMN_LABELS[k] || k;
+                  let tableTitle = perfTableLabel(table, tableIndex);
+                  if (labelCounts[tableTitle] > 1) {
+                    const suffix = table.table_name || (rows[0]?.Masse ? `${rows[0].Masse} kg` : '');
+                    if (suffix && suffix !== tableTitle) tableTitle = `${tableTitle} — ${suffix}`;
+                  }
                   return (
                     <Box key={tableIndex} sx={{ mb: 3 }}>
                       <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
-                        {perfTableLabel(table, tableIndex)}
+                        {tableTitle}
                       </Typography>
                       {table.conditions && (
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
@@ -1376,7 +1392,8 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                       )}
                     </Box>
                   );
-                })
+                  });
+                })()
               ) : (
                 <Box>
                   {/* Affichage des données de performance simple si pas de tableaux */}

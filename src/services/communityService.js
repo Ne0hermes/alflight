@@ -240,7 +240,11 @@ class CommunityService {
         importedFromCommunity: true,
         communityPresetId: data.id,
         // 🔧 FIX: Propager hasManex depuis Supabase (n'est pas dans aircraft_data)
-        hasManex: data.has_manex || false
+        hasManex: data.has_manex || false,
+        // Revue 16/08 : propager le propriétaire RÉEL de la ligne (colonne) —
+        // sans lui, la copie locale d'un import standard était estampillée
+        // comme possédée par l'importateur (dédup incohérente au ré-import).
+        submitted_by: data.submitted_by ?? null
       };
 
       // 🔧 FIX MEMORY LEAK: NE PAS télécharger automatiquement le MANEX

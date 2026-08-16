@@ -95,6 +95,16 @@ grant execute on function public.aircraft_request_pending(text) to authenticated
 --    wizard récupère directement l'OACI. Idempotent.
 alter table public.aircraft_requests add column if not exists home_base text;
 
+-- 6bis. NETTOYAGE CLIENT (revue 2026-08-16) : si l'enregistrement de la
+--    demande échoue APRÈS le téléversement, le client retire son propre PDF
+--    (sinon fichier orphelin non supprimable — la policy delete était
+--    admin-only). Chacun ne peut supprimer QUE dans son dossier <uid>/.
+drop policy if exists "storage req: delete son propre fichier" on storage.objects;
+create policy "storage req: delete son propre fichier" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'aircraft-requests'
+         and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- 7. Vérification
 select 'aircraft_requests' as verif, count(*) as policies
   from pg_policies where tablename = 'aircraft_requests';

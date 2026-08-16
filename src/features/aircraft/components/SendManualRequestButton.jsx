@@ -98,7 +98,12 @@ const SendManualRequestButton = ({ style }) => {
         file_name: file.name,
         file_size: file.size,
       });
-      if (insErr) throw new Error('Enregistrement échoué : ' + insErr.message);
+      if (insErr) {
+        // Revue 16/08 : l'upload a déjà eu lieu — retirer le PDF pour ne pas
+        // laisser un fichier orphelin dans le bucket (policy delete-own requise).
+        try { await supabase.storage.from('aircraft-requests').remove([path]); } catch { /* purge admin possible via dashboard */ }
+        throw new Error('Enregistrement échoué : ' + insErr.message);
+      }
 
       setDone({ registration: reg });
     } catch (e) {

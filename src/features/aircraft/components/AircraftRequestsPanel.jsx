@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper, Wand2, MapPin, X } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
-import { storeRequestHandoff } from '../services/aircraftRequestWorkflow';
+import { storeRequestHandoff, getRequestContext, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
 // Clé de « dernier statut vu » (partitionnée par compte via accountDataIsolation)
 const SEEN_KEY = 'aircraftRequestsSeen';
@@ -109,6 +109,9 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
         .update({ status, processed_at: new Date().toISOString() })
         .eq('id', req.id);
       if (error) throw error;
+      // Revue 16/08 : statuer à la main annule tout handoff « Créer la fiche »
+      // en cours sur cette demande — le contexte ne doit pas survivre.
+      if (getRequestContext()?.requestId === req.id) clearRequestContext();
       await load();
     } catch (e) {
       alert('Mise à jour impossible : ' + (e?.message || e));
@@ -194,8 +197,11 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                 </span>
               )}
 
-              {/* ✖ Masquer la notification (les deux rôles) — la demande reste en base */}
-              {!isAdmin && (
+              {/* ✖ Masquer la notification — UNIQUEMENT les demandes déjà statuées
+                  (revue 16/08 : masquer une demande « pending » l'enterrait sans
+                  retour possible — l'admin ne la voyait plus, le demandeur perdait
+                  sa future bannière). La demande reste en base dans tous les cas. */}
+              {!isAdmin && req.status !== 'pending' && (
                 <button
                   type="button"
                   onClick={() => hideRequest(req.id)}
@@ -231,15 +237,17 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                       </button>
                     </>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => hideRequest(req.id)}
-                    aria-label="Masquer cette notification"
-                    title="Masquer"
-                    style={dismissBtn}
-                  >
-                    <X size={14} />
-                  </button>
+                  {req.status !== 'pending' && (
+                    <button
+                      type="button"
+                      onClick={() => hideRequest(req.id)}
+                      aria-label="Masquer cette notification"
+                      title="Masquer"
+                      style={dismissBtn}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </span>
               )}
             </div>

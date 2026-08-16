@@ -80,6 +80,9 @@ const MobileApp = () => {
   const isAdmin = isAdminUser(user);
   const visibleMenuTabs = MENU_TABS.filter((t) => isAdmin || !ADMIN_ONLY_TABS.has(t.id));
   const [activeTab, setActiveTab] = useState('landing');
+  // 📥 Clé de remontage du wizard avion : incrémentée par « Créer la fiche »
+  // (événement aircraft-request-prefill) pour repartir d'un état vierge.
+  const [wizardKey, setWizardKey] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [showSplash, setShowSplash] = useState(false); // Désactivé temporairement
   const [isProfileConfigured, setIsProfileConfigured] = useState(null); // null = en cours de vérification
@@ -159,6 +162,12 @@ const MobileApp = () => {
     };
     window.addEventListener('navigate-to-tab', handleNavigateTab);
 
+    // 📥 « Créer la fiche » (revue 16/08) : REMONTER le wizard à neuf — l'état
+    // en cours (brouillon, avion importé, étape > 0) est jeté, Step0 remonte
+    // vierge à l'étape 0 et consomme le témoin de pré-remplissage à son montage.
+    const handleWizardRemount = () => setWizardKey((k) => k + 1);
+    window.addEventListener('aircraft-request-prefill', handleWizardRemount);
+
     // Check if mobile / tablette : breakpoint 1024px pour que tablettes en
     // mode portrait (768-1024) bénéficient aussi du menu burger (la TabNav
     // horizontale est cramée par 8-12 onglets sur une tablette portrait).
@@ -174,6 +183,7 @@ const MobileApp = () => {
       window.removeEventListener('navigate-to-home', handleNavigateHome);
       window.removeEventListener('profile-configured', handleProfileConfigured);
       window.removeEventListener('navigate-to-tab', handleNavigateTab);
+      window.removeEventListener('aircraft-request-prefill', handleWizardRemount);
     };
   }, [activeTab]); // 🔧 Ajouter activeTab pour charger backup/migration quand on quitte landing
 
@@ -366,6 +376,7 @@ const MobileApp = () => {
               ) : ActiveComponent && (
                 activeTab === 'aircraft-wizard' ? (
                   <ActiveComponent
+                    key={wizardKey}
                     onComplete={() => setActiveTab('landing')}
                     onCancel={() => setActiveTab('landing')}
                   />

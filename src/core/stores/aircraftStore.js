@@ -440,8 +440,11 @@ export const useAircraftStore = create(
             ...lightAircraft,
             id: result.id,
             aircraftId: result.id,
-            // Owner (pour dédup + remplacement silencieux de la version communautaire)
-            submitted_by: result.submitted_by || currentUserId,
+            // Owner (pour dédup + remplacement silencieux de la version communautaire).
+            // Revue 16/08 : un import COMMUNAUTAIRE sans owner connu ne doit PAS
+            // être estampillé comme possédé par l'importateur (sinon confirm() de
+            // doublon injustifié au ré-import après recréation de la fiche).
+            submitted_by: result.submitted_by ?? (normalizedAircraft.communityPresetId ? null : currentUserId),
             // 🔧 FIX: Ajouter les flags pour le chargement des données volumineuses depuis IndexedDB
             // (préserver les flags déjà posés par l'appelant — ex. AircraftForm
             // passe lightData SANS blobs mais avec hasPhoto/hasManex à true,
@@ -658,13 +661,27 @@ export const useAircraftStore = create(
           console.error('❌ [AircraftStore] Erreur sauvegarde IndexedDB (update):', idbError);
         }
 
-        // 3. Persister dans Supabase — modèle « FICHE UNIQUE PARTAGÉE » (prototype).
-        // On ÉCRASE la fiche existante EN PLACE (UPDATE), quel que soit le
-        // propriétaire — PLUS de clone (donc plus de doublon : une seule fiche
-        // par avion). ⚠️ Suppose que la policy RLS UPDATE de community_presets a été
-        // OUVERTE (voir supabase-prototype-open-write.sql). Sinon l'UPDATE touche
-        // 0 ligne → erreur explicite (les modifs restent locales en attendant).
-        const currentUserId = await getCurrentUserId(); // peut être null (RLS ouverte → OK)
+        // 🔐 Phase 1 RBAC (revue 16/08) : MÊME règle que addAircraft — un compte
+        // standard ne tente JAMAIS d'écrire la fiche communautaire (RLS
+        // admin-only : l'UPDATE ferait 0 ligne → erreur + bandeau trompeur).
+        // Ses modifications restent locales (optimistic + IndexedDB déjà faits).
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.app_metadata?.role !== 'admin') {
+            console.log('🔐 [updateAircraft] Compte standard — modifications locales uniquement (aucune écriture serveur)');
+            set({ isLoading: false });
+            return validatedAircraft;
+          }
+        } catch {
+          // fail-closed : sans certitude sur le rôle, pas d'écriture serveur
+          set({ isLoading: false });
+          return validatedAircraft;
+        }
+
+        // 3. Persister dans Supabase — modèle « FICHE UNIQUE PARTAGÉE » :
+        // l'ADMIN écrase la fiche existante EN PLACE (UPDATE). Les RLS Phase 1
+        // (écriture admin-only) garantissent qu'on n'arrive ici qu'en admin.
+        const currentUserId = await getCurrentUserId();
 
         // Résoudre le MANEX (fichier uploadable) pour le réattacher à la fiche.
         const manexResolved = (validatedAircraft.hasManex || validatedAircraft.manex)
@@ -692,7 +709,7 @@ export const useAircraftStore = create(
           });
           set({
             error: blockedByRls
-              ? '⚠ La base refuse l\'écrasement de cette fiche (RLS). Applique supabase-prototype-open-write.sql dans Supabase pour autoriser la mise à jour en place. Tes modifications restent locales pour l\'instant.'
+              ? '⚠ La base a refusé la mise à jour de cette fiche (RLS). Vérifie que ce compte porte bien le rôle admin. Tes modifications restent locales pour l\'instant.'
               : `⚠ Sauvegarde Supabase échouée : ${supabaseError.message || 'erreur inconnue'}. Tes modifications sont uniquement locales pour l'instant.`
           });
           throw supabaseError;

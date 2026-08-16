@@ -74,6 +74,28 @@ const restoreVault = (userId) => {
 };
 
 /**
+ * 🗑️ SUPPRESSION DE COMPTE — purge locale CHIRURGICALE (fix bug César 16/08).
+ * L'ancien code faisait `localStorage.clear()` : cela détruisait aussi les
+ * COFFRES des AUTRES comptes de l'appareil (alflight:vault:<autres ids>) —
+ * l'espace pilote des autres profils disparaissait après la suppression d'un
+ * compte de test. On n'efface QUE : les clés actives (qui appartiennent au
+ * compte supprimé, puisqu'il était connecté), SON coffre, et le marqueur de
+ * propriétaire. Les coffres des autres comptes et les caches partagés du
+ * référentiel (GeoJSON, VAC…) sont préservés.
+ * @param {string} userId - id du compte qui vient d'être supprimé
+ */
+export function purgeLocalDataForDeletedAccount(userId) {
+  try {
+    clearCurrent();
+    if (userId) localStorage.removeItem(VAULT_PREFIX + userId);
+    localStorage.removeItem(OWNER_KEY);
+    console.log('🗑️ [Isolation] Données locales du compte supprimé purgées (coffres des autres comptes préservés)');
+  } catch (e) {
+    console.warn('[Isolation] Purge post-suppression incomplète :', e?.message);
+  }
+}
+
+/**
  * À appeler à CHAQUE session authentifiée (AuthContext).
  * @param {string} userId - id Supabase de l'utilisateur connecté
  * @returns {boolean} true si un échange a eu lieu (l'appelant doit recharger)

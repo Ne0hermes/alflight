@@ -39,7 +39,7 @@ import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { sanitizeTankVariants } from '@utils/tankVariants';
-import { markRequestProcessedAfterSave } from '../services/aircraftRequestWorkflow';
+import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
@@ -554,6 +554,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
   const handleConfirmCancel = (saveState) => {
     const closeCallback = onClose || onCancel;
+
+    // 📥 Revue 16/08 : abandonner le wizard = abandonner la demande en cours.
+    // Sans ce nettoyage, un contexte périmé pouvait clôturer la demande lors
+    // d'une sauvegarde ULTÉRIEURE sans rapport (même immatriculation).
+    try { clearRequestContext(); } catch { /* best effort */ }
 
     if (saveState) {
       saveWizardState();
