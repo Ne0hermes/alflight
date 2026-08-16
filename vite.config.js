@@ -112,6 +112,10 @@ export default defineConfig(({ mode }) => ({
       '@features': path.resolve(__dirname, './src/features'),
       '@shared': path.resolve(__dirname, './src/shared'),
       '@services': path.resolve(__dirname, './src/services'),
+      // 🧮 Phase 2 — moteur de calcul autonome. L'alias pointe sur les SOURCES
+      // (pas un dossier compilé) : rechargement à chaud conservé, aucune étape
+      // de build supplémentaire pendant la migration.
+      '@alflight/calc-engine': path.resolve(__dirname, './packages/calc-engine/src'),
       '@utils': path.resolve(__dirname, './src/utils'),
       '@data': path.resolve(__dirname, './src/data'),
       '@hooks': path.resolve(__dirname, './src/hooks'),

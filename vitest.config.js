@@ -15,6 +15,7 @@ export default defineConfig({
       '@features': r('./src/features'),
       '@shared': r('./src/shared'),
       '@services': r('./src/services'),
+      '@alflight/calc-engine': r('./packages/calc-engine/src'),
       '@utils': r('./src/utils'),
       '@data': r('./src/data'),
       '@hooks': r('./src/hooks'),
@@ -26,6 +27,8 @@ export default defineConfig({
     // environnement node suffit. (jsdom sera activé par fichier si besoin UI.)
     environment: 'node',
     globals: true,
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    // Les tests du moteur de calcul vivent dans packages/ : sans cette ligne
+    // ils ne seraient jamais exécutés (piège relevé à la cartographie).
+    include: ['src/**/*.{test,spec}.{js,jsx}', 'packages/*/src/**/*.{test,spec}.{js,ts}'],
   },
 });

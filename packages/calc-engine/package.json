@@ -1,0 +1,17 @@
+{
+  "name": "@alflight/calc-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Moteur de calcul ALFlight — masse & centrage, navigation, carburant, performances. Aucune dépendance d'interface : exécutable dans le navigateur comme côté serveur (fonctions Edge).",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./units": "./src/units/index.js",
+    "./nav": "./src/nav/index.js",
+    "./wb": "./src/wb/index.js",
+    "./fuel": "./src/fuel/index.js",
+    "./perf": "./src/perf/index.js"
+  },
+  "sideEffects": false
+}

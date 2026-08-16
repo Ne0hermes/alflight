@@ -129,5 +129,8 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.30.1"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }
