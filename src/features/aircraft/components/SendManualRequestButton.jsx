@@ -105,12 +105,6 @@ const SendManualRequestButton = ({ style }) => {
     }
   };
 
-  const notifyByEmail = () => {
-    const subject = `Nouvelle demande d'avion — ${done?.registration || ''}`;
-    const body = `Bonjour,\n\nJe viens de déposer une demande d'ajout pour ${done?.registration} via l'application (manuel de vol téléversé).\n\nMerci !`;
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  };
-
   const inputStyle = {
     width: '100%', padding: '8px 10px', marginBottom: '10px',
     borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)',
@@ -144,14 +138,11 @@ const SendManualRequestButton = ({ style }) => {
           <CheckCircle size={18} color="#10b981" />
           Demande envoyée pour {done.registration}
         </p>
-        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: 0 }}>
           Votre manuel de vol a été transmis. L'administrateur créera la fiche
-          avion — elle apparaîtra ensuite dans la base communautaire.
+          avion — vous serez prévenu ici même dès qu'elle sera disponible dans
+          la base communautaire (suivi dans « Mes demandes d'ajout »).
         </p>
-        <button type="button" onClick={notifyByEmail} style={btn('var(--accent-primary)')}>
-          <Mail size={15} />
-          Prévenir aussi par e-mail
-        </button>
       </div>
     );
   }

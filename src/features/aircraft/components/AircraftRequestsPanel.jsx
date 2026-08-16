@@ -75,6 +75,21 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
   const setStatus = async (req, status) => {
     setBusyId(req.id);
     try {
+      // 🛡️ « Traitée » déclenche côté demandeur la bannière « ajouté à la base —
+      // importez-le » : le statut ne peut donc passer à processed QUE si la fiche
+      // existe réellement dans la base communautaire (bug F-HSTS, César 16/08).
+      if (status === 'processed') {
+        const { data: existing, error: checkErr } = await supabase
+          .from('community_presets')
+          .select('id')
+          .ilike('registration', (req.registration || '').trim())
+          .limit(1);
+        if (checkErr) throw checkErr;
+        if (!existing || existing.length === 0) {
+          alert(`⛔ ${req.registration} n'est pas encore dans la base communautaire.\n\nCréez d'abord la fiche avion (Configurer un avion → Importer depuis un manuel de vol), puis marquez la demande « Traitée » : le demandeur sera alors prévenu que son avion est disponible.`);
+          return;
+        }
+      }
       const { error } = await supabase
         .from('aircraft_requests')
         .update({ status, processed_at: new Date().toISOString() })

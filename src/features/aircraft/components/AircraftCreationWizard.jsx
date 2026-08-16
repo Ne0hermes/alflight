@@ -44,6 +44,9 @@ import { sanitizeTankVariants } from '@utils/tankVariants';
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
 // Après : chaque step chargé uniquement quand il devient visible
 const Step0CommunityCheck = React.lazy(() => import('./wizard-steps/Step0CommunityCheck'));
+// 📥 Boîte des demandes d'ajout : l'admin doit les voir AUSSI ici, là où il
+// crée les fiches (demande César 16/08) — pas seulement dans « Mes avions ».
+const AircraftRequestsPanel = React.lazy(() => import('./AircraftRequestsPanel'));
 const Step1BasicInfo = React.lazy(() => import('./wizard-steps/Step1BasicInfo'));
 const Step2Speeds = React.lazy(() => import('./wizard-steps/Step2Speeds'));
 const Step3WeightBalance = React.lazy(() => import('./wizard-steps/Step3WeightBalance'));
@@ -1400,14 +1403,19 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <Step0CommunityCheck
-                  data={aircraftData}
-                  updateData={updateData}
-                  updateDataBulk={updateDataBulk}
-                  onSkip={() => handleNext()}
-                  onComplete={onComplete}
-                  manexReviewTrigger={manexReviewTrigger}
-                />;
+        return (
+          <>
+            {!readOnlyConsult && <AircraftRequestsPanel isAdmin />}
+            <Step0CommunityCheck
+              data={aircraftData}
+              updateData={updateData}
+              updateDataBulk={updateDataBulk}
+              onSkip={() => handleNext()}
+              onComplete={onComplete}
+              manexReviewTrigger={manexReviewTrigger}
+            />
+          </>
+        );
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
