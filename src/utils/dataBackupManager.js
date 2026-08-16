@@ -386,9 +386,20 @@ class DataBackupManager {
     await this.initPromise;
     
 
+    // 🔐 CLOISONNEMENT PAR COMPTE (16/08) — bug constaté : un avion ajouté sur
+    // un profil apparaissait sur TOUS les profils du navigateur, et sa
+    // suppression le retirait pour tous (IndexedDB partagée, contrairement aux
+    // clés localStorage déjà isolées par accountDataIsolation). Chaque avion
+    // porte désormais le compte propriétaire — même convention que les coffres.
+    let ownerAccountId = aircraft.ownerAccountId || null;
+    if (!ownerAccountId) {
+      try { ownerAccountId = localStorage.getItem('alflight:data-owner'); } catch { ownerAccountId = null; }
+    }
+
     const aircraftData = {
       ...aircraft,
       id: aircraft.id || `aircraft_${Date.now()}`,
+      ...(ownerAccountId ? { ownerAccountId } : {}),
       lastModified: new Date().toISOString()
     };
 

@@ -94,7 +94,34 @@ export const AircraftProvider = memo(({ children }) => {
           const { default: dataBackupManager } = await import('@utils/dataBackupManager');
 
           // 🔧 FIX: Charger TOUS les avions mais SANS les données volumineuses
-          const allAircraft = await dataBackupManager.getAllFromStore('aircraftData');
+          const allRecords = await dataBackupManager.getAllFromStore('aircraftData');
+
+          // 🔐 CLOISONNEMENT PAR COMPTE (16/08) — bug constaté par César : un
+          // avion ajouté sur un profil apparaissait sur TOUS les profils, et sa
+          // suppression le retirait partout (IndexedDB partagée). On ne montre
+          // que les avions du compte propriétaire courant (même marqueur que
+          // les coffres de accountDataIsolation).
+          // Avions HÉRITÉS (sans propriétaire, créés avant ce correctif) : ils
+          // sont ADOPTÉS une fois par le compte courant — jamais supprimés.
+          let ownerAccountId = null;
+          try { ownerAccountId = localStorage.getItem('alflight:data-owner'); } catch { /* stockage indisponible */ }
+
+          let allAircraft = allRecords;
+          if (ownerAccountId) {
+            const orphans = allRecords.filter((a) => !a.ownerAccountId);
+            for (const orphan of orphans) {
+              try {
+                await dataBackupManager.saveAircraftData({ ...orphan, ownerAccountId });
+                orphan.ownerAccountId = ownerAccountId;
+              } catch (e) {
+                console.warn('[AircraftProvider] Adoption de l\'avion hérité impossible :', orphan?.registration, e?.message);
+              }
+            }
+            allAircraft = allRecords.filter((a) => a.ownerAccountId === ownerAccountId);
+            if (allAircraft.length !== allRecords.length) {
+              console.log(`🔐 [AircraftProvider] ${allRecords.length - allAircraft.length} avion(s) d'un autre compte masqué(s)`);
+            }
+          }
 
           // 🛡️ FIX OOM (Out of Memory) CRITIQUE :
           // L'ancien code faisait `const light = { ...aircraft }` qui CLONE

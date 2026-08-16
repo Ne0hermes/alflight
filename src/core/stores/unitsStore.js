@@ -136,7 +136,24 @@ export const useUnitsStore = create(
     }),
     {
       name: 'units-preferences',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
+      // 🐛 FIX CRITIQUE (16/08) — « tous les bras de levier vides » :
+      // la fusion par DÉFAUT de zustand/persist est SUPERFICIELLE, donc l'objet
+      // `units` restauré REMPLAÇAIT entièrement les valeurs par défaut. Un
+      // réglage sauvegardé avant l'ajout d'une catégorie (ex. `armLength`, ou
+      // restauré depuis un coffre de compte plus ancien) laissait cette clé
+      // INDÉFINIE. Or fromStorage/toStorage sont fail-closed : sans unité
+      // cible, ils renvoient '' → TOUS les champs de bras et de moment
+      // s'affichaient vides, quelle que soit la valeur réellement stockée
+      // (le travail au centrogramme semblait « ne servir à rien »).
+      // Fusion PROFONDE sur `units` : les préférences de l'utilisateur gagnent,
+      // les catégories absentes retombent sur les défauts. Répare aussi
+      // automatiquement les stockages déjà incomplets, au chargement.
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted || {}),
+        units: { ...current.units, ...((persisted && persisted.units) || {}) }
+      })
     }
   )
 );

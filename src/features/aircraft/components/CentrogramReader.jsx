@@ -56,6 +56,7 @@ import {
   FUEL_TANK_TYPES
 } from '../utils/centrogramMath';
 import { buildCgEnvelope, aircraftToCentrogramScaffold } from '../utils/centrogramAdapter';
+import { getFuelDensity } from '../utils/mbUnits';
 import { unitsSelectors } from '@core/stores/unitsStore';
 
 const STEPS = [
@@ -657,10 +658,34 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
     // relisait « 2130 » comme des mètres et affichait 2 130 000 mm : les bras
     // mesurés semblaient « jamais importés ». armInUserUnit ne sert plus qu'à
     // l'AFFICHAGE (bouton de validation, pastilles de résultats).
-    if (currentStage.aircraftPath) {
-      const armMeters = convertArmUnit(armInfo.armRaw, armInfo.lengthUnit, 'm');
-      if (Number.isFinite(armMeters)) {
-        updateData(currentStage.aircraftPath, Math.round(armMeters * 1e5) / 1e5);
+    const armMeters = convertArmUnit(armInfo.armRaw, armInfo.lengthUnit, 'm');
+    if (currentStage.aircraftPath && Number.isFinite(armMeters)) {
+      const armRounded = Math.round(armMeters * 1e5) / 1e5;
+      updateData(currentStage.aircraftPath, armRounded);
+
+      // 💡 Retour César 16/08 : « le moment à plein… tout est vide » — les
+      // moments dérivés n'étaient recalculés QUE par les handlers de saisie
+      // manuelle, jamais après une mesure au lecteur. On les calcule ici,
+      // exactement comme Step3 (capacité × densité × bras / masse max × bras).
+      if (currentStage.dynamicType === 'fuelTank') {
+        const tank = aircraftData?.additionalFuelTanks?.[currentStage.dynamicIndex];
+        const cap = parseFloat(tank?.capacity);
+        const density = getFuelDensity(aircraftData?.fuelType);
+        if (Number.isFinite(cap) && density != null) {
+          updateData(
+            `additionalFuelTanks[${currentStage.dynamicIndex}].momentAtFull`,
+            Math.round(cap * density * armRounded * 100) / 100 // kg·m
+          );
+        }
+      } else if (currentStage.dynamicType === 'baggage') {
+        const comp = aircraftData?.baggageCompartments?.[currentStage.dynamicIndex];
+        const maxW = parseFloat(comp?.maxWeight);
+        if (Number.isFinite(maxW)) {
+          updateData(
+            `baggageCompartments[${currentStage.dynamicIndex}].momentMax`,
+            Math.round(maxW * armRounded * 100) / 100 // kg·m
+          );
+        }
       }
     }
   };

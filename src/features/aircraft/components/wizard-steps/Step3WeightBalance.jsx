@@ -431,20 +431,26 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   // STOCKE via in* (user → canonique). Un changement de préférence d'unités ne
   // réécrit plus JAMAIS la donnée (l'ancien effet de conversion in-place était
   // le vecteur du bug kg/lbs — ANO-8/ANO-11, AUDIT_MASSE_CENTRAGE_UNITES.md).
+  // 🛡️ Garde-fou (16/08) : une préférence d'unité absente (stockage hérité)
+  // rendait fromStorage/toStorage fail-closed → champs de bras VIDES malgré
+  // une donnée présente. Le défaut de l'application fait foi si la catégorie
+  // manque. Cause racine traitée dans unitsStore (fusion profonde du persist).
+  const armUnit = units.armLength || 'mm';
+  const weightUnit = units.weight || 'kg';
   const dispArm = (v) => {
-    const x = fromStorage(v, units.armLength, 'armLength');
+    const x = fromStorage(v, armUnit, 'armLength');
     return x === '' ? '' : Math.round(x * 10000) / 10000;
   };
   const inArm = (raw) => {
-    const x = toStorage(raw, units.armLength, 'armLength');
+    const x = toStorage(raw, armUnit, 'armLength');
     return x === null ? '' : Math.round(x * 100000) / 100000; // m, 5 déc. = 0,01 mm
   };
   const dispWeight = (v) => {
-    const x = fromStorage(v, units.weight, 'weight');
+    const x = fromStorage(v, weightUnit, 'weight');
     return x === '' ? '' : Math.round(x * 100) / 100;
   };
   const inWeight = (raw) => {
-    const x = toStorage(raw, units.weight, 'weight');
+    const x = toStorage(raw, weightUnit, 'weight');
     return x === null ? '' : Math.round(x * 1000) / 1000; // kg, 3 déc.
   };
   const dispMoment = (v) => {
