@@ -914,7 +914,11 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             if (newInputValue === CREATE_FROM_MANEX_OPTION) return; // action, pas une valeur
             setSearchValue(newInputValue);
           }}
-          options={[...communityAircraft.map(ac => ac.registration), ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])]}
+          options={[
+            // 🔤 Tri alphabétique des immatriculations (demande César 16/08)
+            ...communityAircraft.map(ac => ac.registration).sort((a, b) => String(a).localeCompare(String(b), 'fr')),
+            ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])
+          ]}
           filterOptions={(options, state) => {
             const input = (state.inputValue || '').trim().toUpperCase();
             const matches = options.filter(

@@ -1795,7 +1795,11 @@ export const AircraftModule = memo(() => {
             const found = allPresets.find((p) => p.registration === newValue);
             setSelectedPreset(found || null);
           }}
-          options={[...communityPresetsNotLocal.map((p) => p.registration), ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])]}
+          options={[
+            // 🔤 Tri alphabétique des immatriculations (demande César 16/08)
+            ...communityPresetsNotLocal.map((p) => p.registration).sort((a, b) => String(a).localeCompare(String(b), 'fr')),
+            ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])
+          ]}
           filterOptions={(options, state) => {
             const input = (state.inputValue || '').trim().toUpperCase();
             const matches = options.filter(
