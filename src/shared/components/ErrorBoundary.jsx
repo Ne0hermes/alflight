@@ -15,7 +15,28 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary:', error, errorInfo);
+    // 🔎 Diagnostic (16/08) : une valeur lancée qui n'est pas une Error
+    // (undefined, objet nu, chaîne) s'affichait VIDE dans la console —
+    // « ErrorBoundary: {componentStack…} » sans le moindre indice sur la cause.
+    // On journalise donc toujours un message exploitable + la version du build,
+    // pour distinguer un vrai bug d'un onglet resté sur un bundle périmé.
+    const describe = (e) => {
+      if (e instanceof Error) return `${e.name}: ${e.message}`;
+      if (e === undefined) return 'valeur lancée : undefined (aucune Error)';
+      if (e === null) return 'valeur lancée : null (aucune Error)';
+      if (typeof e === 'object') {
+        try { return `objet lancé : ${JSON.stringify(e).slice(0, 300)}`; } catch { return 'objet lancé (non sérialisable)'; }
+      }
+      return `valeur lancée (${typeof e}) : ${String(e).slice(0, 300)}`;
+    };
+    console.error('ErrorBoundary:', describe(error), {
+      error,
+      stack: error?.stack,
+      componentStack: errorInfo?.componentStack,
+      bundle: typeof document !== 'undefined'
+        ? (document.currentScript?.src || window.location.pathname)
+        : 'n/a'
+    });
     // Conserver la pile composant pour l'affichage « Détail technique »
     this.setState({ errorInfo });
     // 🔁 FILET DE SECOURS chunk périmé : si l'erreur vient d'un import dynamique
