@@ -90,14 +90,22 @@
                             window.location.port === '4001';
 
       if (!isDevelopment && 'serviceWorker' in navigator) {
+        // 🔧 FIX 2026-08-16 : l'ancien service-worker.js ARTISANAL entrait en
+        // conflit avec la PWA Workbox (vite-plugin-pwa enregistre /sw.js tout
+        // seul) : il SUPPRIMAIT le precache workbox pendant la session → les
+        // modules lazy (Profil…) perdaient leurs fichiers → « Une erreur est
+        // survenue » à la première connexion. On ne l'enregistre PLUS, et on
+        // DÉSENREGISTRE la version encore installée chez les utilisateurs.
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then(registration => {
-              console.log('✅ Service Worker registered:', registration);
-            })
-            .catch(error => {
-              console.error('❌ Service Worker registration failed:', error);
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+              const url = registration.active?.scriptURL || registration.installing?.scriptURL || '';
+              if (url.endsWith('/service-worker.js')) {
+                registration.unregister();
+                console.warn('🗑️ Ancien service worker artisanal désenregistré');
+              }
             });
+          });
         });
       } else if (isDevelopment) {
         console.log('🔧 Mode développement : Service Worker DÉSACTIVÉ');

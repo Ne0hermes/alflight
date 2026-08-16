@@ -16,6 +16,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary:', error, errorInfo);
+    // Conserver la pile composant pour l'affichage « Détail technique »
+    this.setState({ errorInfo });
     // 🔁 FILET DE SECOURS chunk périmé : si l'erreur vient d'un import dynamique
     // disparu (déploiement pendant que l'onglet tournait), un simple reload
     // retomberait sur le service worker PÉRIMÉ → même 404 → boucle. On purge donc
@@ -42,6 +44,26 @@ class ErrorBoundary extends React.Component {
               <p style={{ marginTop: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                 Une nouvelle version vient d'être déployée. Rechargement en cours…
               </p>
+            )}
+            {/* 🔧 2026-08-16 : détail TOUJOURS affiché (repliable) — sans lui,
+                un crash en production est indiagnosticable à distance. */}
+            {!recovering && this.state.error && (
+              <details style={{ marginTop: '12px', textAlign: 'left', maxWidth: '480px', margin: '12px auto 0' }}>
+                <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+                  Détail technique (à transmettre au support)
+                </summary>
+                <pre style={{
+                  marginTop: '8px', padding: '10px', fontSize: '11px', whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word', backgroundColor: 'var(--bg-overlay)',
+                  border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)',
+                  maxHeight: '180px', overflow: 'auto'
+                }}>
+                  {String(this.state.error?.message || this.state.error)}
+                  {this.state.errorInfo?.componentStack
+                    ? '\n--- composant ---' + String(this.state.errorInfo.componentStack).split('\n').slice(0, 4).join('\n')
+                    : ''}
+                </pre>
+              </details>
             )}
             <button
               onClick={() => recoverFromStaleChunks({ force: true })}

@@ -4,9 +4,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig(({ mode }) => ({
-  // 🔒 Lot 0.3 : en production, les ~1500 console.*/debugger sont supprimés du
-  // bundle au build (esbuild). En dev, ils restent (outillage volontaire).
-  ...(mode === 'production' ? { esbuild: { drop: ['console', 'debugger'] } } : {}),
+  // 🔒 Lot 0.3 (révisé 2026-08-16) : en production, les console.log/info/debug
+  // (~900 occurrences de bruit) sont supprimés du bundle, mais console.error
+  // et console.warn sont CONSERVÉS — sinon les vraies pannes deviennent
+  // indiagnosticables à distance (leçon du crash « Une erreur est survenue »
+  // dont le détail avait été avalé par drop:['console']).
+  ...(mode === 'production'
+    ? { esbuild: { pure: ['console.log', 'console.info', 'console.debug'], drop: ['debugger'] } }
+    : {}),
   plugins: [
     react(),
     VitePWA({
