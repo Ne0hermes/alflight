@@ -287,6 +287,24 @@ export const useWeightBalanceStore = create(
       const isWithinWeight = totalWeight <= maxTakeoffWeight &&
         (Number.isFinite(minTakeoffWeight) ? totalWeight >= minTakeoffWeight : true);
 
+      // ⚠️ CORRECTIF (16/08) — la masse maximale à l'ATTERRISSAGE n'était
+      // vérifiée nulle part dans le verdict principal : elle n'apparaissait
+      // que dans un écran précis du wizard. Un vol pouvait donc être déclaré
+      // « dans les limites » tout en dépassant la MLW à l'arrivée.
+      // On ne peut pas connaître ici le carburant brûlé : on signale donc le
+      // cas où la masse au décollage dépasse déjà la MLW — un atterrissage
+      // immédiat (demi-tour, panne) serait alors hors limites.
+      const maxLandingWeight = parseFloat(
+        aircraft.weights?.mlw ?? aircraft.maxLandingWeight ?? aircraft.masses?.maxLandingMass
+      );
+      const exceedsMlwAtTakeoff = Number.isFinite(maxLandingWeight)
+        && totalWeight > maxLandingWeight;
+      if (exceedsMlwAtTakeoff) {
+        warnings.push(
+          `Masse au décollage (${totalWeight.toFixed(0)} kg) supérieure à la masse maximale à l'atterrissage (${maxLandingWeight.toFixed(0)} kg) : un retour immédiat imposerait un délestage.`
+        );
+      }
+
       // 🔧 A2/A3 — Enveloppe RÉELLE interpolée à la masse (remplace le rectangle
       // constant [forwardPoints[0].cg, aftCG]).
       const cgLimitsAtTOW = cgLimitsAtMass(
@@ -315,6 +333,10 @@ export const useWeightBalanceStore = create(
         isWithinCG,
         cgReliable,
         fuelDensityMissing,
+        // Masse au décollage supérieure à la MLW (retour immédiat impossible
+        // sans délestage). Exposé pour l'UI et la synthèse.
+        exceedsMlwAtTakeoff,
+        maxLandingWeight: Number.isFinite(maxLandingWeight) ? maxLandingWeight : null,
         warnings,
         // Limites CG effectivement appliquées À cette masse (interpolées).
         cgLimits: { forward: cgLimitsAtTOW.forward, aft: cgLimitsAtTOW.aft }

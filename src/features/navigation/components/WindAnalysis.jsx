@@ -5,6 +5,7 @@ import { sx } from '@shared/styles/styleSystem';
 import { useWeatherStore } from '@core/stores/weatherStore';
 import { useUnits } from '@hooks/useUnits';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
+import { solveWindTriangle } from '@utils/windTriangle';
 
 const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -124,17 +125,40 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
         };
       }
       
-      // Calcul de la composante de vent de face/arrière (headwind/tailwind)
-      const windAngle = (windDirection - trueCourse + 360) % 360;
-      const headwindComponent = windSpeed * Math.cos(windAngle * Math.PI / 180);
-      const crosswindComponent = windSpeed * Math.sin(windAngle * Math.PI / 180);
-      
-      // Calcul de la dérive (Wind Correction Angle - WCA)
-      const wca = Math.asin(crosswindComponent / tas) * 180 / Math.PI;
-      
-      // Calcul de la vitesse sol (Ground Speed)
-      const groundSpeed = tas - headwindComponent;
-      
+      // ⚠️ CORRECTIF SÉCURITÉ (16/08) — cet écran calculait la vitesse sol par
+      // l'APPROXIMATION « GS = TAS − vent de face », sans garde sur le vent
+      // traversier. Par vent de travers elle SURESTIME la vitesse sol, donc
+      // sous-estime le temps de vol ET le carburant nécessaire.
+      // Exemple mesuré : route 090°, TAS 100 kt, vent 360°/40 kt
+      //   → approximation : 100 kt ; formule exacte : 91,65 kt.
+      // On utilise désormais la source unique du triangle des vents
+      // (GS = TAS·cos(WCA) − vent de face), fail-closed si le segment n'est
+      // pas tenable (traversier ≥ TAS) — aucune valeur inventée.
+      const solved = solveWindTriangle(trueCourse, tas, windDirection, windSpeed);
+      if (!solved) {
+        return {
+          label,
+          windSpeed,
+          windDirection,
+          untenable: true,
+          impact: 'Vent traversier supérieur à la vitesse propre — segment non tenable',
+          windSpeedDisplay: format(windSpeed, 'windSpeed', 0),
+          // Affichage explicite plutôt que des cases vides : le pilote doit
+          // comprendre qu'aucune vitesse sol ne peut être garantie ici.
+          headwindComponent: 0,
+          crosswindComponent: 0,
+          windCorrectionAngle: 0,
+          groundSpeed: null,
+          groundSpeedDisplay: 'non calculable',
+          headwindDisplay: 'non calculable',
+          crosswindDisplay: 'non calculable'
+        };
+      }
+      const headwindComponent = solved.headwind;
+      const crosswindComponent = solved.crosswind;
+      const wca = solved.windCorrectionAngle;
+      const groundSpeed = solved.groundSpeed;
+
       return {
         label,
         windSpeed,
@@ -158,11 +182,15 @@ const WindAnalysis = ({ waypoints, selectedAircraft, plannedAltitude = 3000 }) =
     
     // Estimation du vent moyen en route (interpolation simple)
     let averageWind = null;
-    if (departureWind && arrivalWind) {
+    // Même correctif que ci-dessus : la vitesse sol moyenne était calculée par
+    // « TAS − vent de face moyen », qui surestime la vitesse sol dès qu'il y a
+    // du travers. On moyenne les VITESSES SOL réellement résolues, et on ne
+    // publie rien si l'un des deux segments n'est pas tenable.
+    if (departureWind && arrivalWind && !departureWind.untenable && !arrivalWind.untenable) {
       const avgHeadwind = (departureWind.headwindComponent + arrivalWind.headwindComponent) / 2;
       const avgCrosswind = (departureWind.crosswindComponent + arrivalWind.crosswindComponent) / 2;
-      const avgGroundSpeed = tas - avgHeadwind;
-      
+      const avgGroundSpeed = (departureWind.groundSpeed + arrivalWind.groundSpeed) / 2;
+
       averageWind = {
         headwindComponent: Math.round(avgHeadwind),
         crosswindComponent: Math.round(avgCrosswind),

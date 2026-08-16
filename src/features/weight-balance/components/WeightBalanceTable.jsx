@@ -146,11 +146,15 @@ export const WeightBalanceTable = memo(({ aircraft, loads, calculations }) => {
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
               {loads.fuel || 0}
             </td>
+            {/* ⚠️ Correctif 16/08 : le moteur renvoie légitimement fuelArm null
+                (bras ambigu sur avion multi-réservoirs, ou donnée absente).
+                L'appel direct à toFixed faisait alors PLANTER l'écran. On
+                affiche l'absence plutôt que d'inventer un bras. */}
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
-              {wb.fuelArm.toFixed(2)}
+              {Number.isFinite(wb.fuelArm) ? wb.fuelArm.toFixed(2) : '—'}
             </td>
             <td style={sx.combine(styles.cell, styles.rightAlign, styles.fuelText)}>
-              {((loads.fuel || 0) * wb.fuelArm).toFixed(1)}
+              {Number.isFinite(wb.fuelArm) ? ((loads.fuel || 0) * wb.fuelArm).toFixed(1) : '—'}
             </td>
           </tr>
         </tbody>
@@ -180,7 +184,9 @@ const TableRow = memo(({ label, mass, arm, moment }) => (
   <tr style={styles.row}>
     <td style={styles.cell}>{label}</td>
     <td style={sx.combine(styles.cell, styles.rightAlign)}>{mass}</td>
-    <td style={sx.combine(styles.cell, styles.rightAlign)}>{arm.toFixed(2)}</td>
+    <td style={sx.combine(styles.cell, styles.rightAlign)}>
+      {Number.isFinite(arm) ? arm.toFixed(2) : '—'}
+    </td>
     <td style={sx.combine(styles.cell, styles.rightAlign, styles.bold)}>{moment}</td>
   </tr>
 ));

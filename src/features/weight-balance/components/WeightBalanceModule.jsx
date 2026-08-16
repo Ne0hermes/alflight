@@ -119,20 +119,37 @@ export const WeightBalanceModule = memo(() => {
 const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
   // Gérer le cas où weightBalance n'existe pas ou est incomplet
   // Utiliser armLengths comme fallback si weightBalance n'est pas défini
-  const wb = aircraft.weightBalance || {
-    emptyWeightArm: aircraft.armLengths?.emptyMassArm || 2.00,
-    frontLeftSeatArm: aircraft.armLengths?.frontSeat1Arm || 2.00,
-    frontRightSeatArm: aircraft.armLengths?.frontSeat2Arm || 2.00,
-    rearLeftSeatArm: aircraft.armLengths?.rearSeat1Arm || 2.90,
-    rearRightSeatArm: aircraft.armLengths?.rearSeat2Arm || 2.90,
-    baggageArm: aircraft.armLengths?.standardBaggageArm || 3.50,
-    auxiliaryArm: aircraft.armLengths?.aftBaggageExtensionArm || aircraft.armLengths?.baggageTubeArm || 3.70,
-    fuelArm: aircraft.armLengths?.fuelArm || 2.18,
-    cgLimits: {
-      forward: 2.00,
-      aft: 2.45
-    }
+  // ⚠️ CORRECTIF SÉCURITÉ (16/08) — ce bloc INVENTAIT les bras de levier d'un
+  // DR400 générique (2,00 / 2,90 / 3,50 / 3,70 / 2,18 m et des limites de
+  // centrage 2,00–2,45) quand l'avion n'avait pas de données de centrage, puis
+  // affichait des moments calculés dessus SANS AUCUN AVERTISSEMENT. Un pilote
+  // pouvait ainsi lire un centrage plausible… entièrement fabriqué.
+  // Règle du projet (fail-closed, cf. moteur de centrage) : on ne fabrique
+  // JAMAIS une donnée de sécurité — on refuse et on le dit.
+  const armOrNull = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) && n !== 0 ? n : null;
   };
+  const wb = aircraft.weightBalance || {
+    emptyWeightArm: armOrNull(aircraft.armLengths?.emptyMassArm),
+    frontLeftSeatArm: armOrNull(aircraft.armLengths?.frontSeat1Arm),
+    frontRightSeatArm: armOrNull(aircraft.armLengths?.frontSeat2Arm),
+    rearLeftSeatArm: armOrNull(aircraft.armLengths?.rearSeat1Arm),
+    rearRightSeatArm: armOrNull(aircraft.armLengths?.rearSeat2Arm),
+    baggageArm: armOrNull(aircraft.armLengths?.standardBaggageArm),
+    auxiliaryArm: armOrNull(aircraft.armLengths?.aftBaggageExtensionArm)
+      ?? armOrNull(aircraft.armLengths?.baggageTubeArm),
+    fuelArm: armOrNull(aircraft.armLengths?.fuelArm),
+    cgLimits: null
+  };
+
+  // Les bras réellement absents sont signalés au pilote (jamais comblés).
+  const missingArms = Object.entries({
+    'masse à vide': wb.emptyWeightArm,
+    'sièges avant': wb.frontLeftSeatArm,
+    'sièges arrière': wb.rearLeftSeatArm,
+    'carburant': wb.fuelArm,
+  }).filter(([, v]) => v == null).map(([k]) => k);
   
   // S'assurer que toutes les valeurs sont numériques, incluant les compartiments dynamiques
   const safeLoads = {
@@ -155,7 +172,24 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
       <h3 style={sx.combine(sx.text['lg'], sx.text.bold, sx.spacing.mb(4))}>
         ⚖️ Chargement et Moments
       </h3>
-      
+
+      {/* Bras manquants : signalés explicitement — les moments correspondants
+          ne peuvent PAS être calculés, et aucune valeur n'est inventée. */}
+      {missingArms.length > 0 && (
+        <div style={{
+          marginBottom: '16px', padding: '10px 12px',
+          border: '1px solid var(--color-red-critical)',
+          borderRadius: 'var(--radius-sm)',
+          backgroundColor: 'rgba(220, 38, 38, 0.08)',
+          fontSize: 'var(--fs-body)'
+        }}>
+          <strong>⚠ Données de centrage incomplètes</strong> — bras de levier manquants :{' '}
+          {missingArms.join(', ')}. Les moments correspondants ne sont pas calculés.
+          Complétez la fiche de l'avion (rubrique masse et centrage) avant d'utiliser
+          ce chargement pour un vol.
+        </div>
+      )}
+
       <div style={sx.combine(sx.flex.col, sx.spacing.gap(4))}>
         {/* Sièges avant */}
         <div style={styles.grid2}>

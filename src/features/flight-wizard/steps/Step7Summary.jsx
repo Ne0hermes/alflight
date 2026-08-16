@@ -18,6 +18,8 @@ import { WeightBalanceChart } from '@features/weight-balance/components/WeightBa
 import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards';
 import { getFuelDensity } from '@utils/fuelDensity';
 import { useVACStore } from '@core/stores/vacStore';
+import { useNavigationStore } from '@core/stores/navigationStore';
+import { computeRegulatoryReserveMinutes } from '@core/flightType';
 import { aeroDataProvider } from '@core/data';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 import { CollapsibleSection } from './components/CollapsibleSection';
@@ -316,6 +318,12 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
   // Données pour le tableau de navigation VFR (provenant de l'étape 2)
   const flightType = flightPlan.generalInfo.flightType || 'VFR';
   const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
+  // ⚠️ CORRECTIF CONFORMITÉ (16/08) : la réserve finale dépend du JOUR/NUIT
+  // (et d'un supplément IFR), pas de « VFR ou IFR » comme l'affichait ce
+  // dossier. Un VFR de NUIT imprimait « 30min » alors que le calcul retenait
+  // 45 min : le document emporté contredisait le calcul. On lit désormais le
+  // type de vol canonique et la règle unique (core/flightType).
+  const canonicalFlightType = useNavigationStore((s) => s.flightType);
 
   // Calculer les vraies valeurs de carburant
   // 🔧 CRAN 3 — avec une escale avitaillement, le « requis » comparé au FOB
@@ -339,8 +347,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     const totalConfirmed = fobFuel.ltr || 0;
     const reserveFuel = fuelData.finalReserve.ltr || 0;
 
-    // Déterminer le temps de réserve selon le type de vol
-    const reserveTime = flightPlan.generalInfo.flightType === 'VFR' ? '30min' : '45min';
+    // Réserve finale : règle réglementaire unique (jour/nuit + supplément IFR)
+    const reserveTime = `${computeRegulatoryReserveMinutes(canonicalFlightType)}min`;
 
     return {
       required: totalRequired,
@@ -350,7 +358,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
       isMultiLeg,
       legs: legPlan?.legs || []
     };
-  }, [fuelData, fobFuel, calculateTotal, flightPlan.generalInfo.flightType, waypoints, selectedAircraft]);
+  }, [fuelData, fobFuel, calculateTotal, canonicalFlightType, waypoints, selectedAircraft]);
 
   // Calculer les rayons d'action basés sur le carburant
   const actionRadii = useMemo(() => {
