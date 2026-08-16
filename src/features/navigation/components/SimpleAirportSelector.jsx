@@ -176,25 +176,23 @@ export const SimpleAirportSelector = ({ label, value, onChange, placeholder, exc
               setInputValue('');
             }
           }}
-          onBlur={(e) => {
-            // Délai pour permettre le clic sur les suggestions
+          onBlur={() => {
+            // Délai pour permettre au clic sur une suggestion d'aboutir
             setTimeout(() => {
-              // Si on a tapé un code ICAO valide de 4 lettres
-              if (inputValue.length === 4 && inputValue.match(/^[A-Z]{4}$/)) {
-                const airport = airports.find(a => a.icao === inputValue);
-                if (airport) {
-                  handleSelect(airport);
-                } else {
-                  // Créer un aéroport personnalisé
-                  onChange({
-                    icao: inputValue,
-                    name: `Aéroport ${inputValue}`,
-                    coordinates: { lat: 48.8566, lon: 2.3522 }, // Paris par défaut
-                    custom: true
-                  });
-                  setInputValue('');
-                }
-              }
+              // 🐛 Fix Sarreguemines (16/08) — double défaut corrigé ici :
+              // 1) la fermeture capturait un inputValue PÉRIMÉ : après un clic
+              //    de sélection (handleSelect vide l'input), le callback
+              //    retraitait l'ancien texte ; on lit donc la valeur COURANTE.
+              // 2) taper 4 lettres du NOM (« SARR… ») puis cliquer déclenchait
+              //    le fallback « aéroport personnalisé » aux coordonnées de
+              //    PARIS qui ÉCRASAIT la sélection posée sur la carte. Un
+              //    waypoint silencieusement placé sur Paris est un piège de
+              //    navigation : plus AUCUNE création automatique — seule une
+              //    correspondance OACI exacte est validée à la sortie du champ.
+              const current = String(inputRef.current?.value || '').trim().toUpperCase();
+              if (!/^[A-Z]{4}$/.test(current)) return;
+              const airport = airports.find(a => a.icao === current);
+              if (airport) handleSelect(airport);
             }, 200);
           }}
           placeholder={placeholder || "Code OACI ou nom..."}

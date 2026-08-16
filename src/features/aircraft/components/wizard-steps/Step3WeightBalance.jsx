@@ -282,6 +282,58 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     }
   }, [data.additionalSeats]);
 
+  // ─── 🔧 Audit 16/08 (CRITIQUE) : resync local ← data pour l'ENVELOPPE ────
+  // Sans ces effets, l'enveloppe construite par le CentrogramReader
+  // (updateData('cgEnvelope', …)) restait INVISIBLE en saisie manuelle (états
+  // locaux figés au montage — Step3 n'est pas remonté au passage
+  // graphique → manuel) et toute édition manuelle réécrivait data.cgEnvelope
+  // avec les copies périmées, DÉTRUISANT la lecture : « travail dans le
+  // vide ». Resync PAR SOUS-CHAMP — un resync global sur data.cgEnvelope
+  // écraserait la saisie arrière en cours (écrite dans data au « Valider »).
+  useEffect(() => {
+    const fp = data.cgEnvelope?.forwardPoints;
+    if (Array.isArray(fp) && fp !== forwardCGPoints) {
+      // Backfill d'id : buildCgEnvelope émet {weight, cg} SANS id, or l'UI
+      // clé et édite les points par p.id.
+      setForwardCGPoints(fp.map((p, i) => (p && p.id != null ? p : { ...p, id: Date.now() + i + Math.random() })));
+    }
+  }, [data.cgEnvelope?.forwardPoints]);
+
+  useEffect(() => {
+    const ip = data.cgEnvelope?.intermediatePoints;
+    if (Array.isArray(ip) && ip !== intermediatePoints) setIntermediatePoints(ip);
+  }, [data.cgEnvelope?.intermediatePoints]);
+
+  useEffect(() => {
+    const env = data.cgEnvelope;
+    if (!env) return;
+    setAftCG(prev => {
+      const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
+      const minWeight = env.aftMinWeight ?? prev.minWeight;
+      const maxWeight = env.aftMaxWeight ?? prev.maxWeight;
+      const minCG = env.aftMinCG ?? env.aftCG ?? prev.minCG;
+      const maxCG = env.aftMaxCG ?? env.aftCG ?? prev.maxCG;
+      // buildCgEnvelope n'émet pas les moments : recalcul masse × CG
+      const minMoment = env.aftMinMoment
+        ?? ((num(minWeight) !== null && num(minCG) !== null) ? Math.round(num(minWeight) * num(minCG) * 100) / 100 : prev.minMoment);
+      const maxMoment = env.aftMaxMoment
+        ?? ((num(maxWeight) !== null && num(maxCG) !== null) ? Math.round(num(maxWeight) * num(maxCG) * 100) / 100 : prev.maxMoment);
+      return { ...prev, minWeight, maxWeight, minCG, maxCG, minMoment, maxMoment };
+    });
+  }, [data.cgEnvelope?.aftMinWeight, data.cgEnvelope?.aftMaxWeight, data.cgEnvelope?.aftMinCG, data.cgEnvelope?.aftMaxCG, data.cgEnvelope?.aftCG]);
+
+  useEffect(() => {
+    if (data.cgEnvelope?.macLength != null && data.cgEnvelope.macLength !== macLength) {
+      setMacLength(data.cgEnvelope.macLength);
+    }
+  }, [data.cgEnvelope?.macLength]);
+
+  useEffect(() => {
+    if (data.cgEnvelope?.lemac != null && data.cgEnvelope.lemac !== lemac) {
+      setLemac(data.cgEnvelope.lemac);
+    }
+  }, [data.cgEnvelope?.lemac]);
+
   // ─── Migration legacy → array : convertit data.fuelMainCapacity en tank ─
   // Si l'avion a été créé avant la refonte (fuelMainCapacity > 0 et pas de
   // tank de type 'main' dans la liste), on insère automatiquement un tank
@@ -479,6 +531,21 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     // casser les consommateurs externes qui lisent encore aftCG (PDF, exports…)
     // Mais à terme, ils devront lire aftMinCG/aftMaxCG explicitement.
     updateData('cgEnvelope.aftCG', aftCG.maxCG || aftCG.minCG);
+
+    // 🔧 Audit 16/08 : réécrire AUSSI aftPoints — la courbe arrière complète
+    // posée par le CentrogramReader reste sinon PRIORITAIRE pour le moteur
+    // (cgEnvelope.js) et la correction manuelle des 2 points serait
+    // silencieusement ignorée dans les calculs de centrage.
+    const nMinW = parseFloat(finalMinWeight);
+    const nMaxW = parseFloat(finalMaxWeight);
+    const nMinC = parseFloat(aftCG.minCG);
+    const nMaxC = parseFloat(aftCG.maxCG);
+    if ([nMinW, nMaxW, nMinC, nMaxC].every(Number.isFinite)) {
+      updateData('cgEnvelope.aftPoints', [
+        { weight: nMinW, cg: nMinC },
+        { weight: nMaxW, cg: nMaxC }
+      ]);
+    }
 
     return true;
   };

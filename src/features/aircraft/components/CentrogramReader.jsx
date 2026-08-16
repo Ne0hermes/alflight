@@ -251,7 +251,15 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
       selectStage(`baggage_${id}`);
     } else if (newElType === 'fuel') {
       const list = Array.isArray(aircraftData?.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
-      updateData('additionalFuelTanks', [...list, { id, name: name || `Réservoir ${list.length + 1}`, type: 'optional', capacity: 0, arm: '' }]);
+      // 🔧 Audit 16/08 : premier réservoir créé depuis le lecteur = PRINCIPAL
+      // (le stage fixe legacy « fuelMain » a été retiré — les pastilles
+      // carburant viennent exclusivement d'additionalFuelTanks). Forme alignée
+      // sur Step3.addFuelTank (flag optional, capacité saisissable).
+      const tankType = list.length === 0 ? 'main' : 'optional';
+      updateData('additionalFuelTanks', [...list, {
+        id, name: name || (tankType === 'main' ? 'Réservoir principal' : `Réservoir ${list.length + 1}`),
+        type: tankType, capacity: '', arm: '', optional: tankType === 'optional'
+      }]);
       selectStage(`fuelTank_${id}`);
     } else if (newElType === 'seat') {
       const list = Array.isArray(aircraftData?.additionalSeats) ? aircraftData.additionalSeats : [];
@@ -579,10 +587,24 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   };
 
   const validateStage = () => {
-    if (!regression || !currentStage) return;
-    const armInfo = computeArmFromRegression(regression);
+    if (!currentStage) return;
+    // 🔧 Audit 16/08 : un stage « valeur unique » (ex. Bras CG à vide) était
+    // INVALIDABLE — la régression exige ≥ 2 points alors que l'aide invite à
+    // « cliquer un point unique ». Avec 1 seul point (masse, moment), le bras
+    // est simplement moment/masse.
+    let armInfo = null;
+    if (regression) {
+      armInfo = computeArmFromRegression(regression);
+    } else if (currentStage.singleValue && curvePoints.length === 1) {
+      const p = curvePoints[0];
+      const mass = massAxis === 'x' ? p.x : p.y;
+      const moment = massAxis === 'x' ? p.y : p.x;
+      if (Number.isFinite(mass) && mass !== 0 && Number.isFinite(moment)) {
+        armInfo = computeArmFromRegression({ a: massAxis === 'x' ? moment / mass : mass / moment, b: 0, r2: 1, n: 1 });
+      }
+    }
     if (!armInfo) {
-      alert('Impossible de calculer le bras à partir de cette régression (pente nulle ?).');
+      alert('Impossible de calculer le bras : cliquez au moins 2 points (ou 1 point pour une valeur unique).');
       return;
     }
 
@@ -603,14 +625,17 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
       }
     }));
 
-    // Stockage dans l'unité utilisateur (mm par défaut). Step3 affichera
-    // directement cette valeur avec le bon suffixe d'unité.
+    // 🔧 Audit 16/08 (CRITIQUE unités) : le stockage se fait en MÈTRES
+    // CANONIQUES — le contrat C2 du wizard (mbUnits STORAGE_UNITS.armLength
+    // = 'm'). L'ancien code stockait armInUserUnit (mm par défaut) → Step3
+    // relisait « 2130 » comme des mètres et affichait 2 130 000 mm : les bras
+    // mesurés semblaient « jamais importés ». armInUserUnit ne sert plus qu'à
+    // l'AFFICHAGE (bouton de validation, pastilles de résultats).
     if (currentStage.aircraftPath) {
-      // Arrondi adapté : 1 décimale pour mm/cm (précision raisonnable),
-      // 4 décimales pour m (besoin de précision plus fine).
-      const decimals = userArmUnit === 'm' ? 4 : userArmUnit === 'in' ? 3 : 1;
-      const factor = Math.pow(10, decimals);
-      updateData(currentStage.aircraftPath, Math.round(armInfo.armInUserUnit * factor) / factor);
+      const armMeters = convertArmUnit(armInfo.armRaw, armInfo.lengthUnit, 'm');
+      if (Number.isFinite(armMeters)) {
+        updateData(currentStage.aircraftPath, Math.round(armMeters * 1e5) / 1e5);
+      }
     }
   };
 

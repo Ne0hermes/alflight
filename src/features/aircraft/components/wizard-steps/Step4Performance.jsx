@@ -15,6 +15,7 @@ import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../.
 // existants dont la classification était jusqu'ici figée.
 import { OperationClassifier } from '../../../../abac/curves/ui/OperationClassifier';
 import { getOperation } from '../../../../abac/curves/core/operationCatalog';
+import PerformanceCorrectionsEditor from '../PerformanceCorrectionsEditor';
 
 const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav }) => {
   // État local pour stocker les données de performance temporaires
@@ -1203,6 +1204,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         >
           Ajouter des données de performance (tableaux du manuel de vol / mixte)
         </button>
+
+        {/* ✈️ Facteurs correctifs du manuel (vent, herbe…) — validé César 16/08 */}
+        <PerformanceCorrectionsEditor
+          corrections={data.performanceCorrections || []}
+          onChange={(list) => updateData('performanceCorrections', list)}
+        />
 
         {/* Boutons de navigation */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>

@@ -16,12 +16,16 @@ import dataBackupManager from '../../utils/dataBackupManager';
 import { resolveWindComponent } from '../../utils/windComponent';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
+import { applyPerformanceCorrections } from '../../utils/performanceCorrections';
+import { normalizeSurface } from '../../utils/runwaySurface';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
 
 const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft();
+  // ✈️ Détail des facteurs correctifs du manuel appliqués (affichage pilote)
+  const [corrBreakdowns, setCorrBreakdowns] = useState({ takeoff: null, landing: null, takeoffSurface: null, landingSurface: null });
   const { calculations } = useWeightBalance();
   const { waypoints } = useNavigation();
   const { getWeatherByIcao } = useWeather();
@@ -564,10 +568,39 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const takeoffState = generatePerformanceState(aircraftForResolver, takeoffInputsForMatrix);
     const landingState = generatePerformanceState(aircraftForResolver, landingInputsForMatrix);
 
-    const takeoffRoll = pickDistanceMeters(takeoffState, ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']);
-    const takeoff50 = pickDistanceMeters(takeoffState, ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']);
-    const landingRoll = pickDistanceMeters(landingState, ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up']);
-    const landing50 = pickDistanceMeters(landingState, ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up']);
+    const takeoffRollBase = pickDistanceMeters(takeoffState, ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']);
+    const takeoff50Base = pickDistanceMeters(takeoffState, ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']);
+    const landingRollBase = pickDistanceMeters(landingState, ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up']);
+    const landing50Base = pickDistanceMeters(landingState, ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up']);
+
+    // ✈️ FACTEURS CORRECTIFS DU MANUEL (16/08, validé César) : appliqués aux
+    // distances calculées AVANT persistance — la marge réglementaire s'applique
+    // ensuite dans le pipeline existant. Le détail (critère → calcul → résultat)
+    // est affiché dans le module pour que le pilote puisse vérifier chaque
+    // facteur contre son manuel de vol.
+    const manualCorrections = selectedAircraft?.performanceCorrections || [];
+    const famToKind = (fam) => (fam === 'GRASS' ? 'grass' : fam === 'PAVED' ? 'paved' : null);
+    const takeoffSurface = famToKind(normalizeSurface(departureRunwayWind.bestRunway?.surface));
+    const landingSurface = famToKind(normalizeSurface(arrivalRunwayWind.bestRunway?.surface));
+    const applyCorr = (distance, phase, windComponentKt, surface) =>
+      distance !== null && manualCorrections.length > 0
+        ? applyPerformanceCorrections({ distance, phase, corrections: manualCorrections, conditions: { windComponentKt, surface } })
+        : null;
+    const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface);
+    const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface);
+    const corrLandingRoll = applyCorr(landingRollBase, 'landing', landingWindComponent, landingSurface);
+    const corrLanding50 = applyCorr(landing50Base, 'landing', landingWindComponent, landingSurface);
+    setCorrBreakdowns({
+      takeoff: corrTakeoff50 || corrTakeoffRoll,
+      landing: corrLanding50 || corrLandingRoll,
+      takeoffSurface,
+      landingSurface
+    });
+
+    const takeoffRoll = corrTakeoffRoll ? Math.round(corrTakeoffRoll.corrected) : takeoffRollBase;
+    const takeoff50 = corrTakeoff50 ? Math.round(corrTakeoff50.corrected) : takeoff50Base;
+    const landingRoll = corrLandingRoll ? Math.round(corrLandingRoll.corrected) : landingRollBase;
+    const landing50 = corrLanding50 ? Math.round(corrLanding50.corrected) : landing50Base;
 
     // Garde anti-boucle : handleTakeoffResults/handleLandingResults appellent onUpdate
     // (re-render du wizard) — ne re-sauvegarder que si les valeurs utiles ont changé.
@@ -695,14 +728,73 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     </div>
   );
 
+  // ✈️ Carte « Facteurs correctifs du manuel » : chaque facteur est détaillé
+  // (critère → calcul → résultat) pour que le pilote constate une erreur
+  // potentielle en comparant avec son manuel de vol (demande César 16/08).
+  const renderCorrectionCard = (phase) => {
+    const rules = selectedAircraft?.performanceCorrections || [];
+    if (rules.length === 0) return null;
+    const bd = corrBreakdowns[phase];
+    const surfaceKind = phase === 'takeoff' ? corrBreakdowns.takeoffSurface : corrBreakdowns.landingSurface;
+    const title = phase === 'takeoff' ? 'Décollage' : 'Atterrissage';
+    return (
+      <div style={{
+        marginBottom: 12, padding: 10,
+        backgroundColor: 'var(--bg-overlay)',
+        border: '1px solid var(--border-subtle)', borderRadius: 8
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)', marginBottom: 6 }}>
+          ✈️ Facteurs correctifs du manuel — {title}
+          {surfaceKind && (
+            <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>
+              {' '}· piste {surfaceKind === 'grass' ? 'en herbe' : 'revêtue'}
+            </span>
+          )}
+        </div>
+        {!bd ? (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            Distance de base indisponible (matrice non calculée) — facteurs non appliqués.
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              Distance de base : <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.round(bd.base)} m</strong>
+            </div>
+            {bd.steps.length === 0 && (
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Aucun facteur applicable aux conditions du jour.
+              </div>
+            )}
+            {bd.steps.map((s, i) => (
+              <div key={i} style={{ fontSize: 12, lineHeight: 1.6, color: s.note ? 'var(--color-orange-warning, #b45309)' : 'var(--text-primary)' }}>
+                {s.note
+                  ? <>⚠ <strong>{s.label}</strong> — {s.note}</>
+                  : <>• <strong>{s.label}</strong> : {s.detail} — {s.before} m → <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{s.after} m</strong></>}
+              </div>
+            ))}
+            {bd.applied && (
+              <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, borderTop: '1px solid var(--border-subtle)', paddingTop: 6 }}>
+                Total facteurs : ×{(Math.round(bd.totalFactor * 1000) / 1000).toLocaleString('fr-FR')} →{' '}
+                <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.round(bd.corrected)} m</strong>
+                <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}> (avant marge réglementaire)</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   // Compat : ancien helper pour les early-returns (legacy). Affiche les 3 matrices à la suite.
   const renderCoverageMatrices = () => (
     <>
       {renderSafetyFactorSelector()}
       {renderRunwayCorrectionsNotice()}
       {renderTakeoffMatrix()}
+      {renderCorrectionCard('takeoff')}
       {renderClimbCruiseMatrix()}
       {renderLandingMatrix()}
+      {renderCorrectionCard('landing')}
     </>
   );
 
@@ -916,6 +1008,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       </div>
 
       {renderTakeoffMatrix()}
+      {renderCorrectionCard('takeoff')}
 
       {/* Analyse des pistes pour le départ */}
       {departureWeather?.metar?.decoded?.wind && departureIcao && (
@@ -1022,6 +1115,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       </div>
 
       {renderLandingMatrix()}
+      {renderCorrectionCard('landing')}
 
       {/* Analyse des pistes pour l'arrivée */}
       {arrivalWeather?.metar?.decoded?.wind && arrivalIcao && (

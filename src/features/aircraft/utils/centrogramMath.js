@@ -226,7 +226,15 @@ const FUEL_TANK_LABELS = {
  * @returns {Array<{key, label, aircraftPath, helper, singleValue, dynamicIndex?, category?}>}
  */
 export function buildStageList(aircraftData) {
-  const stages = [...CENTROGRAM_STAGES];
+  // 🔧 Audit 16/08 (CRITIQUE) : le stage FIXE « Carburant — Réservoir
+  // principal » → arms.fuelMain (chemin LEGACY que Step3 n'affiche plus et
+  // que la migration vide) était un BOUTON FANTÔME : le bras mesuré
+  // n'apparaissait dans aucun réservoir du récapitulatif — « travail dans le
+  // vide ». Les pastilles carburant proviennent désormais EXCLUSIVEMENT de
+  // additionalFuelTanks (le principal y est un type comme un autre) ; s'il
+  // n'existe pas encore, le lecteur propose de le créer via « Ajouter un
+  // élément » (type Principal par défaut).
+  const stages = CENTROGRAM_STAGES.filter((s) => s.key !== 'fuelMain');
 
   // ─── Réservoirs additionnels (data.additionalFuelTanks = [{id, name, type, arm, capacity}]) ───
   // Permet de gérer : réservoir d'ailes (gauche/droite), réservoir optionnel,

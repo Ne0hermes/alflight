@@ -47,6 +47,7 @@ import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical, toUserUnit } from '@utils/unitsDisplay';
 import { convertMoment } from '../../utils/mbUnits';
+import { describeCorrection } from '@utils/performanceCorrections';
 
 // ─── Libellés FR compréhensibles des tableaux de performances ───────────────
 // Demande César 16/08 : « takeoff_ground_roll » ne parle à personne. Basés sur
@@ -1472,6 +1473,23 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
               Aucune donnée de performance disponible
             </Typography>
+          )}
+
+          {/* ✈️ Facteurs correctifs du manuel (vent, herbe…) — consultables */}
+          {Array.isArray(data.performanceCorrections) && data.performanceCorrections.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                Facteurs correctifs du manuel
+              </Typography>
+              {data.performanceCorrections.map((c) => (
+                <Typography key={c.id} variant="body2" sx={{ lineHeight: 1.8 }}>
+                  • {describeCorrection(c)}
+                </Typography>
+              ))}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                Appliqués aux distances calculées dans la préparation de vol, détail du calcul affiché au pilote.
+              </Typography>
+            </Box>
           )}
         </Box>
       </Paper>

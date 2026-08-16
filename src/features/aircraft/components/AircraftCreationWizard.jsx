@@ -473,8 +473,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
   // En mode édition (existingAircraft présent), commencer à l'étape 1
   // Si on reprend un brouillon, commencer à l'étape sauvegardée
+  // 🔐 CONSULTATION utilisateur standard (B3, 16/08) : un avion importé
+  // depuis « Mes avions » s'ouvre DIRECTEMENT sur l'étape Vérification —
+  // la fiche complète et lisible — au lieu de traverser les étapes figées.
   const [currentStep, setCurrentStep] = useState(
-    draft?.currentStep ?? (existingAircraft ? 1 : 0)
+    existingAircraft && readOnlyConsult
+      ? 7
+      : (draft?.currentStep ?? (existingAircraft ? 1 : 0))
   );
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
