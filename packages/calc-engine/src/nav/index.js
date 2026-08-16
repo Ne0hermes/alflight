@@ -3,3 +3,4 @@ export * from './windTriangle.js';
 export * from './windComponent.js';
 export * from './navigationCalculations.js';
 export * from './runwayWindUtils.js';
+export * from './routeWindTimes.js';
