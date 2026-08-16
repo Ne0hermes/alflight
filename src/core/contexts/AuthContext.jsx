@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { ensureAccountDataIsolation } from '../auth/accountDataIsolation';
 
 const AuthContext = createContext({});
 
@@ -47,6 +48,13 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
+        // 🔐 Isolation par compte : si l'utilisateur diffère du propriétaire
+        // des données locales, échange de coffres puis rechargement (les
+        // stores se réhydratent depuis le stockage du bon compte).
+        if (session?.user?.id && ensureAccountDataIsolation(session.user.id)) {
+          window.location.reload();
+          return;
+        }
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
@@ -62,6 +70,11 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
+        // 🔐 Isolation par compte (connexion depuis l'écran de login)
+        if (event === 'SIGNED_IN' && session?.user?.id && ensureAccountDataIsolation(session.user.id)) {
+          window.location.reload();
+          return;
+        }
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);

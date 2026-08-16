@@ -1,37 +1,93 @@
 // src/features/aircraft/components/SendManualRequestButton.jsx
 // 🔐 Phase 1 RBAC — parcours UTILISATEUR quand son avion n'est pas dans la
-// base communautaire : un petit FORMULAIRE structuré qui prépare un e-mail
-// à l'assistance (l'admin ajoute ensuite l'avion au référentiel).
-// Décision César 2026-08-16. NB : un e-mail ne peut pas joindre un fichier
-// automatiquement depuis le navigateur — le formulaire rappelle au pilote
-// de joindre le PDF du manuel avant l'envoi.
+// base communautaire : un VRAI formulaire avec PIÈCE JOINTE (v2, 2026-08-16).
+//
+// v1 : mailto seul (pas de pièce jointe possible depuis un navigateur).
+// v2 : le PDF du manuel est TÉLÉVERSÉ dans le bucket privé Supabase
+//      « aircraft-requests » + la demande est enregistrée en base
+//      (table aircraft_requests, visible par l'admin). L'e-mail devient une
+//      simple notification optionnelle. Prérequis : supabase-aircraft-requests.sql.
 
-import React, { useState } from 'react';
-import { Mail, Send } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Mail, Send, Paperclip, CheckCircle } from 'lucide-react';
+import { supabase } from '../../../lib/supabaseClient';
 
 export const SUPPORT_EMAIL = 'assistance@alflight.fr';
+const MAX_FILE_MB = 50;
 
 const SendManualRequestButton = ({ style }) => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ registration: '', model: '', message: '' });
+  const [file, setFile] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [progressMsg, setProgressMsg] = useState('');
+  const [error, setError] = useState(null);
+  const [done, setDone] = useState(null); // { registration }
+  const fileInputRef = useRef(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const handleSend = () => {
-    const subject = `Demande d'ajout avion — ${form.registration.trim().toUpperCase() || 'immatriculation à préciser'}`;
-    const body = [
-      'Bonjour,',
-      '',
-      "Je souhaite faire ajouter mon avion à la base ALFlight :",
-      '',
-      `• Immatriculation : ${form.registration.trim().toUpperCase() || '—'}`,
-      `• Constructeur / modèle : ${form.model.trim() || '—'}`,
-      form.message.trim() ? `• Remarques : ${form.message.trim()}` : null,
-      '',
-      '⚠️ Je joins le manuel de vol (PDF) à cet e-mail.',
-      '',
-      'Merci !',
-    ].filter((l) => l !== null).join('\n');
+  const handleFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.type !== 'application/pdf') {
+      setError('Le manuel doit être un fichier PDF.');
+      return;
+    }
+    if (f.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(`Fichier trop volumineux (max ${MAX_FILE_MB} Mo).`);
+      return;
+    }
+    setError(null);
+    setFile(f);
+  };
+
+  const canSend = form.registration.trim() && file && !busy;
+
+  const handleSend = async () => {
+    if (!canSend) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Session expirée — reconnectez-vous.');
+
+      const reg = form.registration.trim().toUpperCase();
+      const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, '_');
+      const path = `${user.id}/${Date.now()}-${safeName}`;
+
+      // 1. Téléversement du PDF (bucket privé, dossier de l'utilisateur)
+      setProgressMsg('Téléversement du manuel…');
+      const { error: upErr } = await supabase.storage
+        .from('aircraft-requests')
+        .upload(path, file, { contentType: 'application/pdf', upsert: false });
+      if (upErr) throw new Error('Téléversement échoué : ' + upErr.message);
+
+      // 2. Enregistrement de la demande (visible par l'administrateur)
+      setProgressMsg('Enregistrement de la demande…');
+      const { error: insErr } = await supabase.from('aircraft_requests').insert({
+        user_email: user.email,
+        registration: reg,
+        manufacturer_model: form.model.trim() || null,
+        message: form.message.trim() || null,
+        file_path: path,
+        file_name: file.name,
+        file_size: file.size,
+      });
+      if (insErr) throw new Error('Enregistrement échoué : ' + insErr.message);
+
+      setDone({ registration: reg });
+    } catch (e) {
+      setError(e?.message || 'Envoi impossible. Réessayez ou contactez le support.');
+    } finally {
+      setBusy(false);
+      setProgressMsg('');
+    }
+  };
+
+  const notifyByEmail = () => {
+    const subject = `Nouvelle demande d'avion — ${done?.registration || ''}`;
+    const body = `Bonjour,\n\nJe viens de déposer une demande d'ajout pour ${done?.registration} via l'application (manuel de vol téléversé).\n\nMerci !`;
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -40,23 +96,43 @@ const SendManualRequestButton = ({ style }) => {
     borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)',
     backgroundColor: '#ffffff', fontSize: 'var(--fs-body)'
   };
+  const btn = (bg, disabled = false) => ({
+    display: 'inline-flex', alignItems: 'center', gap: '8px',
+    padding: '9px 14px', borderRadius: 'var(--radius-sm)', border: 'none',
+    backgroundColor: disabled ? 'var(--border-subtle)' : bg, color: '#ffffff',
+    fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: 'var(--fs-body)'
+  });
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: '8px',
-          padding: '10px 16px', borderRadius: 'var(--radius-sm)',
-          border: 'none', backgroundColor: 'var(--accent-primary)',
-          color: '#ffffff', fontWeight: 600, cursor: 'pointer',
-          fontSize: 'var(--fs-body)', ...style
-        }}
-      >
+      <button type="button" onClick={() => setOpen(true)} style={{ ...btn('var(--accent-primary)'), ...style }}>
         <Mail size={16} />
         Envoyer le manuel de vol
       </button>
+    );
+  }
+
+  if (done) {
+    return (
+      <div style={{
+        maxWidth: '420px', textAlign: 'left', padding: '16px',
+        border: '1px solid #10b981', borderRadius: 'var(--radius-sm)',
+        backgroundColor: 'rgba(16, 185, 129, 0.08)', ...style
+      }}>
+        <p style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, marginBottom: '8px' }}>
+          <CheckCircle size={18} color="#10b981" />
+          Demande envoyée pour {done.registration}
+        </p>
+        <p style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+          Votre manuel de vol a été transmis. L'administrateur créera la fiche
+          avion — elle apparaîtra ensuite dans la base communautaire.
+        </p>
+        <button type="button" onClick={notifyByEmail} style={btn('var(--accent-primary)')}>
+          <Mail size={15} />
+          Prévenir aussi par e-mail
+        </button>
+      </div>
     );
   }
 
@@ -70,34 +146,41 @@ const SendManualRequestButton = ({ style }) => {
         Demande d'ajout de votre avion
       </p>
       <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Immatriculation *</label>
-      <input style={inputStyle} value={form.registration} onChange={set('registration')} placeholder="Ex : F-GABC" autoComplete="off" />
+      <input style={inputStyle} value={form.registration} onChange={set('registration')} placeholder="Ex : F-GABC" autoComplete="off" disabled={busy} />
       <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Constructeur / modèle</label>
-      <input style={inputStyle} value={form.model} onChange={set('model')} placeholder="Ex : Robin DR400-120" autoComplete="off" />
+      <input style={inputStyle} value={form.model} onChange={set('model')} placeholder="Ex : Robin DR400-120" autoComplete="off" disabled={busy} />
       <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Remarques (optionnel)</label>
-      <textarea style={{ ...inputStyle, minHeight: '60px', resize: 'vertical' }} value={form.message} onChange={set('message')} />
-      <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', margin: '4px 0 12px' }}>
-        Votre logiciel de mail va s'ouvrir, pré-rempli. <strong>Joignez-y le PDF du
-        manuel de vol</strong> avant d'envoyer — l'administrateur créera la fiche.
-      </p>
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <textarea style={{ ...inputStyle, minHeight: '54px', resize: 'vertical' }} value={form.message} onChange={set('message')} disabled={busy} />
+
+      {/* Pièce jointe : le manuel de vol (PDF) — téléversé directement */}
+      <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Manuel de vol (PDF) *</label>
+      <div style={{ marginBottom: '10px' }}>
         <button
           type="button"
-          onClick={handleSend}
-          disabled={!form.registration.trim()}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={busy}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '9px 14px', borderRadius: 'var(--radius-sm)', border: 'none',
-            backgroundColor: form.registration.trim() ? 'var(--accent-primary)' : 'var(--border-subtle)',
-            color: '#ffffff', fontWeight: 700,
-            cursor: form.registration.trim() ? 'pointer' : 'not-allowed'
+            padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+            border: '1px dashed var(--accent-primary)', backgroundColor: 'transparent',
+            color: 'var(--accent-primary)', cursor: 'pointer', fontSize: 'var(--fs-body)'
           }}
         >
+          <Paperclip size={15} />
+          {file ? `${file.name} (${(file.size / 1048576).toFixed(1)} Mo)` : 'Joindre le PDF du manuel…'}
+        </button>
+        <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handleFile} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button type="button" onClick={handleSend} disabled={!canSend} style={btn('var(--accent-primary)', !canSend)}>
           <Send size={15} />
-          Préparer l'e-mail
+          {busy ? (progressMsg || 'Envoi…') : 'Envoyer la demande'}
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={() => { setOpen(false); setError(null); setFile(null); }}
+          disabled={busy}
           style={{
             padding: '9px 14px', borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-subtle)', backgroundColor: 'transparent',
@@ -107,6 +190,9 @@ const SendManualRequestButton = ({ style }) => {
           Fermer
         </button>
       </div>
+      {error && (
+        <p style={{ marginTop: '10px', color: 'var(--color-red-critical)', fontSize: 'var(--fs-body)' }}>{error}</p>
+      )}
     </div>
   );
 };
