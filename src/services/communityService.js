@@ -475,14 +475,36 @@ class CommunityService {
         throw searchError;
       }
 
+      // 1bis. 🔁 RENOMMAGE D'IMMATRICULATION (bug H-HDIM → F-HDIM, César 16/08) :
+      // aucune ligne ne porte la NOUVELLE immat mais un id de fiche est fourni
+      // (édition d'un avion importé) — la fiche existe alors sous l'ANCIENNE
+      // immat. On la retrouve PAR ID pour la mettre à jour EN PLACE (la colonne
+      // registration est réécrite par updateCommunityPreset). Sans ce repli, le
+      // save créait une fiche NEUVE à la nouvelle immat et l'ancienne restait
+      // en base sous l'immatriculation erronée.
+      let matchedPresets = existingPresets || [];
+      const isPresetUuid = (v) => typeof v === 'string'
+        && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+      if (matchedPresets.length === 0 && isPresetUuid(presetData.id)) {
+        const { data: byId, error: byIdError } = await supabase
+          .from('community_presets')
+          .select('id, version, has_manex, submitted_by, registration')
+          .eq('id', presetData.id)
+          .eq('status', 'active');
+        if (!byIdError && byId && byId.length > 0) {
+          console.log(`🔁 [CommunityService] Renommage d'immatriculation détecté : fiche ${presetData.id} (${byId[0].registration} → ${presetData.registration}) — mise à jour EN PLACE`);
+          matchedPresets = byId;
+        }
+      }
+
       // 2. Si une ligne existe déjà, décider UPDATE (copie possédée d'abord) vs CREATE.
-      if (existingPresets && existingPresets.length > 0) {
+      if (matchedPresets.length > 0) {
         // Modèle « fiche unique partagée » : viser la fiche correspondant à l'id
         // importé (mise à jour EN PLACE exacte) ; à défaut ma copie ; sinon la 1re.
         const existingPreset =
-          existingPresets.find(p => presetData.id && p.id === presetData.id) ||
-          existingPresets.find(p => userId && p.submitted_by === userId) ||
-          existingPresets[0];
+          matchedPresets.find(p => presetData.id && p.id === presetData.id) ||
+          matchedPresets.find(p => userId && p.submitted_by === userId) ||
+          matchedPresets[0];
 
         // Variant = choix EXPLICITE de l'utilisateur (vraie copie, gérée en amont
         // avec une immatriculation DIFFÉRENTE — donc absente de cette recherche).

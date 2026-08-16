@@ -18,7 +18,10 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
-  IconButton
+  IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import {
   CheckCircle as CheckCircleIcon,
@@ -36,7 +39,8 @@ import {
   // 🔧 FIX 2026-08-16 : manquait — <CloudUploadIcon> était utilisé ligne ~1965
   // (carte « Soumettre à la communauté ») sans import → ReferenceError au rendu.
   CloudUpload as CloudUploadIcon,
-  ReportProblem as ReportProblemIcon
+  ReportProblem as ReportProblemIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
@@ -1308,10 +1312,16 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
               {/* Affichage des tableaux extraits depuis advancedPerformance */}
               {data.advancedPerformance?.tables && data.advancedPerformance.tables.length > 0 ? (
                 data.advancedPerformance.tables.map((table, tableIndex) => (
-                <Box key={tableIndex} sx={{ mb: 3 }}>
-                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                    {perfTableLabel({ ...table, table_name: table.table_name || table.title }, tableIndex)}
-                  </Typography>
+                {/* 📂 Menu déroulant par tableau (demande César 16/08) : replié
+                    par défaut — les chiffres restent consultables au clic. */}
+                <Accordion key={tableIndex} disableGutters elevation={0}
+                  sx={{ mb: 1, border: '1px solid', borderColor: 'divider', '&:before': { display: 'none' } }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      {perfTableLabel({ ...table, table_name: table.table_name || table.title }, tableIndex)}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
                   {table.headers && (
                     <Box sx={{ 
                       overflowX: 'auto',
@@ -1365,7 +1375,8 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                       les valeurs doivent être CONSULTABLES pour comparaison avec
                       le manuel de vol (demande César 16/08 soir). */}
                   {!table.headers && <PerfDataTable table={table} />}
-                </Box>
+                  </AccordionDetails>
+                </Accordion>
               ))
               ) : data.performanceTables && data.performanceTables.length > 0 ? (
                 // 📊 Tableaux de performances — refonte lisibilité (César 16/08) :
@@ -1393,11 +1404,16 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                     const suffix = table.table_name || (rows[0]?.Masse ? `${rows[0].Masse} kg` : '');
                     if (suffix && suffix !== tableTitle) tableTitle = `${tableTitle} — ${suffix}`;
                   }
+                  // 📂 Menu déroulant par tableau (demande César 16/08)
                   return (
-                    <Box key={tableIndex} sx={{ mb: 3 }}>
-                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
-                        {tableTitle}
-                      </Typography>
+                    <Accordion key={tableIndex} disableGutters elevation={0}
+                      sx={{ mb: 1, border: '1px solid', borderColor: 'divider', '&:before': { display: 'none' } }}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {tableTitle}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
                       {table.conditions && (
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                           {table.conditions}
@@ -1433,7 +1449,8 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                           Tableau vide
                         </Typography>
                       )}
-                    </Box>
+                      </AccordionDetails>
+                    </Accordion>
                   );
                   });
                 })()
