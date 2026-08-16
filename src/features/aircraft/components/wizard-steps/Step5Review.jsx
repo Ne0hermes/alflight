@@ -96,6 +96,44 @@ const PERF_COLUMN_LABELS = {
   value: 'Valeur'
 };
 
+// Tableau de valeurs {entrées…, value} — utilisé pour les tableaux au format
+// « données » (sans headers/rows) afin que les chiffres extraits soient
+// CONSULTABLES et comparables au manuel de vol (demande César 16/08 soir).
+const PerfDataTable = ({ table }) => {
+  const rows = (Array.isArray(table.data) ? table.data : [])
+    .filter((r) => r && typeof r === 'object');
+  if (rows.length === 0) return null;
+  const inputKeys = Object.keys(rows[0]).filter((k) => k !== 'value');
+  return (
+    <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 320, overflow: 'auto' }}>
+      <Table size="small" stickyHeader>
+        <TableHead>
+          <TableRow>
+            {inputKeys.map((k) => (
+              <TableCell key={k} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                {PERF_COLUMN_LABELS[k] || k}
+              </TableCell>
+            ))}
+            <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+              Valeur{table.outputUnit ? ` (${table.outputUnit})` : ''}
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {inputKeys.map((k) => (
+                <TableCell key={k}>{String(row[k] ?? '—')}</TableCell>
+              ))}
+              <TableCell sx={{ fontWeight: 600 }}>{String(row.value ?? '—')}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
 const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   // Récupérer les préférences d'unités de l'utilisateur
   const units = useUnitsStore(state => state.units);
@@ -1322,6 +1360,10 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                       </table>
                     </Box>
                   )}
+                  {/* Tableaux au format « données » (extraction IA, sans headers) :
+                      les valeurs doivent être CONSULTABLES pour comparaison avec
+                      le manuel de vol (demande César 16/08 soir). */}
+                  {!table.headers && <PerfDataTable table={table} />}
                 </Box>
               ))
               ) : data.performanceTables && data.performanceTables.length > 0 ? (

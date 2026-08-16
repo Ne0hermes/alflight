@@ -40,12 +40,17 @@ export function storeRequestHandoff(req) {
     homeBaseRaw: req.home_base || '',
     filePath: req.file_path,
     fileName: req.file_name,
+    photoPath: req.photo_path || null,
+    photoName: req.photo_name || null,
     createdAt: Date.now(), // péremption courte (revue 16/08) : un témoin non
     // consommé ne doit JAMAIS détourner une création ultérieure sans rapport
   };
   try {
     sessionStorage.setItem(PREFILL_KEY, JSON.stringify(payload));
-    sessionStorage.setItem(CONTEXT_KEY, JSON.stringify({ requestId: req.id, registration, homeBase: payload.homeBase }));
+    sessionStorage.setItem(CONTEXT_KEY, JSON.stringify({
+      requestId: req.id, registration,
+      homeBase: payload.homeBase, homeBaseRaw: payload.homeBaseRaw
+    }));
   } catch (e) {
     console.warn('[RequestWorkflow] sessionStorage indisponible :', e?.message);
   }
@@ -105,6 +110,26 @@ export async function downloadRequestManual(filePath, fileName) {
   if (!resp.ok) throw new Error(`Téléchargement du manuel échoué (HTTP ${resp.status})`);
   const blob = await resp.blob();
   return new File([blob], fileName || 'manuel-de-vol.pdf', { type: 'application/pdf' });
+}
+
+/**
+ * Télécharge la photo de l'avion jointe à la demande (bucket privé) et la
+ * retourne en data URL — le format du champ `photo` du wizard.
+ */
+export async function downloadRequestPhotoDataUrl(filePath) {
+  const { data, error } = await supabase.storage
+    .from('aircraft-requests')
+    .createSignedUrl(filePath, 300);
+  if (error) throw error;
+  const resp = await fetch(data.signedUrl);
+  if (!resp.ok) throw new Error(`Téléchargement de la photo échoué (HTTP ${resp.status})`);
+  const blob = await resp.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Lecture de la photo échouée'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /**

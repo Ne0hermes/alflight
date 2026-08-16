@@ -9,12 +9,13 @@
 //      simple notification optionnelle. Prérequis : supabase-aircraft-requests.sql.
 
 import React, { useState, useRef } from 'react';
-import { Mail, Send, Paperclip, CheckCircle } from 'lucide-react';
+import { Mail, Send, Paperclip, CheckCircle, Camera } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useAirportsList } from '@shared/hooks/useAirportNames';
 
 export const SUPPORT_EMAIL = 'assistance@alflight.fr';
 const MAX_FILE_MB = 50;
+const MAX_PHOTO_MB = 10;
 
 const SendManualRequestButton = ({ style }) => {
   const [open, setOpen] = useState(false);
@@ -23,11 +24,13 @@ const SendManualRequestButton = ({ style }) => {
   const [form, setForm] = useState({ registration: '', homeBase: '', message: '' });
   const airports = useAirportsList();
   const [file, setFile] = useState(null);
+  const [photo, setPhoto] = useState(null); // 📷 photo de l'avion (optionnelle)
   const [busy, setBusy] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
   const [error, setError] = useState(null);
   const [done, setDone] = useState(null); // { registration }
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -44,6 +47,21 @@ const SendManualRequestButton = ({ style }) => {
     }
     setError(null);
     setFile(f);
+  };
+
+  const handlePhoto = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) {
+      setError('La photo doit être une image (JPG, PNG…).');
+      return;
+    }
+    if (f.size > MAX_PHOTO_MB * 1024 * 1024) {
+      setError(`Photo trop volumineuse (max ${MAX_PHOTO_MB} Mo).`);
+      return;
+    }
+    setError(null);
+    setPhoto(f);
   };
 
   const canSend = form.registration.trim() && form.homeBase.trim() && file && !busy;
@@ -87,6 +105,21 @@ const SendManualRequestButton = ({ style }) => {
         .upload(path, file, { contentType: 'application/pdf', upsert: false });
       if (upErr) throw new Error('Téléversement échoué : ' + upErr.message);
 
+      // 1bis. 📷 Photo de l'avion (optionnelle) — reprise dans la fiche du wizard
+      let photoPath = null;
+      if (photo) {
+        setProgressMsg('Téléversement de la photo…');
+        const safePhoto = photo.name.replace(/[^A-Za-z0-9._-]/g, '_');
+        photoPath = `${user.id}/photo-${Date.now()}-${safePhoto}`;
+        const { error: phErr } = await supabase.storage
+          .from('aircraft-requests')
+          .upload(photoPath, photo, { contentType: photo.type, upsert: false });
+        if (phErr) {
+          try { await supabase.storage.from('aircraft-requests').remove([path]); } catch { /* best effort */ }
+          throw new Error('Téléversement de la photo échoué : ' + phErr.message);
+        }
+      }
+
       // 2. Enregistrement de la demande (visible par l'administrateur)
       setProgressMsg('Enregistrement de la demande…');
       const { error: insErr } = await supabase.from('aircraft_requests').insert({
@@ -97,11 +130,16 @@ const SendManualRequestButton = ({ style }) => {
         file_path: path,
         file_name: file.name,
         file_size: file.size,
+        photo_path: photoPath,
+        photo_name: photo?.name || null,
       });
       if (insErr) {
-        // Revue 16/08 : l'upload a déjà eu lieu — retirer le PDF pour ne pas
-        // laisser un fichier orphelin dans le bucket (policy delete-own requise).
-        try { await supabase.storage.from('aircraft-requests').remove([path]); } catch { /* purge admin possible via dashboard */ }
+        // Revue 16/08 : l'upload a déjà eu lieu — retirer les fichiers pour ne
+        // pas laisser d'orphelins dans le bucket (policy delete-own requise).
+        try {
+          const toRemove = photoPath ? [path, photoPath] : [path];
+          await supabase.storage.from('aircraft-requests').remove(toRemove);
+        } catch { /* purge admin possible via dashboard */ }
         throw new Error('Enregistrement échoué : ' + insErr.message);
       }
 
@@ -205,6 +243,26 @@ const SendManualRequestButton = ({ style }) => {
         <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handleFile} />
       </div>
 
+      {/* 📷 Photo de l'avion (optionnelle) — reprise sur la fiche par l'admin */}
+      <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Photo de l'avion (optionnel)</label>
+      <div style={{ marginBottom: '10px' }}>
+        <button
+          type="button"
+          onClick={() => photoInputRef.current?.click()}
+          disabled={busy}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+            border: '1px dashed var(--border-subtle)', backgroundColor: 'transparent',
+            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--fs-body)'
+          }}
+        >
+          <Camera size={15} />
+          {photo ? `${photo.name} (${(photo.size / 1048576).toFixed(1)} Mo)` : 'Joindre une photo…'}
+        </button>
+        <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
+      </div>
+
       <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <button type="button" onClick={handleSend} disabled={!canSend} style={btn('var(--accent-primary)', !canSend)}>
           <Send size={15} />
@@ -212,7 +270,7 @@ const SendManualRequestButton = ({ style }) => {
         </button>
         <button
           type="button"
-          onClick={() => { setOpen(false); setError(null); setFile(null); }}
+          onClick={() => { setOpen(false); setError(null); setFile(null); setPhoto(null); }}
           disabled={busy}
           style={{
             padding: '9px 14px', borderRadius: 'var(--radius-sm)',

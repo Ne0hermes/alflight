@@ -12,7 +12,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper, Wand2, MapPin, X } from 'lucide-react';
+import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper, Wand2, MapPin, X, Camera } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { storeRequestHandoff, getRequestContext, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
@@ -71,12 +71,13 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
 
   useEffect(() => { load(); }, [load]);
 
-  const downloadManual = async (req) => {
-    setBusyId(req.id);
+  // Ouvre un fichier du bucket privé (manuel OU photo) via URL signée 5 min
+  const openStoragePath = async (reqId, path) => {
+    setBusyId(reqId);
     try {
       const { data, error } = await supabase.storage
         .from('aircraft-requests')
-        .createSignedUrl(req.file_path, 300); // 5 min
+        .createSignedUrl(path, 300);
       if (error) throw error;
       window.open(data.signedUrl, '_blank', 'noopener');
     } catch (e) {
@@ -214,10 +215,16 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
               )}
               {isAdmin && (
                 <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '6px' }}>
-                  <button type="button" onClick={() => downloadManual(req)} disabled={busyId === req.id}
+                  <button type="button" onClick={() => openStoragePath(req.id, req.file_path)} disabled={busyId === req.id}
                     style={adminBtn('var(--accent-primary)')}>
                     <Download size={13} /> Manuel
                   </button>
+                  {req.photo_path && (
+                    <button type="button" onClick={() => openStoragePath(req.id, req.photo_path)} disabled={busyId === req.id}
+                      style={adminBtn('var(--accent-primary)')}>
+                      <Camera size={13} /> Photo
+                    </button>
+                  )}
                   {req.status === 'pending' && (
                     <>
                       {/* 🪄 SEUL chemin de validation (décision César 16/08) : le

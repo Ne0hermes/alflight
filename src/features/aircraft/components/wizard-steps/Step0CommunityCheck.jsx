@@ -42,7 +42,7 @@ import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { extractCompleteManexData } from '../../services/manexExtractionService';
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
-import { consumeRequestPrefill, downloadRequestManual, getRequestContext } from '../../services/aircraftRequestWorkflow';
+import { consumeRequestPrefill, downloadRequestManual, downloadRequestPhotoDataUrl, getRequestContext } from '../../services/aircraftRequestWorkflow';
 import { getAirportNameSync } from '@shared/hooks/useAirportNames';
 import { useOpenAIPStore } from '@core/stores/openAIPStore';
 
@@ -192,7 +192,19 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       const seed = {};
       if (prefill.registration) seed.registration = prefill.registration;
       if (prefill.homeBase) seed.homeBase = prefill.homeBase;
+      // Aéroclub/base d'attache TEXTE saisi par le demandeur (retour César
+      // 16/08 : ce champ restait vide alors que l'info était transmise).
+      if (prefill.homeBaseRaw) seed.homeAeroclub = prefill.homeBaseRaw;
       if (Object.keys(seed).length && updateDataBulk) updateDataBulk(seed);
+      // 📷 Photo de l'avion jointe à la demande → champ photo du wizard
+      if (prefill.photoPath) {
+        try {
+          const dataUrl = await downloadRequestPhotoDataUrl(prefill.photoPath);
+          if (!cancelled && dataUrl) updateData('photo', dataUrl);
+        } catch (e) {
+          console.warn('[Handoff] Photo de la demande inaccessible :', e?.message);
+        }
+      }
       if (prefill.filePath) {
         try {
           const file = await downloadRequestManual(prefill.filePath, prefill.fileName);
@@ -300,6 +312,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       const airportsLoaded = useOpenAIPStore.getState().airports.length > 0;
       if (!airportsLoaded || getAirportNameSync(pre.homeBase)) payload.homeBase = pre.homeBase;
     }
+    if (pre?.homeBaseRaw) payload.homeAeroclub = pre.homeBaseRaw;
     if (updateDataBulk) {
       updateDataBulk(payload);
     } else if (updateData) {

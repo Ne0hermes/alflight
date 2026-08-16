@@ -105,6 +105,15 @@ create policy "storage req: delete son propre fichier" on storage.objects
   using (bucket_id = 'aircraft-requests'
          and (storage.foldername(name))[1] = auth.uid()::text);
 
+-- 6ter. PHOTO DE L'AVION (2026-08-16 soir) : le demandeur peut joindre une
+--    photo en plus du manuel — reprise sur la fiche par l'admin (wizard).
+--    Le bucket doit accepter les images en plus du PDF. Idempotent.
+alter table public.aircraft_requests add column if not exists photo_path text;
+alter table public.aircraft_requests add column if not exists photo_name text;
+update storage.buckets
+   set allowed_mime_types = array['application/pdf','image/jpeg','image/png','image/webp','image/heic']
+ where id = 'aircraft-requests';
+
 -- 7. Vérification
 select 'aircraft_requests' as verif, count(*) as policies
   from pg_policies where tablename = 'aircraft_requests';
