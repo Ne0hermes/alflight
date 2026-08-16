@@ -197,6 +197,16 @@ export async function restoreProfileCharts() {
         airacCycle: chart.airac_cycle,
         needsManualExtraction: true,
       });
+      // 👁 Rendre l'aérodrome VISIBLE : le module s'ouvre sur l'onglet Favoris.
+      // Une carte restaurée sans son terrain en favori restait introuvable.
+      try {
+        const raw = localStorage.getItem('sia_favorite_aerodromes');
+        const favs = new Set(raw ? JSON.parse(raw) : []);
+        if (!favs.has(chart.icao)) {
+          favs.add(chart.icao);
+          localStorage.setItem('sia_favorite_aerodromes', JSON.stringify(Array.from(favs)));
+        }
+      } catch { /* affichage seulement — non bloquant */ }
       restored += 1;
     } catch (e) {
       console.warn(`${LOG} restauration de ${chart.icao} :`, e?.message);

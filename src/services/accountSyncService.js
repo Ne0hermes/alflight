@@ -69,6 +69,13 @@ const profileToRow = (p, userId) => ({
   units_preferences: readLocalJson('units-preferences'),
   certifications: readLocalJson('pilotCertifications'),
   medical_records: readLocalJson('pilotMedicalRecords'),
+  // Petites préférences d'interface qui CONDITIONNENT l'affichage : sans les
+  // favoris VAC, une carte pourtant restaurée reste invisible (le module
+  // s'ouvre sur l'onglet Favoris) — retour César 16/08.
+  app_preferences: {
+    vacFavorites: readLocalJson('sia_favorite_aerodromes'),
+    vacEditedData: readLocalJson('sia_edited_data'),
+  },
   updated_at: new Date().toISOString(),
 });
 
@@ -114,6 +121,30 @@ function restoreLocalJson(key, value) {
 
 // ─── PHOTO DU PROFIL (espace privé pilot-photos) ───────────────────────────
 const PHOTO_BUCKET = 'pilot-photos';
+
+/** Lit la photo dans la base locale (elle n'est jamais dans localStorage). */
+async function readLocalProfilePhoto() {
+  try {
+    const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+    await dataBackupManager.initPromise;
+    const stored = await dataBackupManager.getProtectedData('pilotProfilePhoto');
+    return stored?.photo || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Réinstalle la photo dans la base locale (chemin de lecture du profil). */
+async function writeLocalProfilePhoto(photo) {
+  try {
+    const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+    await dataBackupManager.initPromise;
+    await dataBackupManager.saveProtectedData('pilotProfilePhoto', { photo }, 'pilotPhoto');
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** Envoie la photo (data URL base64) dans l'espace privé du pilote. */
 export async function pushProfilePhoto(photoDataUrl) {
@@ -335,9 +366,13 @@ export async function restoreAccountFromServer() {
 
     if (!hasLocal && row?.first_name) {
       const restored = rowToProfile(row);
-      // 📷 Photo : réinjectée dans le profil local (data URL)
+      // 📷 Photo : remise dans la base locale (là où le profil la relit) —
+      // jamais dans localStorage, qui saturerait.
       const photo = await pullProfilePhoto(row.photo_path);
-      if (photo) restored.photo = photo;
+      if (photo) {
+        await writeLocalProfilePhoto(photo);
+        restored.hasPhotoInDB = true;
+      }
       localStorage.setItem('pilotProfile', JSON.stringify(restored));
       result.profile = true;
       window.dispatchEvent(new CustomEvent('profile-configured'));
@@ -345,7 +380,12 @@ export async function restoreAccountFromServer() {
       // Local présent : le serveur reçoit la copie à jour (profil + photo)
       const p = JSON.parse(localProfile);
       await pushProfile(p);
-      if (p.photo) await pushProfilePhoto(p.photo);
+      // 📷 La photo N'EST PAS dans localStorage : elle est extraite à la
+      // sauvegarde et rangée en base locale (marqueur hasPhotoInDB) pour éviter
+      // de saturer le quota. Sans cette lecture, rien n'était jamais envoyé —
+      // c'est pourquoi la photo ne revenait pas (retour César 16/08).
+      const photo = p.photo || (await readLocalProfilePhoto());
+      if (photo) await pushProfilePhoto(photo);
     }
 
     // Annexes restaurées seulement si le local est vide (le local fait foi) :
@@ -354,6 +394,11 @@ export async function restoreAccountFromServer() {
       if (restoreLocalJson('units-preferences', row.units_preferences)) result.units = true;
       if (restoreLocalJson('pilotCertifications', row.certifications)) result.certifications = true;
       if (restoreLocalJson('pilotMedicalRecords', row.medical_records)) result.medical = true;
+      // Favoris VAC : sans eux, une carte restaurée reste invisible.
+      if (row.app_preferences) {
+        restoreLocalJson('sia_favorite_aerodromes', row.app_preferences.vacFavorites);
+        restoreLocalJson('sia_edited_data', row.app_preferences.vacEditedData);
+      }
     }
   } catch (e) {
     console.warn(`${LOG} restauration du profil :`, e?.message);

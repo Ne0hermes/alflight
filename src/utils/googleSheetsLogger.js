@@ -1,5 +1,11 @@
 // Utilitaire pour envoyer des logs à Google Sheets
+//
+// 🔇 DÉVELOPPEMENT UNIQUEMENT (16/08) : ce journal passe par un serveur local
+// (localhost:3001) qui n'existe évidemment pas pour un pilote en production.
+// Chaque enregistrement de vol y déclenchait une erreur CORS bruyante dans la
+// console — inquiétante pour l'utilisateur et gênante pour le diagnostic.
 export const logToGoogleSheets = async (action, details = '', options = {}) => {
+  if (!import.meta.env.DEV) return; // silencieux en production
   try {
     // Détecter automatiquement le composant basé sur l'action
     let component = options.component || 'Carnet de vol';

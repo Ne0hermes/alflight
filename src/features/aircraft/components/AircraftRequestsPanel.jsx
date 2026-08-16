@@ -270,18 +270,23 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
 const BTN_BASE = {
   display: 'inline-flex', alignItems: 'center', gap: '4px',
   padding: '5px 9px', borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border-subtle)',
+  border: '1px solid rgba(255, 255, 255, 0.35)', // fin liseré, visible sur toute teinte
+  // ⚠️ Couleur FORCÉE : sans !important-like (style inline prioritaire), un
+  // héritage de la ligne teintée rendait le libellé sombre et illisible.
   color: '#ffffff', fontWeight: 600,
-  fontSize: 'var(--fs-caption)', cursor: 'pointer'
+  fontSize: 'var(--fs-caption)', cursor: 'pointer',
+  lineHeight: 1.2, whiteSpace: 'nowrap'
 };
 
-// Teintes translucides : l'intention (créer / refuser) reste lisible sans
-// écraser la ligne qui la porte.
+// Teintes translucides — opacité RELEVÉE (retour César 16/08) : à 35 %, la
+// teinte de statut de la ligne (orange « En attente ») traversait le bouton,
+// qui paraissait donc orange à écriture sombre. À 0,85 le bouton s'impose sur
+// n'importe quel fond de ligne tout en restant translucide.
 const TINTS = {
-  neutral: 'rgba(120, 130, 140, 0.35)',
-  violet: 'rgba(124, 58, 237, 0.55)',
-  red: 'rgba(220, 38, 38, 0.55)',
-  green: 'rgba(16, 185, 129, 0.55)',
+  neutral: 'rgba(82, 92, 102, 0.85)',
+  violet: 'rgba(109, 40, 217, 0.85)',
+  red: 'rgba(185, 28, 28, 0.85)',
+  green: 'rgba(4, 120, 87, 0.85)',
 };
 
 const adminBtn = (tint = 'neutral') => ({
