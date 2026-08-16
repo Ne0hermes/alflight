@@ -4,7 +4,10 @@
  */
 
 // Constantes
-const EARTH_RADIUS_NM = 3440.065; // Rayon terre en nautiques
+// Rayon terrestre CANONIQUE (nautiques). Exporté (Phase 2) pour supprimer les
+// copies éparses relevées à la cartographie — dont une à 3440.07, qui donnait
+// ~0,15 NM d'écart sur 1000 NM.
+export const EARTH_RADIUS_NM = 3440.065;
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 
