@@ -216,12 +216,12 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
               {isAdmin && (
                 <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '6px' }}>
                   <button type="button" onClick={() => openStoragePath(req.id, req.file_path)} disabled={busyId === req.id}
-                    style={adminBtn('var(--accent-primary)')}>
+                    style={adminBtn('neutral')}>
                     <Download size={13} /> Manuel
                   </button>
                   {req.photo_path && (
                     <button type="button" onClick={() => openStoragePath(req.id, req.photo_path)} disabled={busyId === req.id}
-                      style={adminBtn('var(--accent-primary)')}>
+                      style={adminBtn('neutral')}>
                       <Camera size={13} /> Photo
                     </button>
                   )}
@@ -233,11 +233,11 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                           l'assistant clôture la demande (« Traitée ») ; plus
                           aucun bouton ne peut valider sans fiche réelle. */}
                       <button type="button" onClick={() => storeRequestHandoff(req)} disabled={busyId === req.id}
-                        style={adminBtn('#7c3aed')}>
+                        style={adminBtn('violet')}>
                         <Wand2 size={13} /> Créer la fiche
                       </button>
                       <button type="button" onClick={() => setStatus(req, 'rejected')} disabled={busyId === req.id}
-                        style={adminBtn('var(--color-red-critical)')}>
+                        style={adminBtn('red')}>
                         <XCircle size={13} /> Refuser
                       </button>
                     </>
@@ -263,21 +263,38 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
   );
 };
 
-const adminBtn = (bg) => ({
+// 🎨 Boutons de la boîte de réception (retour César 16/08) : les aplats de
+// couleur pleine juraient sur les lignes déjà teintées par le statut (fond
+// orange, texte noir, illisible). Nouvelle règle commune : fond TRANSLUCIDE,
+// fin trait grisé identique à celui de la notification, écriture blanche.
+const BTN_BASE = {
   display: 'inline-flex', alignItems: 'center', gap: '4px',
-  padding: '5px 9px', borderRadius: 'var(--radius-sm)', border: 'none',
-  backgroundColor: bg, color: '#ffffff', fontWeight: 600,
+  padding: '5px 9px', borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border-subtle)',
+  color: '#ffffff', fontWeight: 600,
   fontSize: 'var(--fs-caption)', cursor: 'pointer'
+};
+
+// Teintes translucides : l'intention (créer / refuser) reste lisible sans
+// écraser la ligne qui la porte.
+const TINTS = {
+  neutral: 'rgba(120, 130, 140, 0.35)',
+  violet: 'rgba(124, 58, 237, 0.55)',
+  red: 'rgba(220, 38, 38, 0.55)',
+  green: 'rgba(16, 185, 129, 0.55)',
+};
+
+const adminBtn = (tint = 'neutral') => ({
+  ...BTN_BASE,
+  backgroundColor: TINTS[tint] || TINTS.neutral,
 });
 
-// Croix de masquage (retour César 16/08) : fond NEUTRE de la charte — sur les
-// lignes teintées (statut), un fond transparent laissait la teinte traverser
-// et la croix devenait illisible. Croix grise + contour discret, sans aplat.
+// Croix de masquage : carrée, même trait fin grisé, fond gris translucide.
 const dismissBtn = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: '26px', height: '26px', padding: 0,
-  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)',
-  backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)', cursor: 'pointer'
+  ...BTN_BASE,
+  justifyContent: 'center',
+  width: '26px', height: '26px', padding: 0, gap: 0,
+  backgroundColor: TINTS.neutral,
 };
 
 export default AircraftRequestsPanel;

@@ -64,8 +64,23 @@ const profileToRow = (p, userId) => ({
   club_school: p.clubSchool || null,
   default_aircraft: p.defaultAircraft || null,
   preferred_units: p.preferredUnits || null,
+  // 🔄 Complément 16/08 : ce qui ne revenait PAS après vidage du cache.
+  // Conservés en JSON tels quels (formes libres) → restauration fidèle.
+  units_preferences: readLocalJson('units-preferences'),
+  certifications: readLocalJson('pilotCertifications'),
+  medical_records: readLocalJson('pilotMedicalRecords'),
   updated_at: new Date().toISOString(),
 });
+
+/** Lit une clé locale en JSON ; null si absente ou illisible. */
+function readLocalJson(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 const rowToProfile = (r) => ({
   firstName: r.first_name || '', lastName: r.last_name || '',
@@ -84,6 +99,68 @@ const rowToProfile = (r) => ({
   defaultAircraft: r.default_aircraft || '', preferredUnits: r.preferred_units || 'metric',
 });
 
+/** Écrit une clé locale si le serveur a une valeur ET que le local est vide. */
+function restoreLocalJson(key, value) {
+  if (value === null || value === undefined) return false;
+  try {
+    const existing = localStorage.getItem(key);
+    if (existing && existing !== '{}' && existing !== '[]' && existing !== 'null') return false;
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ─── PHOTO DU PROFIL (espace privé pilot-photos) ───────────────────────────
+const PHOTO_BUCKET = 'pilot-photos';
+
+/** Envoie la photo (data URL base64) dans l'espace privé du pilote. */
+export async function pushProfilePhoto(photoDataUrl) {
+  const userId = await currentUserId();
+  if (!userId || typeof photoDataUrl !== 'string' || !photoDataUrl.startsWith('data:')) return null;
+  try {
+    const resp = await fetch(photoDataUrl);
+    const blob = await resp.blob();
+    const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+    const path = `${userId}/photo.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+    if (upErr) throw upErr;
+    await supabase.from('pilot_profiles')
+      .upsert({ user_id: userId, photo_path: path, updated_at: new Date().toISOString() },
+              { onConflict: 'user_id' });
+    console.log(`${LOG} photo du profil enregistrée`);
+    return path;
+  } catch (e) {
+    console.warn(`${LOG} envoi de la photo impossible :`, e?.message);
+    return null;
+  }
+}
+
+/** Récupère la photo du profil en data URL (pour réinjection locale). */
+export async function pullProfilePhoto(photoPath) {
+  if (!photoPath) return null;
+  try {
+    const { data, error } = await supabase.storage
+      .from(PHOTO_BUCKET).createSignedUrl(photoPath, 300);
+    if (error) throw error;
+    const resp = await fetch(data.signedUrl);
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn(`${LOG} lecture de la photo impossible :`, e?.message);
+    return null;
+  }
+}
+
 /** Envoie le profil au serveur. Non bloquant : renvoie false en cas d'échec. */
 export async function pushProfile(profile) {
   const userId = await currentUserId();
@@ -101,18 +178,24 @@ export async function pushProfile(profile) {
   }
 }
 
-export async function pullProfile() {
+/** Ligne brute du profil (inclut les blocs JSON et le chemin de la photo). */
+export async function pullProfileRow() {
   const userId = await currentUserId();
   if (!userId) return null;
   try {
     const { data, error } = await supabase
       .from('pilot_profiles').select('*').eq('user_id', userId).maybeSingle();
     if (error) throw error;
-    return data ? rowToProfile(data) : null;
+    return data || null;
   } catch (e) {
     console.warn(`${LOG} lecture du profil impossible :`, e?.message);
     return null;
   }
+}
+
+export async function pullProfile() {
+  const row = await pullProfileRow();
+  return row ? rowToProfile(row) : null;
 }
 
 // ─── CARNET DE VOL ─────────────────────────────────────────────────────────
@@ -244,20 +327,33 @@ export async function restoreAccountFromServer() {
   if (!userId) return { profile: false, logbook: 0, fleet: 0 };
   const result = { profile: false, logbook: 0, fleet: 0, vacCharts: 0 };
 
-  // 1. Profil — restauré uniquement s'il manque en local (le local fait foi)
+  // 1. Profil + annexes (unités, licences, médical, photo)
   try {
+    const row = await pullProfileRow();
     const localProfile = localStorage.getItem('pilotProfile');
     const hasLocal = localProfile && JSON.parse(localProfile)?.firstName;
-    if (!hasLocal) {
-      const remote = await pullProfile();
-      if (remote?.firstName) {
-        localStorage.setItem('pilotProfile', JSON.stringify(remote));
-        result.profile = true;
-        window.dispatchEvent(new CustomEvent('profile-configured'));
-      }
-    } else {
-      // Local présent : on s'assure que le serveur en a une copie à jour
-      await pushProfile(JSON.parse(localProfile));
+
+    if (!hasLocal && row?.first_name) {
+      const restored = rowToProfile(row);
+      // 📷 Photo : réinjectée dans le profil local (data URL)
+      const photo = await pullProfilePhoto(row.photo_path);
+      if (photo) restored.photo = photo;
+      localStorage.setItem('pilotProfile', JSON.stringify(restored));
+      result.profile = true;
+      window.dispatchEvent(new CustomEvent('profile-configured'));
+    } else if (hasLocal) {
+      // Local présent : le serveur reçoit la copie à jour (profil + photo)
+      const p = JSON.parse(localProfile);
+      await pushProfile(p);
+      if (p.photo) await pushProfilePhoto(p.photo);
+    }
+
+    // Annexes restaurées seulement si le local est vide (le local fait foi) :
+    // préférences d'unités, licences/qualifications, suivi médical.
+    if (row) {
+      if (restoreLocalJson('units-preferences', row.units_preferences)) result.units = true;
+      if (restoreLocalJson('pilotCertifications', row.certifications)) result.certifications = true;
+      if (restoreLocalJson('pilotMedicalRecords', row.medical_records)) result.medical = true;
     }
   } catch (e) {
     console.warn(`${LOG} restauration du profil :`, e?.message);
@@ -281,16 +377,34 @@ export async function restoreAccountFromServer() {
     console.warn(`${LOG} restauration du carnet :`, e?.message);
   }
 
-  // 3. Flotte — re-télécharge les avions absents en local depuis le référentiel
+  // 3. Flotte — dans les DEUX sens
   try {
     const fleet = await pullFleet();
+    const { default: dataBackupManager } = await import('@utils/dataBackupManager');
+    const localRecords = await dataBackupManager.getAllFromStore('aircraftData');
+    const mine = (localRecords || []).filter(
+      (a) => !a.ownerAccountId || a.ownerAccountId === userId
+    );
+
+    // 3a. RATTRAPAGE (retour César 16/08) : les avions présents AVANT ce lot
+    // n'avaient jamais été rattachés au compte — rien ne pouvait donc être
+    // restauré après un vidage de cache. On envoie ici la flotte locale.
+    const attached = new Set(fleet.map((f) => String(f.registration).toUpperCase()));
+    const toAttach = mine.filter(
+      (a) => a.registration && !attached.has(String(a.registration).toUpperCase())
+    );
+    if (toAttach.length > 0) {
+      await pushFleet(toAttach.map((a) => ({
+        registration: a.registration,
+        communityPresetId: a.communityPresetId || a._metadata?.supabaseId || null,
+      })));
+      console.log(`${LOG} ${toAttach.length} avion(s) local(aux) rattaché(s) au compte`);
+    }
+
+    // 3b. Restauration : re-télécharge les avions du compte absents en local
     if (fleet.length > 0) {
-      const { default: dataBackupManager } = await import('@utils/dataBackupManager');
-      const localRecords = await dataBackupManager.getAllFromStore('aircraftData');
       const localRegs = new Set(
-        (localRecords || [])
-          .filter((a) => !a.ownerAccountId || a.ownerAccountId === userId)
-          .map((a) => String(a.registration || '').trim().toUpperCase())
+        mine.map((a) => String(a.registration || '').trim().toUpperCase())
       );
       const missing = fleet.filter((f) => !localRegs.has(f.registration));
       if (missing.length > 0) {
