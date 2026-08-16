@@ -52,7 +52,8 @@ import { Chart } from '../../../abac/curves/ui/Chart';
 import {
   linearRegression,
   convertArmUnit,
-  buildStageList
+  buildStageList,
+  FUEL_TANK_TYPES
 } from '../utils/centrogramMath';
 import { buildCgEnvelope, aircraftToCentrogramScaffold } from '../utils/centrogramAdapter';
 import { unitsSelectors } from '@core/stores/unitsStore';
@@ -198,6 +199,11 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // modèle de l'avion → apparaît dans la liste → son bras mesuré est reconnecté).
   const [newElType, setNewElType] = useState('baggage');
   const [newElName, setNewElName] = useState('');
+  // 🔧 Retour César 16/08 : mêmes CHAMPS que la saisie manuelle (Step3) pour
+  // que l'élément créé ici soit immédiatement complet et reconnu là-bas.
+  const [newElTankType, setNewElTankType] = useState('main');
+  const [newElCapacity, setNewElCapacity] = useState('');
+  const [newElMaxWeight, setNewElMaxWeight] = useState('');
 
   // ─── MÉMOIRE PAR ÉLÉMENT (Phase 2 — une seule interface) ──────────────────
   // Chaque élément (siège avant, réservoir d'aile, bagages…) garde SON propre
@@ -246,27 +252,47 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
     const id = uuidv4();
     const name = (newElName || '').trim();
     if (newElType === 'baggage') {
+      // 🔧 Retour César 16/08 : STRICTEMENT la même forme que Step3
+      // (addBaggageCompartment) — champ maxWeight saisi ici, reconnu là-bas.
       const list = Array.isArray(aircraftData?.baggageCompartments) ? aircraftData.baggageCompartments : [];
-      updateData('baggageCompartments', [...list, { id, name: name || `Compartiment ${list.length + 1}`, arm: '', maxWeight: 0 }]);
+      updateData('baggageCompartments', [...list, {
+        id,
+        name: name || `Compartiment ${list.length + 1}`,
+        arm: '',
+        maxWeight: newElMaxWeight !== '' ? newElMaxWeight : ''
+      }]);
       selectStage(`baggage_${id}`);
     } else if (newElType === 'fuel') {
+      // 🔧 Retour César 16/08 : STRICTEMENT la même forme que Step3
+      // (addFuelTank) — type choisi parmi les 5 (principal/aile/optionnel/
+      // extrémité/auxiliaire), capacité saisie ici, flag optional identique.
       const list = Array.isArray(aircraftData?.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
-      // 🔧 Audit 16/08 : premier réservoir créé depuis le lecteur = PRINCIPAL
-      // (le stage fixe legacy « fuelMain » a été retiré — les pastilles
-      // carburant viennent exclusivement d'additionalFuelTanks). Forme alignée
-      // sur Step3.addFuelTank (flag optional, capacité saisissable).
-      const tankType = list.length === 0 ? 'main' : 'optional';
+      const defaultNames = {
+        main: 'Réservoir principal',
+        wing: 'Réservoir aile',
+        optional: 'Réservoir optionnel',
+        tip: 'Réservoir d\'extrémité',
+        aux: 'Réservoir auxiliaire'
+      };
       updateData('additionalFuelTanks', [...list, {
-        id, name: name || (tankType === 'main' ? 'Réservoir principal' : `Réservoir ${list.length + 1}`),
-        type: tankType, capacity: '', arm: '', optional: tankType === 'optional'
+        id,
+        name: name || `${defaultNames[newElTankType] || 'Réservoir'} ${list.length + 1}`,
+        type: newElTankType,
+        arm: '',
+        capacity: newElCapacity !== '' ? newElCapacity : '',
+        // Même règle que Step3 : amovible pour les types naturellement optionnels
+        optional: newElTankType === 'aux' || newElTankType === 'optional' || newElTankType === 'tip'
       }]);
       selectStage(`fuelTank_${id}`);
     } else if (newElType === 'seat') {
+      // Même nommage que Step3.addSeat (Siège 3, 4, …)
       const list = Array.isArray(aircraftData?.additionalSeats) ? aircraftData.additionalSeats : [];
-      updateData('additionalSeats', [...list, { id, name: name || `Siège ${list.length + 1}`, arm: '' }]);
+      updateData('additionalSeats', [...list, { id, name: name || `Siège ${list.length + 3}`, arm: '' }]);
       selectStage(`seat_${id}`);
     }
     setNewElName('');
+    setNewElCapacity('');
+    setNewElMaxWeight('');
   };
 
   // Passe à l'élément SUIVANT non encore validé (sinon le suivant dans la liste).
@@ -1163,6 +1189,44 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
                     <MenuItem value="seat">💺 Siège additionnel</MenuItem>
                   </Select>
                 </FormControl>
+                {/* 🔧 Retour César 16/08 : mêmes champs que la saisie manuelle */}
+                {newElType === 'fuel' && (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                      <InputLabel id="cgr-new-tank-type">Type</InputLabel>
+                      <Select
+                        labelId="cgr-new-tank-type"
+                        label="Type"
+                        value={newElTankType}
+                        onChange={(e) => setNewElTankType(e.target.value)}
+                      >
+                        {FUEL_TANK_TYPES.map((t) => (
+                          <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Capacité (L)"
+                      value={newElCapacity}
+                      onChange={(e) => setNewElCapacity(e.target.value)}
+                      sx={{ width: 130 }}
+                      inputProps={{ min: 0, step: 'any' }}
+                    />
+                  </>
+                )}
+                {newElType === 'baggage' && (
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Masse max (kg)"
+                    value={newElMaxWeight}
+                    onChange={(e) => setNewElMaxWeight(e.target.value)}
+                    sx={{ width: 140 }}
+                    inputProps={{ min: 0, step: 'any' }}
+                  />
+                )}
                 <TextField
                   size="small"
                   label="Nom (optionnel)"
