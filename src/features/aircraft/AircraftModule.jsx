@@ -5,6 +5,7 @@ import React, { memo, useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../core/contexts/AuthContext';
 import { isAdminUser } from '../../core/auth/roles';
 import SendManualRequestButton from './components/SendManualRequestButton';
+import AircraftRequestsPanel from './components/AircraftRequestsPanel';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
@@ -1652,6 +1653,11 @@ export const AircraftModule = memo(() => {
           </div>
         </header>
       </section>
+
+      {/* 📥 Suivi des demandes d'ajout d'avion (utilisateur : SES demandes +
+          notification « ajouté » ; admin : boîte de réception avec manuel PDF
+          et actions Traitée/Refuser). Discret : rien à afficher = invisible. */}
+      <AircraftRequestsPanel isAdmin={isAdmin} />
 
       {/* ===== ALERTE CONFIGURATION INCOMPLÈTE (bannière sobre, pas cookie banner) ===== */}
       {showIncompleteDataAlert && incompleteAircraft.length > 0 && (

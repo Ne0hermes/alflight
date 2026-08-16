@@ -67,7 +67,27 @@ create policy "storage req: delete admin" on storage.objects
   for delete to authenticated
   using (bucket_id = 'aircraft-requests' and public.is_admin());
 
--- 5. Vérification
+-- 5. ANTI-DOUBLON (2026-08-16) : un utilisateur doit savoir AVANT d'envoyer si
+--    une demande est déjà en cours pour la même immatriculation — sans pouvoir
+--    lire les demandes des autres. Fonction SECURITY DEFINER qui ne renvoie
+--    qu'un BOOLÉEN (aucune donnée exposée).
+create or replace function public.aircraft_request_pending(reg text)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.aircraft_requests
+    where upper(trim(registration)) = upper(trim(reg))
+      and status = 'pending'
+  );
+$$;
+revoke all on function public.aircraft_request_pending(text) from public;
+grant execute on function public.aircraft_request_pending(text) to authenticated;
+
+-- 6. Vérification
 select 'aircraft_requests' as verif, count(*) as policies
   from pg_policies where tablename = 'aircraft_requests';
 select id, public, file_size_limit from storage.buckets where id = 'aircraft-requests';

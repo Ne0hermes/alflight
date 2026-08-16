@@ -43,6 +43,7 @@ const USER_SCOPED_KEYS = [
   'checklist-store-v2',
   'custom-vfr-store-v2',
   'aixm_airspaces_modifications',
+  'aircraftRequestsSeen',
 ];
 
 const collectCurrent = () => {

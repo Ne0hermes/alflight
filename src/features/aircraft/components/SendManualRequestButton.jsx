@@ -53,6 +53,26 @@ const SendManualRequestButton = ({ style }) => {
       if (!user) throw new Error('Session expirée — reconnectez-vous.');
 
       const reg = form.registration.trim().toUpperCase();
+
+      // 🛡️ ANTI-DOUBLON (demande César 2026-08-16) — vérifié JUSTE AVANT l'envoi :
+      // a) l'avion existe déjà dans la base communautaire → importer, pas demander
+      setProgressMsg('Vérification de l\'immatriculation…');
+      const { data: existing } = await supabase
+        .from('community_presets')
+        .select('id')
+        .ilike('registration', reg)
+        .limit(1);
+      if (existing && existing.length > 0) {
+        throw new Error(`${reg} existe déjà dans la base communautaire — importez-le directement depuis la recherche ci-dessus, inutile d'envoyer le manuel.`);
+      }
+      // b) une demande est déjà en cours pour cette immatriculation (la fonction
+      //    ne renvoie qu'un booléen : les demandes des autres restent privées)
+      const { data: pendingExists, error: rpcErr } = await supabase
+        .rpc('aircraft_request_pending', { reg });
+      if (!rpcErr && pendingExists === true) {
+        throw new Error(`Une demande pour ${reg} est déjà en cours de traitement — l'avion sera bientôt disponible, inutile de renvoyer le manuel.`);
+      }
+
       const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, '_');
       const path = `${user.id}/${Date.now()}-${safeName}`;
 
