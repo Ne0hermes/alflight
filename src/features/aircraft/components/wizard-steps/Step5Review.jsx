@@ -1309,11 +1309,11 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                 </Box>
               )}
 
-              {/* Affichage des tableaux extraits depuis advancedPerformance */}
+              {/* Affichage des tableaux extraits depuis advancedPerformance —
+                  📂 en menu déroulant par tableau (demande César 16/08) : replié
+                  par défaut, les chiffres restent consultables au clic. */}
               {data.advancedPerformance?.tables && data.advancedPerformance.tables.length > 0 ? (
                 data.advancedPerformance.tables.map((table, tableIndex) => (
-                {/* 📂 Menu déroulant par tableau (demande César 16/08) : replié
-                    par défaut — les chiffres restent consultables au clic. */}
                 <Accordion key={tableIndex} disableGutters elevation={0}
                   sx={{ mb: 1, border: '1px solid', borderColor: 'divider', '&:before': { display: 'none' } }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
