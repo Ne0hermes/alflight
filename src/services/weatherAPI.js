@@ -20,7 +20,15 @@ const AVWX_CONFIG = {
   baseUrl: 'https://avwx.rest/api'
 };
 
-const NOAA_BASE = 'https://aviationweather.gov/api/data';
+// 🐛 FIX CORS (16/08) : aviationweather.gov ne renvoie PAS d'en-tête
+// Access-Control-Allow-Origin — l'appel DIRECT depuis le navigateur était
+// bloqué (« blocked by CORS policy »), donc plus aucun METAR/TAF ne remontait
+// de la source primaire. On passe par un relais serveur (api/noaa.js, edge
+// Vercel) : un appel serveur→serveur n'est pas soumis à la politique CORS.
+// En développement, /api est proxifié vers le serveur local (vite.config) ;
+// s'il n'est pas lancé, NOAA échoue proprement et AVWX prend le relais —
+// jamais de météo fabriquée (règle A5).
+const NOAA_PROXY = '/api/noaa';
 
 /**
  * Mappe un METAR NOAA vers le contrat `decoded` EXACT d'AVWX (voir plus bas).
@@ -66,8 +74,8 @@ export function mapNoaaMetar(m, icao) {
   };
 }
 
-async function fetchJsonNoaa(path) {
-  const response = await fetch(`${NOAA_BASE}${path}`);
+async function fetchJsonNoaa(type, icao) {
+  const response = await fetch(`${NOAA_PROXY}?type=${type}&ids=${encodeURIComponent(icao)}`);
   if (!response.ok) return null;
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('json')) return null;
@@ -77,7 +85,7 @@ async function fetchJsonNoaa(path) {
 
 async function fetchMetarNoaa(icao) {
   try {
-    const data = await fetchJsonNoaa(`/metar?ids=${encodeURIComponent(icao)}&format=json`);
+    const data = await fetchJsonNoaa('metar', icao);
     if (!Array.isArray(data) || data.length === 0) return null;
     return mapNoaaMetar(data[0], icao);
   } catch (e) {
@@ -88,7 +96,7 @@ async function fetchMetarNoaa(icao) {
 
 async function fetchTafNoaa(icao) {
   try {
-    const data = await fetchJsonNoaa(`/taf?ids=${encodeURIComponent(icao)}&format=json`);
+    const data = await fetchJsonNoaa('taf', icao);
     if (!Array.isArray(data) || data.length === 0 || !data[0]?.rawTAF) return null;
     // Seul decoded.time.dt est consommé en aval (Step7Summary « TAF émis le »)
     const issue = data[0].issueTime
