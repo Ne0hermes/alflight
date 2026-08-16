@@ -13,3 +13,7 @@ npm run lint:fallbacks:staged
 # une clé privée, un JWT ou un fichier .env/credentials stagé par erreur.
 # Exception ponctuelle (faux positif) : « secret-ok » sur la ligne concernée.
 npm run lint:secrets:staged
+
+# Garde-fou COMPOSANTS JSX NON IMPORTÉS (leçon ReferenceError DeleteAccountSection,
+# 2026-08-16) — le build ne détecte pas ce bug, il explose en production.
+npm run lint:jsx:staged

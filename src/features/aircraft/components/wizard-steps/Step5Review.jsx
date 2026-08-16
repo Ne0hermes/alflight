@@ -32,7 +32,10 @@ import {
   Save as SaveIcon,
   Difference as DifferenceIcon,
   ThumbUp as ThumbUpIcon,
-  ThumbDown as ThumbDownIcon
+  ThumbDown as ThumbDownIcon,
+  // 🔧 FIX 2026-08-16 : manquait — <CloudUploadIcon> était utilisé ligne ~1965
+  // (carte « Soumettre à la communauté ») sans import → ReferenceError au rendu.
+  CloudUpload as CloudUploadIcon
 } from '@mui/icons-material';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';

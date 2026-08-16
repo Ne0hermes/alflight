@@ -42,7 +42,8 @@
     "ios": "npx cap add ios && npx cap open ios",
     "mobile:dev": "npx cap run android --livereload --external",
     "mobile:build:android": "npm run build:mobile && npx cap build android",
-    "mobile:build:ios": "npm run build:mobile && npx cap build ios"
+    "mobile:build:ios": "npm run build:mobile && npx cap build ios",
+    "lint:jsx:staged": "node scripts/check-undefined-jsx.mjs --staged"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.2",

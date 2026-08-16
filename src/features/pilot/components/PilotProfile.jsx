@@ -11,6 +11,11 @@ import ImageEditor from '../../../components/ImageEditor';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import AccordionButton from '../../../shared/components/AccordionButton';
 import AeroclubAutocomplete from '../../aircraft/components/AeroclubAutocomplete';
+// 🔧 FIX 2026-08-16 : import MANQUANT — le composant était utilisé sans être
+// importé → ReferenceError au rendu en production (écran « Configuration
+// requise » du premier lancement). Le build ne détecte pas ce cas (identifiant
+// traité comme une globale) : voir le garde-fou lint ajouté au pre-commit.
+import DeleteAccountSection from '../../account/components/DeleteAccountSection';
 // 🔒 PATTERN-10 / Lot 0.3 : les outils de test (PII fictives) ne sont plus
 // importés statiquement — chargement dynamique UNIQUEMENT en développement
 // (voir l'effet ci-dessous). Garantit leur absence du bundle de production.
