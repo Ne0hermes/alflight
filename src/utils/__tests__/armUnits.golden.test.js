@@ -328,9 +328,19 @@ describe('normalizeAircraftArmsToMeters — armLengths (forme historique)', () =
     expect(out.armLengths.unknownArm).toBeNull();
   });
 
-  it('une clé NON-bras glissée dans armLengths est quand même divisée (piège figé)', () => {
+  // ✅ CHANGEMENT DÉLIBÉRÉ (assainissement 16/08) — auparavant, TOUTE clé
+  // d'armLengths était divisée par mille : une masse rangée là (620 kg)
+  // devenait 0,62. Destruction silencieuse, contraire à la règle « les masses
+  // ne sont jamais devinées ». Seules les clés en « …Arm » sont converties.
+  it('une clé NON-bras d\'armLengths est laissée INTACTE (plus de masse détruite)', () => {
     const out = normalizeAircraftArmsToMeters({ armLengths: { emptyMass: 620 } });
-    expect(out.armLengths.emptyMass).toBeCloseTo(0.62, 10); // masse détruite
+    expect(out.armLengths.emptyMass).toBe(620);
+  });
+
+  it('les vraies clés de bras d\'armLengths restent converties', () => {
+    const out = normalizeAircraftArmsToMeters({ armLengths: { emptyMassArm: 2100, fuelArm: 805.9 } });
+    expect(out.armLengths.emptyMassArm).toBeCloseTo(2.1, 10);
+    expect(out.armLengths.fuelArm).toBeCloseTo(0.8059, 10);
   });
 
   it('valeurs non numériques d\'armLengths conservées telles quelles', () => {
@@ -397,10 +407,14 @@ describe('normalizeAircraftCgEnvelopeToMeters — cgEnvelope', () => {
     expect(out.cgEnvelope.aftMaxWeight).toBe(1100);
   });
 
-  it('macLength et lemac NE SONT PAS convertis par cette fonction', () => {
+  // ✅ CHANGEMENT DÉLIBÉRÉ (assainissement 16/08) — macLength et lemac étaient
+  // convertis par l'hydratation du wizard mais pas ici : le même avion
+  // ressortait avec une corde en mètres ou en millimètres selon la porte
+  // d'entrée. Les deux fonctions traitent désormais les mêmes champs.
+  it('macLength et lemac sont convertis comme des longueurs (cohérence des deux portes)', () => {
     const out = normalizeAircraftCgEnvelopeToMeters(ENV_MM);
-    expect(out.cgEnvelope.macLength).toBe(1500);
-    expect(out.cgEnvelope.lemac).toBe(2000);
+    expect(out.cgEnvelope.macLength).toBeCloseTo(1.5, 10);
+    expect(out.cgEnvelope.lemac).toBeCloseTo(2, 10);
   });
 
   it('points : cg converti, weight et moment NON touchés', () => {
@@ -423,13 +437,15 @@ describe('normalizeAircraftCgEnvelopeToMeters — cgEnvelope', () => {
     expect(out.cgEnvelope.forwardPoints[3]).toBeNull();
   });
 
-  it('les clés forwardPoints/intermediatePoints sont AJOUTÉES (à undefined) si absentes', () => {
+  // ✅ CHANGEMENT DÉLIBÉRÉ (assainissement 16/08) — la fonction AJOUTAIT des
+  // clés à undefined même sur une enveloppe qui n'en avait pas, modifiant la
+  // forme de l'objet (sérialisation, comparaisons d'égalité, différentiels de
+  // sauvegarde). Elle ne crée plus rien.
+  it('les clés absentes ne sont PAS créées (forme de l\'objet préservée)', () => {
     const out = normalizeAircraftCgEnvelopeToMeters({ cgEnvelope: { aftCG: 2600 } });
-    expect('forwardPoints' in out.cgEnvelope).toBe(true);
-    expect('intermediatePoints' in out.cgEnvelope).toBe(true);
-    expect(out.cgEnvelope.forwardPoints).toBeUndefined();
-    expect(out.cgEnvelope.intermediatePoints).toBeUndefined();
-    expect(Object.keys(out.cgEnvelope).sort()).toEqual(['aftCG', 'forwardPoints', 'intermediatePoints']);
+    expect('forwardPoints' in out.cgEnvelope).toBe(false);
+    expect('intermediatePoints' in out.cgEnvelope).toBe(false);
+    expect(Object.keys(out.cgEnvelope)).toEqual(['aftCG']);
   });
 
   it('points non-tableau : valeur conservée telle quelle', () => {
@@ -541,21 +557,28 @@ describe('normalizeAircraftForWizard — forme wizard (arms / moments / cgLimits
     expect(out.moments.aux).toBe(0);
   });
 
-  it('cgLimits : toutes les clés via armToMeters (y compris hors forward/aft)', () => {
+  // ✅ CHANGEMENT DÉLIBÉRÉ (assainissement 16/08) — cgLimits passait
+  // ENTIÈREMENT par la conversion de bras : une masse maximale rangée là
+  // (1157 kg) devenait 1,157. Seules les vraies bornes de CG sont converties.
+  it('cgLimits : seules les bornes de CG sont converties, la masse est intacte', () => {
     const out = normalizeAircraftForWizard({
       cgLimits: { forward: 1900, aft: 2600, maxWeight: 1157, note: 'POH' },
     });
     expect(out.cgLimits.forward).toBeCloseTo(1.9, 10);
     expect(out.cgLimits.aft).toBeCloseTo(2.6, 10);
-    expect(out.cgLimits.maxWeight).toBeCloseTo(1.157, 10); // masse détruite (comportement figé)
+    expect(out.cgLimits.maxWeight).toBe(1157);
     expect(out.cgLimits.note).toBe('POH');
   });
 
-  it('cgLimits.forwardVariable (tableau) traverse armToMeters SANS être normalisé', () => {
+  // ✅ CHANGEMENT DÉLIBÉRÉ — la courbe avant variable restait en millimètres
+  // par ce chemin alors que l'autre normaliseur la convertissait : le même
+  // avion avait deux enveloppes selon la porte d'entrée.
+  it('cgLimits.forwardVariable est normalisé comme dans l\'autre porte d\'entrée', () => {
     const fv = [{ weight: 600, cg: 2050 }];
     const out = normalizeAircraftForWizard({ cgLimits: { forward: 1900, forwardVariable: fv } });
-    expect(out.cgLimits.forwardVariable).toBe(fv);         // même référence, cg en mm
-    expect(out.cgLimits.forwardVariable[0].cg).toBe(2050);
+    expect(out.cgLimits.forwardVariable[0].cg).toBeCloseTo(2.05, 10);
+    expect(out.cgLimits.forwardVariable[0].weight).toBe(600);
+    expect(fv[0].cg).toBe(2050); // source jamais mutée
   });
 
   it('les MASSES du wizard ne sont jamais devinées (masses/emptyWeight intacts)', () => {
@@ -597,23 +620,31 @@ describe('normalizeAircraftForWizard — sièges, soutes, réservoirs', () => {
     expect(out.additionalFuelTanks[0].capacity).toBe(60);
   });
 
-  it('DOUBLE normalisation des bras réservoirs/soutes hors plage GA (> 10 000 mm)', () => {
-    // normalizeAircraftArmsToMeters divise déjà, puis la passe wizard redivise.
+  // ✅ CHANGEMENT DÉLIBÉRÉ (assainissement 16/08) — les bras de ces deux
+  // listes étaient normalisés DEUX fois (moteur puis passe wizard) : sans
+  // effet en aviation générale par idempotence, mais faux au-delà — un bras
+  // de 12 000 mm donnait 0,012 m au lieu de 12 m. Une seule passe désormais,
+  // donc les trois listes se comportent enfin de la même façon.
+  it('les bras ne sont plus normalisés deux fois (cohérence des trois listes)', () => {
     const out = normalizeAircraftForWizard({
       additionalFuelTanks: [{ arm: 12000 }],
       baggageCompartments: [{ arm: 12000 }],
-      additionalSeats: [{ arm: 12000 }],   // une seule passe : pas de moteur en amont
+      additionalSeats: [{ arm: 12000 }],
     });
-    expect(out.additionalFuelTanks[0].arm).toBeCloseTo(0.012, 10); // 12000 → 12 → 0.012
-    expect(out.baggageCompartments[0].arm).toBeCloseTo(0.012, 10);
-    expect(out.additionalSeats[0].arm).toBeCloseTo(12, 10);        // 12000 → 12
+    expect(out.additionalFuelTanks[0].arm).toBeCloseTo(12, 10);
+    expect(out.baggageCompartments[0].arm).toBeCloseTo(12, 10);
+    expect(out.additionalSeats[0].arm).toBeCloseTo(12, 10);
   });
 
-  it('un tableau attendu mais fourni comme OBJET fait LEVER une TypeError', () => {
-    // Comportement figé tel quel : `.map` n'existe pas sur un objet simple.
-    expect(() => normalizeAircraftForWizard({ baggageCompartments: {} })).toThrow(TypeError);
-    expect(() => normalizeAircraftForWizard({ additionalSeats: {} })).toThrow(TypeError);
-    expect(() => normalizeAircraftForWizard({ additionalFuelTanks: {} })).toThrow(TypeError);
+  // ✅ CHANGEMENT DÉLIBÉRÉ — une liste fournie sous forme d'objet (avion
+  // ancien, import malformé) faisait PLANTER l'hydratation du wizard.
+  // Elle est désormais laissée telle quelle, sans erreur.
+  it('une liste mal formée (objet au lieu de tableau) ne fait plus planter', () => {
+    expect(() => normalizeAircraftForWizard({ baggageCompartments: {} })).not.toThrow();
+    expect(() => normalizeAircraftForWizard({ additionalSeats: {} })).not.toThrow();
+    expect(() => normalizeAircraftForWizard({ additionalFuelTanks: {} })).not.toThrow();
+    const out = normalizeAircraftForWizard({ additionalSeats: { a: 1 } });
+    expect(out.additionalSeats).toEqual({ a: 1 });
   });
 });
 

@@ -30,6 +30,17 @@ const ARM_KEYS = [
 ];
 
 /**
+ * Une clé désigne-t-elle un BRAS de levier ? Sert de liste blanche là où l'on
+ * parcourait aveuglément un objet — une masse ou une capacité rangée au milieu
+ * de bras ne doit jamais être « convertie » (assainissement 16/08).
+ * @param {string} key
+ * @returns {boolean}
+ */
+function isArmKey(key) {
+  return /arm$/i.test(String(key));
+}
+
+/**
  * Ramène un bras de levier en MÈTRES. Une valeur |x| > 10 est interprétée comme des
  * millimètres et divisée par 1000. Les valeurs non numériques sont renvoyées telles
  * quelles (le moteur gère lui-même l'absence via Number.isFinite → bras manquant).
@@ -89,10 +100,19 @@ export function normalizeAircraftArmsToMeters(aircraft) {
   }
 
   // armLengths : forme historique (clés emptyMassArm/fuelArm/frontSeat1Arm…) servant de
-  // repli quand weightBalance est absent. Tous ses champs numériques sont des bras → normaliser.
+  // repli quand weightBalance est absent.
+  //
+  // 🛡️ ASSAINISSEMENT (16/08) — cette boucle normalisait TOUTES les clés sans
+  // distinction : une clé qui n'est PAS un bras (masse rangée là par erreur ou
+  // par un import ancien, ex. armLengths.emptyMass = 620 kg) était divisée par
+  // mille → 0,62. C'était une DESTRUCTION SILENCIEUSE de donnée, en
+  // contradiction directe avec la règle du module (« les masses ne sont jamais
+  // devinées »). On ne convertit désormais que ce qui est reconnaissable comme
+  // un bras : suffixe « Arm » ou « arm ». Le reste est laissé intact.
   if (out.armLengths && typeof out.armLengths === 'object') {
     const al = { ...out.armLengths };
     for (const k of Object.keys(al)) {
+      if (!isArmKey(k)) continue;
       if (al[k] !== undefined && al[k] !== null) al[k] = armToMeters(al[k]);
     }
     out.armLengths = al;
@@ -135,11 +155,20 @@ export function normalizeAircraftCgEnvelopeToMeters(aircraft) {
 
   if (out.cgEnvelope && typeof out.cgEnvelope === 'object') {
     const env = { ...out.cgEnvelope };
-    for (const k of ['aftCG', 'aftMinCG', 'aftMaxCG', 'forwardCG']) {
+    // 🛡️ ASSAINISSEMENT (16/08) — macLength et lemac sont des LONGUEURS de
+    // référence de la corde : elles étaient converties par l'hydratation du
+    // wizard mais PAS ici. Le même avion sortait donc avec une corde en mètres
+    // ou en millimètres selon la porte d'entrée. Les deux fonctions traitent
+    // désormais les mêmes champs.
+    for (const k of ['aftCG', 'aftMinCG', 'aftMaxCG', 'forwardCG', 'macLength', 'lemac']) {
       if (env[k] !== undefined && env[k] !== null && env[k] !== '') env[k] = armToMeters(env[k]);
     }
-    env.forwardPoints = normPoints(env.forwardPoints);
-    env.intermediatePoints = normPoints(env.intermediatePoints);
+    // 🛡️ Ne CRÉE plus les clés absentes : l'ancienne version posait
+    // forwardPoints/intermediatePoints à undefined même quand l'enveloppe n'en
+    // avait pas, ce qui modifiait la forme de l'objet (sérialisation,
+    // comparaisons d'égalité, différentiels de sauvegarde).
+    if (env.forwardPoints !== undefined) env.forwardPoints = normPoints(env.forwardPoints);
+    if (env.intermediatePoints !== undefined) env.intermediatePoints = normPoints(env.intermediatePoints);
     out.cgEnvelope = env;
   }
   if (out.cgLimits) out.cgLimits = normLimits(out.cgLimits);
@@ -177,29 +206,50 @@ export function normalizeAircraftForWizard(aircraft) {
 
   if (out.arms) out.arms = mapObj(out.arms, armToMeters);
   if (out.moments) out.moments = mapObj(out.moments, momentToKgM);
-  if (out.cgLimits) out.cgLimits = mapObj(out.cgLimits, armToMeters);
+  // 🛡️ ASSAINISSEMENT (16/08) — cgLimits passait ENTIÈREMENT par armToMeters :
+  // une masse rangée dans cet objet (cgLimits.maxWeight = 1157 kg) devenait
+  // 1,157. On s'aligne sur normalizeAircraftCgEnvelopeToMeters : seules les
+  // vraies bornes de CG sont converties, et la courbe avant variable aussi
+  // (elle restait en millimètres par ce chemin — d'où deux enveloppes
+  // différentes pour le même avion selon la porte d'entrée).
+  if (out.cgLimits && typeof out.cgLimits === 'object') {
+    const lim = { ...out.cgLimits };
+    for (const k of ['forward', 'aft']) {
+      if (lim[k] != null && lim[k] !== '') lim[k] = armToMeters(lim[k]);
+    }
+    if (Array.isArray(lim.forwardVariable)) {
+      lim.forwardVariable = lim.forwardVariable.map((p) =>
+        p && p.cg != null && p.cg !== '' ? { ...p, cg: armToMeters(p.cg) } : p
+      );
+    }
+    out.cgLimits = lim;
+  }
 
-  if (out.additionalSeats) {
+  // 🛡️ ASSAINISSEMENT (16/08) — ces trois listes étaient parcourues après un
+  // simple test de vérité : un objet non-tableau (avion ancien, import
+  // malformé) faisait PLANTER l'hydratation du wizard sur `.map is not a
+  // function`. La fonction voisine se protégeait déjà par Array.isArray ; on
+  // aligne. Une liste mal formée est laissée telle quelle, pas convertie.
+  if (Array.isArray(out.additionalSeats)) {
     out.additionalSeats = out.additionalSeats.map((s) =>
       s && s.arm != null && s.arm !== '' ? { ...s, arm: armToMeters(s.arm) } : s
     );
   }
-  if (out.baggageCompartments) {
+  // ⚠️ Les BRAS de ces deux listes ont DÉJÀ été normalisés par
+  // normalizeAircraftArmsToMeters (appelée en tête). Les re-normaliser était
+  // une seconde division : sans effet en aviation générale (idempotence sous
+  // 10 m), mais faux au-delà — un bras de 12 000 mm donnait 0,012 m au lieu
+  // de 12 m. On ne traite donc plus ici que les MOMENTS.
+  if (Array.isArray(out.baggageCompartments)) {
     out.baggageCompartments = out.baggageCompartments.map((c) => {
-      if (!c) return c;
-      const copy = { ...c };
-      if (copy.arm != null && copy.arm !== '') copy.arm = armToMeters(copy.arm);
-      if (copy.momentMax != null && copy.momentMax !== '') copy.momentMax = momentToKgM(copy.momentMax);
-      return copy;
+      if (!c || c.momentMax == null || c.momentMax === '') return c;
+      return { ...c, momentMax: momentToKgM(c.momentMax) };
     });
   }
-  if (out.additionalFuelTanks) {
+  if (Array.isArray(out.additionalFuelTanks)) {
     out.additionalFuelTanks = out.additionalFuelTanks.map((t) => {
-      if (!t) return t;
-      const copy = { ...t };
-      if (copy.arm != null && copy.arm !== '') copy.arm = armToMeters(copy.arm);
-      if (copy.momentAtFull != null && copy.momentAtFull !== '') copy.momentAtFull = momentToKgM(copy.momentAtFull);
-      return copy;
+      if (!t || t.momentAtFull == null || t.momentAtFull === '') return t;
+      return { ...t, momentAtFull: momentToKgM(t.momentAtFull) };
     });
   }
 
