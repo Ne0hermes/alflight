@@ -44,7 +44,7 @@ import { getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical, toUserUnit } from '@utils/unitsDisplay';
 import { convertMoment } from '../../utils/mbUnits';
 
-const Step5Review = ({ data, setCurrentStep, onSave }) => {
+const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   // Récupérer les préférences d'unités de l'utilisateur
   const units = useUnitsStore(state => state.units);
   const [showDifferencesDialog, setShowDifferencesDialog] = useState(false);
@@ -774,6 +774,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             {title}
           </Typography>
         </Box>
+        {/* 🔐 RBAC : bouton Modifier masqué en consultation utilisateur */}
+        {!readOnly && (
         <Button
           size="small"
           variant="outlined"
@@ -783,6 +785,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
         >
           Modifier
         </Button>
+        )}
       </Box>
       
       <Box sx={{ p: 3 }}>
@@ -1083,6 +1086,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
               Performances
             </Typography>
           </Box>
+          {/* 🔐 RBAC : bouton Modifier masqué en consultation utilisateur */}
+          {!readOnly && (
           <Button
             size="small"
             variant="outlined"
@@ -1091,6 +1096,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           >
             Modifier
           </Button>
+          )}
         </Box>
 
         <Box sx={{ p: 3 }}>
@@ -1297,6 +1303,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                 Équipements
               </Typography>
             </Box>
+            {/* 🔐 RBAC : bouton Modifier masqué en consultation utilisateur */}
+            {!readOnly && (
             <Button
               size="small"
               variant="outlined"
@@ -1305,6 +1313,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             >
               Modifier
             </Button>
+            )}
           </Box>
           
           <Box sx={{ p: 3 }}>
@@ -1386,6 +1395,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
               Opérations
             </Typography>
           </Box>
+          {/* 🔐 RBAC : bouton Modifier masqué en consultation utilisateur */}
+          {!readOnly && (
           <Button
             size="small"
             variant="outlined"
@@ -1394,6 +1405,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
           >
             Modifier
           </Button>
+          )}
         </Box>
 
         <Box sx={{ p: 3 }}>
@@ -1512,6 +1524,8 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
                 Remarques
               </Typography>
             </Box>
+            {/* 🔐 RBAC : bouton Modifier masqué en consultation utilisateur */}
+            {!readOnly && (
             <Button
               size="small"
               variant="outlined"
@@ -1520,6 +1534,7 @@ const Step5Review = ({ data, setCurrentStep, onSave }) => {
             >
               Modifier
             </Button>
+            )}
           </Box>
 
           <Box sx={{ p: 3 }}>

@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+// 🔐 Phase 1 RBAC : le même wizard sert à TOUS — édition pour l'admin,
+// CONSULTATION étape par étape (lecture seule) pour les utilisateurs qui
+// téléchargent un avion communautaire (décision César 2026-08-16).
+import { useAuth } from '../../../core/contexts/AuthContext';
+import { isAdminUser } from '../../../core/auth/roles';
 import {
   Box,
   Container,
@@ -66,6 +71,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   existingAircraft = normalizeAircraftForWizard(existingAircraft);
   // Hook pour accéder au contexte des avions
   const { addAircraft, updateAircraft, setSelectedAircraft, aircraftList } = useAircraft();
+
+  // 🔐 Phase 1 RBAC : utilisateur non-admin = CONSULTATION SEULE des étapes
+  // (les champs sont figés ; l'import « Ajouter à ma liste » reste possible).
+  const { user: authUser } = useAuth();
+  const readOnlyConsult = !isAdminUser(authUser);
 
   // Vérifier s'il y a un brouillon à reprendre
   const loadDraftIfExists = () => {
@@ -1416,6 +1426,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             data={aircraftData}
             setCurrentStep={setCurrentStep}
             onSave={handleAircraftSave}
+            readOnly={readOnlyConsult}
           />
         );
       default:
@@ -1616,7 +1627,33 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
             <CircularProgress />
           </Box>
         }>
-          {renderStepContent()}
+          {/* 🔐 RBAC : consultation seule pour les non-admins sur les étapes de
+              saisie (1-6). L'étape 0 (recherche) et la Vérification finale
+              restent interactives (l'import « Ajouter à ma liste » doit
+              fonctionner) ; les boutons Modifier de la Vérification sont
+              masqués via la prop readOnly. */}
+          {readOnlyConsult && currentStep > 0 && currentStep < 7 ? (
+            <>
+              <Box sx={{
+                mb: 2, px: 2, py: 1.5,
+                border: '1px solid var(--border-subtle)',
+                borderLeft: '4px solid var(--accent-primary)',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-overlay)',
+                fontSize: 'var(--fs-body)', color: 'var(--text-secondary)'
+              }}>
+                👁 Consultation — paramètres issus du manuel de vol, en lecture
+                seule. La modification des avions est gérée par l'administrateur.
+              </Box>
+              <Box
+                component="fieldset"
+                disabled
+                sx={{ border: 'none', m: 0, p: 0, pointerEvents: 'none', opacity: 0.95 }}
+              >
+                {renderStepContent()}
+              </Box>
+            </>
+          ) : renderStepContent()}
         </React.Suspense>
       </Paper>
 

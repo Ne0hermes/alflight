@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+// 🔐 Phase 1 RBAC : la CRÉATION (import PDF) est réservée à l'admin ;
+// les utilisateurs consultent/importent depuis la base communautaire.
+import { useAuth } from '../../../../core/contexts/AuthContext';
+import { isAdminUser } from '../../../../core/auth/roles';
 import {
   Box,
   Typography,
@@ -116,6 +120,8 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
   // Extraction MANEX automatique
   const manexFileInputRef = useRef(null);
+  const { user: authUser } = useAuth();
+  const isAdmin = isAdminUser(authUser);
   const [showExtractionReview, setShowExtractionReview] = useState(false);
   const [extractionLoading, setExtractionLoading] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState(0);
@@ -792,7 +798,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             if (newInputValue === CREATE_FROM_MANEX_OPTION) return; // action, pas une valeur
             setSearchValue(newInputValue);
           }}
-          options={[...communityAircraft.map(ac => ac.registration), CREATE_FROM_MANEX_OPTION]}
+          options={[...communityAircraft.map(ac => ac.registration), ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])]}
           filterOptions={(options, state) => {
             const input = (state.inputValue || '').trim().toUpperCase();
             const matches = options.filter(
@@ -800,7 +806,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
             );
             // L'action reste TOUJOURS visible en bas — y compris quand AUCUNE
             // immatriculation ne correspond (avion absent de la base).
-            return [...matches, CREATE_FROM_MANEX_OPTION];
+            return isAdmin ? [...matches, CREATE_FROM_MANEX_OPTION] : matches;
           }}
           renderOption={(props, option) => {
             // eslint-disable-next-line no-unused-vars
@@ -1045,6 +1051,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           l'admin n'a pas à s'écrire à lui-même. La recherche par immatriculation
           ci-dessus reste le chemin pour MODIFIER un avion existant ; l'import
           PDF ci-dessous est le chemin pour CRÉER un avion neuf. */}
+      {isAdmin && (
       <Box sx={{ mt: 5, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, mt: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
           <Button
@@ -1113,6 +1120,7 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
           </Paper>
         )}
       </Box>
+      )}
 
       {/* Modal de validation des données extraites du MANEX.
           Les modifications du pilote sont persistées en temps réel dans

@@ -1,5 +1,10 @@
 // src/features/aircraft/AircraftModule.jsx
 import React, { memo, useState, useEffect, useMemo } from 'react';
+// 🔐 Phase 1 RBAC : rôle pour conditionner création (admin) vs demande par
+// e-mail (utilisateur) — décision César 2026-08-16.
+import { useAuth } from '../../core/contexts/AuthContext';
+import { isAdminUser } from '../../core/auth/roles';
+import SendManualRequestButton from './components/SendManualRequestButton';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
@@ -170,6 +175,8 @@ if (typeof window !== 'undefined') {
 }
 
 export const AircraftModule = memo(() => {
+  const { user: authUser } = useAuth();
+  const isAdmin = isAdminUser(authUser);
   const aircraftContext = useAircraft();
   const { getSymbol, format, getUnit, convert } = useUnits();
 
@@ -1782,7 +1789,7 @@ export const AircraftModule = memo(() => {
             const found = allPresets.find((p) => p.registration === newValue);
             setSelectedPreset(found || null);
           }}
-          options={[...communityPresetsNotLocal.map((p) => p.registration), CREATE_FROM_MANEX_OPTION]}
+          options={[...communityPresetsNotLocal.map((p) => p.registration), ...(isAdmin ? [CREATE_FROM_MANEX_OPTION] : [])]}
           filterOptions={(options, state) => {
             const input = (state.inputValue || '').trim().toUpperCase();
             const matches = options.filter(
@@ -1790,7 +1797,7 @@ export const AircraftModule = memo(() => {
             );
             // L'action reste TOUJOURS visible en bas — y compris quand AUCUNE
             // immatriculation ne correspond (avion absent de la base).
-            return [...matches, CREATE_FROM_MANEX_OPTION];
+            return isAdmin ? [...matches, CREATE_FROM_MANEX_OPTION] : matches;
           }}
           renderOption={(props, option) => {
             // eslint-disable-next-line no-unused-vars
@@ -2649,9 +2656,14 @@ export const AircraftModule = memo(() => {
               >
                 {searchQuery
                   ? `Aucun avion ne correspond à « ${searchQuery} ».`
-                  : 'Aucun avion enregistré. Ajoutez votre premier aéronef pour commencer.'}
+                  : isAdmin
+                    ? 'Aucun avion enregistré. Ajoutez votre premier aéronef pour commencer.'
+                    : 'Vous ne trouvez pas votre avion dans la base communautaire ? Envoyez-nous son manuel de vol — nous créerons sa fiche.'}
               </p>
-              {!searchQuery && (
+              {/* 🔐 RBAC : l'admin crée (wizard) ; l'utilisateur demande l'ajout
+                  par formulaire e-mail (assistance@alflight.fr). La recherche
+                  communautaire au-dessus reste son chemin n°1 pour importer. */}
+              {!searchQuery && (isAdmin ? (
                 <EditorialButton
                   variant="primary"
                   size="md"
@@ -2663,7 +2675,9 @@ export const AircraftModule = memo(() => {
                   <Plus size={14} aria-hidden="true" />
                   Nouvel avion
                 </EditorialButton>
-              )}
+              ) : (
+                <SendManualRequestButton />
+              ))}
             </div>
           </div>
         )}
