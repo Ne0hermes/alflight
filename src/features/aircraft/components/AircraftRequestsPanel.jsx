@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper, Wand2, MapPin, X, Camera } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
+import './AircraftRequestsPanel.css';
 import { storeRequestHandoff, getRequestContext, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
 // Clé de « dernier statut vu » (partitionnée par compte via accountDataIsolation)
@@ -160,7 +161,7 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
             onClick={() => setJustProcessed([])}
             aria-label="Fermer la notification"
             title="Fermer"
-            style={dismissBtn}
+            className="alf-req-btn alf-req-dismiss" style={dismissBtn}
           >
             <X size={14} />
           </button>
@@ -208,7 +209,7 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                   onClick={() => hideRequest(req.id)}
                   aria-label="Masquer cette notification"
                   title="Masquer"
-                  style={{ ...dismissBtn, marginLeft: 'auto' }}
+                  className="alf-req-btn alf-req-dismiss" style={{ ...dismissBtn, marginLeft: 'auto' }}
                 >
                   <X size={14} />
                 </button>
@@ -216,12 +217,12 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
               {isAdmin && (
                 <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '6px' }}>
                   <button type="button" onClick={() => openStoragePath(req.id, req.file_path)} disabled={busyId === req.id}
-                    style={adminBtn('neutral')}>
+                    className="alf-req-btn" style={adminBtn('neutral')}>
                     <Download size={13} /> Manuel
                   </button>
                   {req.photo_path && (
                     <button type="button" onClick={() => openStoragePath(req.id, req.photo_path)} disabled={busyId === req.id}
-                      style={adminBtn('neutral')}>
+                      className="alf-req-btn" style={adminBtn('neutral')}>
                       <Camera size={13} /> Photo
                     </button>
                   )}
@@ -233,11 +234,11 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                           l'assistant clôture la demande (« Traitée ») ; plus
                           aucun bouton ne peut valider sans fiche réelle. */}
                       <button type="button" onClick={() => storeRequestHandoff(req)} disabled={busyId === req.id}
-                        style={adminBtn('violet')}>
+                        className="alf-req-btn" style={adminBtn('violet')}>
                         <Wand2 size={13} /> Créer la fiche
                       </button>
                       <button type="button" onClick={() => setStatus(req, 'rejected')} disabled={busyId === req.id}
-                        style={adminBtn('red')}>
+                        className="alf-req-btn" style={adminBtn('red')}>
                         <XCircle size={13} /> Refuser
                       </button>
                     </>
@@ -248,7 +249,7 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                       onClick={() => hideRequest(req.id)}
                       aria-label="Masquer cette notification"
                       title="Masquer"
-                      style={dismissBtn}
+                      className="alf-req-btn alf-req-dismiss" style={dismissBtn}
                     >
                       <X size={14} />
                     </button>
@@ -267,16 +268,12 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
 // couleur pleine juraient sur les lignes déjà teintées par le statut (fond
 // orange, texte noir, illisible). Nouvelle règle commune : fond TRANSLUCIDE,
 // fin trait grisé identique à celui de la notification, écriture blanche.
-const BTN_BASE = {
-  display: 'inline-flex', alignItems: 'center', gap: '4px',
-  padding: '5px 9px', borderRadius: 'var(--radius-sm)',
-  border: '1px solid rgba(255, 255, 255, 0.35)', // fin liseré, visible sur toute teinte
-  // ⚠️ Couleur FORCÉE : sans !important-like (style inline prioritaire), un
-  // héritage de la ligne teintée rendait le libellé sombre et illisible.
-  color: '#ffffff', fontWeight: 600,
-  fontSize: 'var(--fs-caption)', cursor: 'pointer',
-  lineHeight: 1.2, whiteSpace: 'nowrap'
-};
+// ⚠️ AUDIT 16/08 : la mise en forme de ces boutons vit dans le CSS voisin, PAS
+// ici. La règle globale « button:not(.MuiButtonBase-root) { … !important } »
+// (src/styles/unified-styles.css) écrase tout style en ligne — c'est ce qui
+// donnait le fond orange à écriture sombre. Seule la TEINTE est passée en
+// ligne, via une variable que la feuille de style consomme.
+const btnStyle = (tint = 'neutral') => ({ '--alf-btn-bg': TINTS[tint] || TINTS.neutral });
 
 // Teintes translucides — opacité RELEVÉE (retour César 16/08) : à 35 %, la
 // teinte de statut de la ligne (orange « En attente ») traversait le bouton,
@@ -289,17 +286,7 @@ const TINTS = {
   green: 'rgba(4, 120, 87, 0.85)',
 };
 
-const adminBtn = (tint = 'neutral') => ({
-  ...BTN_BASE,
-  backgroundColor: TINTS[tint] || TINTS.neutral,
-});
-
-// Croix de masquage : carrée, même trait fin grisé, fond gris translucide.
-const dismissBtn = {
-  ...BTN_BASE,
-  justifyContent: 'center',
-  width: '26px', height: '26px', padding: 0, gap: 0,
-  backgroundColor: TINTS.neutral,
-};
+const adminBtn = btnStyle;
+const dismissBtn = btnStyle('neutral');
 
 export default AircraftRequestsPanel;

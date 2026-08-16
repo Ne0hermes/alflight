@@ -1,0 +1,70 @@
+/* AircraftRequestsPanel.css
+   ==========================================================================
+   🎨 BOUTONS DE LA BOÎTE « DEMANDES D'AJOUT » — échappatoire au style global
+   --------------------------------------------------------------------------
+   AUDIT (16/08, demande César) : les styles en ligne du composant étaient
+   IGNORÉS. Cause : la règle globale de src/styles/unified-styles.css
+       button:not(.MuiButtonBase-root) { background/color/border … !important }
+   impose à TOUT bouton non-MUI le fond et le texte de la charte (d'où le
+   « fond orange, écriture noire »), et va jusqu'à forcer
+       button svg { color/fill: var(--button-text) !important }
+   ce qui REMPLIT les icônes au trait (lucide) — elles deviennent des taches.
+   Un style inline ne peut pas battre un !important : il faut du CSS.
+
+   La classe est volontairement RÉPÉTÉE dans le sélecteur
+   (button.alf-req-btn.alf-req-btn) pour dépasser la spécificité de la règle
+   globale quel que soit l'ordre d'import des feuilles de style.
+   La teinte est fournie par la variable --alf-btn-bg, posée en ligne par le
+   composant (gris / violet / vert / rouge translucides).
+   ========================================================================== */
+
+button.alf-req-btn.alf-req-btn {
+  background: var(--alf-btn-bg) !important;
+  background-color: var(--alf-btn-bg) !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 5px 9px !important;
+  min-height: 0 !important;
+  font-size: var(--fs-caption) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  cursor: pointer !important;
+  transition: filter 0.15s ease !important;
+}
+
+button.alf-req-btn.alf-req-btn:hover:not(:disabled) {
+  background: var(--alf-btn-bg) !important;
+  background-color: var(--alf-btn-bg) !important;
+  filter: brightness(1.15) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+button.alf-req-btn.alf-req-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Icônes au trait : la règle globale les REMPLIT (fill), ce qui les rend
+   illisibles. On restaure le tracé blanc sans remplissage. */
+button.alf-req-btn.alf-req-btn svg {
+  color: #ffffff !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  flex: none;
+}
+
+/* Variante carrée : la croix de masquage */
+button.alf-req-btn.alf-req-dismiss.alf-req-dismiss {
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  gap: 0 !important;
+}
