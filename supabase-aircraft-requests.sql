@@ -90,7 +90,15 @@ revoke all on function public.aircraft_request_pending(text) from public;
 revoke execute on function public.aircraft_request_pending(text) from anon;
 grant execute on function public.aircraft_request_pending(text) to authenticated;
 
--- 6. Vérification
+-- 6. BASE D'ATTACHE (2026-08-16) : remplace « constructeur / modèle » dans le
+--    formulaire — le demandeur indique son aéroclub/aérodrome, la fiche du
+--    wizard récupère directement l'OACI. Idempotent.
+alter table public.aircraft_requests add column if not exists home_base text;
+
+-- 7. Vérification
 select 'aircraft_requests' as verif, count(*) as policies
   from pg_policies where tablename = 'aircraft_requests';
 select id, public, file_size_limit from storage.buckets where id = 'aircraft-requests';
+select column_name from information_schema.columns
+  where table_schema = 'public' and table_name = 'aircraft_requests'
+  order by ordinal_position;

@@ -151,6 +151,14 @@ const MobileApp = () => {
     };
     window.addEventListener('profile-configured', handleProfileConfigured);
 
+    // 🧭 Navigation programmée entre modules (ex. « Créer la fiche » depuis la
+    // boîte des demandes d'ajout → onglet Configurer un avion).
+    const handleNavigateTab = (e) => {
+      const tabId = e?.detail?.tabId;
+      if (tabId) handleNavigate(tabId);
+    };
+    window.addEventListener('navigate-to-tab', handleNavigateTab);
+
     // Check if mobile / tablette : breakpoint 1024px pour que tablettes en
     // mode portrait (768-1024) bénéficient aussi du menu burger (la TabNav
     // horizontale est cramée par 8-12 onglets sur une tablette portrait).
@@ -165,6 +173,7 @@ const MobileApp = () => {
       window.removeEventListener('resize', checkMobile);
       window.removeEventListener('navigate-to-home', handleNavigateHome);
       window.removeEventListener('profile-configured', handleProfileConfigured);
+      window.removeEventListener('navigate-to-tab', handleNavigateTab);
     };
   }, [activeTab]); // 🔧 Ajouter activeTab pour charger backup/migration quand on quitte landing
 

@@ -12,11 +12,18 @@
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper } from 'lucide-react';
+import { Inbox, Download, CheckCircle, XCircle, Clock, PartyPopper, Wand2, MapPin, X } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
+import { storeRequestHandoff } from '../services/aircraftRequestWorkflow';
 
 // Clé de « dernier statut vu » (partitionnée par compte via accountDataIsolation)
 const SEEN_KEY = 'aircraftRequestsSeen';
+// Notifications masquées d'une croix (César 16/08) — ids de demandes cachés
+// LOCALEMENT (la ligne reste en base) ; partitionnée par compte elle aussi.
+const HIDDEN_KEY = 'aircraftRequestsHidden';
+const readHiddenIds = () => {
+  try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch { return []; }
+};
 
 const STATUS_UI = {
   pending:   { label: 'En attente de traitement', color: '#b45309', bg: 'rgba(242,105,33,0.10)', Icon: Clock },
@@ -28,6 +35,13 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
   const [requests, setRequests] = useState(null); // null = chargement
   const [justProcessed, setJustProcessed] = useState([]); // notifications
   const [busyId, setBusyId] = useState(null);
+  const [hiddenIds, setHiddenIds] = useState(readHiddenIds);
+
+  const hideRequest = (id) => {
+    const next = [...new Set([...hiddenIds, id])];
+    setHiddenIds(next);
+    try { localStorage.setItem(HIDDEN_KEY, JSON.stringify(next)); } catch { /* best effort */ }
+  };
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -104,8 +118,13 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
   };
 
   if (requests === null) return null;             // chargement silencieux
-  if (!isAdmin && requests.length === 0 && justProcessed.length === 0) return null;
-  if (isAdmin && requests.length === 0) return null; // rien à traiter → discret
+
+  // Notifications masquées à la croix : filtrées de l'affichage (base intacte)
+  const visibleRequests = requests.filter((r) => !hiddenIds.includes(r.id));
+  const visibleProcessed = justProcessed.filter((r) => !hiddenIds.includes(r.id));
+
+  if (!isAdmin && visibleRequests.length === 0 && visibleProcessed.length === 0) return null;
+  if (isAdmin && visibleRequests.length === 0) return null; // rien à traiter → discret
 
   return (
     <div style={{
@@ -115,11 +134,11 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
     }}>
       <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: '10px' }}>
         <Inbox size={16} />
-        {isAdmin ? `Demandes d'ajout reçues (${requests.length})` : 'Mes demandes d\'ajout'}
+        {isAdmin ? `Demandes d'ajout reçues (${visibleRequests.length})` : 'Mes demandes d\'ajout'}
       </h4>
 
       {/* 🔔 Bannière utilisateur : avion(s) fraîchement ajouté(s) */}
-      {!isAdmin && justProcessed.length > 0 && (
+      {!isAdmin && visibleProcessed.length > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           padding: '10px 12px', marginBottom: '10px',
@@ -128,15 +147,24 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
         }}>
           <PartyPopper size={18} color="#065f46" />
           <span>
-            <strong>{justProcessed.map((r) => r.registration).join(', ')}</strong>
-            {justProcessed.length > 1 ? ' ont été ajoutés' : ' a été ajouté'} à la base
-            communautaire — importez-{justProcessed.length > 1 ? 'les' : 'le'} depuis la recherche ci-dessus !
+            <strong>{visibleProcessed.map((r) => r.registration).join(', ')}</strong>
+            {visibleProcessed.length > 1 ? ' ont été ajoutés' : ' a été ajouté'} à la base
+            communautaire — importez-{visibleProcessed.length > 1 ? 'les' : 'le'} depuis la recherche ci-dessus !
           </span>
+          <button
+            type="button"
+            onClick={() => setJustProcessed([])}
+            aria-label="Fermer la notification"
+            title="Fermer"
+            style={dismissBtn}
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {requests.map((req) => {
+        {visibleRequests.map((req) => {
           const ui = STATUS_UI[req.status] || STATUS_UI.pending;
           const Icon = ui.Icon;
           return (
@@ -146,6 +174,11 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
               backgroundColor: ui.bg, border: '1px solid var(--border-subtle)'
             }}>
               <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{req.registration}</strong>
+              {req.home_base && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: 'var(--text-secondary)', fontSize: 'var(--fs-caption)' }}>
+                  <MapPin size={12} /> {req.home_base}
+                </span>
+              )}
               {req.manufacturer_model && (
                 <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--fs-caption)' }}>{req.manufacturer_model}</span>
               )}
@@ -161,6 +194,18 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                 </span>
               )}
 
+              {/* ✖ Masquer la notification (les deux rôles) — la demande reste en base */}
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => hideRequest(req.id)}
+                  aria-label="Masquer cette notification"
+                  title="Masquer"
+                  style={{ ...dismissBtn, marginLeft: 'auto' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
               {isAdmin && (
                 <span style={{ marginLeft: 'auto', display: 'inline-flex', gap: '6px' }}>
                   <button type="button" onClick={() => downloadManual(req)} disabled={busyId === req.id}
@@ -169,6 +214,13 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                   </button>
                   {req.status === 'pending' && (
                     <>
+                      {/* 🪄 Lance le wizard pré-rempli : immat + base d'attache de la
+                          demande, extraction automatique du manuel téléversé. La
+                          sauvegarde finale clôturera la demande (processed). */}
+                      <button type="button" onClick={() => storeRequestHandoff(req)} disabled={busyId === req.id}
+                        style={adminBtn('#7c3aed')}>
+                        <Wand2 size={13} /> Créer la fiche
+                      </button>
                       <button type="button" onClick={() => setStatus(req, 'processed')} disabled={busyId === req.id}
                         style={adminBtn('#10b981')}>
                         <CheckCircle size={13} /> Traitée
@@ -179,6 +231,15 @@ const AircraftRequestsPanel = ({ isAdmin }) => {
                       </button>
                     </>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => hideRequest(req.id)}
+                    aria-label="Masquer cette notification"
+                    title="Masquer"
+                    style={dismissBtn}
+                  >
+                    <X size={14} />
+                  </button>
                 </span>
               )}
             </div>
@@ -195,5 +256,13 @@ const adminBtn = (bg) => ({
   backgroundColor: bg, color: '#ffffff', fontWeight: 600,
   fontSize: 'var(--fs-caption)', cursor: 'pointer'
 });
+
+// Croix de masquage : discrète, même hauteur que les boutons d'action
+const dismissBtn = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: '26px', height: '26px', padding: 0,
+  borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)',
+  backgroundColor: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer'
+};
 
 export default AircraftRequestsPanel;

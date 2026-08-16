@@ -31,7 +31,8 @@ import {
   HowToVote as VoteIcon,
   Group as GroupIcon,
   MenuBook as ManualIcon,
-  VerifiedUser as AdminIcon
+  VerifiedUser as AdminIcon,
+  DeleteForever as DeleteForeverIcon
 } from '@mui/icons-material';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import communityService from '../../../../services/communityService';
@@ -41,6 +42,7 @@ import { AutoAwesome as AutoAwesomeIcon } from '@mui/icons-material';
 import { extractCompleteManexData } from '../../services/manexExtractionService';
 import { mapExtractionToReviewItems, buildBulkUpdatePayload } from '../../utils/manexExtractionMapper';
 import ManexExtractionReview from '../ManexExtractionReview';
+import { consumeRequestPrefill, downloadRequestManual } from '../../services/aircraftRequestWorkflow';
 
 /**
  * 🛡️ ANTI-RE-TÉLÉCHARGEMENT DE L'ANNEXE (MANEX)
@@ -101,7 +103,7 @@ async function findLocalManex({ registration, communityPresetId, expectedPath })
 // de la section « Votre avion n'est pas dans la liste ? » plus bas dans la page.
 const CREATE_FROM_MANEX_OPTION = '__create_from_manex__';
 
-const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel, manexReviewTrigger }) => {
+const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onComplete, onCancel, manexReviewTrigger, onGoToReview }) => {
   const [searchValue, setSearchValue] = useState(data.searchRegistration || '');
   const [isLoading, setIsLoading] = useState(false);
   const [communityAircraft, setCommunityAircraft] = useState([]);
@@ -162,9 +164,52 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
     }
   }, [manexReviewTrigger]);
 
+  // ─── 📥 « Créer la fiche » depuis une demande d'ajout (admin) ─────────────
+  // Consomme le témoin déposé par AircraftRequestsPanel : pré-remplit
+  // immatriculation + base d'attache, télécharge le manuel téléversé par le
+  // demandeur (bucket privé) et lance la même extraction que l'import PDF.
+  // Couvre les 2 chemins : wizard monté après changement d'onglet (effet au
+  // montage) et Step0 déjà affiché (événement aircraft-request-prefill).
+  const requestPrefillRef = useRef(null);
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    let cancelled = false;
+    const applyRequestPrefill = async () => {
+      const prefill = consumeRequestPrefill();
+      if (!prefill) return;
+      requestPrefillRef.current = prefill;
+      const seed = {};
+      if (prefill.registration) seed.registration = prefill.registration;
+      if (prefill.homeBase) seed.homeBase = prefill.homeBase;
+      if (Object.keys(seed).length && updateDataBulk) updateDataBulk(seed);
+      if (prefill.filePath) {
+        try {
+          const file = await downloadRequestManual(prefill.filePath, prefill.fileName);
+          if (!cancelled) await processManexFile(file);
+        } catch (e) {
+          if (!cancelled) {
+            setExtractionError(`Manuel de la demande inaccessible : ${e?.message || e}`);
+          }
+        }
+      }
+    };
+    applyRequestPrefill();
+    window.addEventListener('aircraft-request-prefill', applyRequestPrefill);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('aircraft-request-prefill', applyRequestPrefill);
+    };
+  }, [isAdmin]);
+
   const handleManexFileSelected = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    await processManexFile(file);
+  };
+
+  // Flux d'extraction MANEX : appelé par l'input fichier ET par le
+  // pré-remplissage automatique depuis une demande d'ajout (« Créer la fiche »).
+  const processManexFile = async (file) => {
     if (file.type !== 'application/pdf') {
       setExtractionError('Le fichier doit être un PDF');
       return;
@@ -238,6 +283,11 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
 
   const handleApplyExtraction = () => {
     const payload = buildBulkUpdatePayload(extractionItems);
+    // 📥 Fiche issue d'une demande d'ajout : l'immatriculation et la base
+    // d'attache SAISIES PAR LE DEMANDEUR font foi sur ce que le PDF contient.
+    const pre = requestPrefillRef.current;
+    if (pre?.registration) payload.registration = pre.registration;
+    if (pre?.homeBase) payload.homeBase = pre.homeBase;
     if (updateDataBulk) {
       updateDataBulk(payload);
     } else if (updateData) {
@@ -274,6 +324,38 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
       updateData('searchRegistration', '');
     }
   }, [data.searchRegistration, communityAircraft]);
+
+  // 🔐 ADMIN — Suppression DÉFINITIVE d'une fiche de la base communautaire
+  // (demande César 16/08). Confirmation par re-saisie de l'immatriculation :
+  // action irréversible pour TOUS les utilisateurs (les avions déjà importés
+  // localement chez les pilotes ne sont pas touchés).
+  const handleAdminDeletePreset = async () => {
+    if (!selectedAircraft?.id) return;
+    const reg = String(selectedAircraft.registration || '').trim();
+    const typed = window.prompt(
+      `⚠️ SUPPRESSION DÉFINITIVE de ${reg} de la base communautaire.\n\n` +
+      `La fiche et son manuel de vol seront retirés pour TOUS les utilisateurs ` +
+      `(leurs copies déjà importées restent en local).\n\n` +
+      `Pour confirmer, tapez l'immatriculation :`
+    );
+    if (typed === null) return; // annulé
+    if (typed.trim().toUpperCase() !== reg.toUpperCase()) {
+      alert('Immatriculation saisie différente — suppression annulée.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await communityService.adminDeletePresetCompletely(selectedAircraft.id, reg);
+      setSelectedAircraft(null);
+      setSearchValue('');
+      setNotificationMessage(`${reg} a été supprimé définitivement de la base communautaire.`);
+      setShowSuccessNotification(true);
+      await loadCommunityAircraft();
+    } catch (e) {
+      alert(`Suppression impossible : ${e?.message || e}`);
+      setIsLoading(false);
+    }
+  };
 
   const loadCommunityAircraft = async () => {
     setIsLoading(true);
@@ -640,6 +722,15 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
     }
 
     setIsImporting(false);
+
+    // 🔐 UTILISATEUR STANDARD (décision César 16/08) : accès DIRECT à l'étape
+    // Vérification — la fiche complète de l'avion, lisible et consultable.
+    // Les étapes intermédiaires figées ne permettaient qu'une consultation
+    // « aveugle » (menus déroulants et tableaux inertes sous pointerEvents:none).
+    if (!isAdmin && onGoToReview) {
+      onGoToReview();
+      return;
+    }
 
     // Passer directement à l'étape suivante du wizard
     if (onSkip) onSkip();
@@ -1039,6 +1130,46 @@ const Step0CommunityCheck = ({ data, updateData, updateDataBulk, onSkip, onCompl
                   </Box>
                 </Box>
               </Paper>
+
+              {/* 🔐 ADMIN — suppression définitive de la fiche communautaire */}
+              {isAdmin && (
+                <Paper
+                  component="button"
+                  type="button"
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    width: '100%',
+                    textAlign: 'left',
+                    font: 'inherit',
+                    bgcolor: 'rgba(220, 38, 38, 0.06)',
+                    border: '1px solid',
+                    borderColor: 'var(--color-red-critical)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    '&:hover': {
+                      bgcolor: 'rgba(220, 38, 38, 0.14)'
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid var(--color-red-critical)',
+                      outlineOffset: '2px'
+                    }
+                  }}
+                  onClick={handleAdminDeletePreset}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <DeleteForeverIcon sx={{ color: 'var(--color-red-critical)' }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="subtitle2" fontWeight="bold" sx={{ color: 'var(--color-red-critical)' }}>
+                        Supprimer définitivement de la base
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Retire la fiche et son manuel pour tous les utilisateurs — confirmation par immatriculation
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              )}
             </Box>
           </Paper>
         )}

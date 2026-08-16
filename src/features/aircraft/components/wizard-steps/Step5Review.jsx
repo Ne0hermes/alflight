@@ -35,7 +35,8 @@ import {
   ThumbDown as ThumbDownIcon,
   // 🔧 FIX 2026-08-16 : manquait — <CloudUploadIcon> était utilisé ligne ~1965
   // (carte « Soumettre à la communauté ») sans import → ReferenceError au rendu.
-  CloudUpload as CloudUploadIcon
+  CloudUpload as CloudUploadIcon,
+  ReportProblem as ReportProblemIcon
 } from '@mui/icons-material';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import SpeedLimitationChart from '../SpeedLimitationChart';
@@ -46,6 +47,54 @@ import { useUnitsStore } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical, toUserUnit } from '@utils/unitsDisplay';
 import { convertMoment } from '../../utils/mbUnits';
+
+// ─── Libellés FR compréhensibles des tableaux de performances ───────────────
+// Demande César 16/08 : « takeoff_ground_roll » ne parle à personne. Basés sur
+// le catalogue abac (graphTypes.ts) + variantes volets (operationCatalog.ts).
+const PERF_OPERATION_LABELS = {
+  takeoff_ground_roll: 'Décollage — distance de roulage',
+  takeoff_50ft: 'Décollage — distance passage 50 ft (15 m)',
+  accelerate_stop: 'Distance accélération-arrêt',
+  takeoff_climb_speed: 'Vitesse de montée initiale au décollage',
+  landing_ground_roll: 'Atterrissage — distance de roulage',
+  landing_50ft: 'Atterrissage — distance passage 50 ft (15 m)',
+  landing_approach_speed: 'Vitesse d\'approche',
+  climb_rate: 'Taux de montée',
+  climb_gradient: 'Pente de montée',
+  time_fuel_distance_to_climb: 'Montée — temps / carburant / distance',
+  service_ceiling: 'Plafond de service',
+  cruise_performance: 'Performance de croisière',
+  cruise_tas: 'Croisière — vitesse vraie (TAS)',
+  range: 'Distance franchissable',
+  endurance: 'Endurance',
+  descent_rate: 'Taux de descente',
+  glide_performance: 'Performance de plané',
+  fuel_flow: 'Débit carburant',
+  fuel_consumption: 'Consommation totale',
+  crosswind_limits: 'Limites de vent traversier'
+};
+const PERF_FLAP_LABELS = {
+  landing: 'volets atterrissage',
+  takeoff: 'volets décollage',
+  up: 'volets rentrés',
+  approach: 'volets approche'
+};
+const perfTableLabel = (table, index) => {
+  const opId = String(table.operationId || table.table_type || '');
+  const flapMatch = opId.match(/^(.*?)_flaps_(landing|takeoff|up|approach)$/);
+  const baseId = flapMatch ? flapMatch[1] : opId;
+  const base = PERF_OPERATION_LABELS[baseId];
+  if (base) return flapMatch ? `${base} (${PERF_FLAP_LABELS[flapMatch[2]]})` : base;
+  return table.table_name || `Tableau ${index + 1}`;
+};
+// Libellés des colonnes d'entrée des tableaux (clés issues de l'extraction IA)
+const PERF_COLUMN_LABELS = {
+  Altitude: 'Altitude pression (ft)',
+  Temperature: 'Température (°C)',
+  Masse: 'Masse (kg)',
+  Vent: 'Vent (kt)',
+  value: 'Valeur'
+};
 
 const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   // Récupérer les préférences d'unités de l'utilisateur
@@ -961,104 +1010,162 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
           return Number.isFinite(x) ? `${Math.round(x * 100) / 100} ${mU}` : '—';
         };
 
-        // Construire dynamiquement la liste de TOUS les champs M&C
-        const weightBalanceFields = [
-          // ─── Masse à vide (trio masse/bras/moment) ───
+        // ─── Refonte lisibilité (César 16/08) : tableaux par thème au lieu
+        // d'une liste à plat de ~30 paires libellé/valeur indigestes. ───────
+
+        // 1. Masses limites (grille de synthèse)
+        const masses = [
           { label: 'Masse à vide', value: fmtW(data.weights?.emptyWeight) },
-          { label: 'Bras à vide', value: fmtA(data.arms?.empty) },
-          { label: 'Moment à vide', value: fmtM(data.moments?.empty) },
-
-          // ─── Masses limites (MZFW retiré : peu utile en aviation générale) ─
-          { label: 'MTOW', value: fmtW(data.weights?.mtow) },
-          { label: 'MLW', value: fmtW(data.weights?.mlw) },
-          { label: 'Masse min de vol', value: fmtW(data.weights?.minTakeoffWeight) },
-
-          // ─── Carburant total (somme calculée des réservoirs ci-dessous) ──
-          { label: 'Capacité totale carburant', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) },
-
-          // ─── Sièges (bras de levier uniquement — moment dépend du passager) ───
-          { label: 'Bras sièges avant', value: fmtA(data.arms?.frontSeats) },
-          { label: 'Bras sièges arrière', value: fmtA(data.arms?.rearSeats) }
+          { label: 'Masse max au décollage (MTOW)', value: fmtW(data.weights?.mtow) },
+          { label: 'Masse max à l\'atterrissage (MLW)', value: fmtW(data.weights?.mlw) },
+          { label: 'Masse minimale de vol', value: fmtW(data.weights?.minTakeoffWeight) },
+          { label: 'Capacité carburant totale', value: formatCanonical(data.fuelCapacity, 'fuel', units, { both: true }) }
         ];
 
-        // ─── Tous les réservoirs (principal, ailes, optionnels…) ───
-        // Refonte : le « principal » est désormais juste un type au même
-        // niveau que les autres, dans additionalFuelTanks.
-        if (data.additionalFuelTanks && data.additionalFuelTanks.length > 0) {
-          data.additionalFuelTanks.forEach((tank, idx) => {
-            const label = tank.name || `Réservoir ${idx + 1}`;
-            weightBalanceFields.push(
-              { label: `${label} — capacité`, value: formatCanonical(tank.capacity, 'fuel', units, { both: true }) },
-              { label: `${label} — bras`, value: fmtA(tank.arm) },
-              { label: `${label} — moment (plein)`, value: fmtM(tank.momentAtFull) }
-            );
-          });
-        }
+        // 2. Postes de chargement (masse à vide, sièges, bagages)
+        const loadingRows = [
+          { poste: 'Masse à vide (avion équipé)', bras: fmtA(data.arms?.empty), limite: fmtW(data.weights?.emptyWeight), moment: fmtM(data.moments?.empty) },
+          { poste: 'Sièges avant', bras: fmtA(data.arms?.frontSeats), limite: '—', moment: '—' },
+          { poste: 'Sièges arrière', bras: fmtA(data.arms?.rearSeats), limite: '—', moment: '—' },
+          ...(data.additionalSeats || []).map((seat, idx) => ({
+            poste: seat.name || `Siège ${idx + 3}`, bras: fmtA(seat.arm), limite: '—', moment: '—'
+          })),
+          ...(data.baggageCompartments || []).map((comp, idx) => ({
+            poste: comp.name || `Compartiment bagages ${idx + 1}`,
+            bras: fmtA(comp.arm), limite: fmtW(comp.maxWeight), moment: fmtM(comp.momentMax)
+          }))
+        ];
 
-        // ─── Sièges additionnels (bras seul) ───
-        if (data.additionalSeats && data.additionalSeats.length > 0) {
-          data.additionalSeats.forEach((seat, idx) => {
-            const label = seat.name || `Siège ${idx + 3}`;
-            weightBalanceFields.push(
-              { label: `${label} — bras`, value: fmtA(seat.arm) }
-            );
-          });
-        }
+        // 3. Réservoirs (le « principal » est un type parmi additionalFuelTanks)
+        const tankRows = (data.additionalFuelTanks || []).map((tank, idx) => ({
+          poste: tank.name || `Réservoir ${idx + 1}`,
+          capacite: formatCanonical(tank.capacity, 'fuel', units, { both: true }),
+          bras: fmtA(tank.arm),
+          moment: fmtM(tank.momentAtFull)
+        }));
 
-        // ─── Compartiments bagages (trio par compartiment) ───
-        if (data.baggageCompartments && data.baggageCompartments.length > 0) {
-          data.baggageCompartments.forEach((comp, idx) => {
-            const label = comp.name || `Compartiment ${idx + 1}`;
-            weightBalanceFields.push(
-              { label: `${label} — masse max`, value: fmtW(comp.maxWeight) },
-              { label: `${label} — bras`, value: fmtA(comp.arm) },
-              { label: `${label} — moment max`, value: fmtM(comp.momentMax) }
-            );
-          });
-        }
-
-        // ─── Enveloppe CG ───
-        if (data.cgEnvelope?.forwardPoints && data.cgEnvelope.forwardPoints.length > 0) {
-          data.cgEnvelope.forwardPoints.forEach((pt, idx) => {
-            weightBalanceFields.push(
-              { label: `Forward #${idx + 1} — masse`, value: fmtW(pt.weight) },
-              { label: `Forward #${idx + 1} — CG`, value: fmtA(pt.cg) },
-              { label: `Forward #${idx + 1} — moment`, value: fmtM(pt.moment) }
-            );
-          });
-        }
-        // Enveloppe arrière (2 points indépendants avec CG/moment propres)
+        // 4. Enveloppe de centrage (points avant + limites arrière)
         const legacyAftCG = data.cgEnvelope?.aftCG;
-        weightBalanceFields.push(
-          { label: 'Aft point bas — masse min', value: fmtW(data.cgEnvelope?.aftMinWeight) },
-          { label: 'Aft point bas — CG', value: fmtA(data.cgEnvelope?.aftMinCG || legacyAftCG) },
-          { label: 'Aft point bas — moment', value: fmtM(data.cgEnvelope?.aftMinMoment) },
-          { label: 'Aft point haut — masse max', value: fmtW(data.cgEnvelope?.aftMaxWeight) },
-          { label: 'Aft point haut — CG', value: fmtA(data.cgEnvelope?.aftMaxCG || legacyAftCG) },
-          { label: 'Aft point haut — moment', value: fmtM(data.cgEnvelope?.aftMaxMoment) }
+        const envelopeRows = [
+          ...(data.cgEnvelope?.forwardPoints || []).map((pt, idx) => ({
+            point: `Limite avant — point ${idx + 1}`,
+            masse: fmtW(pt.weight), cg: fmtA(pt.cg), moment: fmtM(pt.moment)
+          })),
+          { point: 'Limite arrière — masse min', masse: fmtW(data.cgEnvelope?.aftMinWeight), cg: fmtA(data.cgEnvelope?.aftMinCG || legacyAftCG), moment: fmtM(data.cgEnvelope?.aftMinMoment) },
+          { point: 'Limite arrière — masse max', masse: fmtW(data.cgEnvelope?.aftMaxWeight), cg: fmtA(data.cgEnvelope?.aftMaxCG || legacyAftCG), moment: fmtM(data.cgEnvelope?.aftMaxMoment) }
+        ];
+
+        const wbHeadSx = { fontWeight: 600, whiteSpace: 'nowrap', bgcolor: 'var(--bg-overlay)' };
+        const wbTable = (headers, rows, renderRow) => (
+          <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  {headers.map((h) => <TableCell key={h} sx={wbHeadSx}>{h}</TableCell>)}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rows.map((row, i) => (
+                  <TableRow key={i}>{renderRow(row)}</TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        );
+        const wbSubTitle = (txt) => (
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>{txt}</Typography>
         );
 
-        return renderSection(
-          'Masse et centrage',
-          <ScaleIcon color="primary" />,
-          2,
-          weightBalanceFields,
-          hasCGData ? (
-            <Box sx={{
-              p: 2,
-              bgcolor: 'var(--bg-raised)',
-              borderRadius: '8px',
-              border: '1px solid',
-              borderColor: 'divider'
-            }}>
-              {/* Double graphique CG + Moment côte à côte */}
-              <CGEnvelopeDualChart
-                cgEnvelope={cgEnvelopeData}
-                massUnit={wU}
-                armUnit={aU}
-              />
+        return (
+          <Paper elevation={0} sx={{ mb: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+            <Box sx={{ p: 2, bgcolor: 'var(--bg-raised)', display: 'flex', flexDirection: 'column', gap: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <ScaleIcon color="primary" />
+                <Typography variant="h6" fontWeight={600}>Masse et centrage</Typography>
+              </Box>
+              {!readOnly && (
+                <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => setCurrentStep(2)} sx={{ alignSelf: 'flex-start' }}>
+                  Modifier
+                </Button>
+              )}
             </Box>
-          ) : null
+            <Box sx={{ p: 3 }}>
+              {/* Masses limites */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                {masses.map((item, index) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
+                      {item.label}
+                    </Typography>
+                    <Typography variant="body1" fontWeight={500}>{item.value}</Typography>
+                  </Grid>
+                ))}
+              </Grid>
+
+              {wbSubTitle('Postes de chargement')}
+              {wbTable(
+                ['Poste', `Bras (${aU})`, 'Masse / limite', `Moment (${mU})`],
+                loadingRows,
+                (row) => (
+                  <>
+                    <TableCell>{row.poste}</TableCell>
+                    <TableCell>{row.bras}</TableCell>
+                    <TableCell>{row.limite}</TableCell>
+                    <TableCell>{row.moment}</TableCell>
+                  </>
+                )
+              )}
+
+              {tankRows.length > 0 && (
+                <>
+                  {wbSubTitle('Réservoirs de carburant')}
+                  {wbTable(
+                    ['Réservoir', 'Capacité', `Bras (${aU})`, `Moment plein (${mU})`],
+                    tankRows,
+                    (row) => (
+                      <>
+                        <TableCell>{row.poste}</TableCell>
+                        <TableCell>{row.capacite}</TableCell>
+                        <TableCell>{row.bras}</TableCell>
+                        <TableCell>{row.moment}</TableCell>
+                      </>
+                    )
+                  )}
+                </>
+              )}
+
+              {wbSubTitle('Enveloppe de centrage')}
+              {wbTable(
+                ['Point de l\'enveloppe', `Masse (${wU})`, `CG (${aU})`, `Moment (${mU})`],
+                envelopeRows,
+                (row) => (
+                  <>
+                    <TableCell>{row.point}</TableCell>
+                    <TableCell>{row.masse}</TableCell>
+                    <TableCell>{row.cg}</TableCell>
+                    <TableCell>{row.moment}</TableCell>
+                  </>
+                )
+              )}
+
+              {hasCGData && (
+                <Box sx={{
+                  p: 2,
+                  bgcolor: 'var(--bg-raised)',
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}>
+                  {/* Double graphique CG + Moment côte à côte */}
+                  <CGEnvelopeDualChart
+                    cgEnvelope={cgEnvelopeData}
+                    massUnit={wU}
+                    armUnit={aU}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Paper>
         );
       })()}
 
@@ -1164,7 +1271,7 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                 data.advancedPerformance.tables.map((table, tableIndex) => (
                 <Box key={tableIndex} sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                    {table.title || `Tableau ${tableIndex + 1}`}
+                    {perfTableLabel({ ...table, table_name: table.title }, tableIndex)}
                   </Typography>
                   {table.headers && (
                     <Box sx={{ 
@@ -1218,26 +1325,58 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                 </Box>
               ))
               ) : data.performanceTables && data.performanceTables.length > 0 ? (
-                // Affichage des tableaux depuis performanceTables
-                data.performanceTables.map((table, tableIndex) => (
-                  <Box key={tableIndex} sx={{ mb: 3 }}>
-                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                      {table.table_name || `Tableau ${tableIndex + 1}`} - {table.table_type || 'Performance'}
-                    </Typography>
-                    {table.data && table.data.length > 0 && (
-                      <Box sx={{
-                        overflowX: 'auto',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1
-                      }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ p: 1, display: 'block' }}>
-                          {table.data.length} entrées disponibles
+                // 📊 Tableaux de performances — refonte lisibilité (César 16/08) :
+                // nom COMPRÉHENSIBLE (catalogue FR, plus de « takeoff_ground_roll »)
+                // + VALEURS affichées (avant : simple compteur « N entrées »).
+                data.performanceTables.map((table, tableIndex) => {
+                  const rows = Array.isArray(table.data) ? table.data : [];
+                  const inputKeys = rows.length > 0
+                    ? Object.keys(rows[0]).filter((k) => k !== 'value')
+                    : [];
+                  const colLabel = (k) => PERF_COLUMN_LABELS[k] || k;
+                  return (
+                    <Box key={tableIndex} sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
+                        {perfTableLabel(table, tableIndex)}
+                      </Typography>
+                      {table.conditions && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                          {table.conditions}
                         </Typography>
-                      </Box>
-                    )}
-                  </Box>
-              ))
+                      )}
+                      {rows.length > 0 ? (
+                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 320, overflow: 'auto' }}>
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                {inputKeys.map((k) => (
+                                  <TableCell key={k} sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{colLabel(k)}</TableCell>
+                                ))}
+                                <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                  Valeur{table.outputUnit ? ` (${table.outputUnit})` : ''}
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {rows.map((row, rowIndex) => (
+                                <TableRow key={rowIndex}>
+                                  {inputKeys.map((k) => (
+                                    <TableCell key={k}>{String(row[k] ?? '—')}</TableCell>
+                                  ))}
+                                  <TableCell sx={{ fontWeight: 600 }}>{String(row.value ?? '—')}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          Tableau vide
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                })
               ) : (
                 <Box>
                   {/* Affichage des données de performance simple si pas de tableaux */}
@@ -1855,7 +1994,7 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       )}
 
       {/* Boutons d'action */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4, flexWrap: 'wrap' }}>
         {/* Bouton fusionné : Ajouter à ma liste d'avion + Upload Supabase */}
         <Button
           variant="contained"
@@ -1868,6 +2007,25 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
         >
           {isUpdatingSupabase || isUploadingManex ? 'Traitement en cours...' : 'Ajouter à ma liste d\'avion'}
         </Button>
+
+        {/* 🔐 Consultation (utilisateur standard) : signaler une erreur repérée
+            sur la fiche — mail pré-rempli vers l'assistance (César 16/08). */}
+        {readOnly && (
+          <Button
+            variant="outlined"
+            color="warning"
+            size="large"
+            startIcon={<ReportProblemIcon />}
+            onClick={() => {
+              const subject = `Erreur constatée sur la fiche ${data.registration || ''}`;
+              const body = `Bonjour,\n\nJe pense avoir repéré une erreur sur la fiche ${data.registration || ''} (${data.model || ''}) :\n\n- Section concernée (vitesses, masse et centrage, performances…) :\n- Valeur affichée dans l'application :\n- Valeur attendue selon le manuel de vol :\n\nMerci !`;
+              window.location.href = `mailto:assistance@alflight.fr?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            }}
+            sx={{ px: 3 }}
+          >
+            Signaler une erreur
+          </Button>
+        )}
       </Box>
 
       {/* Dialog pour les différences */}

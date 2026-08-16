@@ -1118,6 +1118,55 @@ class CommunityService {
   }
 
   /**
+   * 🔐 ADMIN — Suppression DÉFINITIVE d'une fiche communautaire (2026-08-16) :
+   * ligne community_presets + métadonnées manex_files + PDF du Storage.
+   * L'effet réel est borné par les RLS Phase 1 (« ref/manex: delete admin ») :
+   * pour un compte standard, 0 ligne supprimée → erreur explicite.
+   * @param {string} presetId
+   * @param {string} [registration] secours pour le nettoyage Storage (dossier <REG>/)
+   * @returns {Promise<{deleted: boolean}>}
+   */
+  async adminDeletePresetCompletely(presetId, registration = '') {
+    // 1. Lire la ligne AVANT suppression (immat réelle + lien manex)
+    const { data: row } = await supabase
+      .from('community_presets')
+      .select('id, registration, manex_file_id')
+      .eq('id', presetId)
+      .maybeSingle();
+    const reg = String(row?.registration || registration || '').trim();
+
+    // 2. Supprimer la fiche — .select() renvoie les lignes réellement effacées
+    const { data: deletedRows, error } = await supabase
+      .from('community_presets')
+      .delete()
+      .eq('id', presetId)
+      .select();
+    if (error) throw error;
+    if (!deletedRows || deletedRows.length === 0) {
+      throw new Error('Aucune ligne supprimée — droits administrateur requis ou fiche déjà absente.');
+    }
+
+    // 3. Nettoyage best-effort du MANEX (métadonnées + fichier) : ne doit
+    //    jamais faire échouer la suppression principale déjà actée.
+    try {
+      if (row?.manex_file_id) {
+        await supabase.from('manex_files').delete().eq('id', row.manex_file_id);
+      }
+      if (reg) {
+        const { data: files } = await supabase.storage.from('manex-files').list(reg);
+        if (files?.length) {
+          await supabase.storage
+            .from('manex-files')
+            .remove(files.map((f) => `${reg}/${f.name}`));
+        }
+      }
+    } catch (cleanupErr) {
+      console.warn('⚠️ [CommunityService] Nettoyage MANEX post-suppression :', cleanupErr?.message);
+    }
+    return { deleted: true };
+  }
+
+  /**
    * Nettoyage one-shot des DOUBLONS POSSÉDÉS : pour chaque immatriculation, garde
    * la copie la plus récente et supprime les autres copies POSSÉDÉES.
    * Ne touche QUE tes lignes (submitted_by = userId) — jamais celles d'autrui.

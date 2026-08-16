@@ -364,6 +364,29 @@ export const useAircraftStore = create(
         // Récupérer l'userId Supabase pour tagger la création
         const currentUserId = await getCurrentUserId();
 
+        // 🔐 Phase 1 RBAC (bug compte standard, 16/08) : seul l'ADMIN écrit
+        // dans la base communautaire. Un utilisateur standard qui « Ajoute à
+        // ma liste » fait un import STRICTEMENT LOCAL (serveur → local, jamais
+        // l'inverse). Sans ce garde, submitPreset tentait un UPDATE bloqué par
+        // la RLS (« a affecté 0 ligne ») et TOUT l'import échouait.
+        let isAdminWriter = false;
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          isAdminWriter = session?.user?.app_metadata?.role === 'admin';
+        } catch { /* fail-closed : import local seulement */ }
+
+        let result;
+        if (!isAdminWriter) {
+          // Import local pur : l'« id » local reprend la fiche communautaire
+          // d'origine — identique au chemin admin, où submitPreset renvoie
+          // l'id de la fiche unique partagée. Aucune écriture Supabase.
+          result = {
+            id: normalizedAircraft.communityPresetId || aircraftData.id || aircraftData.aircraftId || `local-${Date.now()}`,
+            submitted_by: normalizedAircraft.submitted_by ?? null
+          };
+          console.log('🔐 [AircraftStore] Compte standard — import LOCAL uniquement (aucune écriture serveur):', result.id);
+        } else {
+
         // Préparer les données pour Supabase (avec unités NORMALISÉES)
         const presetData = {
           id: aircraftData.id || aircraftData.aircraftId,  // 🔧 FIX: Passer l'ID pour détecter les variants
@@ -387,13 +410,14 @@ export const useAircraftStore = create(
         // Soumettre à Supabase — modèle « fiche unique partagée » : submitPreset
         // met à jour la fiche existante EN PLACE (par immatriculation) ou la crée
         // si elle n'existe pas. PLUS de clone (plus de doublon).
-        const result = await communityService.submitPreset(
+        result = await communityService.submitPreset(
           presetData,
           manexResolved?.blob || null,
           currentUserId
         );
 
         console.log('✅ [AircraftStore] Preset créé dans Supabase:', result?.id);
+        } // fin chemin admin (écriture serveur)
         console.log('🔍 [AircraftStore] Result complet:', {
           hasResult: !!result,
           hasId: !!result?.id,

@@ -11,13 +11,17 @@
 import React, { useState, useRef } from 'react';
 import { Mail, Send, Paperclip, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
+import { useAirportsList } from '@shared/hooks/useAirportNames';
 
 export const SUPPORT_EMAIL = 'assistance@alflight.fr';
 const MAX_FILE_MB = 50;
 
 const SendManualRequestButton = ({ style }) => {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ registration: '', model: '', message: '' });
+  // Base d'attache à la place du modèle (décision César 16/08) : l'admin sait
+  // OÙ est basé l'avion — la fiche du wizard exploite directement ce champ.
+  const [form, setForm] = useState({ registration: '', homeBase: '', message: '' });
+  const airports = useAirportsList();
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
@@ -42,7 +46,7 @@ const SendManualRequestButton = ({ style }) => {
     setFile(f);
   };
 
-  const canSend = form.registration.trim() && file && !busy;
+  const canSend = form.registration.trim() && form.homeBase.trim() && file && !busy;
 
   const handleSend = async () => {
     if (!canSend) return;
@@ -88,7 +92,7 @@ const SendManualRequestButton = ({ style }) => {
       const { error: insErr } = await supabase.from('aircraft_requests').insert({
         user_email: user.email,
         registration: reg,
-        manufacturer_model: form.model.trim() || null,
+        home_base: form.homeBase.trim() || null,
         message: form.message.trim() || null,
         file_path: path,
         file_name: file.name,
@@ -158,8 +162,21 @@ const SendManualRequestButton = ({ style }) => {
       </p>
       <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Immatriculation *</label>
       <input style={inputStyle} value={form.registration} onChange={set('registration')} placeholder="Ex : F-GABC" autoComplete="off" disabled={busy} />
-      <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Constructeur / modèle</label>
-      <input style={inputStyle} value={form.model} onChange={set('model')} placeholder="Ex : Robin DR400-120" autoComplete="off" disabled={busy} />
+      <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Base d'attache (aéroclub / aérodrome) *</label>
+      <input
+        style={inputStyle}
+        value={form.homeBase}
+        onChange={set('homeBase')}
+        placeholder="Ex : LFLP — Annecy Meythet"
+        autoComplete="off"
+        disabled={busy}
+        list="alflight-homebase-airports"
+      />
+      <datalist id="alflight-homebase-airports">
+        {airports.map((a) => (
+          <option key={a.icao} value={`${a.icao} — ${a.name}`} />
+        ))}
+      </datalist>
       <label style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>Remarques (optionnel)</label>
       <textarea style={{ ...inputStyle, minHeight: '54px', resize: 'vertical' }} value={form.message} onChange={set('message')} disabled={busy} />
 

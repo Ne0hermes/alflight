@@ -27,6 +27,21 @@ export async function getCurrentUserId() {
 }
 
 /**
+ * 🔐 Phase 1 RBAC : l'utilisateur courant est-il administrateur ?
+ * Rôle lu depuis app_metadata du JWT (non modifiable côté client).
+ * Fail-closed : false sans session ou en cas d'erreur.
+ */
+export async function isCurrentUserAdmin() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user?.app_metadata?.role === 'admin';
+  } catch (e) {
+    console.warn('[supabaseAuth] isCurrentUserAdmin failed:', e?.message);
+    return false;
+  }
+}
+
+/**
  * Variante stricte : throw si pas de session.
  * À utiliser dans les flux d'écriture critique où on veut un message clair
  * au lieu d'un refus RLS silencieux.

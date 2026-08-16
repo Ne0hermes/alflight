@@ -39,6 +39,7 @@ import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { sanitizeTankVariants } from '@utils/tankVariants';
+import { markRequestProcessedAfterSave } from '../services/aircraftRequestWorkflow';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
 // Avant : tous les steps chargés au démarrage du wizard (7 composants volumineux)
@@ -1183,6 +1184,15 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
         console.log('✅ Avion sauvegardé dans Supabase:', savedAircraft);
         updateStep(2, 'completed');
+
+        // 📥 Fiche issue d'une demande d'ajout (« Créer la fiche ») : la
+        // sauvegarde publie l'avion → la demande passe à « processed » et le
+        // demandeur est prévenu in-app. Non bloquant en cas d'échec.
+        try {
+          await markRequestProcessedAfterSave(dataToSave.registration);
+        } catch (reqErr) {
+          console.warn('⚠️ Clôture de la demande d\'ajout :', reqErr?.message);
+        }
       } catch (error) {
         console.error('❌ Erreur lors de la sauvegarde Supabase:', error);
         updateStep(2, 'error', error.message);
@@ -1373,6 +1383,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       if (savedAircraft) {
         setSelectedAircraft(savedAircraft);
 
+        // 📥 Même clôture de demande que le chemin de sauvegarde principal
+        try {
+          await markRequestProcessedAfterSave(dataToSave.registration);
+        } catch (reqErr) {
+          console.warn('⚠️ Clôture de la demande d\'ajout :', reqErr?.message);
+        }
+
         // Afficher notification de succès
         setNotification({
           open: true,
@@ -1413,6 +1430,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
               onSkip={() => handleNext()}
               onComplete={onComplete}
               manexReviewTrigger={manexReviewTrigger}
+              onGoToReview={() => setCurrentStep(7)}
             />
           </>
         );
