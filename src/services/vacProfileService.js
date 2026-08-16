@@ -113,6 +113,55 @@ export async function getProfileChartUrl(filePath) {
 }
 
 /**
+ * 🔁 RATTRAPAGE (retour César 16/08) : les cartes déjà téléchargées AVANT ce
+ * lot — ou importées par le module « Cartes VAC » — n'étaient rattachées à
+ * aucun profil : rien ne pouvait donc être restauré après un vidage de cache.
+ * À la connexion, on envoie au serveur les cartes locales encore absentes.
+ * @returns {Promise<number>} nombre de cartes rattachées
+ */
+export async function backfillLocalCharts() {
+  const userId = await currentUserId();
+  if (!userId) return 0;
+  try {
+    const { useVACStore } = await import('@core/stores/vacStore');
+    const { vacPdfStorage } = await import('./vacPdfStorage');
+    const charts = useVACStore.getState().charts || {};
+    const local = Object.values(charts).filter((c) => c?.isDownloaded && c?.icao);
+    if (local.length === 0) return 0;
+
+    const remote = await listProfileCharts();
+    const known = new Set(remote.map((r) => r.icao));
+    let sent = 0;
+
+    for (const chart of local) {
+      if (known.has(chart.icao)) continue;
+      try {
+        // Le PDF vit dans le stockage local des cartes : on le relit pour
+        // l'envoyer tel quel (aucune re-conversion, aucune perte).
+        // getPDF renvoie l'ENREGISTREMENT { icao, fileName, pdfBlob… }.
+        const record = await vacPdfStorage.getPDF(chart.icao);
+        const blob = record?.pdfBlob;
+        if (!blob) continue;
+        const file = blob instanceof File
+          ? blob
+          : new File([blob], record.fileName || `${chart.icao}.pdf`, { type: 'application/pdf' });
+        const ok = await uploadChartToProfile(chart.icao, file, {
+          airportName: chart.name || null,
+        });
+        if (ok) sent += 1;
+      } catch (e) {
+        console.warn(`${LOG} rattachement de ${chart.icao} :`, e?.message);
+      }
+    }
+    if (sent > 0) console.log(`${LOG} ${sent} carte(s) locale(s) rattachée(s) au profil`);
+    return sent;
+  } catch (e) {
+    console.warn(`${LOG} rattrapage des cartes impossible :`, e?.message);
+    return 0;
+  }
+}
+
+/**
  * Restaure en local les cartes du profil absentes du navigateur.
  * Appelée après connexion : le pilote retrouve ses cartes sur un appareil neuf.
  * @returns {Promise<number>} nombre de cartes restaurées
@@ -159,5 +208,5 @@ export async function restoreProfileCharts() {
 
 export default {
   uploadChartToProfile, listProfileCharts, getProfileChartUrl,
-  restoreProfileCharts, currentAiracCycle,
+  restoreProfileCharts, backfillLocalCharts, currentAiracCycle,
 };

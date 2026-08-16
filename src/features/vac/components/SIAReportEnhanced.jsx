@@ -507,6 +507,13 @@ export const SIAReportEnhanced = () => {
         console.log(`✅ Données extraites enregistrées dans vacStore pour ${icao}`);
       }
 
+      // 🗺️ Lot 2.0 : rattacher la carte AU PROFIL du pilote (espace privé).
+      // Sans cela, une carte importée ici restait purement locale et
+      // disparaissait au vidage du cache (retour César 16/08).
+      import('@services/vacProfileService')
+        .then(({ uploadChartToProfile }) => uploadChartToProfile(icao, file))
+        .catch(() => { /* copie locale conservée ; renvoi au prochain démarrage */ });
+
       // Forcer le re-render pour voir le badge VAC mis à jour
       setEditedData(prev => ({...prev}));
 

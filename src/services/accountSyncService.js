@@ -411,8 +411,29 @@ export async function restoreAccountFromServer() {
         const { default: communityService } = await import('./communityService');
         for (const item of missing) {
           try {
-            if (!item.community_preset_id) continue;
-            const full = await communityService.getPresetById(item.community_preset_id);
+            // Repli par IMMATRICULATION quand la fiche d'origine n'a pas été
+            // mémorisée (avions rattachés par rattrapage) — sans cela, l'avion
+            // était irrécupérable (retour César 16/08).
+            let presetId = item.community_preset_id;
+            if (!presetId) {
+              const { data: found } = await supabase
+                .from('community_presets')
+                .select('id')
+                .ilike('registration', item.registration)
+                .eq('status', 'active')
+                .limit(1);
+              presetId = found?.[0]?.id || null;
+              if (presetId) {
+                await supabase.from('user_aircraft')
+                  .update({ community_preset_id: presetId })
+                  .eq('user_id', userId).eq('registration', item.registration);
+              }
+            }
+            if (!presetId) {
+              console.warn(`${LOG} ${item.registration} introuvable dans la base communautaire — non restauré`);
+              continue;
+            }
+            const full = await communityService.getPresetById(presetId);
             if (!full) continue;
             const ts = Date.now() + Math.floor(Math.random() * 1000);
             await dataBackupManager.saveAircraftData({
@@ -428,6 +449,23 @@ export async function restoreAccountFromServer() {
         }
         if (result.fleet > 0) {
           console.log(`${LOG} ${result.fleet} avion(s) restauré(s) depuis la base communautaire`);
+          // La liste d'avions est lue AU DÉMARRAGE : sans rafraîchissement,
+          // les avions restaurés n'apparaissaient qu'au rechargement suivant.
+          try {
+            const { useAircraftStore } = await import('@core/stores/aircraftStore');
+            const refreshed = await dataBackupManager.getAllFromStore('aircraftData');
+            const visible = (refreshed || []).filter(
+              (a) => !a.ownerAccountId || a.ownerAccountId === userId
+            ).map(({ photo, profilePhoto, manex, ...light }) => ({
+              ...light,
+              hasPhoto: !!(photo || profilePhoto),
+              hasManex: !!manex,
+            }));
+            useAircraftStore.setState({ aircraftList: visible, isInitialized: true });
+            window.dispatchEvent(new CustomEvent('aircraft-list-restored'));
+          } catch (refreshErr) {
+            console.warn(`${LOG} rafraîchissement de la liste :`, refreshErr?.message);
+          }
         }
       }
     }
@@ -435,12 +473,15 @@ export async function restoreAccountFromServer() {
     console.warn(`${LOG} restauration de la flotte :`, e?.message);
   }
 
-  // 4. Cartes VAC du profil — le pilote retrouve ses cartes sur un appareil neuf
+  // 4. Cartes VAC — dans les DEUX sens, comme la flotte : on rattache d'abord
+  // les cartes déjà présentes en local (téléchargées avant ce lot ou via le
+  // module « Cartes VAC »), puis on restaure celles qui manquent.
   try {
-    const { restoreProfileCharts } = await import('./vacProfileService');
+    const { restoreProfileCharts, backfillLocalCharts } = await import('./vacProfileService');
+    await backfillLocalCharts();
     result.vacCharts = await restoreProfileCharts();
   } catch (e) {
-    console.warn(`${LOG} restauration des cartes VAC :`, e?.message);
+    console.warn(`${LOG} synchronisation des cartes VAC :`, e?.message);
   }
 
   return result;
