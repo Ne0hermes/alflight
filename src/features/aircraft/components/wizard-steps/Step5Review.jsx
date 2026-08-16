@@ -1498,11 +1498,32 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
                 Facteurs correctifs du manuel
               </Typography>
-              {data.performanceCorrections.map((c) => (
-                <Typography key={c.id} variant="body2" sx={{ lineHeight: 1.8 }}>
-                  • {describeCorrection(c)}
-                </Typography>
-              ))}
+              {/* Groupés par PHASE (décollage / atterrissage) — les facteurs
+                  diffèrent entre les deux (demande César 16/08). */}
+              {[
+                { key: 'takeoff', label: 'Décollage' },
+                { key: 'landing', label: 'Atterrissage' }
+              ].map(({ key, label }) => {
+                const rules = data.performanceCorrections.filter(
+                  (c) => c.appliesTo === key || c.appliesTo === 'both'
+                );
+                return (
+                  <Box key={key} sx={{ mb: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase' }}>
+                      {label}
+                    </Typography>
+                    {rules.length === 0 ? (
+                      <Typography variant="body2" sx={{ lineHeight: 1.8, fontStyle: 'italic', color: 'text.secondary' }}>
+                        aucun facteur
+                      </Typography>
+                    ) : rules.map((c) => (
+                      <Typography key={c.id} variant="body2" sx={{ lineHeight: 1.8 }}>
+                        • {describeCorrection(c)}
+                      </Typography>
+                    ))}
+                  </Box>
+                );
+              })}
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                 Appliqués aux distances calculées dans la préparation de vol, détail du calcul affiché au pilote.
               </Typography>
