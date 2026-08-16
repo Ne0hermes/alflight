@@ -455,6 +455,8 @@ const PilotLogbook = ({ showFormProp }) => {
 
     setEntries(newEntries);
     localStorage.setItem('pilotLogbook', JSON.stringify(newEntries));
+    // 🔄 Lot 2.0 : copie serveur du carnet (mise à jour par vol, jamais destructive)
+    import('@services/accountSyncService').then(({ pushLogbook }) => pushLogbook(newEntries)).catch(() => {});
 
     resetForm();
 
@@ -602,6 +604,8 @@ const PilotLogbook = ({ showFormProp }) => {
       const newEntries = entries.filter(e => e.id !== id);
       setEntries(newEntries);
       localStorage.setItem('pilotLogbook', JSON.stringify(newEntries));
+    // 🔄 Lot 2.0 : copie serveur du carnet (mise à jour par vol, jamais destructive)
+    import('@services/accountSyncService').then(({ pushLogbook }) => pushLogbook(newEntries)).catch(() => {});
 
       // Logger vers Google Sheets
       if (entryToDelete) {
@@ -806,6 +810,7 @@ const PilotLogbook = ({ showFormProp }) => {
       // Sauvegarder
       setEntries(mergedEntries);
       localStorage.setItem('pilotLogbook', JSON.stringify(mergedEntries));
+      import('@services/accountSyncService').then(({ pushLogbook }) => pushLogbook(mergedEntries)).catch(() => {});
 
       // Log l'import
       const logMessage = needsConversion

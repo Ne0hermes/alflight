@@ -11,6 +11,7 @@ import { useVACStore } from '@core/stores/vacStore';
 import { aeroDataProvider } from '@core/data';
 import { separateRunwayDirections } from '@utils/runwayDirections';
 import RunwayAnalyzer from '@features/navigation/components/RunwayAnalyzer';
+import VacQuickImport from '@features/vac/components/VacQuickImport';
 // REMOVED: import { getCircuitAltitudes } from '@data/circuitAltitudesComplete'; - File deleted, data must come from official XML
 
 /**
@@ -348,12 +349,20 @@ export const Step3VAC = memo(({ flightPlan, onUpdate }) => {
             <p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>
               <strong>Aérodromes concernés :</strong> {missingVACs.join(', ')}
             </p>
-            <p style={{ margin: '0', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+            <p style={{ margin: '0 0 10px', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
               <span style={{ fontSize: 'var(--fs-title)', marginTop: '2px' }}>ℹ️</span>
               <span>
-                Veuillez télécharger les cartes VAC manquantes via le module <strong>"Cartes VAC"</strong> (menu de gauche) avant de générer le PDF final.
+                Ajoutez-les ici sans quitter votre préparation : la carte est
+                enregistrée dans <strong>votre profil</strong> et vous la retrouverez
+                sur tous vos appareils.
               </span>
             </p>
+            {/* 🗺️ Import sur place, un bouton par aérodrome manquant (César 16/08) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {missingVACs.map((missingIcao) => (
+                <VacQuickImport key={missingIcao} icao={missingIcao} />
+              ))}
+            </div>
           </div>
         </div>
       )}

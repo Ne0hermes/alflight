@@ -567,6 +567,14 @@ export const useAircraftStore = create(
             };
             await dataBackupManager.saveAircraftData(storageAircraft);
             console.log('✅ [AircraftStore] Avion sauvegardé dans IndexedDB (STORAGE units):', storageAircraft.registration);
+            // 🔄 Lot 2.0 : rattacher l'avion au compte côté serveur — à la
+            // reconnexion sur un appareil vierge, il sera re-téléchargé seul.
+            import('@services/accountSyncService')
+              .then(({ pushFleet }) => pushFleet([{
+                registration: storageAircraft.registration,
+                communityPresetId: storageAircraft.communityPresetId || result.id
+              }]))
+              .catch(() => { /* rattachement retenté au prochain ajout */ });
           } catch (error) {
             console.error('❌ [AircraftStore] Erreur sauvegarde IndexedDB:', error);
           }
@@ -765,6 +773,14 @@ export const useAircraftStore = create(
         if (!aircraft) {
                     set({ isLoading: false });
           return false;
+        }
+
+        // 🔄 Lot 2.0 : retirer aussi le rattachement au compte, sinon l'avion
+        // supprimé reviendrait à la prochaine restauration.
+        if (aircraft.registration) {
+          import('@services/accountSyncService')
+            .then(({ removeFromFleet }) => removeFromFleet(aircraft.registration))
+            .catch(() => { /* non bloquant */ });
         }
 
         // 1. Supprimer de la liste locale immédiatement (optimistic update)

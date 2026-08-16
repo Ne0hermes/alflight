@@ -561,6 +561,11 @@ const PilotProfile = () => {
     try {
       // Sauvegarder avec photo dans IndexedDB pour éviter QuotaExceededError
       await savePilotProfile(profile);
+      // 🔄 Lot 2.0 : copie serveur du profil (rattachée au compte) — non
+      // bloquante : un échec réseau ne perd pas la sauvegarde locale.
+      import('@services/accountSyncService')
+        .then(({ pushProfile }) => pushProfile(profile))
+        .catch(() => { /* réessai à la prochaine sauvegarde */ });
       // Notifier que le profil est configuré (pour débloquer l'accès aux autres modules)
       window.dispatchEvent(new CustomEvent('profile-configured'));
       alert('Profil sauvegardé avec succès !\n\nVous avez maintenant accès à toutes les fonctionnalités d\'ALFlight.');

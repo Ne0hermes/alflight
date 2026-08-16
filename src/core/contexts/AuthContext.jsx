@@ -2,6 +2,19 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { ensureAccountDataIsolation } from '../auth/accountDataIsolation';
 
+// 🔄 Lot 2.0 — restauration du compte depuis le serveur, jamais bloquante :
+// une panne réseau ne doit pas empêcher de se connecter et de préparer un vol.
+const restoreAccountSilently = () => {
+  import('../../services/accountSyncService')
+    .then(({ restoreAccountFromServer }) => restoreAccountFromServer())
+    .then((r) => {
+      if (r && (r.profile || r.logbook > 0 || r.fleet > 0)) {
+        console.log('🔄 [AuthContext] Compte restauré depuis le serveur :', r);
+      }
+    })
+    .catch((e) => console.warn('🔄 [AuthContext] Restauration impossible :', e?.message));
+};
+
 const AuthContext = createContext({});
 
 export const useAuth = () => {
@@ -57,6 +70,9 @@ export const AuthProvider = ({ children }) => {
         }
         setSession(session);
         setUser(session?.user ?? null);
+        // 🔄 Lot 2.0 : réinstalle profil / carnet / flotte depuis le serveur si
+        // le stockage local a été vidé (nouvel appareil, cache effacé).
+        if (session?.user?.id) restoreAccountSilently();
       } catch (error) {
         console.error('Error getting session:', error);
       } finally {
@@ -78,6 +94,7 @@ export const AuthProvider = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        if (event === 'SIGNED_IN' && session?.user?.id) restoreAccountSilently();
       }
     );
 

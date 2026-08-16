@@ -45,6 +45,11 @@ const USER_SCOPED_KEYS = [
   'aixm_airspaces_modifications',
   'aircraftRequestsSeen',
   'aircraftRequestsHidden',
+  // 🗺️ Registre des cartes VAC (Lot 2.0) : il échappait à l'isolation — un
+  // pilote voyait les cartes d'un autre profil du même appareil.
+  'vac-storage',
+  'sia_favorite_aerodromes',
+  'sia_edited_data',
 ];
 
 const collectCurrent = () => {
