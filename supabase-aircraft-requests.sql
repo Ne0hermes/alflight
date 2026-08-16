@@ -85,6 +85,9 @@ as $$
   );
 $$;
 revoke all on function public.aircraft_request_pending(text) from public;
+-- Supabase accorde par défaut l'exécution des fonctions au rôle anon (default
+-- privileges) : révocation EXPLICITE nécessaire — vérifié le 2026-08-16.
+revoke execute on function public.aircraft_request_pending(text) from anon;
 grant execute on function public.aircraft_request_pending(text) to authenticated;
 
 -- 6. Vérification
