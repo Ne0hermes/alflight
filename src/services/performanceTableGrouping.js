@@ -136,8 +136,75 @@ export function groupTablesByOperationId(tables) {
  * @param {object} group  Un groupe retourné par groupTablesByOperationId
  * @returns {object|null} { operationId, altitudes, temperatures, masses, values }
  */
+/** Température de l'atmosphère standard à une altitude-pression (°C). */
+export function isaTempAt(altitudeFt) {
+  return 15 - 1.98 * (altitudeFt / 1000);
+}
+
+/**
+ * Le tableau raisonne-t-il en ÉCART À L'ISA plutôt qu'en température absolue ?
+ *
+ * Beaucoup de manuels — les Robin de la base, notamment — donnent pour chaque
+ * palier d'altitude trois températures : ISA−20, ISA et ISA+20. En absolu, cela
+ * s'écrit −5/15/35 au niveau de la mer, −13/7/27 à 4000 ft, −21/−1/19 à 8000 ft.
+ * Rangées telles quelles dans un cube altitude × température absolue, ces neuf
+ * valeurs réclament vingt-sept cases : dix-huit trous sont fabriqués de toutes
+ * pièces, alors que le manuel est complet.
+ *
+ * Reconnaissance volontairement stricte : il faut au moins deux altitudes, des
+ * températures absolues QUI DIFFÈRENT d'un palier à l'autre, et des écarts à
+ * l'ISA qui, eux, COÏNCIDENT. Un tableau à températures absolues (0/10/20/30/40
+ * à toutes les altitudes) n'est donc jamais converti.
+ */
+export function detectIsaRelativeTemperatures(points) {
+  const parAltitude = new Map();
+  for (const p of points) {
+    const alt = parseFloat(p.Altitude);
+    const temp = parseFloat(p.Temperature);
+    if (!Number.isFinite(alt) || !Number.isFinite(temp)) continue;
+    if (!parAltitude.has(alt)) parAltitude.set(alt, []);
+    parAltitude.get(alt).push(temp);
+  }
+  if (parAltitude.size < 2) return false;
+
+  const cle = (arr) => [...new Set(arr)].sort((a, b) => a - b).join('|');
+  const absolus = new Set();
+  const ecarts = new Set();
+  for (const [alt, temps] of parAltitude) {
+    absolus.add(cle(temps));
+    ecarts.add(cle(temps.map((t) => Math.round(t - isaTempAt(alt)))));
+  }
+  // Températures identiques partout → grille absolue classique, on n'y touche pas.
+  if (absolus.size === 1) return false;
+  // Les écarts ne se superposent pas → ce n'est pas un tableau ISA-relatif.
+  if (ecarts.size !== 1) return false;
+
+  // ⚠️ Garde-fou : il faut AU MOINS DEUX écarts distincts.
+  // Un tableau ne portant qu'une température par altitude (la seule ligne ISA,
+  // cas de F-BXNG et F-BXQT après leur aller-retour Excel) satisferait sinon le
+  // test : tous les écarts valent 0, ils « coïncident » trivialement. L'axe des
+  // températures se réduirait alors à un point unique, et TOUTE température
+  // serait écrêtée sur la valeur ISA — une journée à 35 °C recevrait la distance
+  // des 15 °C. C'est précisément le comportement non conservateur qu'on vient de
+  // supprimer. Sans deux écarts, le tableau ne dit rien de l'effet de la
+  // température : on refuse de calculer plutôt que d'inventer.
+  const [seulEcart] = ecarts;
+  return seulEcart.split('|').length >= 2;
+}
+
 export function buildLookupForOperation(group) {
   if (!group?.tables?.length) return null;
+
+  const tousLesPoints = group.tables.flatMap(t => t.data || []);
+  const isaRelative = detectIsaRelativeTemperatures(tousLesPoints);
+  // Valeur portée par l'axe des températures : l'écart à l'ISA quand le manuel
+  // raisonne ainsi, la température absolue sinon.
+  const axeTemp = (point) => {
+    const temp = parseFloat(point.Temperature);
+    if (!isaRelative) return temp;
+    const alt = parseFloat(point.Altitude);
+    return Math.round(temp - isaTempAt(alt));
+  };
 
   const altitudesSet = new Set();
   const temperaturesSet = new Set();
@@ -146,7 +213,7 @@ export function buildLookupForOperation(group) {
   group.tables.forEach(table => {
     (table.data || []).forEach(point => {
       if (point.Altitude !== undefined && point.Altitude !== null) altitudesSet.add(parseFloat(point.Altitude));
-      if (point.Temperature !== undefined && point.Temperature !== null) temperaturesSet.add(parseFloat(point.Temperature));
+      if (point.Temperature !== undefined && point.Temperature !== null) temperaturesSet.add(axeTemp(point));
       if (point.Masse !== undefined && point.Masse !== null) massesSet.add(parseFloat(point.Masse));
     });
   });
@@ -163,7 +230,7 @@ export function buildLookupForOperation(group) {
           const point = (table.data || []).find(p =>
             parseFloat(p.Masse) === mass &&
             parseFloat(p.Altitude) === alt &&
-            parseFloat(p.Temperature) === temp
+            axeTemp(p) === temp
           );
           if (point) {
             const v = extractValue(point);
@@ -181,6 +248,9 @@ export function buildLookupForOperation(group) {
     temperatures,
     masses,
     values,
+    // 'absolute' = températures du manuel telles quelles ; 'isaDeviation' = écarts
+    // à l'ISA. L'appelant DOIT convertir sa température cible dans le second cas.
+    temperatureScale: isaRelative ? 'isaDeviation' : 'absolute',
     tableCount: group.tables.length
   };
 }

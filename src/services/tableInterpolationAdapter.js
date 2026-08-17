@@ -24,7 +24,8 @@
 import { getOperation, isValidOperationId } from '../abac/curves/core/operationCatalog';
 import {
   groupTablesByOperationId,
-  buildLookupForOperation
+  buildLookupForOperation,
+  isaTempAt
 } from './performanceTableGrouping';
 import { trilinearInterpolate } from './performanceTrilinearInterpolation';
 
@@ -144,7 +145,8 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   if (!lookup) return null;
 
   const warnings = [];
-  const { altitudes, temperatures, masses, values } = lookup;
+  const { altitudes, temperatures, masses, values, temperatureScale } = lookup;
+  const enEcartISA = temperatureScale === 'isaDeviation';
 
   // Sanity checks
   if (masses.length === 0 || altitudes.length === 0 || temperatures.length === 0) {
@@ -158,6 +160,12 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   }
 
   const { targetMass, targetAlt, targetTemp } = conditionsToTrilinearTargets(conditions);
+  // Le manuel raisonne en écart à l'ISA (cf. detectIsaRelativeTemperatures) : la
+  // température réelle doit être ramenée dans le même repère avant d'interroger
+  // la grille. À 2000 ft, l'ISA vaut 11 °C : une OAT de 5 °C devient −6.
+  const tempGrille = (targetTemp !== null && targetAlt !== null && enEcartISA)
+    ? targetTemp - isaTempAt(targetAlt)
+    : targetTemp;
   if (targetMass === null || targetAlt === null || targetTemp === null) {
     return {
       operationId,
@@ -183,11 +191,16 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
         : `⚠ Altitude ${targetAlt} ft au-delà de la plage (max ${maxAlt} ft) — clamp aux bornes`
     );
   }
-  if (targetTemp < minTemp || targetTemp > maxTemp) {
+  if (tempGrille < minTemp || tempGrille > maxTemp) {
+    const ecart = (v) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
     warnings.push(
-      targetTemp < minTemp
-        ? `⚠ Température ${targetTemp}°C sous la plage (min ${minTemp}°C) — clamp aux bornes`
-        : `⚠ Température ${targetTemp}°C au-delà de la plage (max ${maxTemp}°C) — clamp aux bornes`
+      enEcartISA
+        ? (tempGrille < minTemp
+            ? `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — sous la plage du manuel (ISA${ecart(minTemp)}) — clamp aux bornes`
+            : `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — au-delà de la plage du manuel (ISA${ecart(maxTemp)}) — clamp aux bornes`)
+        : (tempGrille < minTemp
+            ? `⚠ Température ${targetTemp}°C sous la plage (min ${minTemp}°C) — clamp aux bornes`
+            : `⚠ Température ${targetTemp}°C au-delà de la plage (max ${maxTemp}°C) — clamp aux bornes`)
     );
   }
 
@@ -196,11 +209,11 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   let method;
   let usedNearest = false;
   if (massInRange) {
-    value = trilinearInterpolate(masses, altitudes, temperatures, values, targetMass, targetAlt, targetTemp);
+    value = trilinearInterpolate(masses, altitudes, temperatures, values, targetMass, targetAlt, tempGrille);
     method = 'Trilinéaire (masse × alt × temp)';
   } else {
     // Hors plage masse : on tente d'abord une extrapolation linéaire (≥ 2 masses).
-    value = extrapolateForMass(lookup, targetMass, targetAlt, targetTemp);
+    value = extrapolateForMass(lookup, targetMass, targetAlt, tempGrille);
     method = 'Trilinéaire + extrapolation masse';
     // Repli « TABLEAU LE PLUS PROCHE » (décision pilote 2026-06-23) : si
     // l'extrapolation est IMPOSSIBLE (ex. tableau fourni à UNE seule masse, la
@@ -210,7 +223,7 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
     // L'alerte hors-couverture est CONSERVÉE (cf. warning ci-dessous).
     if (value === null || !Number.isFinite(value)) {
       const clampedMass = targetMass < minMass ? minMass : maxMass;
-      value = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, targetTemp);
+      value = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, tempGrille);
       method = `Tableau le plus proche (masse ${clampedMass} kg)`;
       usedNearest = true;
     }
