@@ -17,12 +17,16 @@
  * Ces valeurs sont des estimations génériques pour l'affichage seulement
  * et ne doivent JAMAIS être utilisées pour des calculs de sécurité
  */
-const DEFAULT_AIRCRAFT_VALUES = {
-  // Ces valeurs sont indicatives uniquement
-  maxBaggageWeight: 50,  // Indicatif - vérifier manuel avion
-  maxAuxiliaryWeight: 20, // Indicatif - vérifier manuel avion
-  fuelType: 'AVGAS 100LL'
-};
+// 🔧 Phase 0 (2026-08-17) — PLUS AUCUNE VALEUR FABRIQUÉE.
+// Ces trois valeurs étaient réinjectées à CHAQUE chargement d'avion dès que le
+// champ était absent. Une fois en base, rien ne les distinguait d'une donnée
+// relevée au manuel de vol : 10 des 13 avions de la base portaient ainsi une
+// soute de « 50 kg » que personne n'avait jamais saisie, et un F-BXNG affichait
+// 50 kg à côté de sa vraie limite de 54 kg. Le carburant, lui, recevait
+// « AVGAS 100LL » — une graphie hors de la liste du wizard, qui ne correspond à
+// aucune densité connue du moteur.
+// Un champ absent doit RESTER absent et s'afficher « non renseigné ».
+const DEFAULT_AIRCRAFT_VALUES = {};
 
 /**
  * Valide et répare les données d'un avion
@@ -200,6 +204,44 @@ export function validateAndRepairAircraft(aircraft, opts = {}) {
       console.warn('⚠️ [Validation] weightBalance ET arms manquants — données M&C indisponibles. L\'avion devra être édité avant prep de vol.');
     }
     // Continue (peut être null ; le bloc cgLimits ci-dessous gère le cas)
+  }
+
+  // 🔧 Phase 0 (2026-08-17) — LE MIROIR DOIT SUIVRE LA SAISIE.
+  // La transposition ci-dessus ne s'exécutait QU'UNE FOIS, à la création du bloc.
+  // Ensuite le miroir était « préservé tel quel » pour toujours, alors que
+  // l'assistant n'écrit QUE dans `arms.*`. Or le moteur de centrage lit
+  // `weightBalance.*` EN PRIORITÉ : corriger un bras dans l'assistant n'avait
+  // donc aucun effet sur le calcul. Vérifié sur F-GUKQ : bras à vide corrigé de
+  // 2,18 m à 0,42 m → centrage inchangé à 1,791 m, car le miroir gardait 2,18.
+  // On réaligne donc le miroir sur la saisie, valeur par valeur.
+  if (repairedAircraft.weightBalance && (repairedAircraft.arms || aircraft.arms)) {
+    const armsSrc = repairedAircraft.arms || aircraft.arms;
+    const wbRef = repairedAircraft.weightBalance;
+    const armOrNull = (v) => {
+      if (v === null || v === undefined || v === '' || v === '0') return null;
+      const parsed = parseFloat(v);
+      return Number.isFinite(parsed) && parsed !== 0 ? parsed : null;
+    };
+    const differe = (a, b) => a !== null && (b === null || Math.abs(a - b) > 1e-6);
+
+    const empty = armOrNull(armsSrc.empty);
+    if (differe(empty, armOrNull(wbRef.emptyWeightArm))) wbRef.emptyWeightArm = empty;
+
+    const fuel = armOrNull(armsSrc.fuelMain) ?? armOrNull(armsSrc.fuel);
+    if (differe(fuel, armOrNull(wbRef.fuelArm))) wbRef.fuelArm = fuel;
+
+    // Sièges : on ne réaligne QUE si le miroir est lui-même symétrique, c'est-à-dire
+    // s'il provient d'une transposition. Un avion dont les bras gauche et droite
+    // diffèrent porte une donnée plus riche que `arms.frontSeats` — on n'y touche pas.
+    const rangee = (armKey, gauche, droite) => {
+      const val = armOrNull(armsSrc[armKey]) ?? armOrNull(armsSrc[armKey.replace(/s$/, '')]);
+      const g = armOrNull(wbRef[gauche]);
+      const d = armOrNull(wbRef[droite]);
+      const symetrique = g === null || d === null || Math.abs(g - d) <= 1e-6;
+      if (symetrique && differe(val, g)) { wbRef[gauche] = val; wbRef[droite] = val; }
+    };
+    rangee('frontSeats', 'frontLeftSeatArm', 'frontRightSeatArm');
+    rangee('rearSeats', 'rearLeftSeatArm', 'rearRightSeatArm');
   }
 
   // Bloc historique : amélioration de weightBalance existant (ou nouvellement dérivé)

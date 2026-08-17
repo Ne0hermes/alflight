@@ -91,8 +91,17 @@ function buildAxisValues(min, max, step) {
   return values;
 }
 
-const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNav }) => {
-  const [activeStep, setActiveStep] = useState(0);
+const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNav, sessionRef }) => {
+  // ─── Session restaurée ──────────────────────────────────────────────────
+  // Ce composant est démonté dès qu'on quitte la lecture graphique (bascule
+  // vers la saisie manuelle, changement d'étape). Sans reprise, l'image, le
+  // calibrage des axes et TOUS les points cliqués disparaissaient : il fallait
+  // tout retracer au retour. La session est détenue par le wizard, donc elle
+  // survit jusqu'à l'enregistrement final. `S` est lu au premier rendu : les
+  // initialiseurs paresseux ci-dessous ne s'exécutent qu'au montage.
+  const S = sessionRef?.current?.reader || null;
+
+  const [activeStep, setActiveStep] = useState(S?.activeStep ?? 0);
 
   // Préférences d'unités utilisateur (mm par défaut pour armLength).
   // Le bras de levier sera stocké dans cette unité, pour rester cohérent avec
@@ -101,11 +110,11 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   const userArmUnit = units?.armLength || 'mm';
 
   // ─── Image ──────────────────────────────────────────────────────────────
-  const [imageUrl, setImageUrl] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState(S?.imageUrl ?? null);
+  const [imageFile, setImageFile] = useState(S?.imageFile ?? null);
 
   // ─── Axes config (min/max/step/unit + titre) ────────────────────────────
-  const [axesConfig, setAxesConfig] = useState({
+  const [axesConfig, setAxesConfig] = useState(S?.axesConfig ?? {
     xAxis: { min: 0, max: 200, step: 50, unit: 'kg', title: 'Masse ajoutée' },
     yAxis: { min: 0, max: 500, step: 100, unit: 'm·kg', title: 'Moment cumulé' }
   });
@@ -115,7 +124,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   //   - 'y' = cas inversé (masse verticale, moment horizontal) → arm = 1/pente
   // Le bras de levier physique reste le même, c'est juste la façon dont
   // le centrogramme est dessiné qui change.
-  const [massAxis, setMassAxis] = useState('x');
+  const [massAxis, setMassAxis] = useState(S?.massAxis ?? 'x');
 
   /**
    * Inverse les axes X et Y :
@@ -138,7 +147,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   };
 
   // Dimensions du chart (modifiables via drag souris quand "Mode ajustement" est activé)
-  const [chartSize, setChartSize] = useState({
+  const [chartSize, setChartSize] = useState(S?.chartSize ?? {
     width: DEFAULT_CHART_WIDTH,
     height: DEFAULT_CHART_HEIGHT
   });
@@ -174,13 +183,13 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   }, [chartResize]);
 
   // ─── Background image (position en pixels SVG inner) ────────────────────
-  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundImage, setBackgroundImage] = useState(S?.backgroundImage ?? null);
   const [imageAdjustMode, setImageAdjustMode] = useState(false);
 
   // ─── Calibration multi-points par axe ───────────────────────────────────
   // Format : [{value, pixel}, ...] — voir Chart.tsx pour le format attendu
-  const [customXTicks, setCustomXTicks] = useState([]);
-  const [customYTicks, setCustomYTicks] = useState([]);
+  const [customXTicks, setCustomXTicks] = useState(S?.customXTicks ?? []);
+  const [customYTicks, setCustomYTicks] = useState(S?.customYTicks ?? []);
 
   // État de calibration GUIDÉE (axe + valeurs restantes à cliquer)
   // null si pas de calibration en cours.
@@ -189,11 +198,11 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
 
   // ─── Stages + points + résultats ────────────────────────────────────────
   const stageList = useMemo(() => buildStageList(aircraftData), [aircraftData]);
-  const [currentStageKey, setCurrentStageKey] = useState('');
+  const [currentStageKey, setCurrentStageKey] = useState(S?.currentStageKey ?? '');
   // Pour Chart : on stocke les points dans le format "curve" (Curve.points)
-  const [curvePoints, setCurvePoints] = useState([]); // [{id, x, y}]
+  const [curvePoints, setCurvePoints] = useState(S?.curvePoints ?? []); // [{id, x, y}]
   // Résultats validés par stage : {a, b, r2, n, armCm, ...}
-  const [resultsByStage, setResultsByStage] = useState({});
+  const [resultsByStage, setResultsByStage] = useState(S?.resultsByStage ?? {});
 
   // ─── Création d'éléments à mesurer sur place (bagages / carburant / siège) ──
   // Permet d'ajouter un élément manquant DIRECTEMENT ici (il est créé dans le
@@ -212,7 +221,7 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // quittant un élément et on le restaure en y revenant → l'image reste chargée
   // UNE seule fois et on passe d'un élément à l'autre SANS tout recalibrer ni
   // faire d'aller-retour entre les étapes.
-  const [contextByStage, setContextByStage] = useState({});
+  const [contextByStage, setContextByStage] = useState(S?.contextByStage ?? {});
   // Formulaire d'axes repliable dans l'atelier (réglage fin par panneau).
   const [showAxesForm, setShowAxesForm] = useState(false);
 
@@ -316,13 +325,32 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // catégorie (Normale, Utilitaire). Chaque point cliqué est en coordonnées data
   // (masse, moment) → CG = moment / masse. À la construction, l'adaptateur de
   // Phase 1 (buildCgEnvelope) produit le cgEnvelope canonique (CG en mètres).
-  const [envelope, setEnvelope] = useState({
+  const [envelope, setEnvelope] = useState(S?.envelope ?? {
     activeCategory: 'Normale',
     activeLimit: 'forward', // 'forward' | 'aft'
     categories: { Normale: { forward: [], aft: [] } },
   });
-  const [envelopeBuilt, setEnvelopeBuilt] = useState(null); // résumé après construction
-  const [envelopePreloaded, setEnvelopePreloaded] = useState(false); // enveloppe avion pré-chargée
+  const [envelopeBuilt, setEnvelopeBuilt] = useState(S?.envelopeBuilt ?? null); // résumé après construction
+  const [envelopePreloaded, setEnvelopePreloaded] = useState(S?.envelopePreloaded ?? false); // enveloppe avion pré-chargée
+
+  // ─── Persistance de la session ──────────────────────────────────────────
+  // Un seul effet : à chaque changement, l'intégralité du travail en cours est
+  // déposée dans le ref du wizard. Le démontage ne détruit donc plus rien.
+  // Volatiles exclus à dessein : calibrationState (calibrage en cours),
+  // chartResize et imageAdjustMode (gestes de souris).
+  useEffect(() => {
+    if (!sessionRef) return;
+    sessionRef.current = {
+      ...(sessionRef.current || {}),
+      reader: {
+        activeStep, imageUrl, imageFile, axesConfig, massAxis, chartSize,
+        backgroundImage, customXTicks, customYTicks, currentStageKey, curvePoints,
+        resultsByStage, contextByStage, envelope, envelopeBuilt, envelopePreloaded,
+      },
+    };
+  }, [sessionRef, activeStep, imageUrl, imageFile, axesConfig, massAxis, chartSize,
+      backgroundImage, customXTicks, customYTicks, currentStageKey, curvePoints,
+      resultsByStage, contextByStage, envelope, envelopeBuilt, envelopePreloaded]);
 
   // ── PONT INVERSE (Phase 4) : pré-charge l'enveloppe DÉJÀ enregistrée sur
   // l'avion (saisie manuelle OU build graphique précédent) dans le traceur, pour
@@ -330,6 +358,10 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
   // On pré-cale aussi les axes du panneau enveloppe (contextByStage) pour que les
   // points soient visibles dès qu'on ouvre l'onglet « Enveloppe ».
   useEffect(() => {
+    // Session reprise : le travail en cours fait foi. Sans cette garde, ce
+    // pré-chargement réinitialiserait la calibration et les points du panneau
+    // enveloppe qu'on vient précisément de restaurer.
+    if (S) return;
     const env = aircraftData?.cgEnvelope;
     if (!env) return;
     let cats = [];

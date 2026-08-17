@@ -46,10 +46,19 @@ import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 import { uploadWeighingReportPdf } from '@services/blobStorage';
 
-const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav }) => {
+const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
   // Persistence locale UI uniquement : ne touche pas au store.
-  const [inputMethod, setInputMethod] = useState(null);
+  // Restauré depuis la session du wizard : revenir sur cette étape rouvre la
+  // méthode en cours au lieu de repartir de l'écran de choix.
+  const [inputMethod, setInputMethod] = useState(() => centrogramSessionRef?.current?.inputMethod ?? null);
+
+  // La méthode choisie fait partie de la session : cette étape est démontée au
+  // changement d'étape principale, la session, elle, vit dans le wizard.
+  useEffect(() => {
+    if (!centrogramSessionRef) return;
+    centrogramSessionRef.current = { ...(centrogramSessionRef.current || {}), inputMethod };
+  }, [inputMethod, centrogramSessionRef]);
 
   // Réf vers le contrat de navigation interne du CentrogramReader (sous-étapes
   // de calibration), relayé au pied de page du wizard pour une cascade complète.
@@ -367,14 +376,24 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   // La capacité totale devient une valeur DÉRIVÉE de la somme de tous les
   // réservoirs (refonte demandée par le pilote). Si la somme diverge de
   // ce qui est stocké actuellement (ex. ancien total MANEX), on aligne.
+  // 🔧 Phase 0 (2026-08-17) — La somme ne REMPLACE plus une capacité déjà saisie.
+  // Cet effet réalignait `fuelCapacity` sur la somme des réservoirs à chaque
+  // ouverture de la fiche. Conséquence : toute correction de la capacité totale
+  // était annulée à la réouverture. Cas vécu sur F-BXQT — 98 L relevés au manuel
+  // et acceptés à l'extraction, écrasés à 85 L par la somme des réservoirs.
+  // Désormais la somme ne sert qu'à RENSEIGNER un champ vide. Un écart entre la
+  // somme et la capacité déclarée n'est plus masqué : c'est le signe qu'un
+  // réservoir manque ou qu'une capacité est fausse, et cela doit se corriger à
+  // la source, pas se recouvrir en silence.
   useEffect(() => {
     if (!additionalFuelTanks || additionalFuelTanks.length === 0) return;
     const sum = additionalFuelTanks.reduce(
       (s, t) => s + (parseFloat(t.capacity) || 0), 0
     );
     if (sum <= 0) return;
-    const current = parseFloat(data.fuelCapacity) || 0;
-    if (Math.abs(sum - current) > 0.5) {
+    const current = parseFloat(data.fuelCapacity);
+    const vide = !Number.isFinite(current) || current <= 0;
+    if (vide) {
       updateData('fuelCapacity', sum);
     }
   }, [additionalFuelTanks, data.fuelCapacity]);
@@ -867,6 +886,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
           onBack={() => setInputMethod(null)}
           onExit={() => setInputMethod('manual')}
           registerNav={registerReaderNav}
+          sessionRef={centrogramSessionRef}
         />
       </Box>
     );

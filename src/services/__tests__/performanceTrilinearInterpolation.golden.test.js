@@ -277,15 +277,31 @@ describe('trilinearInterpolate — tableaux dégénérés', () => {
     expect(trilinearInterpolate([1000], [0], [0], [[[555]]], 1234, 9999, 99)).toBeCloseTo(555, 6);
   });
 
-  it('⚠️ case manquante (null) : remplacée en silence par la case voisine', () => {
+  // ─────────────────────────────────────────────────────────────────────────
+  // COMPORTEMENT DÉLIBÉRÉMENT MODIFIÉ — Phase 0, 17/08/2026
+  //
+  // AVANT : une case absente était remplacée en silence par la case voisine, et
+  //   la distance ressortait avec le statut « calculé ». Ce test l'attestait :
+  //   `trilinearInterpolate(m, a, t, v, 1000, 0, 0)` valait 400, soit la distance
+  //   de la masse la plus LÉGÈRE appliquée à un avion 100 kg plus lourd.
+  //   Constaté sur la base réelle : cinq des treize avions ont des grilles
+  //   trouées ; F-BXNG rendait à 1500 ft la distance du niveau de la mer.
+  //
+  // APRÈS : une borne manquante rend `null`. Le résolveur remonte l'échec et le
+  //   pilote lit « — » plutôt qu'un chiffre faux.
+  //
+  // Assertion changée : la première, `toBe(400)` → `toBeNull()`.
+  // La seconde (tous sommets nuls → null) est inchangée.
+  // ─────────────────────────────────────────────────────────────────────────
+  it('case manquante (null) : refus de calculer, jamais de repli sur la voisine', () => {
     const m = [900, 1100];
     const a = [0];
     const t = [0];
     const v = [[[400]], [[null]]];       // valeur absente à 1100 kg
 
-    // À 1000 kg, le sommet 1100 kg est nul → on renvoie la valeur 900 kg.
-    expect(trilinearInterpolate(m, a, t, v, 1000, 0, 0)).toBe(400);
-    // À 1100 kg pile, tous les sommets sont nuls → null (pas de repli).
+    // À 1000 kg, le sommet 1100 kg est nul → on REFUSE de calculer.
+    expect(trilinearInterpolate(m, a, t, v, 1000, 0, 0)).toBeNull();
+    // À 1100 kg pile, tous les sommets sont nuls → null (inchangé).
     expect(trilinearInterpolate(m, a, t, v, 1100, 0, 0)).toBeNull();
   });
 

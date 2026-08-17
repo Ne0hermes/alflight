@@ -149,12 +149,23 @@ function getValueSafe(values, massIdx, altIdx, tempIdx) {
 }
 
 /**
- * Interpolation linéaire qui gère les valeurs nulles
+ * Interpolation linéaire entre deux bornes du tableau.
+ *
+ * 🔧 Phase 0 (2026-08-17) — PLUS DE COMBLEMENT SILENCIEUX.
+ * Une borne manquante rendait AUTREFOIS l'autre borne, telle quelle : un trou
+ * dans la grille du manuel se remplissait tout seul avec la case voisine, et le
+ * résultat ressortait avec le statut « calculé », sans le moindre avertissement.
+ *
+ * Constaté sur la base réelle : F-BXNG rendait à 1500 ft exactement la distance
+ * du niveau de la mer (13 % trop courte), et F-GUKQ une distance qui DIMINUAIT
+ * quand la température montait. Cinq avions sur treize ont des grilles trouées.
+ *
+ * Une case absente est désormais une case absente : on renvoie null, le
+ * résolveur remonte l'échec, et le pilote lit « — » au lieu d'un chiffre faux.
+ * C'est la règle du projet : mieux vaut pas de valeur qu'une valeur inventée.
  */
 function interpolateIfPossible(x1, y1, x2, y2, x) {
-  if (y1 === null && y2 === null) return null;
-  if (y1 === null) return y2;
-  if (y2 === null) return y1;
+  if (y1 === null || y2 === null) return null;
 
   return linearInterpolate(x1, y1, x2, y2, x);
 }

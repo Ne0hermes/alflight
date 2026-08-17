@@ -208,13 +208,17 @@ export function evaluateAircraft(aircraft) {
 
   for (const def of FIELD_DEFINITIONS) {
     totalWeight += def.weight;
-    // Bypassed = traité comme rempli (le pilote a explicitement accepté de l'ignorer)
     // `valueOf` essaye d'abord le `path` traditionnel, puis le getter custom `def.get`
     // pour les champs qui peuvent vivre dans `additionalFuelTanks[]` (refonte M&B).
-    if (bypassedSet.has(def.path) || hasValue(valueOf(aircraft, def))) {
+    if (hasValue(valueOf(aircraft, def))) {
       filledWeight += def.weight;
     } else {
-      missing.push(def);
+      // 🔧 Phase 0 — Un champ CONTOURNÉ n'est PAS un champ rempli.
+      // Il comptait auparavant dans le score : une fiche sans masse maxi ni
+      // vitesse de décrochage pouvait afficher 88 % et disparaître de la liste
+      // des manques. Le contournement dit « je sais et j'avance », pas « c'est
+      // renseigné » — la donnée reste absente pour le moteur de calcul.
+      missing.push(bypassedSet.has(def.path) ? { ...def, bypassed: true } : def);
     }
   }
 

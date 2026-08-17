@@ -719,6 +719,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   };
 
   // Validation des étapes
+  // Dernières erreurs de validation, lisibles SYNCHRONEMENT (cf. validateStep).
+  const lastErrorsRef = useRef({});
+
   const validateStep = (stepIndex) => {
     const newErrors = {};
     
@@ -841,6 +844,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     }
     
     setErrors(newErrors);
+    // 🔧 Phase 0 — Les erreurs sont AUSSI déposées dans un ref, lisible
+    // immédiatement. `setErrors` est asynchrone : handleNext lisait jusqu'ici
+    // l'état du rendu PRÉCÉDENT — souvent vide au premier clic — et enregistrait
+    // donc un contournement SANS aucune clé. La fiche restait incomplète avec un
+    // `bypassedFields` vide, sans trace de ce qui avait été passé outre.
+    lastErrorsRef.current = newErrors;
     return Object.keys(newErrors).length === 0;
   };
 
@@ -851,6 +860,17 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   // cascade : on ne change d'étape principale que lorsque la step est à sa racine.
   const stepNavRef = useRef(null);
   const registerStepNav = useCallback((api) => { stepNavRef.current = api; }, []);
+
+  // ─── Session de travail du lecteur de centrogramme ─────────────────────────
+  // L'image chargée, le calibrage des deux axes et TOUS les points cliqués
+  // vivaient dans l'état local du lecteur : quitter la lecture graphique le
+  // démontait et détruisait le travail, obligeant à tout retracer au retour.
+  // La session vit désormais ICI, au-dessus des étapes : elle survit à Suivant,
+  // à Précédent et au changement d'étape, jusqu'à l'enregistrement final.
+  // Volontairement HORS de aircraftData : elle contient un blob d'image et un
+  // objet File, que ni la garde de 2 Mo du brouillon ni JSON.stringify ne
+  // supporteraient.
+  const centrogramSessionRef = useRef(null);
 
   // Navigation
   const handleNext = () => {
@@ -866,8 +886,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     if (isValid) {
       setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
     } else {
-      // Validation échouée → proposer le bypass plutôt que de bloquer silencieusement
-      setPendingBypassErrors(errors);
+      // Validation échouée → proposer le bypass plutôt que de bloquer silencieusement.
+      // On lit le ref (à jour) et non l'état `errors` (rendu précédent).
+      setPendingBypassErrors(lastErrorsRef.current);
       setShowBypassDialog(true);
     }
   };
@@ -1026,10 +1047,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         // défini explicitement). Step3 le fait déjà au runtime, mais on
         // sécurise ici au save pour les cas où la sync useEffect ne se
         // serait pas déclenchée (édition rapide, données héritées, etc.).
+        // 🔧 Phase 0 (2026-08-17) — Second verrou de la même règle qu'en Step3 :
+        // on RENSEIGNE une capacité absente, on n'ÉCRASE jamais une capacité
+        // saisie. Ce point de sauvegarde annulait sinon la correction que Step3
+        // venait de laisser passer.
         if (tanks.length > 0) {
           const sum = tanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
           const current = parseFloat(dataToSave.fuelCapacity);
-          if (sum > 0 && (!Number.isFinite(current) || Math.abs(sum - current) > 0.5)) {
+          if (sum > 0 && (!Number.isFinite(current) || current <= 0)) {
             dataToSave.fuelCapacity = sum;
           }
         }
@@ -1466,7 +1491,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
-        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} />;
+        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} centrogramSessionRef={centrogramSessionRef} />;
       case 3:
         return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
       case 4:

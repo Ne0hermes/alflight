@@ -580,9 +580,15 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     // Collecter les équipements SAR cochés
                     const sarEquipment = [];
 
-                    // ELT (via transponder mode ou explicite)
-                    if (survEquip.transponderMode) {
-                      sarEquipment.push(`ELT (${survEquip.transponderMode})`);
+                    // 🔧 Phase 0 (2026-08-17) — La balise de détresse n'est déclarée que
+                    // si elle est DÉCLARÉE. On lisait auparavant `transponderMode`, un champ
+                    // posé en dur à « C » par l'initialisation de l'assistant : la case
+                    // « Équipements SAR » du plan de vol annonçait donc une balise sur des
+                    // avions dont la fiche portait explicitement `elt: false`, et où aucun
+                    // humain n'avait jamais touché ce champ. Une information de recherche
+                    // et sauvetage fausse est pire que pas d'information.
+                    if (ops.elt) {
+                      sarEquipment.push('ELT');
                     }
 
                     // Canot de sauvetage

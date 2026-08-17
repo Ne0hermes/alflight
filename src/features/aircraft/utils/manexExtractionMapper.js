@@ -602,13 +602,16 @@ export function buildBulkUpdatePayload(reviewItems) {
   // Auto-activation catégorie Utilitaire si l'IA a trouvé MTOW/MLW utility.
   // Sans cela, les valeurs U seraient stockées mais Step3 ne montrerait pas
   // le bloc utilitaire (qui dépend de utilityCategory.enabled = true).
-  if (payload.utilityCategory && (
-    payload.utilityCategory.mtow ||
-    payload.utilityCategory.mlw ||
-    payload.utilityCategory.forwardCG ||
-    payload.utilityCategory.aftMinCG ||
-    payload.utilityCategory.aftMaxCG
-  )) {
+  // 🔧 Phase 0 (2026-08-17) — La catégorie Utilitaire n'a de sens que si ses
+  // LIMITES DE CENTRAGE existent. Il suffisait auparavant d'UN seul champ extrait
+  // (souvent une MTOW utilitaire égale à la MTOW normale) pour l'activer : le
+  // sélecteur « Normale / Utilitaire » s'affichait alors en préparation de vol
+  // avec la mention « domaine CG plus restreint », mais aucune limite n'était
+  // substituée. Le pilote croyait voler dans un domaine restreint ; il volait
+  // dans le domaine normal. Six avions de la base étaient dans ce cas.
+  if (payload.utilityCategory &&
+      payload.utilityCategory.forwardCG &&
+      payload.utilityCategory.aftMaxCG) {
     payload.utilityCategory.enabled = true;
   }
 
