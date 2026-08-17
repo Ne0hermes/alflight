@@ -1135,6 +1135,23 @@ export function performCascadeCalculationWithParameters(
                 };
 
                 trace(`  Interpolation altitude: ${yLower.toFixed(2)} → ${interpolatedY.toFixed(2)} → ${yUpper.toFixed(2)}`);
+              } else {
+                // 🔧 2026-08-17 — X hors du domaine tracé des deux courbes
+                // encadrantes (journée plus chaude que l'abaque, altitude entre
+                // deux courbes : le cas banal d'un été à 400 ft). `result`
+                // restait vide, `selectedCurve` aussi, et la ligne « Sortie Y »
+                // plus bas déréférençait le vide : l'étape Performance du
+                // wizard PLANTAIT au lieu d'afficher une erreur. Fail-closed :
+                // on refuse de calculer, avec le motif.
+                return {
+                  steps,
+                  finalValue: currentValue,
+                  success: false,
+                  error:
+                    `X=${currentValue} hors du domaine tracé des courbes ` +
+                    `« ${lowerCurve.name} » et « ${upperCurve.name} » du graphique ` +
+                    `« ${graph.name} » — valeur hors abaque, vérifiez le manuel de vol`
+                };
               }
             } else {
               // Utiliser la courbe la plus proche

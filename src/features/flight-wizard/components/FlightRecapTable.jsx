@@ -376,8 +376,20 @@ export const FlightRecapTable = ({
                             </div>
                           )}
 
-                          {/* Performances calculées (si pas d'abaques ou en complément) */}
-                          {(!performanceData?.takeoff?.abaques || performanceData.takeoff.abaques.length === 0) && performanceData?.takeoff?.groundRoll && (
+                          {/* Performances calculées (si pas d'abaques ou en complément).
+                              🔧 2026-08-17 — Chiffre OPÉRATIONNEL : distance MAJORÉE par le
+                              facteur de sécurité si elle existe (…Factored), brute sinon —
+                              même règle que le bandeau des pistes (l.69-70). Ce bloc
+                              affichait la distance BRUTE et colorait son verdict dessus :
+                              un pilote en marge ×1,43 lisait 715 m à l'écran et 500 m sur
+                              la fiche imprimée, avec une piste déclarée conforme sur la
+                              valeur la plus optimiste. Deux chiffres contradictoires dans
+                              le même dossier de vol — c'est l'imprimé qui accompagne le
+                              pilote en vol, il porte donc le chiffre opérationnel. */}
+                          {(!performanceData?.takeoff?.abaques || performanceData.takeoff.abaques.length === 0) && performanceData?.takeoff?.groundRoll && (() => {
+                            const roll50 = performanceData.takeoff.toda50ftFactored ?? performanceData.takeoff.toda50ft;
+                            const roll = performanceData.takeoff.groundRollFactored ?? performanceData.takeoff.groundRoll;
+                            return (
                             <div style={{
                               marginTop: '4px',
                               paddingTop: '4px',
@@ -386,26 +398,27 @@ export const FlightRecapTable = ({
                               backgroundColor: PRINT.accentBg
                             }}>
                               <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
-                                📊 Calculé
+                                📊 Calculé{performanceData.takeoff.toda50ftFactored ? ' (marge incluse)' : ''}
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Roulement:</span>
                                 <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '8px' }}>
-                                  {Math.round(performanceData.takeoff.groundRoll)}m
+                                  {Math.round(roll)}m
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
-                                  color: tora >= performanceData.takeoff.toda50ft ? PRINT.ok : PRINT.nogo,
+                                  color: tora >= roll50 ? PRINT.ok : PRINT.nogo,
                                   fontSize: '8px'
                                 }}>
-                                  {Math.round(performanceData.takeoff.toda50ft)}m
+                                  {Math.round(roll50)}m
                                 </span>
                               </div>
                             </div>
-                          )}
+                            );
+                          })()}
                         </>
                       )}
 
@@ -448,8 +461,14 @@ export const FlightRecapTable = ({
                             </div>
                           )}
 
-                          {/* Performances calculées (si pas d'abaques ou en complément) */}
-                          {(!performanceData?.landing?.abaques || performanceData.landing.abaques.length === 0) && performanceData?.landing?.groundRoll && (
+                          {/* Performances calculées (si pas d'abaques ou en complément).
+                              🔧 2026-08-17 — Même règle qu'au décollage : chiffre MAJORÉ
+                              (…Factored) s'il existe, brut sinon, et verdict coloré sur
+                              cette valeur-là. */}
+                          {(!performanceData?.landing?.abaques || performanceData.landing.abaques.length === 0) && performanceData?.landing?.groundRoll && (() => {
+                            const ldg50 = performanceData.landing.lda50ftFactored ?? performanceData.landing.lda50ft;
+                            const ldgRoll = performanceData.landing.groundRollFactored ?? performanceData.landing.groundRoll;
+                            return (
                             <div style={{
                               marginTop: '4px',
                               paddingTop: '4px',
@@ -458,26 +477,27 @@ export const FlightRecapTable = ({
                               backgroundColor: PRINT.accentBg
                             }}>
                               <div style={{ fontSize: '8px', fontWeight: '700', color: PRINT.accent, marginBottom: '2px' }}>
-                                📊 Calculé
+                                📊 Calculé{performanceData.landing.lda50ftFactored ? ' (marge incluse)' : ''}
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Roulement:</span>
                                 <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '8px' }}>
-                                  {Math.round(performanceData.landing.groundRoll)}m
+                                  {Math.round(ldgRoll)}m
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                 <span style={{ color: 'var(--text-secondary)', fontSize: '8px' }}>Passage 50ft:</span>
                                 <span style={{
                                   fontWeight: '700',
-                                  color: lda >= performanceData.landing.lda50ft ? PRINT.ok : PRINT.nogo,
+                                  color: lda >= ldg50 ? PRINT.ok : PRINT.nogo,
                                   fontSize: '8px'
                                 }}>
-                                  {Math.round(performanceData.landing.lda50ft)}m
+                                  {Math.round(ldg50)}m
                                 </span>
                               </div>
                             </div>
-                          )}
+                            );
+                          })()}
                         </>
                       )}
                     </div>
