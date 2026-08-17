@@ -17,16 +17,37 @@ import { OperationClassifier } from '../../../../abac/curves/ui/OperationClassif
 import { getOperation } from '../../../../abac/curves/core/operationCatalog';
 import PerformanceCorrectionsEditor from '../PerformanceCorrectionsEditor';
 
-const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav }) => {
+const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav, abacSessionRef }) => {
+  // ─── Session d'atelier restaurée ──────────────────────────────────────────
+  // Ce composant est démonté au moindre Précédent/Suivant de l'assistant avion :
+  // sans reprise, on retombait TOUJOURS sur le récapitulatif (effet de montage
+  // ci-dessous) et l'atelier en cours était perdu. La session est détenue par
+  // le wizard (abacSessionRef), donc elle survit jusqu'à l'enregistrement
+  // final. `H` (host) est lu au premier rendu : les initialiseurs paresseux
+  // ci-dessous ne s'exécutent qu'au montage (même motif que CentrogramReader).
+  const H = abacSessionRef?.current?.host || null;
+
   // État local pour stocker les données de performance temporaires
-  const [savedPerformanceData, setSavedPerformanceData] = useState(null);
-  const [wizardStep, setWizardStep] = useState(2); // Démarrer à l'étape 2 (Step 1 retiré)
+  const [savedPerformanceData, setSavedPerformanceData] = useState(H?.savedPerformanceData ?? null);
+  const [wizardStep, setWizardStep] = useState(H?.wizardStep ?? 2); // Démarrer à l'étape 2 (Step 1 retiré)
   // R5 — « Nouvel abaque » depuis le récap : ouverture directe de l'atelier
   // image unique (bypass du tunnel type/upload/analyse/pages).
-  const [directNewAbaque, setDirectNewAbaque] = useState(false);
-  const [showExistingData, setShowExistingData] = useState(false);
-  const [forceShowSummary, setForceShowSummary] = useState(false);
+  const [directNewAbaque, setDirectNewAbaque] = useState(H?.directNewAbaque ?? false);
+  const [showExistingData, setShowExistingData] = useState(H?.showExistingData ?? false);
+  const [forceShowSummary, setForceShowSummary] = useState(H?.forceShowSummary ?? false);
   const [performanceWizardRef, setPerformanceWizardRef] = useState(null);
+
+  // ─── Persistance de la session (partie hôte) ──────────────────────────────
+  // Un seul effet : à chaque changement, les 5 états d'ORIENTATION (quelle vue
+  // est ouverte, quel modèle est en cours d'édition) sont déposés dans le ref
+  // du wizard. Le démontage ne fait donc plus retomber sur le récapitulatif.
+  useEffect(() => {
+    if (!abacSessionRef) return;
+    abacSessionRef.current = {
+      ...(abacSessionRef.current || {}),
+      host: { savedPerformanceData, wizardStep, directNewAbaque, showExistingData, forceShowSummary },
+    };
+  }, [abacSessionRef, savedPerformanceData, wizardStep, directNewAbaque, showExistingData, forceShowSummary]);
   // Utiliser un ref au lieu d'un state pour stocker la référence AbacBuilder
   const abacBuilderRef = React.useRef(null);
 
@@ -75,7 +96,14 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
   // Restaurer les données sauvegardées au montage du composant
   useEffect(() => {
-    
+    // Session reprise : le travail en cours fait foi. Sans cette garde, ce
+    // montage reconstruisait savedPerformanceData depuis `data` et FORÇAIT
+    // setShowExistingData(true) → on retombait systématiquement sur le
+    // récapitulatif alors qu'un atelier était ouvert (bloqueur n°1 de la
+    // reprise de session). La normalisation 'abac' → 'abaque' et la reprise
+    // localStorage ont déjà eu lieu au premier montage de cette session.
+    if (H) return;
+
     // Désactiver le mode édition quand on monte le composant avec des données existantes
     if (setIsEditingAbaque && (data.advancedPerformance || data.performanceTables || data.performanceModels)) {
       setIsEditingAbaque(false);
@@ -406,6 +434,16 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
 
     // Navigation automatique vers l'étape suivante (équipement)
     if (performanceData.abacCurves) {
+      // ─── Fin de session d'atelier ── l'enregistrement final clôt la partie
+      // hôte de la session : au prochain passage sur l'étape, l'effet de
+      // montage reprend la main et affiche le récapitulatif À JOUR (AbacBuilder
+      // a retiré la partie `atelier` de son côté au même moment). La partie
+      // `pdf` (pages MANEX rendues) est volontairement conservée : coûteuse à
+      // régénérer et sans risque de doublon.
+      if (abacSessionRef?.current) {
+        abacSessionRef.current = { ...abacSessionRef.current, host: null };
+      }
+
       // Dans les deux cas (création ou modification), naviguer vers l'étape équipement
       const action = performanceData.editingModelIndex !== undefined ? 'modifié' : 'créé';
       
@@ -1409,6 +1447,7 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         onPerformanceUpdate={handlePerformanceUpdate}
         initialData={wizardInitialData}
         startAtStep={wizardStep}
+        sessionRef={abacSessionRef}
         abacBuilderRefCallback={handleAbacBuilderRefCallback}
         onCancel={() => {
           // R5 — sortir du mode « Nouvel abaque direct » en quittant l'atelier

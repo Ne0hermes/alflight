@@ -51,6 +51,10 @@ interface AbacBuilderProps {
   modelName?: string;
   aircraftModel?: string;
   onBack?: () => void;
+  /** Session de travail détenue par le wizard avion (AircraftCreationWizard.abacSessionRef).
+   *  Partie `atelier` : tout le tracé en cours (workshop, graphs, calibrations…)
+   *  survit ainsi au démontage de l'atelier lors d'un changement d'étape. */
+  sessionRef?: React.MutableRefObject<any>;
 }
 
 // Exposer les méthodes via un ref
@@ -62,7 +66,7 @@ export interface AbacBuilderRef {
 
 // Define the component function separately
 function AbacBuilderComponent(
-  { onSave, initialData, modelName, aircraftModel, onBack }: AbacBuilderProps,
+  { onSave, initialData, modelName, aircraftModel, onBack, sessionRef }: AbacBuilderProps,
   ref: React.Ref<AbacBuilderRef>
 ) {
   // P1 (AUDIT_ABAC_CONSTRUCTION.md) : UN AbacCurveManager PAR GRAPHE.
@@ -80,13 +84,39 @@ function AbacBuilderComponent(
     }
     return m;
   }, []);
+
+  // ─── Session d'atelier restaurée ──────────────────────────────────────────
+  // L'atelier est démonté au moindre changement d'étape de l'assistant avion
+  // (ou en repassant par le récapitulatif) : image MANEX, cadres, axes, points
+  // cliqués, calibrations, cas de référence… tout le tracé disparaissait et il
+  // fallait recommencer. La session est détenue par le wizard avion
+  // (abacSessionRef) et survit donc jusqu'à l'enregistrement final. `S` est lu
+  // au premier rendu : les initialiseurs paresseux ci-dessous ne s'exécutent
+  // qu'au montage (même motif que CentrogramReader).
+  //
+  // INVALIDATION : la session est liée à UN abaque précis. Si l'atelier
+  // s'ouvre sur un AUTRE initialData (édition d'un autre modèle, ou passage
+  // édition ↔ création), le marqueur ne correspond plus : la session est
+  // ignorée — l'effet de persistance la remplace dès ce montage. Les ids de
+  // graphes (uuid) rendent le marqueur unique par modèle sans hacher tout le
+  // JSON (les points peuvent peser des centaines de Ko).
+  const sessionMarker = initialData
+    ? `${initialData.metadata?.systemType || ''}|${initialData.metadata?.modelName || ''}|${(initialData.graphs || []).map(g => g.id).join(',')}`
+    : 'nouveau';
+  const storedAtelier = sessionRef?.current?.atelier;
+  const S: any = storedAtelier && storedAtelier.marker === sessionMarker ? storedAtelier : null;
+  // Session « fermée » après l'enregistrement final : on cesse de persister,
+  // sinon le prochain « Nouvel abaque » restaurerait le set qu'on vient
+  // d'enregistrer → double enregistrement du même travail.
+  const sessionClosedRef = useRef(false);
+
   // ─── R1 — Atelier « image unique » (AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md) ───
   // État du workshop : UNE image pour le SET, un axe Y COMMUN, des cadres (un
   // par graphe). Posé en R1 (persistance metadata.workshop + duplication du Y
   // à l'export) ; le canevas visuel arrive en R2/R3. Tant que l'atelier n'est
   // pas utilisé (image null + aucun cadre), les exports restent STRICTEMENT
   // identiques à avant — zéro changement de comportement.
-  const [workshop, setWorkshop] = useState<WorkshopConfig>({
+  const [workshop, setWorkshop] = useState<WorkshopConfig>(S?.workshop ?? {
     image: null,
     sharedY: { min: 0, max: 100, unit: '', title: '' },
     frames: []
@@ -107,11 +137,11 @@ function AbacBuilderComponent(
   // R7 — session de façonnage Bézier SUR LE CANEVAS (le Chart séparé a disparu
   // du mode atelier : « tout doit se passer sur le graphique », retour pilote).
   // La session porte la courbe ciblée + les poignées tirées (coords DATA).
-  const [bezierSession, setBezierSession] = useState<{ curveId: string; overrides: BezierOverrides } | null>(null);
+  const [bezierSession, setBezierSession] = useState<{ curveId: string; overrides: BezierOverrides } | null>(S?.bezierSession ?? null);
 
   // R13 — BANC DE TEST PERMANENT : cas de référence du manuel, persistés dans
   // metadata.referenceCases et rejoués à la validation (PASS/FAIL ± tolérance).
-  const [referenceCases, setReferenceCases] = useState<ReferenceCase[]>([]);
+  const [referenceCases, setReferenceCases] = useState<ReferenceCase[]>(S?.referenceCases ?? []);
   const [referencePrefill, setReferencePrefill] = useState<ReferencePrefill | null>(null);
 
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
@@ -165,7 +195,7 @@ function AbacBuilderComponent(
 
   // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
-  const [currentStep, setCurrentStep] = useState<Step>('points');
+  const [currentStep, setCurrentStep] = useState<Step>((S?.currentStep as Step) ?? 'points');
 
   React.useEffect(() => {
         return () => {
@@ -197,7 +227,7 @@ function AbacBuilderComponent(
     },
     getCurrentStep: () => currentStep
   }));
-  const [graphs, setGraphs] = useState<GraphConfig[]>([]);
+  const [graphs, setGraphs] = useState<GraphConfig[]>(S?.graphs ?? []);
   const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null);
   const [selectedCurveId, setSelectedCurveId] = useState<string | null>(null);
   const [fitResults, setFitResults] = useState<Record<string, FitResult>>({});
@@ -220,12 +250,12 @@ function AbacBuilderComponent(
   ];
 
   const [modelNameInput, setModelNameInput] = useState<string>(
-    modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || ''
+    S?.modelNameInput ?? (modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || '')
   );
-  const [aircraftModelDisplay, setAircraftModelDisplay] = useState<string>(aircraftModel || '');
+  const [aircraftModelDisplay, setAircraftModelDisplay] = useState<string>(S?.aircraftModelDisplay ?? (aircraftModel || ''));
   // SPRINT B+ : systemType contient désormais un operationId du catalogue canonique
   // (au lieu d'une valeur SYSTEM_TYPES legacy). Vide par défaut → force l'utilisateur à choisir.
-  const [systemType, setSystemType] = useState<string>('');
+  const [systemType, setSystemType] = useState<string>(S?.systemType ?? '');
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
   const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false); // Désactivé par défaut
   const axesMargin = 5; // Marge fixe de 5 unités
@@ -237,7 +267,7 @@ function AbacBuilderComponent(
 
   // Image en filigrane PDF par graphique (clé = graphId)
   // Stockée en pixels SVG inner — reste fixe en pixels CSS quand le Chart est resize.
-  const [backgroundImages, setBackgroundImages] = useState<Record<string, { url: string; x: number; y: number; width: number; height: number }>>({});
+  const [backgroundImages, setBackgroundImages] = useState<Record<string, { url: string; x: number; y: number; width: number; height: number }>>(S?.backgroundImages ?? {});
   // Graph pour lequel le mode "ajuster image" est actif (un seul à la fois)
   const [imageAdjustGraphId, setImageAdjustGraphId] = useState<string | null>(null);
   // Détection IA en cours pour ce graphId (loader)
@@ -245,7 +275,7 @@ function AbacBuilderComponent(
   // Notes IA dernière analyse (pour feedback utilisateur)
   const [aiNotes, setAiNotes] = useState<Record<string, string>>({});
   // Indices texte libre fournis par l'utilisateur pour guider l'IA (par graphId)
-  const [aiHints, setAiHints] = useState<Record<string, string>>({});
+  const [aiHints, setAiHints] = useState<Record<string, string>>(S?.aiHints ?? {});
 
   // Calibration multi-points par axe pour chaque graphique.
   // Permet de coller exactement aux graduations du filigrane même si l'image est déformée
@@ -254,7 +284,7 @@ function AbacBuilderComponent(
   const [customAxisTicks, setCustomAxisTicks] = useState<Record<string, {
     x?: { value: number; pixel: number }[];
     y?: { value: number; pixel: number }[];
-  }>>({});
+  }>>(S?.customAxisTicks ?? {});
 
   // État du mode calibration interactive en cours (un seul à la fois pour toute l'app)
   const [calibrationState, setCalibrationState] = useState<null | {
@@ -340,7 +370,7 @@ function AbacBuilderComponent(
   // Taille pixel du Chart par graphique (default 500x1000). L'utilisateur peut
   // l'étirer via les poignées sur les bords pour ajuster l'espacement entre
   // graduations sans toucher aux valeurs des bornes.
-  const [chartSizes, setChartSizes] = useState<Record<string, { width: number; height: number }>>({});
+  const [chartSizes, setChartSizes] = useState<Record<string, { width: number; height: number }>>(S?.chartSizes ?? {});
   // Taille par défaut d'un chart d'abaque (en pixels SVG inner).
   // L'utilisateur peut redimensionner via les poignées de bordure du Chart.
   const DEFAULT_CHART_SIZE = 800;
@@ -385,7 +415,29 @@ function AbacBuilderComponent(
 
   // Sous-étape par graphique dans l'étape "Construction et Interpolation"
   // Permet de traiter les graphiques un par un au lieu de les afficher tous ensemble.
-  const [subStepGraphIndex, setSubStepGraphIndex] = useState<number>(0);
+  const [subStepGraphIndex, setSubStepGraphIndex] = useState<number>(S?.subStepGraphIndex ?? 0);
+
+  // ─── Persistance de la session ────────────────────────────────────────────
+  // Un seul effet : à chaque changement, l'intégralité du travail en cours est
+  // déposée dans le ref du wizard avion. Le démontage ne détruit donc plus rien.
+  // Volatiles exclus à dessein : calibrationState (calibrage en cours),
+  // chartResize / imageAdjustGraphId / wizardEditorMode / wizardModeCommand
+  // (gestes de souris), aiDetectingGraphId / aiNotes (requête IA en vol),
+  // fitResults / warnings / expandedGraphs (recalculés ou purement visuels).
+  React.useEffect(() => {
+    if (!sessionRef || sessionClosedRef.current) return;
+    sessionRef.current = {
+      ...(sessionRef.current || {}),
+      atelier: {
+        marker: sessionMarker,
+        workshop, graphs, backgroundImages, customAxisTicks, referenceCases,
+        aiHints, bezierSession, systemType, modelNameInput, aircraftModelDisplay,
+        chartSizes, currentStep, subStepGraphIndex,
+      },
+    };
+  }, [sessionRef, sessionMarker, workshop, graphs, backgroundImages, customAxisTicks,
+      referenceCases, aiHints, bezierSession, systemType, modelNameInput,
+      aircraftModelDisplay, chartSizes, currentStep, subStepGraphIndex]);
 
   // Synchronise selectedGraphId avec le graphique courant de la sous-étape
   // et clamp l'index si le nombre de graphiques change.
@@ -405,9 +457,15 @@ function AbacBuilderComponent(
     }
   }, [subStepGraphIndex, graphs.length, graphs, selectedGraphId, selectedCurveId]);
 
-  // Réinitialise l'index à 0 quand on (re)rentre dans l'étape "points"
+  // Réinitialise l'index à 0 quand on (re)rentre dans l'étape "points".
+  // 🔧 Session : au MONTAGE (prev === null), on respecte l'index restauré —
+  // seule une VRAIE transition d'étape (final → points) remet à zéro. Sans
+  // session, l'index initial vaut déjà 0 : sauter le premier passage est neutre.
+  const prevStepRef = useRef<Step | null>(null);
   React.useEffect(() => {
-    if (currentStep === 'points') {
+    const prev = prevStepRef.current;
+    prevStepRef.current = currentStep;
+    if (currentStep === 'points' && prev !== null && prev !== currentStep) {
       setSubStepGraphIndex(0);
     }
   }, [currentStep]);
@@ -532,6 +590,13 @@ function AbacBuilderComponent(
 
   // Initialize with data if provided
   React.useEffect(() => {
+    // Session reprise : le travail en cours fait foi — rejouer l'hydratation
+    // depuis initialData écraserait les graphs/workshop/systemType qu'on vient
+    // de restaurer par les initialiseurs paresseux. Quand initialData change
+    // RÉELLEMENT (ouverture d'un AUTRE abaque), le marqueur de session ne
+    // correspond plus : S est null et l'hydratation ci-dessous reprend —
+    // l'ouverture normale d'un abaque existant reste donc intacte.
+    if (S) return;
     if (initialData) {
       // Restaurer le systemType depuis les métadonnées si disponible
       if (initialData.metadata?.systemType) {
@@ -1333,7 +1398,18 @@ function AbacBuilderComponent(
     if (onSave) {
       onSave(json, aircraftModel || modelNameInput);
     }
-  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases]);
+
+    // ─── Fin de session d'atelier ── l'enregistrement final clôt la session :
+    // on la retire du wizard avion ET on cesse de persister (sessionClosedRef),
+    // sinon le prochain « Nouvel abaque » restaurerait le set qu'on vient
+    // d'enregistrer → doublon garanti au save suivant. Les annulations en
+    // amont (confirm refusés → return) laissent la session vivante, comme il
+    // se doit.
+    if (sessionRef?.current) {
+      sessionRef.current = { ...sessionRef.current, atelier: null };
+    }
+    sessionClosedRef.current = true;
+  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases, sessionRef]);
 
   const handleImportJSON = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

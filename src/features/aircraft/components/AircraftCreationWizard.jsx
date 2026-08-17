@@ -872,6 +872,19 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
   // supporteraient.
   const centrogramSessionRef = useRef(null);
 
+  // ─── Session de travail de l'atelier d'abaques (étape Performances) ────────
+  // Même remède que le centrogramme ci-dessus : l'image MANEX importée sur le
+  // canevas, les cadres, les axes, les points cliqués, les calibrations et les
+  // pages PDF rendues en PNG vivaient dans l'état local de l'atelier — un
+  // simple Précédent/Suivant démontait Step4Performance et détruisait TOUT le
+  // tracé en cours. La session vit désormais ICI, au-dessus des étapes : elle
+  // survit au changement d'étape jusqu'à l'enregistrement final du set.
+  // Volontairement HORS de aircraftData : elle contient des dataURL d'images
+  // volumineuses (filigranes, pages PDF) que la garde de 2 Mo du brouillon
+  // localStorage rejetterait — et qui n'ont rien à faire dans la fiche avion.
+  // Structure : { host: …(Step4), pdf: …(PerformanceWizard), atelier: …(AbacBuilder) }
+  const abacSessionRef = useRef(null);
+
   // Navigation
   const handleNext = () => {
     // Cascade : si la step active gère un "suivant" interne, on le laisse faire.
@@ -1495,7 +1508,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 3:
         return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
       case 4:
-        return <Step4Performance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} />;
+        return <Step4Performance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} abacSessionRef={abacSessionRef} />;
       case 5:
         return <Step5Equipment data={aircraftData} updateData={updateData} errors={errors} />;
       case 6:

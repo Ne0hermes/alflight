@@ -92,25 +92,44 @@ const styles = {
   }
 };
 
-const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 2, onCancel, abacBuilderRefCallback }) => {
-  
-  
-  
+const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 2, onCancel, abacBuilderRefCallback, sessionRef }) => {
+  // ─── Session restaurée (partie pdf) ───────────────────────────────────────
+  // Ce wizard est démonté au moindre changement d'étape de l'assistant avion :
+  // les pages PDF du MANEX rendues en PNG (coûteuses), la sélection et les
+  // classifications disparaissaient — tout était à refaire au retour. La
+  // session est détenue par le wizard avion (abacSessionRef), donc elle survit
+  // jusqu'à l'enregistrement final. `S` est lu au premier rendu : les
+  // initialiseurs paresseux ne s'exécutent qu'au montage (motif CentrogramReader).
+  //
+  // La NAVIGATION (étape courante, type choisi) n'est reprise QUE si le wizard
+  // se remonte dans le MÊME contexte d'ouverture (navContext) : rouvrir en mode
+  // « Modifier tel abaque » ou « Nouvel abaque direct » doit primer sur l'étape
+  // où l'on se trouvait — seules les DONNÉES (pages rendues…) survivent alors.
+  const navContext = initialData?.directToBuilder
+    ? 'direct'
+    : initialData?.abacCurves
+    ? `edit:${initialData.editingModelIndex ?? ''}`
+    : 'null';
+  const S = sessionRef?.current?.pdf || null;
+  const navRestored = !!S && S.navContext === navContext;
 
   // États - DÉMARRAGE PAR DÉFAUT À L'ÉTAPE 2 (le MANEX est déjà géré ailleurs)
-  const [currentStep, setCurrentStep] = useState(startAtStep);
-  const [manualFile, setManualFile] = useState(null);
-  const [extractedPages, setExtractedPages] = useState([]);
-  const [selectedPages, setSelectedPages] = useState([]);
+  const [currentStep, setCurrentStep] = useState(navRestored ? (S.currentStep ?? startAtStep) : startAtStep);
+  const [manualFile, setManualFile] = useState(S?.manualFile ?? null);
+  const [extractedPages, setExtractedPages] = useState(S?.extractedPages ?? []);
+  const [selectedPages, setSelectedPages] = useState(S?.selectedPages ?? []);
   const [autoExtractPages, setAutoExtractPages] = useState(null);
-  const [performanceType, setPerformanceType] = useState(null);
-  const [pageSystemTypes, setPageSystemTypes] = useState({}); // Type de système pour chaque page (table ou abaque)
+  const [performanceType, setPerformanceType] = useState(navRestored ? (S.performanceType ?? null) : null);
+  const [pageSystemTypes, setPageSystemTypes] = useState(S?.pageSystemTypes ?? {}); // Type de système pour chaque page (table ou abaque)
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState(null);
-  const [detectionResult, setDetectionResult] = useState(null);
+  const [detectionResult, setDetectionResult] = useState(S?.detectionResult ?? null);
   const [thumbnailSize, setThumbnailSize] = useState(150); // Taille des miniatures
-  const [pageClassifications, setPageClassifications] = useState({}); // Classifications des pages
+  const [pageClassifications, setPageClassifications] = useState(S?.pageClassifications ?? {}); // Classifications des pages
+  // showAnalyzer N'EST PAS restauré à dessein : le remonter à true relancerait
+  // l'extraction IA (autoExtract) au montage — l'analyse se relance depuis la
+  // sélection des pages, qui elle est intégralement restaurée.
   const [showAnalyzer, setShowAnalyzer] = useState(false); // Pour basculer entre sélection et analyse
   const fileInputRef = useRef(null);
   const abacBuilderRef = useRef(null);
@@ -132,9 +151,32 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     }
   }, []); // Dépendance vide car on utilise abacBuilderRefCallbackRef
 
+  // ─── Persistance de la session (partie pdf) ───────────────────────────────
+  // Un seul effet : à chaque changement, le travail est déposé dans le ref du
+  // wizard avion. Volatiles exclus à dessein : isProcessing / loadingMessage /
+  // error (extraction en cours), showAnalyzer (voir ci-dessus), thumbnailSize.
+  useEffect(() => {
+    if (!sessionRef) return;
+    sessionRef.current = {
+      ...(sessionRef.current || {}),
+      pdf: {
+        navContext,
+        currentStep, performanceType,
+        manualFile, extractedPages, selectedPages,
+        pageSystemTypes, pageClassifications, detectionResult,
+      },
+    };
+  }, [sessionRef, navContext, currentStep, performanceType, manualFile,
+      extractedPages, selectedPages, pageSystemTypes, pageClassifications, detectionResult]);
+
   // FUSIONNÉ: Restaurer les données initiales ET mettre à jour currentStep EN UN SEUL useEffect
   useEffect(() => {
-    
+    // Session reprise dans le MÊME contexte : l'étape restaurée fait foi.
+    // Sans cette garde, la branche par défaut ramenait à l'étape 2 (choix
+    // Tableaux/Abaques) alors qu'on venait de restaurer l'étape en cours.
+    // Contexte différent (édition d'un abaque, nouvel abaque direct…) :
+    // navRestored est faux et les branches ci-dessous reprennent la main.
+    if (navRestored) return;
 
     if (startAtStep === 2 && initialData) {
 
@@ -1057,6 +1099,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               initialData={initialData?.abacCurves || null}
               modelName={initialData?.abacCurves?.metadata?.modelName || null}
               aircraftModel={aircraft?.model || null}
+              sessionRef={sessionRef}
             />
           );
         }
