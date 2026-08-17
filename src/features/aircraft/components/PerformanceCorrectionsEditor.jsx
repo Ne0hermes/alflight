@@ -36,6 +36,11 @@ const MODE_OPTIONS = [
   { value: 'percent_fixed', label: '± % fixe' },
   { value: 'percent_per_step', label: '± % par tranche de vent' },
   { value: 'factor_per_step', label: '× facteur par tranche de vent' },
+  // Le manuel donne souvent un TABLEAU (« pour 10 kt ×0,85, pour 20 kt ×0,65,
+  // pour 30 kt ×0,55 ») et non un facteur récurrent. Recopié en trois règles
+  // « par tranche », il se multipliait ; ici il tient dans UNE règle à paliers.
+  { value: 'factor_table', label: '× tableau de paliers du manuel' },
+  { value: 'percent_table', label: '± % tableau de paliers du manuel' },
 ];
 
 const APPLIES_OPTIONS = [
@@ -56,13 +61,24 @@ const PHASES = [
   { key: 'landing', label: 'Atterrissage', Icon: LandingIcon },
 ];
 
-const EMPTY_DRAFT = { type: 'headwind', mode: 'factor_per_step', value: '', stepKt: '', appliesTo: 'takeoff', label: '' };
+const EMPTY_BRACKETS = [{ fromKt: '', value: '' }, { fromKt: '', value: '' }, { fromKt: '', value: '' }];
+const EMPTY_DRAFT = { type: 'headwind', mode: 'factor_per_step', value: '', stepKt: '', appliesTo: 'takeoff', label: '', brackets: EMPTY_BRACKETS };
 
 const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
   const [draft, setDraft] = useState(EMPTY_DRAFT);
 
   const isWindType = draft.type === 'headwind' || draft.type === 'tailwind';
-  const needsStep = isWindType && draft.mode !== 'percent_fixed';
+  const isTableMode = isWindType && (draft.mode === 'factor_table' || draft.mode === 'percent_table');
+  const needsStep = isWindType && draft.mode !== 'percent_fixed' && !isTableMode;
+
+  const paliersValides = (draft.brackets || []).filter(
+    (b) => b.fromKt !== '' && b.value !== '' && Number.isFinite(Number(b.fromKt)) && Number.isFinite(Number(b.value))
+  );
+  const setBracket = (i, champ, v) => setDraft((d) => {
+    const b = [...(d.brackets || [])];
+    b[i] = { ...b[i], [champ]: v };
+    return { ...d, brackets: b };
+  });
 
   const addRule = (rule) => {
     const id = `corr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -71,20 +87,43 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
 
   const removeRule = (id) => onChange((corrections || []).filter((c) => c.id !== id));
 
-  const canAddDraft = draft.value !== '' && Number.isFinite(Number(draft.value))
-    && (!needsStep || (draft.stepKt !== '' && Number(draft.stepKt) > 0));
+  // Une règle du même type existe-t-elle déjà pour cette phase ? Le moteur
+  // refuse d'appliquer des règles ambiguës : autant l'empêcher à la saisie.
+  const dejaPresent = isWindType && (corrections || []).some(
+    (c) => c.type === draft.type
+      && (c.appliesTo === draft.appliesTo || c.appliesTo === 'both' || draft.appliesTo === 'both')
+  );
+
+  const canAddDraft = !dejaPresent && (isTableMode
+    ? paliersValides.length >= 1
+    : draft.value !== '' && Number.isFinite(Number(draft.value))
+      && (!needsStep || (draft.stepKt !== '' && Number(draft.stepKt) > 0)));
 
   const handleAddDraft = () => {
     if (!canAddDraft) return;
-    addRule({
-      type: draft.type,
-      mode: isWindType ? draft.mode : 'percent_fixed',
-      value: Number(draft.value),
-      stepKt: needsStep ? Number(draft.stepKt) : null,
-      appliesTo: draft.appliesTo,
-      label: draft.label.trim(),
-    });
-    setDraft({ ...EMPTY_DRAFT, appliesTo: draft.appliesTo });
+    if (isTableMode) {
+      addRule({
+        type: draft.type,
+        mode: draft.mode,
+        brackets: paliersValides
+          .map((b) => ({ fromKt: Number(b.fromKt), value: Number(b.value) }))
+          .sort((a, b) => a.fromKt - b.fromKt),
+        value: null,
+        stepKt: null,
+        appliesTo: draft.appliesTo,
+        label: draft.label.trim(),
+      });
+    } else {
+      addRule({
+        type: draft.type,
+        mode: isWindType ? draft.mode : 'percent_fixed',
+        value: Number(draft.value),
+        stepKt: needsStep ? Number(draft.stepKt) : null,
+        appliesTo: draft.appliesTo,
+        label: draft.label.trim(),
+      });
+    }
+    setDraft({ ...EMPTY_DRAFT, brackets: EMPTY_BRACKETS.map((b) => ({ ...b })), appliesTo: draft.appliesTo });
   };
 
   const rulesForPhase = (phase) =>
@@ -186,11 +225,13 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
             {MODE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
           </TextField>
         )}
-        <TextField size="small" type="number"
-          label={draft.mode === 'factor_per_step' && isWindType ? 'Facteur (ex. 0,85)' : 'Pourcentage (ex. 15)'}
-          value={draft.value}
-          onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
-          sx={{ width: 160 }} inputProps={{ step: 'any' }} />
+        {!isTableMode && (
+          <TextField size="small" type="number"
+            label={draft.mode === 'factor_per_step' && isWindType ? 'Facteur (ex. 0,85)' : 'Pourcentage (ex. 15)'}
+            value={draft.value}
+            onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
+            sx={{ width: 160 }} inputProps={{ step: 'any' }} />
+        )}
         {needsStep && (
           <TextField size="small" type="number" label="Tranche (kt)" value={draft.stepKt}
             onChange={(e) => setDraft((d) => ({ ...d, stepKt: e.target.value }))}
@@ -204,6 +245,42 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
           Ajouter
         </Button>
       </Box>
+
+      {isTableMode && (
+        <Box sx={{ mt: 2, pl: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            Recopiez les paliers <strong>tels quels</strong> depuis le manuel — par exemple
+            « pour 10 kt ×0,85, pour 20 kt ×0,65, pour 30 kt ×0,55 ». Le moteur <strong>lit</strong> le
+            palier atteint, il ne cumule jamais les lignes. Entre deux paliers il garde le palier
+            inférieur, et il ne corrige rien sous le premier.
+          </Typography>
+          {(draft.brackets || []).map((b, i) => (
+            <Box key={i} sx={{ display: 'flex', gap: 1.5, alignItems: 'center', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ width: 28 }}>{`#${i + 1}`}</Typography>
+              <TextField size="small" type="number" label="À partir de (kt)" value={b.fromKt}
+                onChange={(e) => setBracket(i, 'fromKt', e.target.value)}
+                sx={{ width: 150 }} inputProps={{ min: 0, step: 'any' }} />
+              <TextField size="small" type="number"
+                label={draft.mode === 'factor_table' ? 'Facteur (ex. 0,85)' : 'Pourcentage (ex. 15)'}
+                value={b.value}
+                onChange={(e) => setBracket(i, 'value', e.target.value)}
+                sx={{ width: 170 }} inputProps={{ step: 'any' }} />
+            </Box>
+          ))}
+          <Button size="small" startIcon={<AddIcon />}
+            onClick={() => setDraft((d) => ({ ...d, brackets: [...(d.brackets || []), { fromKt: '', value: '' }] }))}>
+            Ajouter un palier
+          </Button>
+        </Box>
+      )}
+
+      {dejaPresent && (
+        <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1.5 }}>
+          Une règle « {CORRECTION_TYPES[draft.type]?.label} » existe déjà pour cette phase.
+          Deux règles du même type se multiplieraient au lieu de se lire : le moteur refuserait
+          alors de les appliquer. Supprimez l'existante, ou complétez-la avec des paliers.
+        </Typography>
+      )}
     </Paper>
   );
 };
