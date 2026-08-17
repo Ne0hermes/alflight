@@ -77,7 +77,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   };
 
   const handleCruiseSpeedChange = (value) => {
-    updateData('cruiseSpeedKt', value);
+    // Écriture typée (cf. writeNumeric) : nombre en base, jamais la chaîne du champ.
+    writeNumeric('cruiseSpeedKt', value);
     const factor = calculateBaseFactor(value);
     if (factor) {
       updateData('baseFactor', factor);
@@ -161,10 +162,20 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     updateData('windLimits.limits', newLimits);
   };
 
+  // Coercition d'un champ numérique de ligne (VO / vent) : nombre si parsable,
+  // chaîne transitoire sinon, '' conservé (ligne en cours de saisie). Les champs
+  // d'énumération (limit.type) ne passent PAS par ici.
+  const numericCell = (value) => {
+    if (value === '' || value === null || value === undefined) return value;
+    const n = Number(String(value).replace(',', '.'));
+    return Number.isFinite(n) ? n : value;
+  };
+
   const updateWindLimitTemp = (index, field, value) => {
     // Persistance dynamique (plus de bouton « Sauvegarder » par ligne).
+    const typed = field === 'type' ? value : numericCell(value);
     const newLimits = windTempLimits.map((l, i) =>
-      i === index ? { ...l, [field]: value, saved: true } : l
+      i === index ? { ...l, [field]: typed, saved: true } : l
     );
     setWindTempLimits(newLimits);
     setWindLimits(newLimits);
@@ -207,7 +218,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     // modification est écrite directement dans les données de l'avion (la
     // sauvegarde globale se fait en fin de création du wizard).
     const newRanges = voTempRanges.map((r, i) =>
-      i === index ? { ...r, [field]: value, saved: true } : r
+      i === index ? { ...r, [field]: numericCell(value), saved: true } : r
     );
     setVoTempRanges(newRanges);
     setVoRanges(newRanges);
@@ -319,11 +330,31 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     }
   };
 
+  // ─── Écriture TYPÉE d'un champ numérique (17/08/2026) ─────────────────────
+  // Un <input type="number"> rend TOUJOURS une chaîne : « 50 » et non 50.
+  // Écrite telle quelle, elle traversait les soustractions sans dommage mais
+  // faussait les comparaisons d'égalité (9 à 12 « modifications » fantômes au
+  // diff communautaire de Step5Review) et a déjà fait planter le module
+  // Déroutements (« fuelConsumption.toFixed is not a function », 16/08).
+  //   • vidé → undefined : la clé DISPARAÎT du JSON — absent reste absent,
+  //     JAMAIS 0 (règle du projet) ;
+  //   • saisie transitoire non parsable (« 4, », « - ») → conservée telle
+  //     quelle, sinon le champ contrôlé se viderait sous les doigts du pilote.
+  const writeNumeric = (path, raw) => {
+    if (raw === '' || raw === null || raw === undefined) {
+      updateData(path, undefined);
+      return;
+    }
+    const n = Number(String(raw).replace(',', '.'));
+    updateData(path, Number.isFinite(n) ? n : raw);
+  };
+
   const renderSpeedInput = (key, speed) => {
-    const value = data.speeds?.[key] || '';
+    // ?? et non || : un 0 légitime doit s'afficher, pas se réafficher vide.
+    const value = data.speeds?.[key] ?? '';
     const isRequired = speed.required;
     const displayLabel = speed.label || `${speed.name} - ${speed.label || speed.description}`;
-    
+
     return (
       <StyledTextField
         key={key}
@@ -332,7 +363,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         label={displayLabel}
         type="number"
         value={value}
-        onChange={(e) => updateData(`speeds.${key}`, e.target.value)}
+        onChange={(e) => writeNumeric(`speeds.${key}`, e.target.value)}
         placeholder="---"
         error={!!errors[`speeds.${key}`]}
         helperText={errors[`speeds.${key}`] || speed.description}
@@ -400,8 +431,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       variant="outlined"
       label={label}
       type="number"
-      value={data.speeds?.[key] || ''}
-      onChange={(e) => updateData(`speeds.${key}`, e.target.value)}
+      value={data.speeds?.[key] ?? ''}
+      onChange={(e) => writeNumeric(`speeds.${key}`, e.target.value)}
       placeholder="---"
       error={!!errors[`speeds.${key}`]}
       helperText={errors[`speeds.${key}`] || ''}

@@ -29,6 +29,28 @@
 const DEFAULT_AIRCRAFT_VALUES = {};
 
 /**
+ * 🔢 Mise au type récursive : toute CHAÎNE NUMÉRIQUE (« 50 », « 147.5 »)
+ * devient le nombre qu'elle représente. Rien d'autre ne change : les chaînes
+ * non numériques (énumérations, libellés), les booléens, les vides et les
+ * nombres passent tels quels. Number("50") === 50 — aucune perte, aucun
+ * arrondi : une mise au type, pas une décision de sécurité.
+ */
+function normalizeNumericStrings(value) {
+  if (typeof value === 'string') {
+    if (value.trim() === '') return value; // vide : on ne fabrique JAMAIS un 0
+    const n = Number(value);
+    return Number.isFinite(n) ? n : value;
+  }
+  if (Array.isArray(value)) return value.map(normalizeNumericStrings);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = normalizeNumericStrings(v);
+    return out;
+  }
+  return value;
+}
+
+/**
  * Valide et répare les données d'un avion
  * @param {Object} aircraft - L'objet avion à valider
  * @returns {Object} L'avion avec les données corrigées si nécessaire
@@ -48,6 +70,19 @@ export function validateAndRepairAircraft(aircraft, opts = {}) {
 
   // Créer une copie PROFONDE pour ne pas modifier l'original et préserver TOUS les champs
   const repairedAircraft = JSON.parse(JSON.stringify(aircraft));
+
+  // 🔢 Mise au type des scalaires numériques dont trois chemins d'écriture
+  // (saisie, extraction MANEX, import communautaire) ont laissé des CHAÎNES en
+  // circulation (« 147.5 » pour le carburant utilisable, « 110 » pour la
+  // capacité d'un réservoir). Cf. normalizeNumericStrings — sans perte.
+  for (const key of ['cruiseSpeedKt', 'fuelCapacity', 'fuelUsableCapacity', 'fuelConsumption', 'maxBaggageTotalMass', 'horsepower', 'serviceCeiling']) {
+    if (typeof repairedAircraft[key] === 'string') {
+      repairedAircraft[key] = normalizeNumericStrings(repairedAircraft[key]);
+    }
+  }
+  if (Array.isArray(repairedAircraft.additionalFuelTanks)) {
+    repairedAircraft.additionalFuelTanks = normalizeNumericStrings(repairedAircraft.additionalFuelTanks);
+  }
 
   // Restaurer immédiatement les données volumineuses
   if (savedPhoto !== undefined) {
@@ -124,7 +159,16 @@ export function validateAndRepairAircraft(aircraft, opts = {}) {
     repairedAircraft.specialCapabilities = aircraft.specialCapabilities;
   }
   if (aircraft.speeds !== undefined) {
-    repairedAircraft.speeds = aircraft.speeds;
+    // 🔢 Mise au type (17/08/2026) — les vitesses arrivaient en CHAÎNES depuis
+    // la saisie (« 50 » et non 50) : les diffs communautaires de Step5Review
+    // voyaient 9 à 12 « modifications » fantômes (50 !== "50"), et un .toFixed
+    // a déjà fait planter le module Déroutements. Number("50") === 50, sans
+    // perte ni arrondi : c'est une mise au type, pas une requalification de
+    // limitation. Faite ICI — le point de passage commun du local ET du
+    // communautaire — pour que les deux côtés du diff redeviennent comparables.
+    // Une chaîne vide DISPARAÎT (absent reste absent, jamais 0) ; une chaîne
+    // non numérique est conservée telle quelle (fail-closed : on ne devine pas).
+    repairedAircraft.speeds = normalizeNumericStrings(aircraft.speeds);
   }
   if (aircraft.distances !== undefined) {
     repairedAircraft.distances = aircraft.distances;
@@ -133,7 +177,9 @@ export function validateAndRepairAircraft(aircraft, opts = {}) {
     repairedAircraft.climb = aircraft.climb;
   }
   if (aircraft.windLimits !== undefined) {
-    repairedAircraft.windLimits = aircraft.windLimits;
+    // Même mise au type que speeds — le champ `type` (énumération) n'est pas
+    // touché : normalizeNumericStrings ne convertit que les chaînes numériques.
+    repairedAircraft.windLimits = normalizeNumericStrings(aircraft.windLimits);
   }
   if (aircraft.masses !== undefined) {
     repairedAircraft.masses = aircraft.masses;
