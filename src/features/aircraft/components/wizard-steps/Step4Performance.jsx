@@ -716,13 +716,24 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         tables: newTables,
         sheets,
         warnings
-      } = await importPerformanceModelsFromExcel(file);
+      } = await importPerformanceModelsFromExcel(file, {
+        // Indispensable au ré-import NON destructeur : un vieux fichier sans
+        // feuille _STRUCTURE fusionne ses points dans la structure des modèles
+        // DÉJÀ présents sur l'avion, au lieu de les remplacer par des
+        // squelettes sans axes (défaut prouvé sur F-GBTU, 2026-08-19).
+        existingModels: currentPerformanceModels
+      });
 
       if (!newModels.length && !newTables.length) {
         alert(`Aucun modèle ou tableau trouvé dans le fichier Excel.\n${warnings.join('\n')}`);
         e.target.value = '';
         return;
       }
+
+      // Modèles ré-importés SANS structure (ni fichier ni avion) : signalés
+      // explicitement — ils ne seront pas calculables tant que l'atelier n'a
+      // pas reconstruit axes et chaînage.
+      const modelsNeedingReview = newModels.filter(m => m.validation?.needsReview);
 
       const diff = diffPerformanceModels(currentPerformanceModels, newModels);
       const summary = [
@@ -732,6 +743,9 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         diff.added.length ? `+ Modèles ajoutés : ${diff.added.join(', ')}` : '',
         diff.removed.length ? `- Modèles supprimés : ${diff.removed.join(', ')}` : '',
         diff.modified.length ? `~ Modifications : ${diff.modified.join(' ; ')}` : '',
+        modelsNeedingReview.length
+          ? `⚠ ATTENTION : ${modelsNeedingReview.length} modèle(s) sans structure d'abaque (${modelsNeedingReview.map(m => m.name || m.id).join(', ')}) — axes et chaînage à reconstruire dans l'atelier avant tout calcul.`
+          : '',
         warnings.length ? `⚠ Warnings : ${warnings.join(' ; ')}` : '',
         '',
         'Remplacer les données performances actuelles par ces valeurs ?'
@@ -787,7 +801,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         // Forcer l'affichage du récap pour que l'utilisateur voie ses nouvelles données
         setShowExistingData(true);
         setForceShowSummary(true);
-        alert(`✅ Import réussi : ${newModels.length} modèle(s) abaque + ${newTables.length} tableau(x).`);
+        alert([
+          `✅ Import réussi : ${newModels.length} modèle(s) abaque + ${newTables.length} tableau(x).`,
+          modelsNeedingReview.length
+            ? `⚠ ${modelsNeedingReview.length} modèle(s) sans structure d'abaque — axes et chaînage à reconstruire dans l'atelier : ${modelsNeedingReview.map(m => m.name || m.id).join(', ')}.`
+            : ''
+        ].filter(Boolean).join('\n'));
       }
     } catch (err) {
       console.error('[Step4] Import Excel échoué:', err);

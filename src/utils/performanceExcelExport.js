@@ -7,9 +7,22 @@
 //   - Une feuille par modèle de performance avec :
 //       * Bloc métadonnées en haut (nom, type, classification…)
 //       * Bloc données : 1 ligne par point (graph, curve, X, Y)
+//   - Feuille technique « _STRUCTURE » (masquée) : JSON complet de la
+//     structure des abaques, SANS les points ni les courbes fittées.
 //
 // Ce format est ROUND-TRIPPABLE avec performanceExcelImport.js : le pilote
 // peut modifier le fichier dans Excel/LibreOffice puis le réimporter.
+//
+// ⚠️ HISTORIQUE (2026-08-19, dossier F-GBTU) : jusqu'ici l'export n'écrivait
+// par courbe QUE Graph ID / noms / rôle / X / Y. Un abaque n'est pas un
+// tableau : c'est une STRUCTURE (axes min/max/unit/title, chaînage
+// linkedTo/linkedFrom/cascadeOrder, familyAxisVariable, vent
+// isWindRelated/windDirection, interpolationMode) + des courbes. Le ré-import
+// reconstruisait donc des graphes squelettes et le moteur de cascade échouait
+// (« n'a pas d'axes configurés », « Entrée(s) de panneau manquante(s) ») :
+// les 4 opérations de F-GBTU étaient incalculables après un aller-retour.
+// D'où la feuille _STRUCTURE : les POINTS restent dans les feuilles lisibles
+// (c'est ce que le pilote édite), la STRUCTURE transite en JSON intact.
 
 import * as XLSX from 'xlsx';
 
@@ -62,20 +75,139 @@ const uniqueSheetName = (baseName, usedNames, fallback = 'Sheet') => {
   return (fallback.slice(0, 23) + '_' + Math.random().toString(36).slice(2, 8)).slice(0, 30);
 };
 
+// ─── Feuille technique _STRUCTURE ─────────────────────────────────────────
+// Nom partagé avec performanceExcelImport.js (qui l'importe d'ici) : une
+// seule source de vérité pour éviter une divergence silencieuse.
+export const STRUCTURE_SHEET_NAME = '_STRUCTURE';
+// Version du format de la feuille : à incrémenter si le schéma JSON change,
+// pour que l'import puisse router les migrations futures.
+export const STRUCTURE_FORMAT_VERSION = 1;
+// Excel limite une cellule à 32767 caractères : on chunke le JSON bien en
+// dessous pour garder une marge (et ne JAMAIS tronquer — un JSON tronqué
+// serait pire que pas de structure du tout).
+const STRUCTURE_CHUNK_SIZE = 30000;
+
+// Clone JSON-safe : les modèles de performance sont du JSON pur (persistés
+// tels quels), donc pas besoin de structuredClone (indispo vieux environnements).
+const deepClone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
+
 /**
- * Exporte la liste des modèles de performance d'un avion vers un .xlsx.
- * Déclenche automatiquement le téléchargement côté navigateur.
+ * Découpe une chaîne en chunks ≤ size SANS couper une paire de substitution
+ * UTF-16 (émoji dans un nom de courbe → une moitié de surrogate isolée dans
+ * une cellule serait remplacée par U+FFFD à l'écriture xlsx, corrompant le
+ * JSON à la reconstitution).
+ */
+const chunkString = (s, size = STRUCTURE_CHUNK_SIZE) => {
+  const chunks = [];
+  let i = 0;
+  while (i < s.length) {
+    let end = Math.min(i + size, s.length);
+    if (end < s.length) {
+      const c = s.charCodeAt(end - 1);
+      if (c >= 0xd800 && c <= 0xdbff) end -= 1; // high surrogate en fin → recule
+    }
+    chunks.push(s.slice(i, end));
+    i = end;
+  }
+  return chunks.length ? chunks : [''];
+};
+
+/**
+ * Construit le payload de structure d'UN modèle : le modèle COMPLET sans les
+ * données volumineuses/reconstructibles :
+ *   - `curve.points` retirés (ils vivent dans la feuille lisible — c'est ce
+ *     que le pilote édite dans Excel)
+ *   - `curve.fitted` retirés (dérivés des points, recalculés à la demande)
+ *   - image de l'atelier retirée si data:/blob: (peut peser des Mo — hors
+ *     gabarit d'une cellule Excel ; le cadrage x/y/width/height est conservé
+ *     pour ré-import d'une image ultérieure)
+ * Tout le reste (axes, rôles, cascadeOrder, linkedTo/linkedFrom,
+ * familyAxisVariable, familyValue/windDirection par courbe, interpolationMode,
+ * metadata dont referenceCases) est copié TEL QUEL — copie intégrale par
+ * défaut pour que les champs futurs survivent sans retoucher l'export.
+ */
+export function buildModelStructurePayload(model) {
+  const m = deepClone(model) || {};
+  const stripCurve = (c) => {
+    if (!c || typeof c !== 'object') return c;
+    const { points, fitted, ...rest } = c;
+    return rest;
+  };
+  if (m.data && typeof m.data === 'object') {
+    if (Array.isArray(m.data.graphs)) {
+      m.data.graphs = m.data.graphs.map((g) => {
+        if (!g || typeof g !== 'object') return g;
+        return { ...g, curves: (g.curves || []).map(stripCurve) };
+      });
+    }
+    // Format legacy (AbacCurvesJSON compat) : data.curves à plat.
+    if (Array.isArray(m.data.curves)) {
+      m.data.curves = m.data.curves.map(stripCurve);
+    }
+    const img = m.data.metadata?.workshop?.image;
+    if (img && typeof img.url === 'string' && /^(data:|blob:)/.test(img.url)) {
+      m.data.metadata.workshop = {
+        ...m.data.metadata.workshop,
+        image: null,
+        // Trace explicite : l'atelier saura pourquoi l'image manque au ré-import.
+        imageStrippedOnExport: true
+      };
+    }
+  }
+  return { version: STRUCTURE_FORMAT_VERSION, model: m };
+}
+
+/**
+ * Ajoute la feuille _STRUCTURE au workbook : 1 bloc de lignes par modèle,
+ * JSON chunké sur la colonne E. La feuille est ensuite MASQUÉE (voir
+ * buildPerformanceWorkbook) mais garde un en-tête explicatif au cas où le
+ * pilote l'affiche dans Excel.
+ */
+function appendStructureSheet(wb, models) {
+  const rows = [
+    ['--- STRUCTURE TECHNIQUE — NE PAS MODIFIER ---'],
+    ['Cette feuille contient la structure des abaques (axes, chaînage de cascade, vent, familles de courbes).'],
+    ['Elle est relue telle quelle au ré-import pour reconstruire les graphes : la modifier casse la fusion.'],
+    ['Les points de courbes se modifient dans les feuilles lisibles, PAS ici.'],
+    ['Version format', STRUCTURE_FORMAT_VERSION],
+    [],
+    ['Model ID', 'Model Name', 'Part', 'Total Parts', 'JSON']
+  ];
+  models.forEach((m) => {
+    let json;
+    try {
+      json = JSON.stringify(buildModelStructurePayload(m));
+    } catch (err) {
+      // Un modèle non sérialisable ne doit pas faire échouer tout l'export :
+      // il retombera au ré-import sur la fusion avec le modèle existant (cas b).
+      console.warn(`⚠️ [ExcelExport] Structure du modèle "${m?.name || m?.id}" non sérialisable — ignorée:`, err);
+      return;
+    }
+    const chunks = chunkString(json);
+    chunks.forEach((chunk, i) => {
+      rows.push([m.id || '', m.name || '', i + 1, chunks.length, chunk]);
+    });
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 22 }, { wch: 28 }, { wch: 6 }, { wch: 10 }, { wch: 80 }];
+  XLSX.utils.book_append_sheet(wb, ws, STRUCTURE_SHEET_NAME);
+}
+
+/**
+ * Construit le workbook complet (INDEX, INFO, tableaux, modèles, _STRUCTURE)
+ * SANS déclencher de téléchargement — séparé de exportPerformanceModelsToExcel
+ * pour être testable sous node (vitest environnement 'node' : pas de
+ * document/Blob) et rejouable dans les tests d'aller-retour.
  *
  * @param {Array} models  Liste de data.performanceModels (peut être vide
  *                        si seuls des tables sont fournis)
- * @param {string} aircraftReg  Immatriculation (utilisée dans le nom du fichier)
+ * @param {string} aircraftReg  Immatriculation (feuille INDEX)
  * @param {object} options
  * @param {Array} options.tables  Liste de data.advancedPerformance.tables
  *                                à exporter (groupés par classification).
- * @returns {string} Nom du fichier généré
+ * @returns {object} Workbook SheetJS prêt à écrire
  */
-export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', options = {}) {
-  const t0 = performance.now();
+export function buildPerformanceWorkbook(models, aircraftReg = 'UNKNOWN', options = {}) {
   const safeModels = Array.isArray(models) ? models : [];
   const safeTables = Array.isArray(options?.tables) ? options.tables : [];
 
@@ -194,7 +326,9 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
   XLSX.utils.book_append_sheet(wb, wsDebug, 'INFO');
 
   // ─── Une feuille par modèle ────────────────────────────────────────────
-  const usedNames = new Set(['INDEX']);
+  // INFO et _STRUCTURE sont réservés : un modèle homonyme aurait fait planter
+  // book_append_sheet (noms de feuilles uniques exigés par Excel).
+  const usedNames = new Set(['INDEX', 'INFO', STRUCTURE_SHEET_NAME]);
 
   // ─── Une feuille par tableau extrait du MANEX (advancedPerformance.tables) ─
   // Format différent des abaques : grilles 2D (rows × columns).
@@ -390,6 +524,37 @@ export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', 
     console.timeEnd(`[ExcelExport] model #${idx + 1} ${m.name || ''}`);
   });
   console.timeEnd('[ExcelExport] models');
+
+  // ─── Feuille technique _STRUCTURE (fix aller-retour destructeur) ────────
+  // Écrite en DERNIER (elle référence tous les modèles exportés) puis masquée :
+  // le pilote ne doit ni la voir ni la toucher — les points s'éditent dans
+  // les feuilles lisibles ci-dessus.
+  if (safeModels.length > 0) {
+    appendStructureSheet(wb, safeModels);
+  }
+  // Masquage : SheetJS lit Workbook.Sheets[i].Hidden (aligné sur SheetNames).
+  // On pose le flag pour TOUTES les feuilles afin que l'alignement par index
+  // soit sans ambiguïté. INDEX reste visible → Excel a toujours ≥ 1 feuille
+  // visible (exigence du format, sinon fichier refusé à l'ouverture).
+  wb.Workbook = wb.Workbook || {};
+  wb.Workbook.Sheets = wb.SheetNames.map((n) => ({
+    name: n,
+    Hidden: n === STRUCTURE_SHEET_NAME ? 1 : 0
+  }));
+
+  return wb;
+}
+
+/**
+ * Exporte la liste des modèles de performance d'un avion vers un .xlsx.
+ * Déclenche automatiquement le téléchargement côté navigateur.
+ * (Construction du workbook déléguée à buildPerformanceWorkbook — testable.)
+ *
+ * @returns {string} Nom du fichier généré
+ */
+export function exportPerformanceModelsToExcel(models, aircraftReg = 'UNKNOWN', options = {}) {
+  const t0 = performance.now();
+  const wb = buildPerformanceWorkbook(models, aircraftReg, options);
 
   // Téléchargement : on passe par Blob pour éviter d'utiliser XLSX.writeFile
   // qui peut être plus long et bloquant. Le navigateur s'occupe de l'écriture
