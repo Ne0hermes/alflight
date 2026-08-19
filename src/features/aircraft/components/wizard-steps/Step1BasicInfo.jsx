@@ -36,6 +36,9 @@ import FormHelperText from '@mui/material/FormHelperText';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical } from '@utils/unitsDisplay';
+// ⛽ Deux contenances par réservoir (17/08/2026) : accesseurs canoniques du
+// moteur (repli legacy `capacity` inclus) — importés, jamais réécrits.
+import { sumTotalLtr, sumUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
@@ -705,62 +708,95 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Box>
 
-            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Capacité totale carburant *"
-                type="number"
-                value={
-                  data.fuelCapacity
-                    ? Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
-                    : ''
-                }
-                onChange={(e) => {
-                  const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
-                  updateData('fuelCapacity', valueInStorageUnit);
-                }}
-                placeholder="Ex: 200"
-                disabled={data.additionalFuelTanks?.length > 0}
-                error={!!errors.fuelCapacity}
-                helperText={
-                  data.additionalFuelTanks?.length > 0
-                    ? `Capacité totale = somme des réservoirs (${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & centrage.`
-                    : (errors.fuelCapacity || (data.fuelCapacity
-                      ? `≈ ${formatCanonical(data.fuelCapacity, 'fuel', units, { both: true })}`
-                      : 'Volume physique total de tous les réservoirs (capacity)'))
-                }
-                required
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
-                }}
-              />
-            </Box>
+            {/* ⛽ Deux contenances (17/08/2026) — cas F-BXQT (F150M, 98 L total /
+                85 L utilisable) : l'ancien `disabled` dès qu'UN réservoir existait
+                grisait le champ alors que les réservoirs n'avaient qu'une contenance
+                ambiguë — le 98 du manuel était insaisissable. Désormais le champ
+                n'est dérivé (lecture seule, Σ tankTotalLtr) que quand TOUS les
+                réservoirs portent un `totalCapacity` explicite ; sinon le pilote
+                peut le saisir directement, tout de suite. */}
+            {(() => {
+              const tanks = Array.isArray(data.additionalFuelTanks) ? data.additionalFuelTanks : [];
+              const hasTanks = tanks.length > 0;
+              const allTanksHaveTotal = hasTanks && tanks.every(t => Number.isFinite(parseFloat(t?.totalCapacity)));
+              const allTanksHaveUsable = hasTanks && tanks.every(t => Number.isFinite(parseFloat(t?.usableCapacity)));
+              // Sommes dérivées (accesseurs avec repli legacy `capacity`) — ne
+              // servent à l'AFFICHAGE que quand le champ est verrouillé-dérivé.
+              const derivedTotal = sumTotalLtr(tanks);
+              const derivedUsable = sumUsableLtr(tanks);
+              const totalDerived = allTanksHaveTotal && derivedTotal != null;
+              const usableDerived = allTanksHaveUsable && derivedUsable != null;
+              const totalShown = totalDerived ? derivedTotal : data.fuelCapacity;
+              const usableShown = usableDerived ? derivedUsable : data.fuelUsableCapacity;
+              return (
+                <>
+                  <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+                    <StyledTextField
+                      fullWidth
+                      variant="outlined"
+                      label="Capacité totale carburant *"
+                      type="number"
+                      value={
+                        totalShown
+                          ? Math.round(convertValue(totalShown, 'ltr', units.fuel, 'fuel') * 10) / 10
+                          : ''
+                      }
+                      onChange={(e) => {
+                        const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
+                        updateData('fuelCapacity', valueInStorageUnit);
+                      }}
+                      placeholder="Ex: 200"
+                      disabled={totalDerived}
+                      error={!!errors.fuelCapacity}
+                      helperText={
+                        totalDerived
+                          ? `Capacité totale = somme des réservoirs (${formatCanonical(totalShown, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & Centrage.`
+                          : (errors.fuelCapacity || (totalShown
+                            ? `≈ ${formatCanonical(totalShown, 'fuel', units, { both: true })} — se précise à l'étape Masse & Centrage`
+                            : 'Somme des réservoirs — se précise à l\'étape Masse & Centrage'))
+                      }
+                      required
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                      }}
+                    />
+                  </Box>
 
-            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
-              <StyledTextField
-                fullWidth
-                variant="outlined"
-                label="Volume utilisable"
-                type="number"
-                value={
-                  data.fuelUsableCapacity
-                    ? Math.round(convertValue(data.fuelUsableCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
-                    : ''
-                }
-                onChange={(e) => {
-                  const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
-                  updateData('fuelUsableCapacity', valueInStorageUnit);
-                }}
-                placeholder="Ex: 195"
-                helperText={data.fuelUsableCapacity
-                  ? `≈ ${formatCanonical(data.fuelUsableCapacity, 'fuel', units, { both: true })} (carburant réellement consommable)`
-                  : 'Volume utilisable (souvent < capacité totale, sans la résiduelle non aspirable). Utilisé pour M&C et autonomie.'}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
-                }}
-              />
-            </Box>
+                  <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+                    <StyledTextField
+                      fullWidth
+                      variant="outlined"
+                      label="Volume utilisable"
+                      type="number"
+                      value={
+                        usableShown
+                          ? Math.round(convertValue(usableShown, 'ltr', units.fuel, 'fuel') * 10) / 10
+                          : ''
+                      }
+                      onChange={(e) => {
+                        const valueInStorageUnit = convertValue(e.target.value, units.fuel, 'ltr', 'fuel');
+                        updateData('fuelUsableCapacity', valueInStorageUnit);
+                      }}
+                      placeholder="Ex: 195"
+                      disabled={usableDerived}
+                      helperText={
+                        usableDerived
+                          ? `Volume utilisable = somme des réservoirs (${formatCanonical(usableShown, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & Centrage.`
+                          : (usableShown
+                            ? `≈ ${formatCanonical(usableShown, 'fuel', units, { both: true })} (carburant réellement consommable)`
+                            // ⛽ Reformulé (17/08/2026) : l'ancien texte promettait un
+                            // usage « pour M&C et autonomie » que les moteurs ne
+                            // faisaient pas encore — c'est vrai depuis la bascule.
+                            : 'Utilisé par le centrage, l\'autonomie et les escales — la masse à vide inclut déjà l\'inutilisable.')
+                      }
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                      }}
+                    />
+                  </Box>
+                </>
+              );
+            })()}
 
             <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledTextField

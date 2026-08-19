@@ -42,6 +42,10 @@ import { toStorage, fromStorage, convertMoment } from '../../utils/mbUnits';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
 import CentrogramReader from '../CentrogramReader';
 import { getFuelDensity } from '../../utils/mbUnits';
+// ⛽ Deux contenances par réservoir (17/08/2026) : accesseurs canoniques du
+// moteur — usableCapacity ?? capacity (utilisable), totalCapacity ?? capacity
+// (total). On les IMPORTE, on ne les réécrit pas (source unique de vérité).
+import { tankUsableLtr, tankTotalLtr, tankUnusableLtr, sumUsableLtr, sumTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 import { uploadWeighingReportPdf } from '@services/blobStorage';
@@ -358,6 +362,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       id: Date.now() + Math.random(),
       name: 'Réservoir principal',
       type: 'main',
+      // ⛽ Deux contenances (17/08/2026) — EXCEPTION assumée à la règle « on
+      // n'écrit plus `capacity` » : fuelMainCapacity est une valeur legacy à
+      // la sémantique AMBIGUË (total ? utilisable ?). La relocaliser telle
+      // quelle en `capacity` préserve cette ambiguïté que les accesseurs
+      // savent lire (usableCapacity ?? capacity) ; l'écrire en usableCapacity
+      // ou totalCapacity affirmerait une sémantique que la fiche n'a jamais
+      // eue. Le pilote tranchera via les deux champs de l'éditeur.
       capacity: legacyCap,
       arm: data.arms?.fuelMain || '',
       momentAtFull: data.moments?.fuelMain || ''
@@ -385,18 +396,25 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   // somme et la capacité déclarée n'est plus masqué : c'est le signe qu'un
   // réservoir manque ou qu'une capacité est fausse, et cela doit se corriger à
   // la source, pas se recouvrir en silence.
+  // ⛽ Deux contenances (17/08/2026) : chaque réservoir porte désormais
+  // totalCapacity (volume physique) ET usableCapacity (carburant utilisable).
+  // Les DEUX champs racine sont dérivés en remplir-si-vide uniquement :
+  //   fuelCapacity       ← Σ tankTotalLtr  (avitaillement, documentation)
+  //   fuelUsableCapacity ← Σ tankUsableLtr (centrage, autonomie, escales)
+  // Les accesseurs retombent sur l'ancien `capacity` pour les fiches legacy.
   useEffect(() => {
     if (!additionalFuelTanks || additionalFuelTanks.length === 0) return;
-    const sum = additionalFuelTanks.reduce(
-      (s, t) => s + (parseFloat(t.capacity) || 0), 0
-    );
-    if (sum <= 0) return;
-    const current = parseFloat(data.fuelCapacity);
-    const vide = !Number.isFinite(current) || current <= 0;
-    if (vide) {
-      updateData('fuelCapacity', sum);
+    const totalSum = sumTotalLtr(additionalFuelTanks);   // null si rien d'exploitable
+    const usableSum = sumUsableLtr(additionalFuelTanks);
+    const currentTotal = parseFloat(data.fuelCapacity);
+    if (totalSum != null && (!Number.isFinite(currentTotal) || currentTotal <= 0)) {
+      updateData('fuelCapacity', totalSum);
     }
-  }, [additionalFuelTanks, data.fuelCapacity]);
+    const currentUsable = parseFloat(data.fuelUsableCapacity);
+    if (usableSum != null && (!Number.isFinite(currentUsable) || currentUsable <= 0)) {
+      updateData('fuelUsableCapacity', usableSum);
+    }
+  }, [additionalFuelTanks, data.fuelCapacity, data.fuelUsableCapacity]);
 
   // ─── Auto-calcul dynamique masse/bras/moment pour la masse à vide ───
   // Relation physique : moment = masse × bras
@@ -777,7 +795,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       name: `${defaultNames[type] || 'Réservoir'} ${additionalFuelTanks.length + 1}`,
       type,
       arm: '',
-      capacity: '',
+      // ⛽ Deux contenances (17/08/2026) : plus d'initialisation de l'ancien
+      // `capacity` — les nouveaux réservoirs portent totalCapacity /
+      // usableCapacity, écrits à la saisie uniquement (absent reste absent).
       // Réservoir amovible (long-range/convoyage) : proposé au cochage en
       // préparation de vol. Pré-coché pour les types naturellement optionnels.
       optional: type === 'aux' || type === 'optional' || type === 'tip'
@@ -816,6 +836,33 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       return updated;
     });
   };
+
+  // ─── ⛽ Deux contenances par réservoir (17/08/2026, cas F-BXQT 98/85 L) ───
+  // Saisie des contenances totalCapacity / usableCapacity : motif writeNumeric
+  // de Step2Speeds — vidé → undefined (la clé DISPARAÎT du JSON, absent reste
+  // absent, JAMAIS 0) ; sinon NOMBRE en litres canoniques (saisie en unité
+  // user). L'ancien champ `capacity` n'est PLUS JAMAIS écrit par ces handlers :
+  // les moteurs lisent usableCapacity ?? capacity (accesseurs calc-engine).
+  const inTankLiters = (raw) => {
+    if (raw === '' || raw === null || raw === undefined) return undefined;
+    const n = Number(String(raw).replace(',', '.'));
+    if (!Number.isFinite(n)) return undefined;
+    const canonical = parseFloat(convertValue(n, units.fuel, 'ltr', 'fuel'));
+    return Number.isFinite(canonical) ? Math.round(canonical * 100) / 100 : undefined;
+  };
+  const dispTankLiters = (v) => {
+    const n = parseFloat(v);
+    if (!Number.isFinite(n)) return '';
+    return Math.round(convertValue(n, 'ltr', units.fuel, 'fuel') * 10) / 10;
+  };
+  // Valeur AFFICHÉE dans le champ « Utilisable » — compatibilité legacy : une
+  // fiche antérieure n'a que l'ancien `capacity` ; on l'affiche comme
+  // UTILISABLE (hypothèse prudente, EXACTEMENT la lecture des moteurs :
+  // usableCapacity ?? capacity, cf. tankUsableLtr) SANS l'écrire en base tant
+  // que le pilote ne touche pas au champ — pas d'écriture de masse silencieuse.
+  // Le champ « totale » reste vide : déduire un total d'un utilisable
+  // exigerait un facteur inventé — interdit.
+  const tankUsableFieldValue = (tank) => tank?.usableCapacity ?? tank?.capacity ?? '';
 
   // Gestion des points intermédiaires de l'enveloppe CG
   const addIntermediatePoint = () => {
@@ -1198,39 +1245,58 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             </IconButton>
                           </Box>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
+                        {/* ⛽ Deux contenances (17/08/2026) : le réservoir porte la capacité
+                            TOTALE (volume physique — avitaillement, documentation) ET
+                            l'UTILISABLE (la grandeur des moteurs de centrage/autonomie).
+                            L'ancien champ unique « Capacité » (sémantique ambiguë) écrasait
+                            le total du manuel — cas F-BXQT : 98 L total / 85 L utilisable,
+                            le 98 était insaisissable. */}
+                        <Grid size={{ xs: 12, sm: 3 }}>
                           <StyledTextField
                             fullWidth
                             size="small"
-                            label="Capacité"
+                            label="Capacité totale"
                             type="number"
-                            value={
-                              tank.capacity
-                                ? Math.round(convertValue(tank.capacity, 'ltr', units.fuel, 'fuel') * 10) / 10
-                                : ''
-                            }
+                            value={dispTankLiters(tank.totalCapacity)}
                             onChange={(e) => {
-                              const newCapUser = e.target.value;
-                              // Convertir saisie user → canonique (litres) pour stockage
-                              const newCapCanonical = newCapUser
-                                ? convertValue(newCapUser, units.fuel, 'ltr', 'fuel')
-                                : '';
-                              const cap = parseFloat(newCapCanonical);
-                              const arm = parseFloat(tank.arm); // m (canonique)
-                              const density = getFuelDensity(data.fuelType);
-                              const fields = { capacity: newCapCanonical };
-                              if (Number.isFinite(cap) && Number.isFinite(arm) && density != null) {
-                                fields.momentAtFull = Math.round(cap * density * arm * 100) / 100; // kg·m
-                              }
-                              updateFuelTankFields(tank.id, fields);
+                              // Le total ne pilote PAS le moment à plein : le « plein »
+                              // opérationnel est le plein UTILISABLE (l'inutilisable est
+                              // déjà dans la masse à vide pesée) — pas de recalcul ici.
+                              updateFuelTankFields(tank.id, { totalCapacity: inTankLiters(e.target.value) });
                             }}
-                            placeholder="Capacité utilisable"
+                            placeholder="Volume physique"
                             InputProps={{
                               endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
                             }}
                           />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
+                        <Grid size={{ xs: 12, sm: 3 }}>
+                          <StyledTextField
+                            fullWidth
+                            size="small"
+                            label="Utilisable"
+                            type="number"
+                            value={dispTankLiters(tankUsableFieldValue(tank))}
+                            onChange={(e) => {
+                              const usableL = inTankLiters(e.target.value);   // L canoniques ou undefined
+                              const arm = parseFloat(tank.arm);              // m (canonique)
+                              const density = getFuelDensity(data.fuelType);
+                              const fields = { usableCapacity: usableL };
+                              // momentAtFull sur l'UTILISABLE : le plein opérationnel est
+                              // le plein utilisable — compter le total pèserait
+                              // l'inutilisable deux fois (déjà dans la masse à vide).
+                              if (Number.isFinite(usableL) && Number.isFinite(arm) && density != null) {
+                                fields.momentAtFull = Math.round(usableL * density * arm * 100) / 100; // kg·m
+                              }
+                              updateFuelTankFields(tank.id, fields);
+                            }}
+                            placeholder="Consommable"
+                            InputProps={{
+                              endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                            }}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 3 }}>
                           <StyledTextField
                             fullWidth
                             size="small"
@@ -1239,7 +1305,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             value={dispArm(tank.arm)}
                             onChange={(e) => {
                               const armCanonical = inArm(e.target.value); // m
-                              const cap = parseFloat(tank.capacity);      // L (canonique)
+                              // ⛽ momentAtFull recalculé sur l'UTILISABLE (accesseur avec
+                              // repli legacy usableCapacity ?? capacity) — le plein
+                              // opérationnel est le plein utilisable.
+                              const cap = tankUsableLtr(tank);            // L (canonique) ou null
                               const arm = parseFloat(armCanonical);
                               const density = getFuelDensity(data.fuelType);
                               const fields = { arm: armCanonical };
@@ -1257,7 +1326,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             }}
                           />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
+                        <Grid size={{ xs: 12, sm: 3 }}>
                           <StyledTextField
                             fullWidth
                             size="small"
@@ -1267,14 +1336,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             onChange={(e) => {
                               const momentCanonical = inMoment(e.target.value); // kg·m
                               const M = parseFloat(momentCanonical);
-                              const cap = parseFloat(tank.capacity);            // L
+                              // ⛽ Trio réciproque sur l'UTILISABLE : M = utilisable ×
+                              // densité × bras. Une saisie de moment redérive le bras
+                              // (si l'utilisable est connu) ou l'UTILISABLE (si le bras
+                              // est connu) — plus jamais l'ancien `capacity`.
+                              const cap = tankUsableLtr(tank);                  // L ou null
                               const arm = parseFloat(tank.arm);                 // m
                               const density = getFuelDensity(data.fuelType);
                               const fields = { momentAtFull: momentCanonical };
                               if (Number.isFinite(M) && Number.isFinite(cap) && cap !== 0 && density != null && density !== 0) {
                                 fields.arm = Math.round((M / (cap * density)) * 100000) / 100000; // m
                               } else if (Number.isFinite(M) && Number.isFinite(arm) && arm !== 0 && density != null && density !== 0) {
-                                fields.capacity = Math.round((M / (arm * density)) * 100) / 100;  // L
+                                fields.usableCapacity = Math.round((M / (arm * density)) * 100) / 100;  // L
                               }
                               updateFuelTankFields(tank.id, fields);
                             }}
@@ -1285,6 +1358,33 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             }}
                           />
                         </Grid>
+                        {(() => {
+                          // Mention dérivée + garde-fou NON bloquant sous la ligne :
+                          //   • « dont inutilisable » = total − utilisable (tankUnusableLtr,
+                          //     jamais stocké — dérivé fail-closed si un volume manque) ;
+                          //   • utilisable > total = incohérence physique signalée en rouge
+                          //     mais SANS bloquer (le pilote corrige la bonne des deux).
+                          const totalL = parseFloat(tank.totalCapacity);
+                          const usableL = parseFloat(tank.usableCapacity);
+                          const usableExceedsTotal =
+                            Number.isFinite(totalL) && Number.isFinite(usableL) && usableL > totalL;
+                          const unusableL = tankUnusableLtr(tank);
+                          if (!usableExceedsTotal && unusableL === null) return null;
+                          return (
+                            <Grid size={12} sx={{ pt: '0 !important', mt: -1 }}>
+                              {usableExceedsTotal ? (
+                                <Typography variant="caption" sx={{ color: 'error.main', display: 'block' }}>
+                                  L'utilisable ne peut pas dépasser le volume physique
+                                  ({dispTankLiters(usableL)} &gt; {dispTankLiters(totalL)} {getUnitSymbol(units.fuel)}).
+                                </Typography>
+                              ) : (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                  dont inutilisable : {dispTankLiters(unusableL)} {getUnitSymbol(units.fuel)}
+                                </Typography>
+                              )}
+                            </Grid>
+                          );
+                        })()}
                         <Grid size={12}>
                           <FormControlLabel
                             control={
@@ -1331,8 +1431,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
                 {tankVariants.map((variant, vi) => {
                   const variantKeys = new Set((Array.isArray(variant.tankIds) ? variant.tankIds : []).map(String));
-                  const variantCapacity = additionalFuelTanks.reduce((s, t, i) =>
-                    variantKeys.has(tankKeyOf(t, i)) ? s + (parseFloat(t.capacity) || 0) : s, 0);
+                  // ⛽ Deux contenances (17/08/2026) : la capacité d'une variante
+                  // s'affiche en UTILISABLE (grandeur des moteurs) avec le TOTAL
+                  // entre parenthèses (avitaillement) — accesseurs calc-engine
+                  // avec repli legacy `capacity`.
+                  const variantTanks = additionalFuelTanks.filter((t, i) => variantKeys.has(tankKeyOf(t, i)));
+                  const variantUsable = sumUsableLtr(variantTanks) ?? 0;
+                  const variantTotal = sumTotalLtr(variantTanks) ?? 0;
                   return (
                     <Box
                       key={variant.id}
@@ -1380,14 +1485,14 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                                 }
                                 label={
                                   <Typography variant="body2">
-                                    {tank.name || `Réservoir ${ti + 1}`} ({parseFloat(tank.capacity) || 0} L)
+                                    {tank.name || `Réservoir ${ti + 1}`} ({tankUsableLtr(tank) ?? 0} L utilisables)
                                   </Typography>
                                 }
                               />
                             );
                           })}
                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                            Capacité de la variante : {variantCapacity.toFixed(0)} L
+                            Capacité de la variante : {variantUsable.toFixed(0)} L utilisables ({variantTotal.toFixed(0)} L total)
                             {variantKeys.size === 0 && ' — ⚠ aucune case cochée : la variante sera ignorée au save'}
                           </Typography>
                         </Grid>
@@ -1409,9 +1514,11 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 garde le total MANEX en comparaison pour vérifier la cohérence. */}
             {(() => {
               const total = parseFloat(data.fuelCapacity) || 0;          // litres (MANEX/Step1)
-              const computed = additionalFuelTanks.reduce(
-                (sum, t) => sum + (parseFloat(t.capacity) || 0), 0        // litres
-              );
+              // ⛽ Deux contenances (17/08/2026) : data.fuelCapacity est le volume
+              // PHYSIQUE total → la somme comparable est Σ tankTotalLtr
+              // (totalCapacity, repli legacy `capacity`). Sommer l'ancien champ
+              // affichait 0 L pour les réservoirs modernes → fausse alerte.
+              const computed = sumTotalLtr(additionalFuelTanks) ?? 0;     // litres
               const hasData = computed > 0;
               if (!hasData && total <= 0) return null;
               const diff = computed - total;
@@ -1431,7 +1538,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       {additionalFuelTanks.map(t => (
                         <div key={t.id}>
                           {t.name || 'Réservoir'} :{' '}
-                          <strong>{toDisp(parseFloat(t.capacity) || 0).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
+                          <strong>{toDisp(tankTotalLtr(t) ?? 0).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
                         </div>
                       ))}
                       <Divider sx={{ my: 0.5 }} />

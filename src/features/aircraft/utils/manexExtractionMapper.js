@@ -530,7 +530,11 @@ export function buildBulkUpdatePayload(reviewItems) {
     }
 
     // ─── Cas spécial : pseudo-paths "_fuelTank:<sub>" ───
-    // Assemblés dans additionalFuelTanks: [{id, name, type, arm, capacity}, ...]
+    // Assemblés dans additionalFuelTanks: [{id, name, type, arm, totalCapacity}, ...]
+    // ⛽ Deux contenances (17/08/2026) : le manuel de vol donne la CONTENANCE du
+    // réservoir, c.-à-d. son volume PHYSIQUE → on écrit `totalCapacity`, plus
+    // jamais l'ancien `capacity` ambigu (qui, lu comme utilisable par les
+    // moteurs, gonflait le devis de masse — cas F-BXQT 98/85 L).
     if (path.startsWith('_fuelTank:')) {
       const sub = path.slice('_fuelTank:'.length);
       const valueNum = typeof item.value === 'number' ? item.value : parseFloat(item.value);
@@ -541,7 +545,7 @@ export function buildBulkUpdatePayload(reviewItems) {
         name: info.name,
         type: info.type,
         arm: '',        // à déterminer plus tard via centrogramme
-        capacity: valueNum
+        totalCapacity: valueNum
       });
       continue;
     }
@@ -596,6 +600,22 @@ export function buildBulkUpdatePayload(reviewItems) {
   // depuis l'extraction MANEX. Le pilote pourra ensuite ajuster les arms via
   // le CentrogramReader (les arms sont initialisés vides).
   if (fuelTankEntries.length > 0) {
+    // ⛽ Inférence MONO-réservoir (17/08/2026) : si le manuel donne l'utilisable
+    // TOTAL (`usable_fuel_total` → payload.fuelUsableCapacity, déjà en litres)
+    // et qu'il n'y a qu'UN réservoir, cet utilisable ne peut appartenir qu'à
+    // lui — on le propose comme `usableCapacity` (cas F-BXQT : 98 L total /
+    // 85 L utilisables sur l'unique réservoir).
+    // MULTI-réservoirs : usableCapacity reste ABSENT (fail-closed) — répartir
+    // un utilisable global entre plusieurs réservoirs exigerait une clé de
+    // répartition inventée (prorata ? symétrie ?) qui fausserait le centrage
+    // par réservoir ; le pilote saisira l'utilisable de chacun à l'étape
+    // Masse & Centrage.
+    if (fuelTankEntries.length === 1) {
+      const usableTotal = parseFloat(payload.fuelUsableCapacity);
+      if (Number.isFinite(usableTotal) && usableTotal > 0) {
+        fuelTankEntries[0].usableCapacity = usableTotal;
+      }
+    }
     payload.additionalFuelTanks = fuelTankEntries;
   }
 

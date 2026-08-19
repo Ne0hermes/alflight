@@ -57,6 +57,9 @@ import {
 } from '../utils/centrogramMath';
 import { buildCgEnvelope, aircraftToCentrogramScaffold } from '../utils/centrogramAdapter';
 import { getFuelDensity } from '../utils/mbUnits';
+// ⛽ Deux contenances par réservoir (17/08/2026) : le « plein » opérationnel
+// est le plein UTILISABLE — accesseur canonique (usableCapacity ?? capacity).
+import { tankUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { unitsSelectors } from '@core/stores/unitsStore';
 
 const STEPS = [
@@ -701,7 +704,11 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
       // exactement comme Step3 (capacité × densité × bras / masse max × bras).
       if (currentStage.dynamicType === 'fuelTank') {
         const tank = aircraftData?.additionalFuelTanks?.[currentStage.dynamicIndex];
-        const cap = parseFloat(tank?.capacity);
+        // ⛽ momentAtFull sur l'UTILISABLE (17/08/2026) : le plein opérationnel
+        // est le plein utilisable — l'inutilisable est déjà dans la masse à
+        // vide pesée, le compter ici le pèserait deux fois. tankUsableLtr lit
+        // usableCapacity avec repli legacy `capacity`.
+        const cap = tankUsableLtr(tank);
         const density = getFuelDensity(aircraftData?.fuelType);
         if (Number.isFinite(cap) && density != null) {
           updateData(

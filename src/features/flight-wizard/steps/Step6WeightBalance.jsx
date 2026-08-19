@@ -9,6 +9,10 @@ import { ScenarioCards } from '@features/weight-balance/components/ScenarioCards
 import { calculateScenarios } from '@features/weight-balance/utils/calculations';
 import { activeTankIdsFrom, aircraftTankConfigId } from '@core/stores/fuelStore';
 import { computeMaxFuel } from '@utils/maxFuel';
+// ⛽ Deux contenances par réservoir (17/08/2026) : totalCapacity (volume
+// physique — avitaillement) et usableCapacity (LA grandeur du centrage et de
+// l'autonomie). Accesseurs canoniques du moteur, repli legacy `capacity`.
+import { tankUsableLtr, tankTotalLtr, sumUsableLtr, sumTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
@@ -1017,8 +1021,15 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
 
               // 🔧 FIX: aircraft.fuelCapacity est TOUJOURS en litres (storage unit)
               // Pas besoin de conversion, c'est déjà en litres !
+              // ⛽ Deux contenances (17/08/2026) : « pleins » = plein UTILISABLE —
+              // la masse à vide pesée inclut déjà l'inutilisable, compter le
+              // total le pèserait deux fois (+9,4 kg sur F-BXQT). Le volume
+              // TOTAL (avitaillement) n'apparaît qu'en mention informative.
               const fuelCapacityLtr = configEngaged
-                ? checkedTanks.reduce((s, { t }) => s + (parseFloat(t.capacity) || 0), 0)
+                ? checkedTanks.reduce((s, { t }) => s + (tankUsableLtr(t) || 0), 0)
+                : (aircraft.fuelUsableCapacity || aircraft.fuelCapacity || 0);
+              const fuelTotalCapacityLtr = configEngaged
+                ? checkedTanks.reduce((s, { t }) => s + (tankTotalLtr(t) || 0), 0)
                 : (aircraft.fuelCapacity || 0);
 
               const fullTankKg = fuelCapacityLtr * fuelDensity;
@@ -1027,7 +1038,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               const fullTankMoment = configEngaged
                 ? checkedTanks.reduce((s, { t }) => {
                     const a = parseFloat(t.arm);
-                    return s + (parseFloat(t.capacity) || 0) * fuelDensity * (Number.isFinite(a) ? a : 0);
+                    return s + (tankUsableLtr(t) || 0) * fuelDensity * (Number.isFinite(a) ? a : 0);
                   }, 0)
                 : fullTankKg * (arms.fuel || 0);
               const fullTankInUserUnit = convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit);
@@ -1039,7 +1050,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                       Full Tank{configEngaged ? ` (${checkedTanks.length} réservoir${checkedTanks.length > 1 ? 's' : ''} coché${checkedTanks.length > 1 ? 's' : ''})` : ''}
                     </span>
                     <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-                      {fullTankInUserUnit.toFixed(3)} {fuelUnitSymbol} ({fullTankKg.toFixed(3)} kg)
+                      {fullTankInUserUnit.toFixed(3)} {fuelUnitSymbol} utilisables ({fullTankKg.toFixed(3)} kg)
+                      {/* Mention informative : volume physique ≠ utilisable — la
+                          différence (inutilisable) ne se pèse ni ne se consomme. */}
+                      {fuelTotalCapacityLtr > fuelCapacityLtr + 0.01
+                        ? ` (capacité totale ${convert(fuelTotalCapacityLtr, 'fuel', 'ltr', userFuelUnit).toFixed(1)} ${fuelUnitSymbol})`
+                        : ''}
                     </span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
@@ -1249,10 +1265,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
   });
 
   // Champ de saisie carburant PAR RÉSERVOIR (centrage). Saisie en LITRES,
-  // plafonnée à la capacité du réservoir ; convertie en kg via la densité pour
-  // le moment (chaque réservoir a son propre bras de levier).
+  // plafonnée à la capacité UTILISABLE du réservoir ; convertie en kg via la
+  // densité pour le moment (chaque réservoir a son propre bras de levier).
+  // ⛽ Deux contenances (17/08/2026) : le plafond est l'UTILISABLE
+  // (tankUsableLtr, repli legacy `capacity`) — on ne peut pas EMBARQUER
+  // opérationnellement plus que l'utilisable, et l'inutilisable est déjà
+  // compté dans la masse à vide pesée.
   const FuelTankInput = memo(({ tank, liters, onChange, density }) => {
-    const cap = parseFloat(tank.capacity);
+    const cap = tankUsableLtr(tank) ?? NaN;   // L utilisables (NaN si inconnu)
     const arm = parseFloat(tank.arm);
     const L = parseFloat(liters) || 0;
     const weight = L * density;
@@ -1306,11 +1326,11 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         />
         {exceeds && (
           <div style={{ marginTop: '4px', fontSize: 'var(--fs-caption)', color: 'var(--color-red-critical)', fontWeight: '600' }}>
-            ⚠️ Dépasse la capacité : {L} L &gt; {cap} L
+            ⚠️ Dépasse la capacité utilisable : {L} L &gt; {cap} L utilisables
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '8px', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cap:</span><span style={{ color: theme.colors.textPrimary }}>{Number.isFinite(cap) ? `${cap} L` : '—'}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Cap:</span><span style={{ color: theme.colors.textPrimary }}>{Number.isFinite(cap) ? `${cap} L utilisables` : '—'}</span></div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Bras:</span>{Number.isFinite(arm) ? <span style={{ color: theme.colors.textPrimary }}>{arm.toFixed(3)} m</span> : <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>MANQUANT</span>}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Moment:</span>{moment !== null ? <span style={{ color: theme.colors.textPrimary, fontWeight: '600' }}>{moment.toFixed(3)}</span> : <span style={{ color: 'var(--color-red-critical)', fontWeight: '600' }}>N/A</span>}</div>
         </div>
@@ -1354,7 +1374,11 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     const activeSet = configEngaged ? new Set(activeTankIds.map(String)) : new Set();
     const indexedTanks = aircraftTanks.map((tank, i) => ({ tank, i, key: String(tank.id ?? i) }));
     const shownTanks = indexedTanks.filter(({ key }) => activeSet.has(key));
-    const checkedCapacityLtr = shownTanks.reduce((s, { tank }) => s + (parseFloat(tank.capacity) || 0), 0);
+    // ⛽ Deux contenances (17/08/2026) : la « Capacité configuration » s'affiche
+    // en UTILISABLE (grandeur du centrage/autonomie) avec le TOTAL entre
+    // parenthèses quand il diffère (accesseurs avec repli legacy `capacity`).
+    const checkedCapacityLtr = sumUsableLtr(shownTanks.map(({ tank }) => tank)) ?? 0;
+    const checkedTotalCapacityLtr = sumTotalLtr(shownTanks.map(({ tank }) => tank)) ?? 0;
     // requiredRawLtr = même valeur que le garde-fou du wizard (comparaisons) ;
     // requiredLtr arrondi sup = AFFICHAGE uniquement (revue lot 9 : un ceil
     // dans la comparaison contredisait la validation pour 0,5 L)
@@ -1473,7 +1497,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     <span style={{ fontSize: 'var(--fs-body)' }}>
                       <strong>{tank.name || `Réservoir ${i + 1}`}</strong>
                       <span style={{ color: theme.colors.textSecondary }}>
-                        {' '}· {isOptional ? 'Optionnel (amovible)' : 'Fixe'} · Capacité {(parseFloat(tank.capacity) || 0).toFixed(1)} L
+                        {/* ⛽ Double affichage utilisable/(total) — le pilote embarque
+                            l'utilisable, il avitaille le total. */}
+                        {' '}· {isOptional ? 'Optionnel (amovible)' : 'Fixe'} · Capacité {(tankUsableLtr(tank) ?? 0).toFixed(1)} L utilisables
+                        {(() => {
+                          const tot = tankTotalLtr(tank);
+                          const usa = tankUsableLtr(tank) ?? 0;
+                          return tot != null && tot > usa + 0.01 ? ` (${tot.toFixed(1)} L total)` : '';
+                        })()}
                       </span>
                     </span>
                   </label>
@@ -1481,7 +1512,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               })}
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)', fontWeight: 600, fontSize: 'var(--fs-body)' }}>
                 <span>Capacité configuration</span>
-                <span>{checkedCapacityLtr.toFixed(1)} L</span>
+                <span>
+                  {checkedCapacityLtr.toFixed(1)} L utilisables
+                  {checkedTotalCapacityLtr > checkedCapacityLtr + 0.01
+                    ? ` (${checkedTotalCapacityLtr.toFixed(1)} L total)`
+                    : ''}
+                </span>
               </div>
             </div>
 

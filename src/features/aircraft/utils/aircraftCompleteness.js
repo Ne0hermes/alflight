@@ -14,6 +14,11 @@
  */
 
 import { computeMissingPerformanceTables } from './performanceCoverage';
+// ⛽ Deux contenances par réservoir (17/08/2026) : les replis lisent les
+// nouveaux champs via les accesseurs canoniques du moteur — Σ tankTotalLtr
+// pour la capacité, Σ tankUsableLtr pour l'utilisable — avec l'ancien
+// `capacity` en DERNIER recours (repli intégré aux accesseurs).
+import { sumTotalLtr, sumUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 
 // R22 — poids FIXE du groupe « Performances » (décision pilote : la liste des
 // tables manquantes est informative et ne doit pas diluer le % avec 8 lignes).
@@ -77,12 +82,11 @@ const findTank = (aircraft, type) => {
   return tanks.find((t) => t && t.type === type) || null;
 };
 
-const sumTankCapacities = (aircraft) => {
-  const tanks = aircraft?.additionalFuelTanks;
-  if (!Array.isArray(tanks) || tanks.length === 0) return undefined;
-  const sum = tanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
-  return sum > 0 ? sum : undefined;
-};
+// ⛽ Deux contenances (17/08/2026) : les sommes passent par les accesseurs
+// calc-engine (totalCapacity / usableCapacity, repli legacy `capacity`).
+// null → undefined pour rester cohérent avec le contrat hasValue de valueOf.
+const sumTankTotal = (aircraft) => sumTotalLtr(aircraft?.additionalFuelTanks) ?? undefined;
+const sumTankUsable = (aircraft) => sumUsableLtr(aircraft?.additionalFuelTanks) ?? undefined;
 
 // Résolution unifiée d'un champ : essaye le `path` traditionnel (legacy
 // + alternatives via « | »), puis si rien n'a été trouvé, tente le getter
@@ -118,14 +122,17 @@ export const FIELD_DEFINITIONS = [
   { path: 'model',                                                 label: 'Modèle',                    severity: 'REQUIRED', weight: 3 },
   { path: 'fuelType',                                              label: 'Type de carburant',         severity: 'REQUIRED', weight: 2 },
   { path: 'fuelCapacity',                                          label: 'Capacité carburant',        severity: 'REQUIRED', weight: 3,
-    // Fallback : si fuelCapacity est vide, accepter la somme des
-    // capacités des réservoirs additionnels (refonte M&B).
-    get: sumTankCapacities },
+    // Fallback : si fuelCapacity est vide, accepter la somme des volumes
+    // PHYSIQUES des réservoirs (Σ tankTotalLtr — totalCapacity, puis
+    // l'ancien `capacity` en dernier recours).
+    get: sumTankTotal },
   { path: 'cruiseSpeedKt | cruiseSpeed',                           label: 'Vitesse de croisière',      severity: 'REQUIRED', weight: 3 },
   { path: 'fuelConsumption',                                       label: 'Consommation carburant',    severity: 'REQUIRED', weight: 3 },
   { path: 'fuelUsableCapacity | fuelCapacity',                     label: 'Volume utilisable',         severity: 'REQUIRED', weight: 2,
-    // Fallback : capacité du tank principal, sinon somme totale.
-    get: (a) => findTank(a, 'main')?.capacity ?? sumTankCapacities(a) },
+    // Fallback : somme des volumes UTILISABLES des réservoirs
+    // (Σ tankUsableLtr — usableCapacity, puis l'ancien `capacity` en
+    // dernier recours, qui se lit comme l'utilisable).
+    get: sumTankUsable },
   { path: 'horsepower',                                            label: 'Puissance moteur (CV)',     severity: 'REQUIRED', weight: 2 },
 
   // === CRITICAL — masse et centrage ===
