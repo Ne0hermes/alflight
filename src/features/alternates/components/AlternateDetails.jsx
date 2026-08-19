@@ -272,12 +272,12 @@ const AlternateCard = memo(({ alternate, index, onDownloadVAC }) => {
                   const surfaceCompatible = aircraftSurfaces.length > 0 &&
                     aircraftSurfaces.some(s => normalizeSurface(s) === runwaySurface);
 
-                  // Vérifier longueur minimale si spécifiée
-                  const minLength = selectedAircraft?.minimumRunwayLength ?
-                    parseInt(selectedAircraft.minimumRunwayLength) : 0;
-                  const lengthCompatible = minLength > 0 ? lengthM >= minLength : true;
-
-                  const isCompatible = surfaceCompatible && lengthCompatible;
+                  // 🗑️ 19/08/2026 — plus de contrôle « longueur minimale »
+                  // (minimumRunwayLength supprimé, décision pilote) : la
+                  // longueur de piste exploitable vient des performances
+                  // calculées aux conditions du jour, pas d'un seuil figé de
+                  // la fiche. Une valeur résiduelle en base est inerte ici.
+                  const isCompatible = surfaceCompatible;
 
                   return (
                     <div key={idx} style={sx.combine(

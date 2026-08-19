@@ -929,7 +929,6 @@ export const useAlternateSelection = () => {
       // 2. Filtrer selon les critères de compatibilité de piste
       // DEBUG: Afficher les critères de l'avion (format string pour voir le contenu)
       console.log('🛫 [FILTRAGE PISTES] Critères avion - surfaces:', JSON.stringify(selectedAircraft.compatibleRunwaySurfaces));
-      console.log('🛫 [FILTRAGE PISTES] Critères avion - longueur min:', selectedAircraft.minimumRunwayLength);
 
       // DEBUG: Afficher quelques exemples de pistes d'aérodromes (format string)
       const exemplesPistes = candidatesInZone.slice(0, 5).map(apt => ({
@@ -938,7 +937,7 @@ export const useAlternateSelection = () => {
       }));
       console.log('🛬 [FILTRAGE PISTES] Exemples de pistes:', JSON.stringify(exemplesPistes, null, 2));
 
-      let rejectedReasons = { noRunways: 0, noSurface: 0, incompatibleSurface: 0, tooShort: 0 };
+      let rejectedReasons = { noRunways: 0, noSurface: 0, incompatibleSurface: 0 };
 
       const filtered = candidatesInZone.filter(airport => {
         // Si l'aérodrome n'a pas d'info sur les pistes, l'accepter quand même
@@ -970,39 +969,27 @@ export const useAlternateSelection = () => {
 
         // Vérifier si au moins une piste est compatible
         // NOUVEAU: On accepte les pistes sans info de surface (données GeoJSON incomplètes)
-        let isTooShort = false;
-        let allTooShort = true;
-
         const hasCompatibleRunway = airport.runways.some(runway => {
-          // Récupérer la longueur de piste (peut être à différents endroits)
-          const runwayLength = runway.length || runway.dimensions?.length || 0;
-
-          // 1. Vérifier la SURFACE EN PREMIER (critère le plus important).
+          // Vérifier la SURFACE (critère de compatibilité STATIQUE de l'avion).
           // Util partagé : tolère surfaces combinées (CONC+ASPH) et synonymes
           // (MACADAM, BITUM…) → fini les faux « surface incompatible ».
           if (!isSurfaceCompatible(runway.surface, selectedAircraft.compatibleRunwaySurfaces)) {
             return false; // Surface incompatible - REJET
           }
 
-          // 2. Vérifier la longueur minimale si l'avion a un critère
-          if (selectedAircraft.minimumRunwayLength &&
-              selectedAircraft.minimumRunwayLength !== '' &&
-              runwayLength > 0) {
-            const minLength = parseInt(selectedAircraft.minimumRunwayLength);
-            if (runwayLength < minLength) {
-              isTooShort = true;
-              return false; // Cette piste est trop courte
-            }
-          }
-
-          // Si on arrive ici, la piste est compatible (surface OK et longueur OK)
-          allTooShort = false;
-          return true;
+          // 🗑️ 19/08/2026 — le filtre « longueur de piste minimale »
+          // (minimumRunwayLength) est SUPPRIMÉ. Décision pilote : « à aucun
+          // moment je ne dois mettre une longueur de piste minimum pour cet
+          // avion, car cela vient avec les performances lors de la préparation
+          // du vol ». La sélection des déroutements s'appuie sur les
+          // PERFORMANCES CALCULÉES aux conditions du jour (analyse de
+          // compatibilité de piste), pas sur un seuil figé dans la fiche —
+          // seuil qui n'avait d'ailleurs jamais eu d'écran de saisie.
+          return true; // surface OK → piste compatible
         });
 
         if (!hasCompatibleRunway) {
-          if (allTooShort) rejectedReasons.tooShort++;
-          else rejectedReasons.incompatibleSurface++;
+          rejectedReasons.incompatibleSurface++;
         }
 
         return hasCompatibleRunway;
@@ -1013,8 +1000,7 @@ export const useAlternateSelection = () => {
         ', après=' + filtered.length +
         ', rejets: noRunways=' + rejectedReasons.noRunways +
         ', noSurface=' + rejectedReasons.noSurface +
-        ', incompatibleSurface=' + rejectedReasons.incompatibleSurface +
-        ', tooShort=' + rejectedReasons.tooShort
+        ', incompatibleSurface=' + rejectedReasons.incompatibleSurface
       );
       
             

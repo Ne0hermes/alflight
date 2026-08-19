@@ -91,7 +91,8 @@ const SupabaseUpdater = ({ aircraft, onUpdateComplete }) => {
       { key: 'usefulLoad', label: 'Charge utile' },
       { key: 'seats', label: 'Nombre de sièges' },
       { key: 'compatibleRunwaySurfaces', label: 'Surfaces compatibles', isArray: true },
-      { key: 'minimumRunwayLength', label: 'Longueur piste minimale' },
+      // 🗑️ 19/08/2026 — minimumRunwayLength supprimé (décision pilote : la
+      // longueur exploitable vient des performances du jour, pas de la fiche).
       { key: 'engineType', label: 'Type moteur' },
       { key: 'engineModel', label: 'Modèle moteur' },
       { key: 'enginePower', label: 'Puissance moteur' },

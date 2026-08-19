@@ -161,7 +161,20 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
       // Calcul du poids total incluant les compartiments bagages dynamiques
       let baggageWeight = 0;
       let baggageMoment = 0;
-      
+
+      // ─── Limites BAGAGES du manuel (19/08/2026, cas F-BXQT : C1 max 54 kg,
+      //     C2 max 18 kg, MAIS total soute max 54 kg) ───────────────────────
+      // Jusqu'ici, maxBaggageTotalMass (saisi dans Step3 avec la promesse
+      // « sera contrôlée lors du calcul M&C ») n'était LU PAR AUCUN calcul, et
+      // les maxWeight PAR compartiment n'étaient qu'une borne d'UI (champ
+      // plafonné dans Step6). L'application déclarait donc un contrôle qui
+      // n'existait pas. Le moteur contrôle désormais les deux : dépassement ⇒
+      // avertissement explicite ET verdict hors limites (isBaggageOverLimit
+      // participe à isWithinLimits, exposé à part pour un affichage dédié).
+      // ⚠️ Aucune limite FABRIQUÉE : champ absent / non fini / ≤ 0 ⇒ aucun
+      // contrôle, comportement strictement inchangé.
+      const baggageWarnings = [];
+
       // Si l'avion a des compartiments bagages définis, les utiliser
       let baggageArmMissing = false;
       if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
@@ -172,6 +185,14 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
           if (weight > 0 && !Number.isFinite(arm)) baggageArmMissing = true;
           baggageWeight += weight;
           baggageMoment += weight * (Number.isFinite(arm) ? arm : 0);
+          // Limite PAR compartiment (manuel de vol). Contrôle moteur : l'UI
+          // borne la saisie mais rien ne verrouillait le VERDICT jusqu'ici.
+          const maxW = parseFloat(compartment.maxWeight);
+          if (Number.isFinite(maxW) && maxW > 0 && weight > maxW) {
+            baggageWarnings.push(
+              `Compartiment « ${compartment.name || `bagages ${index + 1}`} » : ${weight.toFixed(1)} kg > maximum ${maxW.toFixed(1)} kg du manuel`
+            );
+          }
         });
       } else {
         // Sinon, utiliser les compartiments par défaut
@@ -183,6 +204,24 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         baggageMoment = (loads.baggage || 0) * (Number.isFinite(bArm) ? bArm : 0) +
                         (loads.auxiliary || 0) * (Number.isFinite(aArm) ? aArm : 0);
       }
+
+      // Limite TOTALE de soute (maxBaggageTotalMass, kg canonique, racine de la
+      // fiche). Somme des charges de soute du vol : compartiments dynamiques
+      // (déjà dans baggageWeight) + clés legacy baggage/auxiliary — en mode
+      // compartiments elles ne participent pas au bilan mais restent comptées
+      // dans la limite par sécurité (elles devraient être nulles).
+      let baggageLoadTotal = baggageWeight;
+      if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
+        baggageLoadTotal += (loads.baggage || 0) + (loads.auxiliary || 0);
+      }
+      const maxBaggageTotal = parseFloat(aircraft.maxBaggageTotalMass);
+      if (Number.isFinite(maxBaggageTotal) && maxBaggageTotal > 0 && baggageLoadTotal > maxBaggageTotal) {
+        baggageWarnings.push(
+          `Bagages : ${baggageLoadTotal.toFixed(1)} kg > maximum total ${maxBaggageTotal.toFixed(1)} kg du manuel`
+        );
+      }
+      const isBaggageOverLimit = baggageWarnings.length > 0;
+      warnings.push(...baggageWarnings);
       
       // ─── Carburant : PAR RÉSERVOIR si l'avion en a (bras distincts), sinon
       //     bloc unique. Demande pilote : répartir le carburant dans les
@@ -310,7 +349,9 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
             : false); // enveloppe incomplète → fail-closed
 
       // Fail-closed : centrage non fiable ou inconnu ⇒ jamais « dans les limites ».
-      const isWithinLimits = cgReliable && fuelReliable && isWithinWeight && isWithinCG === true;
+      // 19/08/2026 : les limites BAGAGES du manuel (totale + par compartiment)
+      // composent désormais le verdict, au même titre que masse et centrage.
+      const isWithinLimits = cgReliable && fuelReliable && isWithinWeight && isWithinCG === true && !isBaggageOverLimit;
 
       const result = {
         totalWeight: parseFloat(totalWeight.toFixed(1)),
@@ -321,6 +362,11 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         isWithinCG,
         cgReliable,
         fuelDensityMissing,
+        // Dépassement d'une limite BAGAGES du manuel (totale maxBaggageTotalMass
+        // et/ou maxWeight d'un compartiment). Exposé à part pour que l'UI
+        // l'affiche distinctement du dépassement de masse globale ; les
+        // messages détaillés sont dans `warnings`.
+        isBaggageOverLimit,
         // Masse au décollage supérieure à la MLW (retour immédiat impossible
         // sans délestage). Exposé pour l'UI et la synthèse.
         exceedsMlwAtTakeoff,

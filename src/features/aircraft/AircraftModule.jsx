@@ -2033,6 +2033,10 @@ export const AircraftModule = memo(() => {
             // Évaluation complète : % de complétion + champs manquants + criticité
             const completeness = evaluateAircraft(aircraft);
             const { percentage, missing, hasCriticalGaps } = completeness;
+            // 19/08/2026 — tables de perf CERTIFIÉES absentes du manuel de vol
+            // (bypass admin) : affichées sur la carte pour que le trou soit lu
+            // comme ASSUMÉ, pas oublié.
+            const certifiedAbsentPerf = completeness.certifiedAbsentPerformanceTables || [];
             const isMissingExpanded = expandedMissingIds.has(aircraft.id);
             const photoUrl = aircraftPhotos[aircraft.id];
             const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
@@ -2432,7 +2436,10 @@ export const AircraftModule = memo(() => {
                             un <span> avec font-size 11px / letter-spacing 0.08em.
                             Pas d'icône décorative (triangle), pas de gras 600,
                             pas de pill rouge — l'info « X manquants » suffit. */}
-                        {missing.length > 0 && (
+                        {/* 19/08/2026 : le bouton reste disponible quand il ne
+                            reste QUE des tables certifiées absentes du manuel
+                            — le panel permet alors de les consulter/rétablir. */}
+                        {(missing.length > 0 || certifiedAbsentPerf.length > 0) && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -2444,14 +2451,18 @@ export const AircraftModule = memo(() => {
                                 return next;
                               });
                             }}
-                            title={`${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`}
-                            aria-label={`${missing.length} manquant${missing.length > 1 ? 's' : ''}`}
+                            title={missing.length > 0
+                              ? `${missing.length} champ${missing.length > 1 ? 's' : ''} manquant${missing.length > 1 ? 's' : ''}`
+                              : `${certifiedAbsentPerf.length} table${certifiedAbsentPerf.length > 1 ? 's' : ''} certifiée${certifiedAbsentPerf.length > 1 ? 's' : ''} absente${certifiedAbsentPerf.length > 1 ? 's' : ''} du manuel de vol`}
+                            aria-label={missing.length > 0
+                              ? `${missing.length} manquant${missing.length > 1 ? 's' : ''}`
+                              : 'Tables certifiées absentes du manuel'}
                             aria-expanded={isMissingExpanded}
                             style={{
                               ...baseBtn,
                               padding: `0 ${tokens.spacing[2]}`,
                               gap: '6px',
-                              color: 'var(--accent-primary)'
+                              color: missing.length > 0 ? 'var(--accent-primary)' : 'var(--text-secondary)'
                             }}
                             onMouseEnter={(e) => hoverIn(e)}
                             onMouseLeave={hoverOut}
@@ -2463,7 +2474,9 @@ export const AircraftModule = memo(() => {
                                 letterSpacing: '0.08em'
                               }}
                             >
-                              {missing.length} MANQUANT{missing.length > 1 ? 'S' : ''}
+                              {missing.length > 0
+                                ? `${missing.length} MANQUANT${missing.length > 1 ? 'S' : ''}`
+                                : 'PERFS CERTIFIÉES'}
                             </span>
                           </button>
                         )}
@@ -2588,8 +2601,31 @@ export const AircraftModule = memo(() => {
                     );
                   })()}
 
-                  {/* Panel des champs manquants — s'ouvre EN BAS de la card */}
-                  {isMissingExpanded && missing.length > 0 && (
+                  {/* 🔏 19/08/2026 — Tables de performance certifiées ABSENTES
+                      du manuel de vol : ligne discrète mais TOUJOURS visible
+                      (indépendante du panel « À compléter »). Le pilote qui
+                      consulte la fiche doit comprendre que le trou est assumé
+                      par l'admin, pas oublié. */}
+                  {certifiedAbsentPerf.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: tokens.spacing[2],
+                        fontSize: 'var(--fs-caption)',
+                        lineHeight: 1.5,
+                        color: 'var(--text-tertiary)'
+                      }}
+                    >
+                      Non fournie par le manuel de vol (certifié) :{' '}
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        {certifiedAbsentPerf.map((t) => t.label).join(' · ')}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Panel des champs manquants — s'ouvre EN BAS de la card.
+                      19/08/2026 : reste accessible quand il ne reste QUE des
+                      tables certifiées absentes (pour pouvoir les rétablir). */}
+                  {isMissingExpanded && (missing.length > 0 || certifiedAbsentPerf.length > 0) && (
                     <div
                       onClick={(e) => e.stopPropagation()}
                       style={{
@@ -2692,7 +2728,7 @@ export const AircraftModule = memo(() => {
                                 <span style={{ flex: 1 }}>{item.label}</span>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleTogglePerfBypass(aircraft, item.path); }}
-                                  title="Marquer cette table comme non applicable à cet avion (ex. pas de cran volets concerné)"
+                                  title="Certifier que cette table n'existe pas dans le manuel de vol de cet avion — la fiche affichera « Non fournie par le manuel de vol (certifié) »"
                                   style={{
                                     padding: '1px 8px',
                                     fontSize: 'var(--fs-caption)',
@@ -2704,13 +2740,68 @@ export const AircraftModule = memo(() => {
                                     whiteSpace: 'nowrap'
                                   }}
                                 >
-                                  non applicable
+                                  Certifier absente du manuel de vol
                                 </button>
                               </div>
                             ))}
                           </div>
                         );
                       })()}
+
+                      {/* 🔏 19/08/2026 — tables certifiées ABSENTES du manuel :
+                          listées dans le panel avec un « rétablir » (annule la
+                          certification si l'admin s'est trompé — la table
+                          redevient alors « manquante »). */}
+                      {certifiedAbsentPerf.length > 0 && (
+                        <div style={{ marginBottom: tokens.spacing[3] }}>
+                          <div
+                            style={{
+                              fontFamily: tokens.fontFamily.mono,
+                              fontSize: 'var(--fs-caption)',
+                              letterSpacing: '0.18em',
+                              textTransform: 'uppercase',
+                              color: 'var(--text-tertiary)',
+                              fontWeight: 600,
+                              marginBottom: '4px'
+                            }}
+                          >
+                            Non fournies par le manuel de vol (certifié) · {certifiedAbsentPerf.length}
+                          </div>
+                          {certifiedAbsentPerf.map((item) => (
+                            <div
+                              key={item.bypassKey}
+                              style={{
+                                display: 'flex',
+                                gap: tokens.spacing[2],
+                                alignItems: 'center',
+                                paddingLeft: tokens.spacing[3],
+                                color: 'var(--text-tertiary)',
+                                fontSize: 'var(--fs-body)',
+                                lineHeight: 1.5
+                              }}
+                            >
+                              <span>·</span>
+                              <span style={{ flex: 1 }}>{item.label}</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleTogglePerfBypass(aircraft, item.bypassKey); }}
+                                title="Annuler la certification d'absence — la table redeviendra « manquante »"
+                                style={{
+                                  padding: '1px 8px',
+                                  fontSize: 'var(--fs-caption)',
+                                  cursor: 'pointer',
+                                  backgroundColor: 'transparent',
+                                  color: 'var(--text-tertiary)',
+                                  border: '1px solid var(--border-subtle)',
+                                  borderRadius: tokens.radius.sm,
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                rétablir
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

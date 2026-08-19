@@ -422,7 +422,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     },
     
     // Opérations
-    minimumRunwayLength: existingAircraft?.minimumRunwayLength || '',
+    // 🗑️ 19/08/2026 — minimumRunwayLength SUPPRIMÉ de l'init (décision
+    // pilote) : la longueur de piste exploitable vient des PERFORMANCES aux
+    // conditions du jour, jamais d'un seuil figé sur la fiche. Le champ n'a
+    // jamais eu d'écran de saisie (vide sur 13/13 fiches) ; les valeurs déjà
+    // en base restent inertes (plus aucun consommateur).
     serviceCeiling: existingAircraft?.serviceCeiling || '',
     approvedOperations: {
       ...existingAircraft?.approvedOperations, // 🆕 préserve les sous-champs non listés

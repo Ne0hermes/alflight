@@ -511,6 +511,26 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           });
         }
 
+        // 🧳 19/08/2026 — Limites BAGAGES du manuel (cas F-BXQT : total soute
+        // 54 kg < somme des maxima par compartiment). Le verdict vient du
+        // MOTEUR (isBaggageOverLimit, messages détaillés dans warnings) : on
+        // l'affiche DISTINCTEMENT de la surcharge MTOW — un vol peut être sous
+        // la masse max tout en violant la limite de soute du manuel.
+        if (calculations?.isBaggageOverLimit) {
+          const baggageMsgs = (calculations.warnings || []).filter(
+            (w) => /^Bagages|^Compartiment/.test(w)
+          );
+          violations.push({
+            type: 'critical',
+            phase: 'Chargement',
+            message: `⚠️ LIMITE BAGAGES DU MANUEL DÉPASSÉE`,
+            detail: baggageMsgs.length > 0
+              ? baggageMsgs.join(' — ')
+              : `La charge en soute dépasse une limite du manuel de vol.`,
+            icon: '🧳'
+          });
+        }
+
         return violations.length > 0 ? violations : null;
       }, [aircraft, scenarios, calculations]);
 
@@ -621,6 +641,23 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         <div style={commonStyles.container}>
           {/* Sélecteur catégorie d'opération N / U — visible uniquement si
               l'avion a une configuration utilitaire activée */}
+          {/* 🔧 19/08/2026 (demande César) — quand la catégorie utilitaire n'est
+              pas disponible, on le DIT au lieu de masquer en silence : quatre
+              fiches l'avaient activée sans limites de centrage (héritage
+              d'extraction), le sélecteur promettait un domaine restreint
+              inexistant. Désactivées par script ; l'absence doit se lire comme
+              un fait, pas comme un oubli d'affichage. */}
+          {!aircraft.utilityCategory?.enabled && (
+            <p style={{
+              margin: '0 0 12px',
+              fontSize: '12px',
+              color: 'var(--text-tertiary)',
+              fontStyle: 'italic',
+            }}>
+              Mode utilitaire non disponible pour cet avion — le devis s'établit en
+              catégorie Normale.
+            </p>
+          )}
           {aircraft.utilityCategory?.enabled && (
             <div style={{
               padding: '12px 16px',
@@ -964,23 +1001,32 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             />
           </div>
 
-          {/* Sièges arrière */}
-          <div style={commonStyles.grid2}>
-            <LoadInputWithInfo
-              label="Siège arrière gauche"
-              value={safeLoads.rearLeft}
-              onChange={(v) => onLoadChange('rearLeft', v)}
-              arm={arms.rearLeft}
-              max={120}
-            />
-            <LoadInputWithInfo
-              label="Siège arrière droit"
-              value={safeLoads.rearRight}
-              onChange={(v) => onLoadChange('rearRight', v)}
-              arm={arms.rearRight}
-              max={120}
-            />
-          </div>
+          {/* Sièges arrière — UNIQUEMENT si un bras arrière existe (19/08/2026,
+              biplaces F-BXQT/F-BXNG) : même détection que la fiche avion
+              (arms.rearSeats / weightBalance.rearLeft/RightSeatArm, via les
+              fallbacks de `arms` ci-dessus). Un avion sans places arrière
+              n'expose plus de champs de charge arrière — auparavant on
+              affichait deux postes « bras MANQUANT » invitant à charger des
+              sièges inexistants. Garde-fou moteur inchangé : une charge
+              arrière résiduelle avec bras null ⇒ cgReliable=false. */}
+          {(arms.rearLeft !== null || arms.rearRight !== null) && (
+            <div style={commonStyles.grid2}>
+              <LoadInputWithInfo
+                label="Siège arrière gauche"
+                value={safeLoads.rearLeft}
+                onChange={(v) => onLoadChange('rearLeft', v)}
+                arm={arms.rearLeft}
+                max={120}
+              />
+              <LoadInputWithInfo
+                label="Siège arrière droit"
+                value={safeLoads.rearRight}
+                onChange={(v) => onLoadChange('rearRight', v)}
+                arm={arms.rearRight}
+                max={120}
+              />
+            </div>
+          )}
 
           {/* Section Carburant - Différents scénarios */}
           <div style={{ ...commonStyles.card, padding: '16px' }}>

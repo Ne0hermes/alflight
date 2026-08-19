@@ -640,6 +640,64 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     if ('momentMax' in fields) updateData(`seatLimits.${rowKey}.momentMax`, fields.momentMax);
   };
 
+  // ─── Sièges ARRIÈRE supprimables (19/08/2026, biplaces F-BXQT/F-BXNG) ───
+  // La rangée arrière était affichée INCONDITIONNELLEMENT : sur un biplace,
+  // deux champs vides irrémédiables — et pire, certaines fiches portaient un
+  // bras arrière FANTÔME (copie du bras avant) qui aurait faussé le centrage
+  // si quelqu'un y avait mis une masse. La rangée devient supprimable :
+  //   • détection « absent » : arms.rearSeats ET les deux bras weightBalance
+  //     tous absents/vides/null ;
+  //   • suppression : bras effacés (JAMAIS 0 — un zéro serait un bras
+  //     inventé ; côté weightBalance on écrit null, le contrat moteur pour
+  //     « bras absent » — undefined ferait refuser TOUT le calcul via
+  //     requiredProps) + seatLimits.rearSeats retiré ;
+  //   • Step6 (prépa vol) masque les postes de charge arrière sur la même
+  //     détection : un avion sans places arrière n'expose plus ces champs.
+  const hasArmValue = (v) =>
+    v !== null && v !== undefined && v !== '' && Number.isFinite(parseFloat(v));
+  const rearSeatsDefined =
+    hasArmValue(data.arms?.rearSeats) ||
+    hasArmValue(data.weightBalance?.rearLeftSeatArm) ||
+    hasArmValue(data.weightBalance?.rearRightSeatArm);
+  // État d'AFFICHAGE de la rangée : données présentes → visible ; sinon le
+  // pilote la fait (ré)apparaître explicitement via « + Ajouter des sièges
+  // arrière » (rangée vide tant qu'il ne saisit rien). Les seatLimits seuls
+  // (limite saisie avant le bras) suffisent aussi à montrer la rangée.
+  const [showRearSeats, setShowRearSeats] = useState(() =>
+    rearSeatsDefined ||
+    hasArmValue(data.seatLimits?.rearSeats?.maxWeight) ||
+    hasArmValue(data.seatLimits?.rearSeats?.momentMax)
+  );
+  // Écriture EXTERNE des bras arrière (CentrogramReader, import…) → la rangée
+  // doit réapparaître même si le pilote l'avait masquée auparavant.
+  useEffect(() => {
+    if (rearSeatsDefined) setShowRearSeats(true);
+  }, [rearSeatsDefined]);
+
+  const removeRearSeats = () => {
+    // Bras : effacés, jamais 0 (0 = bras fabriqué qui fausserait le centrage).
+    updateData('arms.rearSeats', '');
+    if (data.weightBalance) {
+      // null = « absent » pour le moteur (computeWeightBalance) : les
+      // requiredProps acceptent null mais REFUSENT undefined (calcul rejeté).
+      updateData('weightBalance.rearLeftSeatArm', null);
+      updateData('weightBalance.rearRightSeatArm', null);
+    }
+    if (data.seatLimits?.rearSeats) {
+      updateData('seatLimits.rearSeats', undefined);
+    }
+    // Formes LEGACY : sans cet effacement, pick()/fallbacks moteur feraient
+    // RESSUSCITER le bras fantôme depuis armLengths à la prochaine édition.
+    if (data.armLengths) {
+      ['rearSeat1Arm', 'rearSeat2Arm', 'rearSeatArm'].forEach((k) => {
+        if (data.armLengths[k] !== undefined && data.armLengths[k] !== null && data.armLengths[k] !== '') {
+          updateData(`armLengths.${k}`, undefined);
+        }
+      });
+    }
+    setShowRearSeats(false);
+  };
+
   // ─── Trio « Masse max × Bras = Moment max » pour une rangée de sièges ───
   // MÊME pattern (et même logique réciproque) que les compartiments bagages :
   //   - saisir la masse ou le bras → moment recalculé ;
@@ -1669,31 +1727,57 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
               <Divider sx={{ width: '100%', maxWidth: 700 }} />
 
-              {/* ─── Sièges arrière — OPTIONNELS (certains avions n'ont pas de
-                    places arrière : biplaces, F152…). Même trio que les autres. ─── */}
-              <Box sx={{ width: '100%', maxWidth: 700 }}>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Sièges arrière (Rangée 2){' '}
-                  <Typography component="span" variant="caption" color="text.secondary">
-                    — optionnel
+              {/* ─── Sièges arrière — SUPPRIMABLES (19/08/2026, biplaces).
+                    La rangée n'est plus inconditionnelle : le bouton poubelle
+                    efface les bras (jamais 0) et masque la rangée ; « + Ajouter
+                    des sièges arrière » la fait revenir, vide. ─── */}
+              {showRearSeats ? (
+                <Box sx={{ width: '100%', maxWidth: 700 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Sièges arrière (Rangée 2){' '}
+                      <Typography component="span" variant="caption" color="text.secondary">
+                        — optionnel
+                      </Typography>
+                    </Typography>
+                    <Button
+                      size="small"
+                      color="error"
+                      startIcon={<DeleteIcon fontSize="small" />}
+                      onClick={removeRearSeats}
+                      sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      Cet avion n'a pas de sièges arrière
+                    </Button>
+                  </Box>
+                  {renderSeatTrio(
+                    {
+                      maxWeight: data.seatLimits?.rearSeats?.maxWeight,
+                      arm: data.arms?.rearSeats,
+                      momentMax: data.seatLimits?.rearSeats?.momentMax
+                    },
+                    applySeatRowFields('rearSeats'),
+                    {
+                      armError: errors['arms.rearSeats'],
+                      armHelper: 'Position du siège. Moment au chargement = bras × masse passager'
+                    }
+                  )}
+                </Box>
+              ) : (
+                <Box sx={{ width: '100%', maxWidth: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Pas de sièges arrière sur cet avion.
                   </Typography>
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                  Laissez vide si l'avion n'a pas de places arrière.
-                </Typography>
-                {renderSeatTrio(
-                  {
-                    maxWeight: data.seatLimits?.rearSeats?.maxWeight,
-                    arm: data.arms?.rearSeats,
-                    momentMax: data.seatLimits?.rearSeats?.momentMax
-                  },
-                  applySeatRowFields('rearSeats'),
-                  {
-                    armError: errors['arms.rearSeats'],
-                    armHelper: 'Position du siège. Moment au chargement = bras × masse passager'
-                  }
-                )}
-              </Box>
+                  <Button
+                    size="small"
+                    startIcon={<AddIcon fontSize="small" />}
+                    onClick={() => setShowRearSeats(true)}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Ajouter des sièges arrière
+                  </Button>
+                </Box>
+              )}
 
               {/* ─── Sièges supplémentaires — même trio par siège ─── */}
               {additionalSeats.map((seat) => (

@@ -13,7 +13,7 @@
  *  - OPTIONAL : confort / complétude (photo, MANEX, équipement). Pondération faible.
  */
 
-import { computeMissingPerformanceTables } from './performanceCoverage';
+import { computeMissingPerformanceTables, computeCertifiedAbsentPerformanceTables } from './performanceCoverage';
 // ⛽ Deux contenances par réservoir (17/08/2026) : les replis lisent les
 // nouveaux champs via les accesseurs canoniques du moteur — Σ tankTotalLtr
 // pour la capacité, Σ tankUsableLtr pour l'utilisable — avec l'ancien
@@ -201,6 +201,7 @@ export function evaluateAircraft(aircraft) {
       criticalMissing: FIELD_DEFINITIONS.filter(f => f.severity === 'CRITICAL'),
       requiredMissing: FIELD_DEFINITIONS.filter(f => f.severity === 'REQUIRED'),
       missingPerformanceTables: computeMissingPerformanceTables(null),
+      certifiedAbsentPerformanceTables: [],
       hasCriticalGaps: true,
       bypassedFields: []
     };
@@ -236,6 +237,11 @@ export function evaluateAircraft(aircraft) {
   // pas le score, seulement l'affichage) avec le marqueur group:'PERFORMANCE'
   // pour un rendu dédié et un toggle « non applicable ».
   const missingPerformanceTables = computeMissingPerformanceTables(aircraft, bypassedSet);
+  // 19/08/2026 — les tables CONTOURNÉES ne sont plus retirées en silence :
+  // elles sont retournées À PART comme « certifiées absentes du manuel de
+  // vol » pour que la carte avion et la synthèse puissent le dire. Le score
+  // reste inchangé (contournée = couverte).
+  const certifiedAbsentPerformanceTables = computeCertifiedAbsentPerformanceTables(aircraft, bypassedSet);
   totalWeight += PERFORMANCE_GROUP_WEIGHT;
   if (missingPerformanceTables.length === 0) {
     filledWeight += PERFORMANCE_GROUP_WEIGHT;
@@ -266,6 +272,7 @@ export function evaluateAircraft(aircraft) {
     criticalMissing,
     requiredMissing,
     missingPerformanceTables,
+    certifiedAbsentPerformanceTables,
     hasCriticalGaps: criticalMissing.length > 0,
     bypassedFields
   };

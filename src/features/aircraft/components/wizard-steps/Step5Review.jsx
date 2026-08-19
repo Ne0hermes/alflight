@@ -53,6 +53,9 @@ import { getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical, toUserUnit } from '@utils/unitsDisplay';
 import { convertMoment } from '../../utils/mbUnits';
 import { describeCorrection } from '@utils/performanceCorrections';
+// 🔏 19/08/2026 — tables de perf certifiées ABSENTES du manuel de vol (bypass
+// admin) : la synthèse doit dire que le trou est ASSUMÉ, pas oublié.
+import { computeCertifiedAbsentPerformanceTables } from '../../utils/performanceCoverage';
 
 // ─── Libellés FR compréhensibles des tableaux de performances ───────────────
 // Demande César 16/08 : « takeoff_ground_roll » ne parle à personne. Basés sur
@@ -212,7 +215,6 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       'maxRange': 'Autonomie max (nm)',
       'fuelCapacity': `Capacité carburant (${getUnitSymbol(units.fuel)})`,
       'engineModel': 'Modèle moteur',
-      'minimumRunwayLength': 'Longueur piste minimale (m)',
       'photo': 'Photo de l\'avion',
       'manex': 'Manuel de vol',
       'hasManex': 'Présence du manuel de vol',
@@ -268,6 +270,10 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       'maxBaggageWeight', 'maxAuxiliaryWeight', 'maxTakeoffWeight', 'minTakeoffWeight',
       // Champs redondants ou calculés
       'maxPayload', 'maxBaggageFwd', 'maxBaggageAft',
+      // 🗑️ 19/08/2026 — champ supprimé (décision pilote : la longueur de piste
+      // vient des performances du jour, pas d'un seuil figé). Les valeurs
+      // résiduelles en base sont inertes : on ne les affiche plus en diff.
+      'minimumRunwayLength',
       // Champs de premier niveau (anciens formats) - doublons avec sous-objets
       'emptyWeight', 'mtow', 'mlw',
       'vso', 'vs1', 'vne', 'vno', 'vfe', 'vr', 'vx', 'vy', 'va', 'vlo', 'vle',
@@ -1529,6 +1535,32 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
               </Typography>
             </Box>
           )}
+
+          {/* 🔏 Tables certifiées ABSENTES du manuel de vol (19/08/2026) —
+              une table contournée ne disparaît plus en silence : la synthèse
+              affiche que l'admin CERTIFIE que ces tables n'existent pas dans
+              le manuel de vol de cet avion (trou assumé, pas oublié). */}
+          {(() => {
+            const certifiedAbsent = computeCertifiedAbsentPerformanceTables(
+              data,
+              new Set(Array.isArray(data.bypassedFields) ? data.bypassedFields : [])
+            );
+            if (certifiedAbsent.length === 0) return null;
+            return (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
+                  Non fournie par le manuel de vol (certifié)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                  {certifiedAbsent.map((t) => t.label).join(' · ')}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  L'administrateur certifie que ces tables n'existent pas dans le manuel de vol
+                  de cet avion : leur absence est assumée, pas oubliée.
+                </Typography>
+              </Box>
+            );
+          })()}
         </Box>
       </Paper>
 

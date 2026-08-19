@@ -79,6 +79,40 @@ export function computeMissingPerformanceTables(aircraft, bypassedSet = new Set(
   return missing;
 }
 
+/**
+ * Tables du minimum attendu CERTIFIÉES ABSENTES du manuel de vol.
+ *
+ * 19/08/2026 — jusqu'ici une table contournée (bypassedFields) DISPARAISSAIT
+ * simplement de la liste des manquantes : impossible de distinguer « la table
+ * est renseignée » de « l'admin a certifié qu'elle n'existe pas dans le
+ * manuel ». Décision pilote : le contournement devient une CERTIFICATION
+ * d'absence, et la fiche de synthèse doit le dire — le trou est ASSUMÉ, pas
+ * oublié. Le score reste inchangé (contournée = couverte, cf. R22).
+ *
+ * @param {object} aircraft
+ * @param {Set<string>} [bypassedSet] clés bypassedFields actives
+ * @returns {Array<{operationId, label, phase, flaps, bypassKey}>} opérations
+ *          attendues, NON présentes, mais certifiées absentes du manuel.
+ */
+export function computeCertifiedAbsentPerformanceTables(aircraft, bypassedSet = new Set()) {
+  const present = getPresentOperationIds(aircraft);
+  const certifiedAbsent = [];
+  for (const op of getExpectedPerformanceOperations()) {
+    const bypassKey = PERF_BYPASS_PREFIX + op.id;
+    // Une table redevenue PRÉSENTE n'est plus « absente du manuel » même si
+    // le flag de bypass traîne encore : la donnée réelle prime.
+    if (present.has(op.id) || !bypassedSet.has(bypassKey)) continue;
+    certifiedAbsent.push({
+      operationId: op.id,
+      label: op.labelFr,
+      phase: op.phase,
+      flaps: op.configuration?.flaps || null,
+      bypassKey
+    });
+  }
+  return certifiedAbsent;
+}
+
 /** Modèles présents portant un operationId « hérité » SANS volets précisés
  *  (takeoff_50ft, takeoff_ground_roll) → à re-tagger via les listes
  *  Phase/Métrique/Volets (synergie R17). Informatif. */
