@@ -43,6 +43,7 @@ import {
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import CGEnvelopeDualChart from '../CgEnvelopeDualChart';
+import { humanizeDiffValue } from '../../utils/humanizeDiffValue';
 import SpeedLimitationChart from '../SpeedLimitationChart';
 import communityService from '../../../../services/communityService';
 import { getCurrentUserIdOrThrow } from '../../../../lib/supabaseAuth';
@@ -287,13 +288,12 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
     // Formater la valeur pour affichage avec conversion d'unités
     const formatValue = (value, fieldPath) => {
       if (value === null || value === undefined || value === '') return '-';
-      if (Array.isArray(value)) return value.join(', ');
-      if (typeof value === 'object') {
-        // Pour les objets photo, afficher juste "Photo présente"
-        if (value.data || value.url || value.base64) return 'Photo présente';
-        // Pour les objets MANEX, afficher "MANEX présent"
-        if (value.fileName || value.fileUrl || value.uploadedAt) return 'Manuel de vol présent';
-        return JSON.stringify(value);
+      // 🔎 17/08/2026 — un tableau d'objets s'affichait « [object Object] »
+      // (join → toString) : le pilote validait une publication sans pouvoir
+      // lire ce qu'il modifiait. Chaque structure connue (réservoirs,
+      // variantes, limites de vent, plages VO…) se décrit désormais en clair.
+      if (Array.isArray(value) || typeof value === 'object') {
+        return humanizeDiffValue(value) ?? '-';
       }
 
       // 🔧 FIX: Convertir les champs de carburant depuis l'unité de stockage (ltr/lph)
@@ -2198,12 +2198,11 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
                           </Box>
                         );
                       }
-                      // Sinon afficher le texte normalement
+                      // Sinon afficher le texte lisible (plus jamais de JSON brut :
+                      // le pilote doit pouvoir LIRE ce qu'il modifie — 17/08/2026).
                       return (
                         <Typography variant="body2" color={isOriginal ? "text.secondary" : "primary"}>
-                          {typeof value === 'object' && value !== null
-                            ? JSON.stringify(value)
-                            : (value || 'Non défini')}
+                          {humanizeDiffValue(value) ?? 'Non défini'}
                         </Typography>
                       );
                     };

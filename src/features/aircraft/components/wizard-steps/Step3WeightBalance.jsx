@@ -1422,11 +1422,24 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
                   Configurations de réservoirs (variantes)
                 </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                   Définissez des configurations nommées (ex. « Standard », « Long Range »).
                   Le pilote choisira la variante à l'étape 1 de la préparation de vol —
                   carburant et centrage suivront automatiquement. Sans variante définie,
                   tous les réservoirs restent disponibles.
+                </Typography>
+                {/* 🔎 17/08/2026 — la règle du jeu n'était écrite nulle part : un
+                    pilote créait une variante, ne voyait « rien se passer », et ne
+                    pouvait pas deviner qu'il fallait d'abord déclarer le réservoir
+                    de l'autre configuration dans la liste ci-dessus. Vécu sur
+                    F-BXQT (98 L standard / 144 L grand réservoir du manuel). */}
+                <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'var(--accent-primary)' }}>
+                  Comment ça marche : déclarez d'abord, dans la liste ci-dessus, TOUS les
+                  réservoirs que l'avion peut recevoir — y compris ceux qui se remplacent
+                  (ex. réservoir standard 98 L ET grand réservoir 144 L, même s'ils ne
+                  volent jamais ensemble). Puis cochez, dans chaque variante, les seuls
+                  réservoirs qu'elle embarque. Une variante n'est pas un réservoir : c'est
+                  une sélection.
                 </Typography>
 
                 {tankVariants.map((variant, vi) => {
