@@ -371,6 +371,120 @@ class CommunityService {
   }
 
   /**
+   * 🔄 Lot 2.0 (correctif post-purge) — Garantit un MANEX exploitable EN LOCAL.
+   *
+   * POURQUOI : la restauration de compte (restoreAccountFromServer) réinstalle
+   * les avions via getPresetById, qui — politique mémoire assumée — ne
+   * télécharge JAMAIS le PDF (5-50 Mo pièce, ~300 Mo pour toute la flotte).
+   * La fiche restaurée porte donc la référence serveur
+   * (manexAvailableInSupabase) mais AUCUN blob local : le manuel doit être
+   * récupéré À L'OUVERTURE, pas au boot.
+   *
+   * CE QUE FAIT CE HELPER (chemin unique, réutilisé par la carte avion et
+   * l'extraction de performances — ne pas dupliquer cette logique) :
+   *  1. blob local (mémoire puis IndexedDB) → le renvoie tel quel ;
+   *  2. sinon, référence serveur → téléchargement via downloadManexLazy (MÊME
+   *     mécanisme que l'import initial, avec sa chaîne de repli de chemins) ;
+   *  3. le PDF téléchargé est PERSISTÉ dans le record IndexedDB de l'avion
+   *     (même emplacement qu'à l'import initial) → prochaine ouverture hors ligne ;
+   *  4. FAIL-CLOSED : fichier disparu côté serveur alors que le serveur répond
+   *     → la fiche locale est corrigée (hasManex=false, référence effacée) pour
+   *     que l'interface cesse de proposer un téléchargement impossible. Une
+   *     simple panne réseau ne corrige RIEN (statut 'offline', flags intacts).
+   *
+   * @param {Object} aircraft avion (liste allégée ou record complet)
+   * @returns {Promise<{status:'ready'|'gone'|'offline'|'none', manex?:Object, error?:string}>}
+   *   'ready'   → manex.pdfData utilisable (et persisté si un record existe)
+   *   'gone'    → fichier absent côté serveur, flags locaux corrigés
+   *   'offline' → serveur injoignable, rien n'a été modifié
+   *   'none'    → aucun manuel connu pour cet avion (ni blob, ni référence)
+   */
+  async ensureManexLocal(aircraft) {
+    if (!aircraft) return { status: 'none' };
+
+    // 1) Blob déjà en mémoire (avion complet, pas la liste allégée)
+    if (aircraft.manex?.pdfData) return { status: 'ready', manex: aircraft.manex };
+
+    // 2) Blob dans la copie IndexedDB complète (la liste allégée ne porte pas le PDF)
+    let dataBackupManager = null;
+    let full = null;
+    try {
+      dataBackupManager = (await import('@utils/dataBackupManager')).default;
+      await dataBackupManager.initPromise;
+      if (aircraft.id) full = await dataBackupManager.getAircraftData(aircraft.id);
+    } catch (_) { /* IndexedDB indisponible : on tentera le serveur */ }
+    if (full?.manex?.pdfData) return { status: 'ready', manex: full.manex };
+
+    // 3) Référence serveur — d'abord celle posée par getPresetById (chemin EXACT
+    //    manex_files.file_path), sinon celle d'un ancien objet manex sans blob,
+    //    sinon requête légère par immatriculation (ancienne convention de rangement).
+    const ref = aircraft.manexAvailableInSupabase || full?.manexAvailableInSupabase || null;
+    const registration = aircraft.registration || full?.registration || '';
+    let filePath = ref?.filePath
+      || aircraft.manex?.filePath || aircraft.manex?.supabasePath
+      || full?.manex?.filePath || full?.manex?.supabasePath
+      || null;
+    if (!filePath && (aircraft.hasManex || full?.hasManex || aircraft.manex || full?.manex)) {
+      filePath = await this.getManexFilePathByRegistration(registration).catch(() => null);
+      // Dernier recours : convention par immatriculation (downloadManex re-tente
+      // de toute façon les variantes de chemin en interne).
+      if (!filePath && registration) filePath = `${registration}/${registration} - manex.pdf`;
+    }
+    if (!filePath) return { status: 'none' };
+
+    // 4) Téléchargement à la demande + persistance locale
+    try {
+      const downloaded = await this.downloadManexLazy(filePath);
+      const manexObject = {
+        fileName: ref?.fileName || full?.manex?.fileName || aircraft.manex?.fileName
+          || `${registration || 'Manuel_de_vol'}.pdf`,
+        fileSize: ref?.fileSize ?? full?.manex?.fileSize ?? aircraft.manex?.fileSize ?? null,
+        pdfData: downloaded.pdfData,
+        uploadDate: new Date().toISOString(),
+        uploadedToSupabase: true,
+        supabasePath: filePath,
+        hasData: true
+      };
+      // Persister dans le record avion (même emplacement que l'import initial via
+      // le wizard) — ouverture suivante hors ligne, aucun re-téléchargement.
+      if (full && dataBackupManager) {
+        try {
+          await dataBackupManager.saveAircraftData({ ...full, manex: manexObject, hasManex: true });
+          console.log('✅ [ensureManexLocal] MANEX re-téléchargé et persisté en local:', registration);
+        } catch (persistError) {
+          // Non bloquant : le pilote a quand même son PDF pour cette session.
+          console.warn('⚠️ [ensureManexLocal] persistance IndexedDB échouée:', persistError?.message);
+        }
+      }
+      return { status: 'ready', manex: manexObject };
+    } catch (downloadError) {
+      // Distinguer « fichier disparu » d'une panne réseau : on ne corrige les
+      // flags QUE si le serveur répond (sinon un vol en zone blanche marquerait
+      // à tort tous les manuels comme perdus).
+      let serverReachable = false;
+      try {
+        const { error: pingError } = await supabase
+          .from('community_presets').select('id').limit(1);
+        serverReachable = !pingError;
+      } catch { serverReachable = false; }
+      if (!serverReachable) {
+        return { status: 'offline', error: downloadError?.message };
+      }
+      // Fail-closed : le serveur répond mais le fichier n'existe plus → corriger
+      // la fiche locale pour ne plus afficher un manuel fantôme.
+      if (full && dataBackupManager) {
+        try {
+          const corrected = { ...full, hasManex: false, manexAvailableInSupabase: null };
+          delete corrected.manex;
+          await dataBackupManager.saveAircraftData(corrected);
+          console.warn('🗑️ [ensureManexLocal] MANEX introuvable côté serveur — flags locaux corrigés:', registration);
+        } catch (_) { /* la correction sera re-tentée à la prochaine ouverture */ }
+      }
+      return { status: 'gone', error: downloadError?.message };
+    }
+  }
+
+  /**
    * Enregistrer un téléchargement
    * @param {string} presetId
    * @param {string} userId

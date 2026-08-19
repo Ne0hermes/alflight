@@ -252,6 +252,10 @@ export const AircraftModule = memo(() => {
   const [showManexImporter, setShowManexImporter] = useState(false);
   const [showManexViewer, setShowManexViewer] = useState(false);
   const [manexAircraft, setManexAircraft] = useState(null);
+  // 🔄 Lot 2.0 (correctif purge) : id de l'avion dont le MANEX est en cours de
+  // re-téléchargement depuis Supabase — pilote l'indicateur sur le bouton de la
+  // carte (spinner + « TÉLÉCHARGEMENT… ») et bloque le double-clic.
+  const [manexBusyId, setManexBusyId] = useState(null);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardAircraft, setWizardAircraft] = useState(null);
   const [aircraftPhotos, setAircraftPhotos] = useState({});
@@ -1368,11 +1372,12 @@ export const AircraftModule = memo(() => {
     if (!aircraft) return;
     let pdfData = aircraft?.[field]?.pdfData;
     let fileName = aircraft?.[field]?.fileName;
+    let full = null; // record IndexedDB complet — réutilisé par les fallbacks serveur
     // Fallback IndexedDB
     if (!pdfData) {
       try {
         await dataBackupManager.initPromise;
-        const full = await Promise.race([
+        full = await Promise.race([
           dataBackupManager.getAircraftData(aircraft.id),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
         ]);
@@ -1383,38 +1388,86 @@ export const AircraftModule = memo(() => {
       }
     }
 
-    // R28 — Fallback SUPABASE STORAGE pour le MANEX. La liste « Mes avions »
-    // utilise l'avion ALLÉGÉ (IndexedDB) qui ne porte ni le base64 ni la
-    // référence Supabase (manexAvailableInSupabase, posée seulement au
-    // chargement depuis Supabase). Le PDF vit pourtant dans le bucket
-    // manex-files — c'est pourquoi le wizard SAIT le télécharger mais pas la
-    // carte. On tente donc Storage avant de déclarer « indisponible ».
+    // 🔄 Lot 2.0 (correctif purge) — MANEX absent en LOCAL mais référencé côté
+    // serveur : cas typique d'une fiche restaurée après vidage des données du
+    // site (restoreAccountFromServer ne re-télécharge volontairement pas les
+    // PDF — ~300 Mo pour la flotte). Téléchargement À LA DEMANDE via le chemin
+    // unique ensureManexLocal (même mécanisme qu'à l'import initial), qui
+    // PERSISTE le PDF dans IndexedDB → la prochaine ouverture est hors ligne.
+    // Remplace l'ancien fallback R28 qui téléchargeait sans jamais stocker
+    // (re-téléchargement des mêmes mégaoctets à chaque clic).
     if (!pdfData && field === 'manex' && (aircraft.hasManex || aircraft.manex || aircraft.manexAvailableInSupabase)) {
+      setManexBusyId(aircraft.id);
       try {
-        const reg = aircraft.registration || '';
-        // Chemin EXACT (manex_files.file_path) en priorité — gère l'ancienne
-        // convention (dossier modèle) ; sinon la convention par immatriculation.
-        const exactPath = await communityService.getManexFilePathByRegistration(reg).catch(() => null);
-        const filePath = aircraft.manexAvailableInSupabase?.filePath
-          || aircraft.manex?.filePath
-          || exactPath
-          || (reg ? `${reg}/${reg} - manex.pdf` : null);
-        if (filePath) {
-          const blob = await communityService.downloadManex(filePath);
-          if (blob) {
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName || `${defaultPrefix}_${reg || aircraft.id}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            return;
-          }
+        const res = await communityService.ensureManexLocal(full || aircraft);
+        if (res.status === 'ready') {
+          pdfData = res.manex.pdfData;
+          fileName = fileName || res.manex.fileName;
+          // Badge de la carte → CHARGÉ, sans rechargement de page.
+          useAircraftStore.setState((state) => ({
+            aircraftList: state.aircraftList.map((a) =>
+              a.id === aircraft.id ? { ...a, hasManex: true } : a
+            )
+          }));
+        } else if (res.status === 'gone') {
+          // Fail-closed : la fiche IndexedDB est déjà corrigée par le service —
+          // on aligne la liste affichée pour que le bouton cesse de proposer
+          // un téléchargement impossible.
+          useAircraftStore.setState((state) => ({
+            aircraftList: state.aircraftList.map((a) =>
+              a.id === aircraft.id ? { ...a, hasManex: false, manexAvailableInSupabase: null } : a
+            )
+          }));
+          setOpError({
+            severity: 'warn',
+            title: 'Manuel de vol supprimé du serveur',
+            description: 'Le PDF n\'existe plus dans la base communautaire : la fiche a été corrigée en conséquence. Ré-importe le manuel via le wizard (étape Manuel de vol) si tu en possèdes une copie.'
+          });
+          return;
+        } else if (res.status === 'offline') {
+          // Panne réseau : rien n'est modifié, le pilote peut simplement réessayer.
+          setOpError({
+            severity: 'warn',
+            title: 'Serveur injoignable',
+            description: 'Le manuel de vol est bien disponible côté serveur, mais le téléchargement a échoué (connexion ?). Réessaie une fois le réseau revenu — rien n\'a été perdu.'
+          });
+          return;
         }
-      } catch (err) {
-        console.warn('⚠️ Échec téléchargement MANEX depuis Supabase Storage :', err?.message);
+      } finally {
+        setManexBusyId(null);
+      }
+    }
+
+    // R20/B — Fiche de PESÉE : après restauration de compte, le PDF local a pu
+    // être purgé mais la fiche restaurée porte l'URL Storage
+    // (weighingReport.pdfUrl, externalisation R20/B). Même politique que le
+    // MANEX : récupération à la demande, message honnête en cas de fichier
+    // disparu (pas de bouton qui échoue en silence).
+    if (!pdfData && field === 'weighingReport') {
+      const weighingPdfUrl = aircraft?.weighingReport?.pdfUrl || full?.weighingReport?.pdfUrl;
+      if (weighingPdfUrl) {
+        try {
+          const resp = await fetch(weighingPdfUrl);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const blob = await resp.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = fileName || `${defaultPrefix}_${aircraft.registration || aircraft.id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          return;
+        } catch (err) {
+          console.warn('⚠️ Échec téléchargement pesée depuis Supabase Storage :', err?.message);
+          setOpError({
+            severity: 'warn',
+            title: 'Fiche de pesée indisponible',
+            description: 'Le PDF de pesée n\'est ni en local ni accessible sur le serveur. Réimporte-le via le wizard (étape Masse & centrage).'
+          });
+          return;
+        }
       }
     }
 
@@ -1983,6 +2036,13 @@ export const AircraftModule = memo(() => {
             const isMissingExpanded = expandedMissingIds.has(aircraft.id);
             const photoUrl = aircraftPhotos[aircraft.id];
             const manexLoaded = !!(aircraft.hasManex || aircraft.manex);
+            // 🔄 Lot 2.0 (correctif purge) : blob local absent MAIS référence
+            // serveur présente (fiche restaurée après vidage du site). Le manuel
+            // existe — il sera téléchargé à l'ouverture. Sans cet état, la carte
+            // affichait « ABSENT » + bouton mort alors que le PDF attend dans le
+            // bucket manex-files.
+            const manexRemote = !manexLoaded && !!aircraft.manexAvailableInSupabase?.filePath;
+            const manexBusy = manexBusyId === aircraft.id;
             const weighingLoaded = !!(aircraft.hasWeighingReport || aircraft.weighingReport?.hasData);
 
             // Bordure de la card : orange si sélectionné, sinon TRANSPARENT.
@@ -2182,7 +2242,9 @@ export const AircraftModule = memo(() => {
                           borderTop: `${tokens.border.thin} solid var(--border-subtle)`
                         }}
                       >
-                        {/* MANEX */}
+                        {/* MANEX — trois états honnêtes : CHARGÉ (blob local),
+                            DISPONIBLE (référence serveur, téléchargé à l'ouverture
+                            — cas post-purge), ABSENT (aucun manuel connu). */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <TechLabel>MANUEL DE VOL</TechLabel>
                           <div
@@ -2191,10 +2253,12 @@ export const AircraftModule = memo(() => {
                               fontSize: 'var(--fs-body)',
                               fontWeight: 600,
                               letterSpacing: '0.06em',
-                              color: manexLoaded ? okColor : 'var(--text-tertiary)'
+                              color: manexLoaded
+                                ? okColor
+                                : manexRemote ? 'var(--text-secondary)' : 'var(--text-tertiary)'
                             }}
                           >
-                            {manexLoaded ? 'CHARGÉ' : 'ABSENT'}
+                            {manexLoaded ? 'CHARGÉ' : manexRemote ? 'DISPONIBLE' : 'ABSENT'}
                           </div>
                           {manexLoaded && aircraft.manex?.pageCount && (
                             <span
@@ -2207,6 +2271,19 @@ export const AircraftModule = memo(() => {
                               }}
                             >
                               {aircraft.manex.pageCount} P.
+                            </span>
+                          )}
+                          {manexRemote && (
+                            <span
+                              style={{
+                                fontFamily: tokens.fontFamily.mono,
+                                fontSize: 'var(--fs-caption)',
+                                letterSpacing: '0.10em',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              TÉLÉCHARGÉ À L'OUVERTURE
                             </span>
                           )}
                         </div>
@@ -2392,29 +2469,51 @@ export const AircraftModule = memo(() => {
                         )}
 
                         {/* Helper render bouton avec icône + libellé court mono pour clarté */}
-                        {/* 1. MANEX — icône Book = manuel d'utilisation, plus reconnaissable */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadManex(aircraft);
-                          }}
-                          title={manexLoaded ? 'Télécharger le manuel de vol' : 'Aucun manuel de vol disponible'}
-                          aria-label="Télécharger le manuel de vol"
-                          disabled={!manexLoaded}
-                          style={{
-                            ...baseBtn,
-                            padding: `0 ${tokens.spacing[2]}`,
-                            gap: '6px',
-                            color: manexLoaded ? 'var(--accent-primary)' : 'var(--text-tertiary)',
-                            opacity: manexLoaded ? 1 : 0.4,
-                            cursor: manexLoaded ? 'pointer' : 'not-allowed'
-                          }}
-                          onMouseEnter={manexLoaded ? (e) => hoverIn(e) : undefined}
-                          onMouseLeave={manexLoaded ? hoverOut : undefined}
-                        >
-                          <BookOpen size={16} aria-hidden="true" />
-                          <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: 'var(--fs-caption)', letterSpacing: '0.08em' }}>MANUEL DE VOL</span>
-                        </button>
+                        {/* 1. MANEX — icône Book = manuel d'utilisation, plus reconnaissable.
+                            🔄 Lot 2.0 : actif AUSSI quand le blob local manque mais que la
+                            référence serveur existe (post-purge) → téléchargement à la
+                            demande avec indicateur, persisté pour les prochaines ouvertures. */}
+                        {(() => {
+                          const manexActionable = (manexLoaded || manexRemote) && !manexBusy;
+                          const manexSizeMB = aircraft.manexAvailableInSupabase?.fileSize
+                            ? (aircraft.manexAvailableInSupabase.fileSize / 1024 / 1024).toFixed(1)
+                            : null;
+                          return (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!manexActionable) return;
+                                handleDownloadManex(aircraft);
+                              }}
+                              title={manexBusy
+                                ? 'Téléchargement du manuel de vol en cours…'
+                                : manexLoaded
+                                  ? 'Télécharger le manuel de vol'
+                                  : manexRemote
+                                    ? `Manuel disponible sur le serveur${manexSizeMB ? ` (${manexSizeMB} Mo)` : ''} — sera téléchargé puis conservé en local`
+                                    : 'Aucun manuel de vol disponible'}
+                              aria-label="Télécharger le manuel de vol"
+                              disabled={!manexActionable}
+                              style={{
+                                ...baseBtn,
+                                padding: `0 ${tokens.spacing[2]}`,
+                                gap: '6px',
+                                color: (manexLoaded || manexRemote) ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                                opacity: (manexLoaded || manexRemote) ? 1 : 0.4,
+                                cursor: manexActionable ? 'pointer' : manexBusy ? 'progress' : 'not-allowed'
+                              }}
+                              onMouseEnter={manexActionable ? (e) => hoverIn(e) : undefined}
+                              onMouseLeave={manexActionable ? hoverOut : undefined}
+                            >
+                              {manexBusy
+                                ? <CircularProgress size={14} thickness={5} style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+                                : <BookOpen size={16} aria-hidden="true" />}
+                              <span style={{ fontFamily: tokens.fontFamily.mono, fontSize: 'var(--fs-caption)', letterSpacing: '0.08em' }}>
+                                {manexBusy ? 'TÉLÉCHARGEMENT…' : 'MANUEL DE VOL'}
+                              </span>
+                            </button>
+                          );
+                        })()}
 
                         {/* 2. Fiche de pesée — icône Scale = balance, sémantique aviation */}
                         <button

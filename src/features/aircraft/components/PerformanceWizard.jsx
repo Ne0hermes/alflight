@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Table, LineChart, AlertCircle, Check } from 'lucide-react';
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
+// 🔄 Lot 2.0 (correctif purge) : re-téléchargement à la demande du MANEX quand
+// le blob local a été purgé mais que la référence serveur existe (ensureManexLocal).
+import communityService from '../../../services/communityService';
 import AdvancedPerformanceAnalyzer from './AdvancedPerformanceAnalyzer';
 import { AbacBuilder } from '../../../abac/curves/ui/AbacBuilder';
 import { OPERATION_CATALOG } from '../../../abac/curves/core/operationCatalog';
@@ -482,6 +485,37 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           setManualFile(pdfFile);
         }
 
+        // 🔄 Lot 2.0 (correctif purge) : pas de PDF local mais une référence
+        // serveur (fiche restaurée après vidage du site — le wizard synthétise
+        // alors un manex avec filePath SANS pdfData). Téléchargement à la
+        // demande via le chemin unique ensureManexLocal : l'indicateur
+        // isProcessing couvre l'attente, et le PDF est persisté dans le record
+        // IndexedDB de l'avion pour les prochaines ouvertures.
+        if (!pdfFile) {
+          const remote = await communityService.ensureManexLocal(aircraft);
+          if (remote.status === 'ready' && remote.manex?.pdfData) {
+            const remoteBase64 = remote.manex.pdfData.includes(',')
+              ? remote.manex.pdfData.split(',')[1]
+              : remote.manex.pdfData;
+            const remoteChars = atob(remoteBase64);
+            const remoteBytes = new Uint8Array(remoteChars.length);
+            for (let i = 0; i < remoteChars.length; i++) {
+              remoteBytes[i] = remoteChars.charCodeAt(i);
+            }
+            pdfFile = remoteBytes;
+            setManualFile(new File([remoteBytes], remote.manex.fileName || 'manex.pdf', { type: 'application/pdf' }));
+          } else if (remote.status === 'gone') {
+            // Fail-closed : la fiche locale a été corrigée par le service.
+            setError('Le manuel de vol n\'existe plus côté serveur — ré-importe le PDF à l\'étape « Informations générales ».');
+            setIsProcessing(false);
+            return;
+          } else if (remote.status === 'offline') {
+            setError('Manuel de vol disponible côté serveur, mais téléchargement impossible (connexion ?). Réessaie une fois le réseau revenu.');
+            setIsProcessing(false);
+            return;
+          }
+        }
+
         if (!pdfFile) {
 
           setError('Impossible de récupérer le fichier PDF du manuel de vol');
@@ -547,11 +581,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
           aircraft.manex.fileName // Ajout: si un fileName existe, c'est qu'un MANEX est présent
         );
 
-        // Vérifier si MANEX disponible dans Supabase mais téléchargement échoué
+        // MANEX pas (encore) en local, mais référencé côté serveur — cas d'une
+        // fiche restaurée après vidage des données du site (Lot 2.0) : le PDF
+        // sera re-téléchargé automatiquement au lancement de l'extraction.
         const hasManexInSupabase = aircraft?.manexAvailableInSupabase;
-
-        
-        
+        const canUseManex = hasManex || !!hasManexInSupabase;
 
         return (
           <div style={styles.card}>
@@ -559,14 +593,17 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
               Étape 2 : Sélection des sections de performance
             </h3>
 
-              {/* Alerte si MANEX disponible dans Supabase mais téléchargement échoué */}
+              {/* MANEX disponible côté serveur mais pas encore sur cet appareil :
+                  message HONNÊTE (l'ancien texte prétendait qu'un téléchargement
+                  était « en cours » et conseillait F5 — rien ne se passait). */}
               {!hasManex && hasManexInSupabase && (
                 <div style={{ ...styles.alert, ...styles.alertWarning }}>
                   <AlertCircle size={16} />
                   <div>
-                    <strong>Téléchargement du manuel de vol en cours...</strong>
+                    <strong>Manuel de vol disponible sur le serveur</strong>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'var(--fs-body)' }}>
-                      Le manuel de vol est disponible dans Supabase ({hasManexInSupabase.fileName}). Rechargez la page (F5) pour réessayer le téléchargement.
+                      {hasManexInSupabase.fileName} n'est pas encore téléchargé sur cet appareil :
+                      il sera récupéré automatiquement au lancement de l'extraction.
                     </p>
                   </div>
                 </div>
@@ -603,10 +640,12 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                 gap: '16px',
                 marginBottom: '24px'
               }}>
-                {/* Carte Tableaux - CLIQUABLE - Navigation directe */}
+                {/* Carte Tableaux - CLIQUABLE - Navigation directe.
+                    canUseManex : accessible aussi quand le PDF n'est pas encore
+                    en local mais existe côté serveur (téléchargé à l'étape 3). */}
                 <div
                   onClick={() => {
-                    if (hasManex) {
+                    if (canUseManex) {
                       setPerformanceType('tables');
                       setCurrentStep(3); // Aller directement à la sélection des pages
                     }
@@ -616,14 +655,14 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     backgroundColor: 'var(--bg-overlay)',
                     border: '2px solid var(--text-secondary)',
                     borderRadius: 'var(--radius-sm)',
-                    cursor: hasManex ? 'pointer' : 'not-allowed',
+                    cursor: canUseManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
-                    opacity: hasManex ? 1 : 0.4,
+                    opacity: canUseManex ? 1 : 0.4,
                     transform: 'scale(1)',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                   }}
                   onMouseEnter={(e) => {
-                    if (hasManex) {
+                    if (canUseManex) {
                       e.currentTarget.style.transform = 'scale(1.05)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
                       e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
@@ -646,10 +685,12 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   </p>
                 </div>
 
-                {/* Carte Graphiques/Abaques - CLIQUABLE - Navigation directe */}
+                {/* Carte Graphiques/Abaques - CLIQUABLE - Navigation directe.
+                    canUseManex : même règle que la carte Tableaux (référence
+                    serveur acceptée — la construction manuelle n'exige pas le PDF). */}
                 <div
                   onClick={() => {
-                    if (hasManex) {
+                    if (canUseManex) {
                       setPerformanceType('abacs');
                       setCurrentStep(4); // Aller directement à l'AbacBuilder
                     }
@@ -659,14 +700,14 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     backgroundColor: 'var(--bg-overlay)',
                     border: '2px solid var(--text-primary)',
                     borderRadius: 'var(--radius-sm)',
-                    cursor: hasManex ? 'pointer' : 'not-allowed',
+                    cursor: canUseManex ? 'pointer' : 'not-allowed',
                     transition: 'all 0.2s',
-                    opacity: hasManex ? 1 : 0.4,
+                    opacity: canUseManex ? 1 : 0.4,
                     transform: 'scale(1)',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                   }}
                   onMouseEnter={(e) => {
-                    if (hasManex) {
+                    if (canUseManex) {
                       e.currentTarget.style.transform = 'scale(1.05)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(22, 163, 74, 0.3)';
                       e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
