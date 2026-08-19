@@ -12,10 +12,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Radio,
   Checkbox,
   FormControlLabel
 } from '@mui/material';
@@ -779,32 +776,50 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     });
   };
 
-  // ─── Gestion des réservoirs additionnels (aile, optionnel, tip-tank...) ───
-  // Le réservoir principal est géré séparément via data.arms.fuelMain.
-  // Ici on gère uniquement les réservoirs SUPPLÉMENTAIRES.
-  const addFuelTank = (type = 'wing') => {
-    const defaultNames = {
-      main: 'Réservoir principal',
-      wing: 'Réservoir aile',
-      optional: 'Réservoir optionnel',
-      tip: 'Réservoir d\'extrémité',
-      aux: 'Réservoir auxiliaire'
-    };
+  // ─── Gestion des réservoirs ───────────────────────────────────────────────
+  // 🔧 17/08/2026 — FIN DU MENU DE TYPES (main/wing/optional/tip/aux).
+  // Le « type » mélangeait un RÔLE (principal) et une POSITION (aile, tip…) :
+  // les réservoirs principaux d'un PA-28 SONT dans les ailes, et il fallait
+  // choisir entre dire où il est et dire ce qu'il est. Audit du code : le type
+  // n'avait que DEUX effets réels — désigner le réservoir qui alimente les
+  // champs de compatibilité (arms.fuelMain), et pré-cocher « amovible ».
+  // Tout le reste était décoratif. Désormais :
+  //   • la POSITION vit dans le NOM (texte libre, boutons = préremplissages) ;
+  //   • le RÔLE « principal » est une pastille unique (type:'main' conservé en
+  //     base pour la compatibilité — les moteurs, eux, ignorent le type) ;
+  //   • « amovible » reste la case existante (pilote les variantes).
+  const addFuelTank = (preset = {}) => {
+    const hasMain = additionalFuelTanks.some((t) => t?.type === 'main');
     const newTank = {
       id: Date.now() + Math.random(),
-      name: `${defaultNames[type] || 'Réservoir'} ${additionalFuelTanks.length + 1}`,
-      type,
+      name: `${preset.name || 'Réservoir'}${additionalFuelTanks.length > 0 ? ` ${additionalFuelTanks.length + 1}` : ''}`,
+      // « Principal » : seulement s'il n'y en a pas déjà un — sinon la pastille
+      // de la ligne permet de déplacer le rôle.
+      ...(preset.main && !hasMain ? { type: 'main' } : {}),
       arm: '',
       // ⛽ Deux contenances (17/08/2026) : plus d'initialisation de l'ancien
       // `capacity` — les nouveaux réservoirs portent totalCapacity /
       // usableCapacity, écrits à la saisie uniquement (absent reste absent).
-      // Réservoir amovible (long-range/convoyage) : proposé au cochage en
-      // préparation de vol. Pré-coché pour les types naturellement optionnels.
-      optional: type === 'aux' || type === 'optional' || type === 'tip'
+      optional: !!preset.optional
     };
     const updated = [...additionalFuelTanks, newTank];
     setAdditionalFuelTanks(updated);
     updateData('additionalFuelTanks', updated);
+  };
+
+  // Déplace le rôle « principal » sur un réservoir : un seul le porte.
+  // Les anciens libellés de type (wing/tip/aux) des autres réservoirs sont
+  // laissés tels quels — donnée décorative héritée, sans effet de calcul.
+  const setMainTank = (tankId) => {
+    setAdditionalFuelTanks(prev => {
+      const updated = prev.map(t =>
+        t.id === tankId
+          ? { ...t, type: 'main' }
+          : (t.type === 'main' ? { ...t, type: undefined } : t)
+      );
+      updateData('additionalFuelTanks', updated);
+      return updated;
+    });
   };
 
   const removeFuelTank = (tankId) => {
@@ -1153,12 +1168,16 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               </Divider>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                {/* 🔧 17/08/2026 — les boutons ne figent plus un « type » : ce sont
+                    des préremplissages de NOM (+ rôle principal ou case amovible
+                    quand ça va de soi). Un réservoir d'aile peut être LE principal :
+                    ajoutez « Réservoir d'aile » puis posez la pastille Principal. */}
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank('main')}
+                  onClick={() => addFuelTank({ name: 'Réservoir principal', main: true })}
                 >
                   Réservoir principal
                 </Button>
@@ -1166,7 +1185,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank('wing')}
+                  onClick={() => addFuelTank({ name: 'Réservoir d\'aile' })}
                 >
                   Réservoir d'aile
                 </Button>
@@ -1174,15 +1193,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank('optional')}
-                >
-                  Réservoir optionnel
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => addFuelTank('tip')}
+                  onClick={() => addFuelTank({ name: 'Tip tank', optional: true })}
                 >
                   Tip tank
                 </Button>
@@ -1190,9 +1201,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank('aux')}
+                  onClick={() => addFuelTank({ name: 'Réservoir auxiliaire', optional: true })}
                 >
                   Auxiliaire
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => addFuelTank({ name: 'Réservoir' })}
+                >
+                  Autre
                 </Button>
               </Box>
 
@@ -1221,20 +1240,21 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                               value={tank.name || ''}
                               onChange={(e) => updateFuelTank(tank.id, 'name', e.target.value)}
                             />
-                            <FormControl size="small" sx={{ minWidth: 160 }}>
-                              <InputLabel>Type</InputLabel>
-                              <Select
-                                value={tank.type || 'wing'}
-                                label="Type"
-                                onChange={(e) => updateFuelTank(tank.id, 'type', e.target.value)}
-                              >
-                                <MenuItem value="main">Principal</MenuItem>
-                                <MenuItem value="wing">Aile</MenuItem>
-                                <MenuItem value="optional">Optionnel</MenuItem>
-                                <MenuItem value="tip">Tip tank</MenuItem>
-                                <MenuItem value="aux">Auxiliaire</MenuItem>
-                              </Select>
-                            </FormControl>
+                            {/* 🔧 17/08/2026 — la pastille remplace le menu de types :
+                                « principal » est un RÔLE (alimente les champs de
+                                compatibilité), la position (aile, tip…) vit dans le
+                                nom. Un seul réservoir porte la pastille. */}
+                            <FormControlLabel
+                              sx={{ whiteSpace: 'nowrap', mr: 0 }}
+                              control={
+                                <Radio
+                                  size="small"
+                                  checked={tank.type === 'main'}
+                                  onChange={() => setMainTank(tank.id)}
+                                />
+                              }
+                              label={<Typography variant="body2">Principal</Typography>}
+                            />
                             <IconButton
                               color="error"
                               onClick={() => removeFuelTank(tank.id)}
