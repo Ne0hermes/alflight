@@ -1,5 +1,6 @@
 // src/utils/tankVariants.js
 // Variantes de réservoirs (Lot 5) — ex. « Standard » vs « Long Range ».
+import { sumTotalLtr, sumUsableLtr } from '../fuel/tankCapacity.js';
 //
 // MODÈLE : aircraft.tankVariants = [
 //   { id: 'v-...', name: 'Standard', isDefault: true, tankIds: ['12345', ...] }
@@ -49,16 +50,19 @@ export const applyTankVariant = (aircraft, variantId) => {
   // Variante couvrant tous les réservoirs : avion inchangé (identité préservée)
   if (filteredTanks.length === allTanks.length) return aircraft;
 
-  const fuelCapacity = filteredTanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
+  // ⛽ DEUX sommes par configuration : le volume physique (documentation,
+  // avitaillement) et l'utilisable (LA grandeur des moteurs). L'ancien
+  // plafonnement min(usable, somme des capacity) mélangeait les deux
+  // sémantiques ; chaque somme suit désormais son propre champ, avec repli
+  // sur l'ancien `capacity` pour les fiches non migrées.
+  const fuelCapacity = sumTotalLtr(filteredTanks) ?? 0;
+  const fuelUsableCapacity = sumUsableLtr(filteredTanks) ?? aircraft.fuelUsableCapacity;
 
   return {
     ...aircraft,
     additionalFuelTanks: filteredTanks,
     fuelCapacity,
-    // Capacité utile plafonnée à la capacité de la variante (si renseignée)
-    fuelUsableCapacity: Number.isFinite(parseFloat(aircraft.fuelUsableCapacity))
-      ? Math.min(parseFloat(aircraft.fuelUsableCapacity), fuelCapacity)
-      : aircraft.fuelUsableCapacity,
+    fuelUsableCapacity,
     _tankVariantId: variantId
   };
 };

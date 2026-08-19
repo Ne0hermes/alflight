@@ -7,6 +7,7 @@
 // déterministe que la consommation à l'atterrissage, cf. fuelArm.js : l'ordre
 // de la liste est la séquence réelle d'utilisation validée par le pilote).
 import { getFuelDensity } from '../units/fuelDensity.js';
+import { tankUsableLtr } from './tankCapacity.js';
 
 const num = (v) => {
   const n = parseFloat(v);
@@ -36,9 +37,12 @@ export function computeMaxFuel({ aircraft, zfwKg, activeTankIds = null }) {
   const tanks = Array.isArray(aircraft?.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
   const activeSet = activeTankIds == null ? null : new Set(activeTankIds.map(String));
 
-  // Réservoirs considérés : cochés (ou tous si config non engagée), capacité > 0
+  // Réservoirs considérés : cochés (ou tous si config non engagée), capacité > 0.
+  // ⛽ Contenance UTILISABLE : « remplir au maximum » plafonne au carburant
+  // consommable — remplir jusqu'au volume physique injecterait l'inutilisable
+  // dans le bilan et le centrage.
   const usable = tanks
-    .map((t, i) => ({ key: String(t?.id ?? i), cap: num(t?.capacity) ?? 0 }))
+    .map((t, i) => ({ key: String(t?.id ?? i), cap: tankUsableLtr(t) ?? 0 }))
     .filter(t => t.cap > 0)
     .filter(t => activeSet == null || activeSet.has(t.key));
 
@@ -50,7 +54,7 @@ export function computeMaxFuel({ aircraft, zfwKg, activeTankIds = null }) {
 
   const capacityLtr = usable.length > 0
     ? usable.reduce((s, t) => s + t.cap, 0)
-    : (num(aircraft?.fuelCapacity) ?? 0);
+    : (num(aircraft?.fuelUsableCapacity) ?? num(aircraft?.fuelCapacity) ?? 0);
   if (capacityLtr <= 0) return { ok: false, error: 'noTanks' };
 
   // Arrondi vers le BAS (0,1 L) : un arrondi au plus proche pouvait dépasser

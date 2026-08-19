@@ -42,6 +42,29 @@ export function getFuelCapacityLtr(aircraft) {
 }
 
 /**
+ * ⛽ Carburant UTILISABLE en litres — LA borne des calculs d'autonomie, de
+ * bilan et d'escales (17/08/2026). La capacité PHYSIQUE (getFuelCapacityLtr)
+ * servait partout de borne « ça tient dans les réservoirs » : elle surestimait
+ * l'embarquable de l'inutilisable (13 L sur un F150M) et pouvait masquer le
+ * besoin d'une escale carburant. Priorité au champ dédié, repli sur l'ancien
+ * `fuel.unusable` (vieux schéma : total − inutilisable), puis sur la capacité
+ * physique — mieux vaut l'ancienne borne que pas de borne du tout, et la fiche
+ * reste signalée incomplète tant que l'utilisable n'est pas saisi.
+ * @returns {number|null} litres, ou null.
+ */
+export function getFuelUsableCapacityLtr(aircraft) {
+  if (!aircraft) return null;
+  const usable = parseFloat(aircraft.fuelUsableCapacity);
+  if (Number.isFinite(usable) && usable > 0) return usable;
+  const total = getFuelCapacityLtr(aircraft);
+  const unusable = parseFloat(aircraft.fuel?.unusable);
+  if (total !== null && Number.isFinite(unusable) && unusable >= 0 && unusable < total) {
+    return total - unusable;
+  }
+  return total;
+}
+
+/**
  * 🔧 R3 (audit score déroutements) — Distance d'atterrissage POH en MÈTRES.
  * Source : aircraft.distances.landingDistance50ft (convention POH en PIEDS,
  * cf. RunwayAnalyzer/runwayCompatibility qui comparent ces champs à des ft),

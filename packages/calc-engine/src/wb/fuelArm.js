@@ -22,6 +22,7 @@
 //     une moyenne.
 
 import { armToMeters } from './armUnits.js';
+import { tankUsableLtr } from '../fuel/tankCapacity.js';
 
 // Tolérance d'égalité des bras (1 mm) pour décider « même bras ».
 const ARM_EQ_TOL = 1e-3;
@@ -40,7 +41,9 @@ function usableTanks(aircraft, activeTankIds = null) {
       _i: i,
       id: t?.id ?? i,
       name: t?.name,
-      cap: parseFloat(t?.capacity),
+      // ⛽ UTILISABLE, jamais le total : la masse à vide de la pesée inclut
+      // déjà l'inutilisable — le compter ici le pèserait deux fois.
+      cap: tankUsableLtr(t) ?? NaN,
       arm: armToMeters(parseFloat(t?.arm)),
     }))
     .filter((t) => Number.isFinite(t.cap) && t.cap > 0)
@@ -104,7 +107,11 @@ export function computeScenarioFuel({ aircraft, scenario, density, fobLiters = 0
   if (declaredTanks.length > 0 && tanks.length === 0) return empty;
   const totalForScenario = () =>
     scenario === 'full'
-      ? (parseFloat(aircraft?.fuelCapacity) || 0)
+      // ⛽ « Pleins » = carburant UTILISABLE. La branche legacy lisait
+      // fuelCapacity (le volume physique) : un avion sans réservoirs détaillés
+      // dont fuelCapacity portait le total POH comptait l'inutilisable DEUX
+      // fois — une fois dans la masse à vide pesée, une fois ici.
+      ? (parseFloat(aircraft?.fuelUsableCapacity) || parseFloat(aircraft?.fuelCapacity) || 0)
       : scenario === 'fob'
         ? fobLiters
         : Math.max(0, fobLiters - burnedLiters);

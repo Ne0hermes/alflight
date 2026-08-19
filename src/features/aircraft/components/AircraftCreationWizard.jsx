@@ -1046,29 +1046,32 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           dataToSave.moments = { ...(dataToSave.moments || {}) };
           const armVal = parseFloat(mainTank.arm);
           const momVal = parseFloat(mainTank.momentAtFull);
-          const capVal = parseFloat(mainTank.capacity);
           if (Number.isFinite(armVal) && armVal !== 0) dataToSave.arms.fuelMain = armVal;
           if (Number.isFinite(momVal) && momVal > 0) dataToSave.moments.fuelMain = momVal;
-          if (Number.isFinite(capVal) && capVal > 0) {
-            // fuelUsableCapacity = capacité utile du tank principal
-            if (!Number.isFinite(parseFloat(dataToSave.fuelUsableCapacity))) {
-              dataToSave.fuelUsableCapacity = capVal;
-            }
-          }
         }
-        // fuelCapacity = somme totale de tous les réservoirs (s'il n'est pas déjà
-        // défini explicitement). Step3 le fait déjà au runtime, mais on
-        // sécurise ici au save pour les cas où la sync useEffect ne se
-        // serait pas déclenchée (édition rapide, données héritées, etc.).
-        // 🔧 Phase 0 (2026-08-17) — Second verrou de la même règle qu'en Step3 :
-        // on RENSEIGNE une capacité absente, on n'ÉCRASE jamais une capacité
-        // saisie. Ce point de sauvegarde annulait sinon la correction que Step3
-        // venait de laisser passer.
+        // ⛽ 17/08/2026 — DEUX contenances par réservoir (totalCapacity /
+        // usableCapacity, repli legacy `capacity`). Les champs racine sont des
+        // SOMMES, chacune dans sa sémantique :
+        //   • fuelUsableCapacity = Σ utilisable — LA grandeur des moteurs
+        //     (l'ancienne recopie du seul réservoir principal ignorait les
+        //     autres réservoirs) ;
+        //   • fuelCapacity = Σ totale — documentation et avitaillement.
+        // Règle Phase 0 conservée : on RENSEIGNE un champ vide, on n'ÉCRASE
+        // jamais une valeur saisie (le 98 L du manuel de F-BXQT doit tenir).
         if (tanks.length > 0) {
-          const sum = tanks.reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0);
-          const current = parseFloat(dataToSave.fuelCapacity);
-          if (sum > 0 && (!Number.isFinite(current) || current <= 0)) {
-            dataToSave.fuelCapacity = sum;
+          const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 ? n : null; };
+          const sumOf = (pick) => {
+            const vals = tanks.map(pick).filter((v) => v !== null);
+            return vals.length ? vals.reduce((s, v) => s + v, 0) : null;
+          };
+          const sumUsable = sumOf((t) => num(t?.usableCapacity) ?? num(t?.capacity));
+          const sumTotal = sumOf((t) => num(t?.totalCapacity) ?? num(t?.capacity));
+          if (sumUsable !== null && !Number.isFinite(parseFloat(dataToSave.fuelUsableCapacity))) {
+            dataToSave.fuelUsableCapacity = sumUsable;
+          }
+          const currentTotal = parseFloat(dataToSave.fuelCapacity);
+          if (sumTotal !== null && (!Number.isFinite(currentTotal) || currentTotal <= 0)) {
+            dataToSave.fuelCapacity = sumTotal;
           }
         }
         console.log('🔄 [Save] Sync additionalFuelTanks → arms.fuelMain / moments.fuelMain / fuelUsableCapacity', {

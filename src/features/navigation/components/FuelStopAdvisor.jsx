@@ -7,7 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Fuel, CheckCircle } from 'lucide-react';
 import { useNavigation, useFuel } from '@core/contexts';
-import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr } from '@utils/aircraftPerf';
+import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelUsableCapacityLtr } from '@utils/aircraftPerf';
 import { analyzeFuelAutonomy, findFuelStopCandidates, assessRouteFuelWaypoint } from '../utils/fuelStopPlanner';
 
 const bannerBase = {
@@ -30,7 +30,9 @@ export const FuelStopAdvisor = ({ selectedAircraft, navigationResults }) => {
 
   const cruiseSpeedKt = getCruiseSpeedKt(selectedAircraft);
   const fuelConsumptionLph = getFuelConsumptionLph(selectedAircraft);
-  const capacityLtr = getFuelCapacityLtr(selectedAircraft);
+  // ⛽ Borne d'escale = carburant UTILISABLE : la capacité physique pouvait
+  // masquer le besoin d'une escale (l'inutilisable ne brûle pas).
+  const capacityLtr = getFuelUsableCapacityLtr(selectedAircraft);
   const reserveLiters = navigationResults?.regulationReserveLiters || 0;
 
   const analysis = useMemo(() => analyzeFuelAutonomy({

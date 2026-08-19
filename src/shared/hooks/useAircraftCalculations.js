@@ -26,7 +26,9 @@ export const useAircraftCalculations = () => {
   // Calcul de l'autonomie mémorisé
   const calculateEndurance = useCallback((fuelLiters = null) => {
     if (!selectedAircraft) return 0;
-    const fuel = fuelLiters || selectedAircraft.fuelCapacity;
+    // ⛽ Autonomie sur le carburant UTILISABLE : la capacité physique comptait
+    // l'inutilisable, qui ne brûle pas (+15 % d'autonomie fictive sur un F150M).
+    const fuel = fuelLiters || selectedAircraft.fuelUsableCapacity || selectedAircraft.fuelCapacity;
     return fuel / selectedAircraft.fuelConsumption;
   }, [selectedAircraft]);
   

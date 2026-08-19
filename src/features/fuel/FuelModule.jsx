@@ -12,7 +12,7 @@ import { useFuelSync } from '@hooks/useFuelSync';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit } from '@utils/unitsDisplay';
-import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr } from '@utils/aircraftPerf';
+import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr, getFuelUsableCapacityLtr } from '@utils/aircraftPerf';
 import { computeLegFuelPlans } from './utils/legFuelPlan';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
@@ -510,7 +510,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
         // foi, sinon les deux écrans se contredisaient
         const capacityRef = tankConfigAuthoritative
           ? (effectiveCapacityLtr > 0 ? effectiveCapacityLtr : null)
-          : getFuelCapacityLtr(selectedAircraft);
+          : getFuelUsableCapacityLtr(selectedAircraft); // ⛽ borne = utilisable
 
         // 🔧 CRAN 3 — avec une escale avitaillement, le bilan pertinent est
         // PAR TRONÇON (plein refait à l'escale) : le tableau ci-dessous

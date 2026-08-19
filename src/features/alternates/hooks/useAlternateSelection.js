@@ -427,7 +427,9 @@ export const useAlternateSelection = () => {
       const n = typeof v === 'number' ? v : parseFloat(v);
       return Number.isFinite(n) ? n : 0;
     };
-    let fuelCapacity = toNum(selectedAircraft.fuelCapacity ?? selectedAircraft.fuel?.capacity);
+    // ⛽ Rayon de déroutement sur le carburant UTILISABLE : la capacité
+    // physique surestimait la distance franchissable de l'inutilisable.
+    let fuelCapacity = toNum(selectedAircraft.fuelUsableCapacity ?? selectedAircraft.fuelCapacity ?? selectedAircraft.fuel?.capacity);
     let fuelConsumption = toNum(selectedAircraft.fuelConsumption ?? selectedAircraft.fuel?.consumption);
     const cruiseSpeed = getCruiseSpeedKt(selectedAircraft); // null si absent → coneZoneParams renverra null
 
