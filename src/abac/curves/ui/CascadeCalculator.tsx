@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { GraphConfig } from '../core/types';
 import {
   performCascadeCalculation,
@@ -227,6 +227,14 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   const [error, setError] = useState<string>('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [parameterWarnings, setParameterWarnings] = useState<{[graphId: string]: string}>({});
+  // Retour visuel du « 📌 » : depuis l'étape construction, le panneau banc de
+  // test n'est monté qu'à l'étape Validation — sans confirmation locale, le
+  // clic est muet. Remis à zéro dès que les entrées du calcul changent.
+  const [referencePinned, setReferencePinned] = useState(false);
+
+  useEffect(() => {
+    setReferencePinned(false);
+  }, [initialValue, parameters, windDirection, expectedValue, selectedSystemId]);
 
   // Trouver tous les systèmes disponibles avec leurs métadonnées
   const availableSystems = useMemo(() => {
@@ -643,8 +651,70 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 </>
               )}
 
+              {/* Lecture descendante (readoutAxis 'x', planches d'atterrissage) :
+                  entrée Y → intersection avec le guide → DESCENTE verticale →
+                  sortie lue en BAS sur l'axe X. Pas de « verticale du
+                  paramètre » : le paramètre est la valeur de FAMILLE des guides
+                  (vent signé), pas une position X. */}
+              {index > 0 && graph.readoutAxis === 'x' && (
+                <>
+                  {/* ÉTAPE 1: Ligne horizontale d'entrée, arrêtée au point
+                      d'intersection avec le guide (x = sortie) */}
+                  <line
+                    x1="0"
+                    y1={yScale(step.inputValue)}
+                    x2={xScale(step.outputValue)}
+                    y2={yScale(step.inputValue)}
+                    stroke="var(--accent-primary)"
+                    strokeWidth="2"
+                    strokeDasharray="5,5"
+                    opacity="0.7"
+                  />
+                  <text
+                    x="-35"
+                    y={yScale(step.inputValue) + 3}
+                    fontSize="10"
+                    fill="var(--accent-primary)"
+                  >
+                    Y={step.inputValue.toFixed(0)}
+                  </text>
+
+                  {/* ÉTAPE 2: Descente verticale depuis l'intersection
+                      jusqu'au bas de la zone de tracé */}
+                  <line
+                    x1={xScale(step.outputValue)}
+                    y1={yScale(step.inputValue)}
+                    x2={xScale(step.outputValue)}
+                    y2={innerHeight}
+                    stroke="var(--accent-primary)"
+                    strokeWidth="2"
+                    strokeDasharray="5,5"
+                    opacity="0.7"
+                  />
+
+                  {/* ÉTAPE 3: Point de sortie rouge posé EN BAS, sur l'axe X */}
+                  <circle
+                    cx={xScale(step.outputValue)}
+                    cy={innerHeight}
+                    r="6"
+                    fill="var(--color-red-critical)"
+                    stroke="white"
+                    strokeWidth="2"
+                  />
+                  <text
+                    x={xScale(step.outputValue) + 10}
+                    y={innerHeight - 6}
+                    fontSize="10"
+                    fill="var(--color-red-critical)"
+                    fontWeight="bold"
+                  >
+                    X={step.outputValue.toFixed(0)}
+                  </text>
+                </>
+              )}
+
               {/* Pour les graphiques suivants (avec méthode des abaques) */}
-              {index > 0 && (
+              {index > 0 && graph.readoutAxis !== 'x' && (
                 <>
                   {/* ÉTAPE 1: Ligne horizontale à Y=entrée */}
                   <line
@@ -1247,6 +1317,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                           computed: result.finalValue,
                           ...(Number.isFinite(exp) ? { expected: exp } : {})
                         });
+                        setReferencePinned(true);
                       }}
                       style={{
                         marginTop: 10, padding: '5px 12px', fontSize: 'var(--fs-body)', cursor: 'pointer',
@@ -1257,6 +1328,16 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     >
                       📌 En faire un cas de référence
                     </button>
+                  )}
+                  {/* Confirmation discrète du 📌 (indispensable depuis l'étape
+                      construction où le panneau du banc n'est pas monté). */}
+                  {onProposeReference && referencePinned && (
+                    <div style={{
+                      marginTop: 6, fontSize: 'var(--fs-caption)',
+                      color: 'rgba(255,255,255,0.9)', fontWeight: 500
+                    }}>
+                      ✓ Repris dans le banc de test — visible à l'étape Validation
+                    </div>
                   )}
                 </>
               );
