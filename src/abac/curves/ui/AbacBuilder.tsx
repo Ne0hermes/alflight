@@ -1488,29 +1488,11 @@ const renderStepContent = () => {
             />
 
 
-            {/* ─── P4 : TEST DE CASCADE EN ÉDITION — exécute le calcul complet
-                (méthode des abaques, cascade.ts) sur les graphes EN L'ÉTAT, sans
-                quitter la construction : un chaînage incohérent se voit ICI, pas
-                en préparation de vol. Le CascadeCalculator est le même composant
-                que côté lecture ; il signale lui-même les courbes non interpolées.
-                R6 : n'apparaît qu'une fois les cadres posés (rien sous le canevas
-                tant que l'atelier n'est pas engagé). */}
-            {workshop.frames.length > 0 && (
-            <KitPanel collapsible title="Testeur — cascade sur les graphes en l'état">
-              {/* Lot 1-F — testeur unifié : MÊME formulaire (testDraft hissé)
-                  que le montage de l'écran Validation ; le « 📌 » alimente le
-                  banc monté juste EN DESSOUS (et l'ouvre). */}
-              <CascadeCalculator
-                graphs={graphs}
-                draft={testDraft}
-                onDraftChange={setTestDraft}
-                onProposeReference={(snap) => {
-                  setReferencePrefill(snap);
-                  setTraceBenchOpen(true);
-                }}
-              />
-            </KitPanel>
-            )}
+            {/* (Retour pilote 20/08 : le CALCULATEUR de test n'a pas sa place
+                sur l'écran Tracé — les tests se font après l'interpolation. Il
+                vit désormais uniquement sur l'écran Validation, avec le MÊME
+                formulaire persistant (testDraft). Le banc replié reste ici en
+                sentinelle : son badge alerte si une retouche casse un cas.) */}
 
             {/* ─── Lot 1-F : LE BANC VISIBLE PENDANT LE TRACÉ — « le banc EST
                 le testeur ». Le panneau des cas de référence est monté AUSSI

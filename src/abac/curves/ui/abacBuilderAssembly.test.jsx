@@ -135,8 +135,8 @@ describe('AbacBuilder — assemblage écran Tracé (Lot 1-G)', () => {
     expect(primaries).toBe(1);
   });
 
-  it('grands blocs en KitPanel repliable (testeur, banc)', () => {
-    expect(html).toContain('Testeur — cascade sur les graphes en l&#x27;état');
+  it('grands blocs du Tracé : banc replié et courbes — SANS le calculateur de test (décision pilote 20/08 : les tests se font après interpolation, sur l\'écran Validation)', () => {
+    expect(html).not.toContain('Testeur — cascade sur les graphes en l&#x27;état');
     expect(html).toContain('Banc de test — cas de référence du manuel');
     expect(html).toContain('Courbes du cadre actif');
   });

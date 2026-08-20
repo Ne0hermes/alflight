@@ -1457,7 +1457,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       marginTop: 6, fontSize: 'var(--fs-caption)',
                       color: 'rgba(255,255,255,0.9)', fontWeight: 500
                     }}>
-                      ✓ Repris dans le banc de test (panneau ci-dessous)
+                      ✓ Repris dans le banc de test
                     </div>
                   )}
                 </>
