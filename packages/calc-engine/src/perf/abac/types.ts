@@ -40,22 +40,6 @@ export interface Curve {
    * Saisi manuellement → ne dépend pas du parsing du nom de courbe.
    */
   familyValue?: number;
-  /**
-   * 🔒 OVERRIDE OPTIONNEL — Valeur Y de la courbe au bord gauche pour le mode
-   * `slope-follow`. Si laissé indéfini, la valeur est dérivée automatiquement
-   * du Y du PREMIER POINT de la courbe (trié par X croissant).
-   *
-   * Pourquoi un override ?
-   *   - Cas standard : on laisse vide et l'algorithme utilise points[0].y
-   *     trié par X croissant — c'est suffisant dans la grande majorité des
-   *     cas et la valeur se met à jour automatiquement quand on déplace le
-   *     premier point dans le wizard.
-   *   - Cas exceptionnel : on souhaite forcer une valeur d'entrée différente
-   *     (par exemple si on a tracé la courbe sans atteindre le bord gauche
-   *     du graphique mais qu'on veut la considérer comme se prolongeant à
-   *     une valeur spécifique). Saisir alors la valeur manuellement.
-   */
-  entryY?: number;
   fitted?: {
     points: XYPoint[];
     rmse: number;
@@ -128,19 +112,6 @@ export interface GraphConfig {
    * Utilisé par le résolveur pour le bracket 2D (lecture pilote).
    */
   familyAxisVariable?: string;
-  /**
-   * 🔒 Mode d'interpolation à appliquer sur ce graphe :
-   *   - 'family'        : bracket entre 2 courbes par leur valeur familiale (graphe 1
-   *                       d'une cascade typique avec courbes "0 ft / 2000 ft / 4000 ft").
-   *                       Requiert `familyAxisVariable` + `Curve.familyValue` sur chaque courbe.
-   *   - 'slope-follow'  : suivi de pente (graphe 2-3 d'une cascade avec courbes guides
-   *                       sans valeur). Entre par Y_in (output précédent) au bord gauche
-   *                       (X = X_min), trace parallèle aux 2 courbes encadrant Y_in,
-   *                       lit Y_out à X = X_cible (input courant).
-   *   - 'mono'          : graphe à 1 seule courbe → interpolation 1D directe sur X.
-   *   - (undefined)     : auto-détection (mono si 1 courbe, family si familyValue présent, sinon fallback).
-   */
-  interpolationMode?: 'family' | 'slope-follow' | 'mono';
   /**
    * 🔒 Axe de LECTURE du résultat de ce graphe :
    *   - 'y' (défaut) : géométrie standard — la sortie se lit sur l'axe Y

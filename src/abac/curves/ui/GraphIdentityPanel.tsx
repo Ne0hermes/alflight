@@ -71,28 +71,10 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
           />
           Intermédiaire — correction
         </label>
-
-        {/* Si INTERMÉDIAIRE : position dans la cascade, sur la même ligne */}
-        {!isPrimary && (
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={labelStyle} title="L'output de ce tableau sert d'entrée au tableau suivant (ou au primaire si c'est le dernier intermédiaire).">
-              Position dans la cascade
-            </span>
-            <select
-              value={graph.cascadeOrder ?? ''}
-              onChange={(e) => {
-                const v = e.target.value;
-                onUpdateGraph({ cascadeOrder: v === '' ? undefined : Number(v) });
-              }}
-              style={selectStyle}
-            >
-              <option value="">—</option>
-              {[1, 2, 3, 4, 5, 6].map(n => (
-                <option key={n} value={n}>Tableau {n}{n === 1 ? ' (premier)' : ''}</option>
-              ))}
-            </select>
-          </label>
-        )}
+        {/* (Lot 0 : le select « Position dans la cascade » a été retiré — réglage
+            jamais lu par le moteur actif, la chaîne réelle suit l'ordre des
+            cadres. `cascadeOrder` reste dans le type/les données : l'adaptateur
+            s'en sert en repli compat pour les vieux modèles sans liens.) */}
       </div>
 
       {/* R16b — variable de FAMILLE des courbes : le paramètre qui distingue

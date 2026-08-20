@@ -16,16 +16,6 @@ interface CurveManagerProps {
   familyAxisVariable?: string;
   /** Libellé court de la variable familiale (pour affichage UI). */
   familyAxisLabel?: string;
-  /** Mode d'interpolation du graphe. Si 'slope-follow', on affiche un champ
-   *  "Y au bord gauche" pour chaque courbe (utilisé pour bracketer Y_in). */
-  interpolationMode?: 'family' | 'slope-follow' | 'mono';
-  /** Unité de l'axe Y du graphe (affichée dans le label du champ entryY). */
-  yAxisUnit?: string;
-  /** Titre de l'axe Y du graphe (affiché dans le label du champ entryY). */
-  yAxisTitle?: string;
-  /** Sens de l'axe X : si true, l'axe est décroissant → le 1er point pilote
-   *  est celui avec le X MAX (bord gauche visuel). */
-  xAxisReversed?: boolean;
 }
 
 // Palette de COURBES (data-viz) — EXCEPTION charte documentée : un éditeur de
@@ -59,11 +49,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
   onReorderCurves,
   isWindRelated = false,
   familyAxisVariable,
-  familyAxisLabel,
-  interpolationMode,
-  yAxisUnit,
-  yAxisTitle,
-  xAxisReversed
+  familyAxisLabel
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCurveName, setNewCurveName] = useState('');
@@ -365,94 +351,6 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                   )}
                 </div>
               )}
-
-              {/* Champ entryY — OVERRIDE optionnel pour le mode slope-follow.
-                  Si non saisi, l'algorithme prend automatiquement le Y du premier
-                  point de la courbe au bord GAUCHE VISUEL du graphe :
-                    - axe X croissant : X min
-                    - axe X décroissant : X max */}
-              {interpolationMode === 'slope-follow' && editingCurveId !== curve.id && (() => {
-                // Calculer la valeur auto à partir du premier point selon le sens d'axe
-                let autoValue = null;
-                let autoX = null;
-                if (Array.isArray(curve.points) && curve.points.length > 0) {
-                  const sorted = [...curve.points]
-                    .filter(p => typeof p.x === 'number' && typeof p.y === 'number')
-                    .sort((a, b) => xAxisReversed ? b.x - a.x : a.x - b.x);
-                  if (sorted.length > 0) {
-                    autoValue = sorted[0].y;
-                    autoX = sorted[0].x;
-                  }
-                }
-                const hasOverride = typeof curve.entryY === 'number';
-                return (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '4px 8px',
-                    backgroundColor: hasOverride ? 'var(--accent-soft)' : 'var(--bg-overlay)',
-                    borderRadius: 3,
-                    fontSize: 11,
-                    marginTop: 4
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  title={hasOverride
-                    ? "Override manuel : cette valeur est utilisée à la place du Y du premier point."
-                    : autoValue !== null
-                      ? `Auto : Y du premier point (à X=${autoX}). Effacer pour laisser auto, saisir pour forcer une autre valeur.`
-                      : "Aucun point placé — placez au moins un point pour activer le calcul automatique."}
-                  >
-                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
-                      🚀 Y bord gauche{yAxisUnit ? ` (${yAxisUnit})` : ''} :
-                    </span>
-                    <input
-                      type="number"
-                      step="any"
-                      value={curve.entryY ?? ''}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        const num = v === '' ? undefined : parseFloat(v);
-                        onUpdateCurve(curve.id, { entryY: Number.isFinite(num) ? num : undefined });
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder={autoValue !== null ? `auto = ${autoValue.toFixed(1)}` : 'placez un point d\'abord'}
-                      style={{
-                        flex: 1,
-                        padding: '2px 6px',
-                        fontSize: 11,
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 3,
-                        fontStyle: hasOverride ? 'normal' : 'italic',
-                        color: hasOverride ? 'var(--text-primary)' : 'var(--text-secondary)'
-                      }}
-                    />
-                    {hasOverride ? (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUpdateCurve(curve.id, { entryY: undefined });
-                        }}
-                        style={{
-                          padding: '1px 6px',
-                          fontSize: 10,
-                          backgroundColor: 'var(--accent-primary)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 3,
-                          cursor: 'pointer'
-                        }}
-                        title="Revenir au calcul automatique"
-                      >
-                        override
-                      </button>
-                    ) : autoValue !== null ? (
-                      <span style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 600 }}>auto</span>
-                    ) : (
-                      <span style={{ fontSize: 10, color: 'var(--color-red-critical)' }}>—</span>
-                    )}
-                  </div>
-                );
-              })()}
 
               {/* Deuxième ligne : tous les boutons d'action */}
               {editingCurveId !== curve.id && (

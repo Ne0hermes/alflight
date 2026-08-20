@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { TextField, Select, MenuItem, FormControl, InputLabel, FormHelperText } from '@mui/material';
 // R0 : imports morts retirés (AxesForm/CurveManager/PointsTable n'étaient utilisés
 // que par les cases supprimées ; PointEditor/GraphManager étaient orphelins).
 // CurveManager et PointsTable restent VIVANTS via AbacGraphWizard qui les monte.
@@ -11,16 +10,13 @@ import { WorkshopCanvas } from './WorkshopCanvas';
 //  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
 import { CascadeCalculator } from './CascadeCalculator';
 import { AbacCurveManager } from '../core/manager';
-import { calculateAutoAxesLimits, calculateGraphAutoLimits, updateAxesWithAutoLimits } from '../core/axesUtils';
-import { analyzeChartImage } from '../../v2/aiChartAnalysisService';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
 import { ReferenceCasesPanel, ReferencePrefill } from './ReferenceCasesPanel';
 import { runAllReferenceCases } from '../core/referenceBench';
 import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
-import { isValidOperationId, OPERATION_CATALOG, getOperation } from '../core/operationCatalog';
+import { isValidOperationId, getOperation } from '../core/operationCatalog';
 import {
-  AxesConfig,
   Curve,
   XYPoint,
   FitOptions,
@@ -44,6 +40,11 @@ import styles from './styles.module.css';
 
 // R0 : l'étape 'axes' (morte depuis SPRINT B) est retirée du type — séquence réelle : points → final.
 type Step = 'points' | 'final';
+
+// Lot 0 — réglages d'interpolation : leurs setters n'ont jamais été branchés à
+// l'UI (états figés depuis toujours) → constantes assumées.
+const INTERPOLATION_METHOD: InterpolationMethod = 'naturalSpline';
+const INTERPOLATION_POINTS = 200;
 
 interface AbacBuilderProps {
   onSave?: (json: AbacCurvesJSON, modelName?: string) => void;
@@ -72,8 +73,7 @@ function AbacBuilderComponent(
   // P1 (AUDIT_ABAC_CONSTRUCTION.md) : UN AbacCurveManager PAR GRAPHE.
   // L'ancien managerRef unique était vidé/rechargé à chaque bascule de graphe —
   // incompatible avec l'atelier multi-colonnes (P2) où plusieurs graphes
-  // s'éditent sans bascule. Création paresseuse par id ; purge à la
-  // suppression du graphe (handleRemoveGraph).
+  // s'éditent sans bascule. Création paresseuse par id.
   const managersRef = useRef(new Map<string, AbacCurveManager>());
   const getManager = useCallback((graphId: string | null | undefined): AbacCurveManager | null => {
     if (!graphId) return null;
@@ -197,11 +197,6 @@ function AbacBuilderComponent(
   // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
   const [currentStep, setCurrentStep] = useState<Step>((S?.currentStep as Step) ?? 'points');
 
-  React.useEffect(() => {
-        return () => {
-          };
-  }, []);
-
   // Exposer les méthodes via useImperativeHandle
   React.useImperativeHandle(ref, () => ({
     goToNextStep: () => {
@@ -230,7 +225,6 @@ function AbacBuilderComponent(
   const [graphs, setGraphs] = useState<GraphConfig[]>(S?.graphs ?? []);
   const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null);
   const [selectedCurveId, setSelectedCurveId] = useState<string | null>(null);
-  const [fitResults, setFitResults] = useState<Record<string, FitResult>>({});
   const [warnings, setWarnings] = useState<Record<string, string[]>>({});
   // Liste prédéfinie des types de systèmes d'abaques
   const SYSTEM_TYPES = [
@@ -257,161 +251,7 @@ function AbacBuilderComponent(
   // (au lieu d'une valeur SYSTEM_TYPES legacy). Vide par défaut → force l'utilisateur à choisir.
   const [systemType, setSystemType] = useState<string>(S?.systemType ?? '');
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
-  const [autoAdjustEnabled, setAutoAdjustEnabled] = useState(false); // Désactivé par défaut
-  const axesMargin = 5; // Marge fixe de 5 unités
-  const [interpolationMethod, setInterpolationMethod] = useState<InterpolationMethod>('naturalSpline');
-  const [interpolationPoints, setInterpolationPoints] = useState(200);
-  const [numIntermediateCurves, setNumIntermediateCurves] = useState(1);
-  const [windFilter, setWindFilter] = useState<'all' | 'headwind' | 'tailwind'>('all');
-  const [expandedGraphs, setExpandedGraphs] = useState<Record<string, boolean>>({});
 
-  // Image en filigrane PDF par graphique (clé = graphId)
-  // Stockée en pixels SVG inner — reste fixe en pixels CSS quand le Chart est resize.
-  const [backgroundImages, setBackgroundImages] = useState<Record<string, { url: string; x: number; y: number; width: number; height: number }>>(S?.backgroundImages ?? {});
-  // Graph pour lequel le mode "ajuster image" est actif (un seul à la fois)
-  const [imageAdjustGraphId, setImageAdjustGraphId] = useState<string | null>(null);
-  // Détection IA en cours pour ce graphId (loader)
-  const [aiDetectingGraphId, setAiDetectingGraphId] = useState<string | null>(null);
-  // Notes IA dernière analyse (pour feedback utilisateur)
-  const [aiNotes, setAiNotes] = useState<Record<string, string>>({});
-  // Indices texte libre fournis par l'utilisateur pour guider l'IA (par graphId)
-  const [aiHints, setAiHints] = useState<Record<string, string>>(S?.aiHints ?? {});
-
-  // Calibration multi-points par axe pour chaque graphique.
-  // Permet de coller exactement aux graduations du filigrane même si l'image est déformée
-  // ou si les graduations ne sont pas équidistantes.
-  // Format : { [graphId]: { x?: [{value, pixel}, ...], y?: [...] } }
-  const [customAxisTicks, setCustomAxisTicks] = useState<Record<string, {
-    x?: { value: number; pixel: number }[];
-    y?: { value: number; pixel: number }[];
-  }>>(S?.customAxisTicks ?? {});
-
-  // État du mode calibration interactive en cours (un seul à la fois pour toute l'app)
-  const [calibrationState, setCalibrationState] = useState<null | {
-    graphId: string;
-    axis: 'x' | 'y';
-    valuesToCalibrate: number[]; // valeurs à calibrer dans l'ordre
-    currentIndex: number;        // index de la valeur courante
-    collected: { value: number; pixel: number }[];
-  }>(null);
-
-  // Génère la liste des valeurs de graduations à partir de min/max/pas
-  const buildAxisValuesFromConfig = useCallback((min: number, max: number, step: number): number[] => {
-    if (!isFinite(min) || !isFinite(max) || !isFinite(step) || step <= 0) return [min, max];
-    const values: number[] = [];
-    // Tolérance pour éviter d'omettre max à cause d'erreurs flottantes
-    const eps = step * 1e-6;
-    for (let v = min; v <= max + eps; v += step) {
-      values.push(parseFloat(v.toFixed(10))); // évite les artefacts type 0.30000000000000004
-    }
-    if (values[values.length - 1] < max - eps) values.push(max);
-    return values;
-  }, []);
-
-  // Démarre une session de calibration interactive pour un axe d'un graphique.
-  // L'utilisateur va cliquer sur chaque graduation visible de l'image filigrane.
-  const startAxisCalibration = useCallback((graphId: string, axis: 'x' | 'y', step?: number) => {
-    const graph = graphs.find(g => g.id === graphId);
-    if (!graph?.axes) return;
-    const cfg = axis === 'x' ? graph.axes.xAxis : graph.axes.yAxis;
-    // Pas par défaut : tente de deviner (10 ticks dans la plage) si non fourni
-    const defaultStep = step ?? ((cfg.max - cfg.min) / 10);
-    const values = buildAxisValuesFromConfig(cfg.min, cfg.max, defaultStep);
-    setCalibrationState({
-      graphId, axis,
-      valuesToCalibrate: values,
-      currentIndex: 0,
-      collected: []
-    });
-    // Sélectionner ce graphique dans la sous-étape
-    const idx = graphs.findIndex(g => g.id === graphId);
-    if (idx >= 0) setSubStepGraphIndex(idx);
-  }, [graphs, buildAxisValuesFromConfig]);
-
-  // Reçoit un clic en pixel inner depuis Chart pendant la calibration
-  const handleCalibrationClick = useCallback((pixelInner: { x: number; y: number }) => {
-    if (!calibrationState) return;
-    const { axis, valuesToCalibrate, currentIndex, collected, graphId } = calibrationState;
-    const value = valuesToCalibrate[currentIndex];
-    const pixel = axis === 'x' ? pixelInner.x : pixelInner.y;
-    const newCollected = [...collected, { value, pixel }];
-
-    // Si fini : commit dans customAxisTicks et termine la calibration
-    if (currentIndex + 1 >= valuesToCalibrate.length) {
-      setCustomAxisTicks(prev => ({
-        ...prev,
-        [graphId]: { ...prev[graphId], [axis]: newCollected }
-      }));
-      setCalibrationState(null);
-      return;
-    }
-
-    // Sinon, passe à la valeur suivante
-    setCalibrationState({ ...calibrationState, currentIndex: currentIndex + 1, collected: newCollected });
-  }, [calibrationState]);
-
-  const cancelCalibration = useCallback(() => setCalibrationState(null), []);
-
-  const resetCalibration = useCallback((graphId: string, axis?: 'x' | 'y') => {
-    setCustomAxisTicks(prev => {
-      const next = { ...prev };
-      if (!next[graphId]) return prev;
-      if (axis) {
-        const { [axis]: _, ...rest } = next[graphId];
-        if (Object.keys(rest).length === 0) delete next[graphId];
-        else next[graphId] = rest;
-      } else {
-        delete next[graphId];
-      }
-      return next;
-    });
-  }, []);
-
-  // Taille pixel du Chart par graphique (default 500x1000). L'utilisateur peut
-  // l'étirer via les poignées sur les bords pour ajuster l'espacement entre
-  // graduations sans toucher aux valeurs des bornes.
-  const [chartSizes, setChartSizes] = useState<Record<string, { width: number; height: number }>>(S?.chartSizes ?? {});
-  // Taille par défaut d'un chart d'abaque (en pixels SVG inner).
-  // L'utilisateur peut redimensionner via les poignées de bordure du Chart.
-  const DEFAULT_CHART_SIZE = 800;
-  const getChartWidth = (id: string) => chartSizes[id]?.width ?? DEFAULT_CHART_SIZE;
-  const getChartHeight = (id: string) => chartSizes[id]?.height ?? DEFAULT_CHART_SIZE;
-
-  // État du drag de resize du Chart
-  const [chartResize, setChartResize] = useState<null | {
-    graphId: string;
-    kind: 'right' | 'bottom' | 'corner';
-    startClientX: number;
-    startClientY: number;
-    originW: number;
-    originH: number;
-  }>(null);
-
-  React.useEffect(() => {
-    if (!chartResize) return;
-    const onMove = (e: MouseEvent) => {
-      const dx = e.clientX - chartResize.startClientX;
-      const dy = e.clientY - chartResize.startClientY;
-      setChartSizes(prev => ({
-        ...prev,
-        [chartResize.graphId]: {
-          width: chartResize.kind === 'bottom'
-            ? chartResize.originW
-            : Math.max(300, Math.min(2000, chartResize.originW + dx)),
-          height: chartResize.kind === 'right'
-            ? chartResize.originH
-            : Math.max(300, Math.min(2500, chartResize.originH + dy))
-        }
-      }));
-    };
-    const onUp = () => setChartResize(null);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [chartResize]);
 
   // Sous-étape par graphique dans l'étape "Construction et Interpolation"
   // Permet de traiter les graphiques un par un au lieu de les afficher tous ensemble.
@@ -420,24 +260,22 @@ function AbacBuilderComponent(
   // ─── Persistance de la session ────────────────────────────────────────────
   // Un seul effet : à chaque changement, l'intégralité du travail en cours est
   // déposée dans le ref du wizard avion. Le démontage ne détruit donc plus rien.
-  // Volatiles exclus à dessein : calibrationState (calibrage en cours),
-  // chartResize / imageAdjustGraphId / wizardEditorMode / wizardModeCommand
-  // (gestes de souris), aiDetectingGraphId / aiNotes (requête IA en vol),
-  // fitResults / warnings / expandedGraphs (recalculés ou purement visuels).
+  // Volatiles exclus à dessein : wizardEditorMode / wizardModeCommand (gestes
+  // de souris), warnings (recalculés à l'interpolation).
   React.useEffect(() => {
     if (!sessionRef || sessionClosedRef.current) return;
     sessionRef.current = {
       ...(sessionRef.current || {}),
       atelier: {
         marker: sessionMarker,
-        workshop, graphs, backgroundImages, customAxisTicks, referenceCases,
-        aiHints, bezierSession, systemType, modelNameInput, aircraftModelDisplay,
-        chartSizes, currentStep, subStepGraphIndex,
+        workshop, graphs, referenceCases,
+        bezierSession, systemType, modelNameInput, aircraftModelDisplay,
+        currentStep, subStepGraphIndex,
       },
     };
-  }, [sessionRef, sessionMarker, workshop, graphs, backgroundImages, customAxisTicks,
-      referenceCases, aiHints, bezierSession, systemType, modelNameInput,
-      aircraftModelDisplay, chartSizes, currentStep, subStepGraphIndex]);
+  }, [sessionRef, sessionMarker, workshop, graphs,
+      referenceCases, bezierSession, systemType, modelNameInput,
+      aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
   // Synchronise selectedGraphId avec le graphique courant de la sous-étape
   // et clamp l'index si le nombre de graphiques change.
@@ -492,82 +330,14 @@ function AbacBuilderComponent(
     }
   }, [currentStep, graphs.length]);
 
-  // Lance l'analyse IA de l'image en filigrane et ajoute les courbes détectées
-  const handleAIDetect = useCallback(async (graphId: string) => {
-    const bg = backgroundImages[graphId];
-    const graph = graphs.find(g => g.id === graphId);
-    if (!bg || !graph?.axes) {
-      console.warn('[AI] Pas d\'image ou axes manquants pour graphId', graphId);
-      return;
-    }
-    setAiDetectingGraphId(graphId);
-    setAiNotes(prev => ({ ...prev, [graphId]: '' }));
-
-    try {
-      const result = await analyzeChartImage(bg.url, graph.axes, {
-        extraContext: aiHints[graphId]
-      });
-
-      if (!result.curves || result.curves.length === 0) {
-        setAiNotes(prev => ({ ...prev, [graphId]: '⚠️ Aucune courbe détectée. ' + (result.notes || '') }));
-        return;
-      }
-
-      // Injecter les courbes détectées dans le graph
-      setGraphs(prev => prev.map(g => {
-        if (g.id !== graphId) return g;
-        const ts = Date.now();
-        const newCurves = result.curves.map((c, i) => ({
-          id: `curve-ai-${ts}-${i}`,
-          name: c.name,
-          color: c.color,
-          points: c.points.map((p, j) => ({
-            ...p,
-            id: `point-ai-${ts}-${i}-${j}`
-          }))
-        }));
-        return { ...g, curves: [...g.curves, ...newCurves] };
-      }));
-
-      // Sélectionner la première courbe ajoutée
-      const firstNewId = `curve-ai-${Date.now()}-0`;
-      // (id exact dépend du ts au-dessus ; on prend juste la dernière courbe ajoutée du graph)
-      setTimeout(() => {
-        const updated = (graphs.find(g => g.id === graphId) || {}).curves || [];
-        if (updated.length > 0) setSelectedCurveId(updated[updated.length - 1].id);
-      }, 0);
-
-      const summary = `✅ ${result.curves.length} courbe(s) détectée(s), ${result.curves.reduce((s, c) => s + c.points.length, 0)} point(s) au total.`;
-      setAiNotes(prev => ({ ...prev, [graphId]: summary + (result.notes ? ' ' + result.notes : '') }));
-    } catch (err: any) {
-      console.error('[AI] Erreur analyse :', err);
-      setAiNotes(prev => ({ ...prev, [graphId]: `❌ Erreur : ${err.message || err}` }));
-    } finally {
-      setAiDetectingGraphId(null);
-    }
-  }, [backgroundImages, graphs, aiHints]);
 
   // Pour compatibilité avec l'ancien système
   const currentGraph = graphs.find(g => g.id === selectedGraphId);
   const axesConfig = currentGraph?.axes || null;
 
-  // Filtrer les courbes selon le filtre vent si le graphique est lié au vent
-  const curves = React.useMemo(() => {
-    if (!currentGraph) return [];
-
-    if (!currentGraph.isWindRelated || windFilter === 'all') {
-      return currentGraph.curves;
-    }
-
-    return currentGraph.curves.filter(curve => {
-      if (windFilter === 'headwind') {
-        return curve.windDirection === 'headwind' || curve.name.toLowerCase().includes('headwind') || curve.name.toLowerCase().includes('vent de face');
-      } else if (windFilter === 'tailwind') {
-        return curve.windDirection === 'tailwind' || curve.name.toLowerCase().includes('tailwind') || curve.name.toLowerCase().includes('vent arrière');
-      }
-      return true;
-    });
-  }, [currentGraph, windFilter]);
+  // Lot 0 — le filtre vent de l'étape 3 était figé sur 'all' (UI dans un bloc
+  // {false && …} jamais rendu) : courbes du graphe courant, sans filtrage.
+  const curves = currentGraph ? currentGraph.curves : [];
 
   // Fonction pour détecter si un graphique est lié au vent
   const isWindRelatedGraph = (graph: GraphConfig): boolean => {
@@ -688,39 +458,14 @@ function AbacBuilderComponent(
       // Si la courbe a déjà été ajustée, appliquer l'ajustement
       if (curve.fitted) {
         manager.fitCurve(curveId, {
-          method: interpolationMethod,
-          numPoints: interpolationPoints
+          method: INTERPOLATION_METHOD,
+          numPoints: INTERPOLATION_POINTS
         });
       }
     });
 
-      }, [selectedGraphId, graphs, interpolationMethod, interpolationPoints, getManager]);
+      }, [selectedGraphId, graphs, getManager]);
 
-  // Gestionnaires pour les graphiques
-  const handleAddGraph = useCallback((graph: GraphConfig) => {
-    setGraphs(prev => [...prev, graph]);
-    setSelectedGraphId(graph.id);
-    // Fermer tous les graphiques existants et ouvrir uniquement le nouveau
-    setExpandedGraphs(prev => {
-      const newExpanded: Record<string, boolean> = {};
-      // Fermer tous les graphiques existants
-      Object.keys(prev).forEach(id => {
-        newExpanded[id] = false;
-      });
-      // Ouvrir uniquement le nouveau graphique
-      newExpanded[graph.id] = true;
-      return newExpanded;
-    });
-  }, []);
-
-  const handleRemoveGraph = useCallback((graphId: string) => {
-    setGraphs(prev => prev.filter(g => g.id !== graphId));
-    // P1 : purger le manager du graphe supprimé (sinon fuite dans la map)
-    managersRef.current.delete(graphId);
-    if (selectedGraphId === graphId) {
-      setSelectedGraphId(graphs[0]?.id || null);
-    }
-  }, [selectedGraphId, graphs]);
 
   const handleUpdateGraph = useCallback((graphId: string, updates: Partial<GraphConfig>) => {
     setGraphs(prev => prev.map(g => {
@@ -736,58 +481,6 @@ function AbacBuilderComponent(
     }));
   }, []);
 
-  // Gestionnaire pour lier deux graphiques
-  const handleLinkGraphs = useCallback((fromId: string, toId: string) => {
-    setGraphs(prev => prev.map(graph => {
-      if (graph.id === fromId) {
-        // Ajouter le lien sortant
-        return {
-          ...graph,
-          linkedTo: [...(graph.linkedTo || []), toId]
-        };
-      } else if (graph.id === toId) {
-        // Ajouter le lien entrant
-        return {
-          ...graph,
-          linkedFrom: [...(graph.linkedFrom || []), fromId]
-        };
-      }
-      return graph;
-    }));
-  }, []);
-
-  // Gestionnaire pour délier deux graphiques
-  const handleUnlinkGraphs = useCallback((fromId: string, toId: string) => {
-    setGraphs(prev => prev.map(graph => {
-      if (graph.id === fromId) {
-        // Retirer le lien sortant
-        return {
-          ...graph,
-          linkedTo: (graph.linkedTo || []).filter(id => id !== toId)
-        };
-      } else if (graph.id === toId) {
-        // Retirer le lien entrant
-        return {
-          ...graph,
-          linkedFrom: (graph.linkedFrom || []).filter(id => id !== fromId)
-        };
-      }
-      return graph;
-    }));
-  }, []);
-
-  const handleAxesSubmit = useCallback((config: AxesConfig) => {
-    if (selectedGraphId) {
-      handleUpdateGraph(selectedGraphId, { axes: config });
-    }
-    // Ne pas changer d'étape automatiquement
-  }, [selectedGraphId, handleUpdateGraph]);
-
-  const handleWindRelatedChange = useCallback((isWindRelated: boolean) => {
-    if (selectedGraphId) {
-      handleUpdateGraph(selectedGraphId, { isWindRelated });
-    }
-  }, [selectedGraphId, handleUpdateGraph]);
 
   // R17 — `familyValue` posé À LA CRÉATION : quand la courbe est créée depuis
   // la liste déroulante de valeurs (capsule / gestionnaire), la valeur
@@ -894,88 +587,29 @@ function AbacBuilderComponent(
   // Changer de courbe, de cadre (focus) ou d'étape ABANDONNE la session.
   React.useEffect(() => { setBezierSession(null); }, [selectedCurveId, selectedGraphId, currentStep]);
 
-  const handleAutoAdjustAxes = useCallback((graphId?: string) => {
-    const graphsToUpdate = graphId
-      ? graphs.filter(g => g.id === graphId)
-      : graphs;
-
-    setGraphs(prev => prev.map(g => {
-      // Ne traiter que les graphiques sélectionnés
-      if (!graphsToUpdate.some(gu => gu.id === g.id)) return g;
-
-      // Ne pas ajuster si pas de points
-      if (!g.curves.some(c => c.points.length > 0)) return g;
-
-      // Collecter tous les points
-      const allPoints: XYPoint[] = [];
-      for (const curve of g.curves) {
-        if (curve.points && curve.points.length > 0) {
-          allPoints.push(...curve.points);
-        }
-      }
-
-      // Calculer les nouvelles limites avec la marge configurée
-      const newLimits = calculateAutoAxesLimits(allPoints, axesMargin);
-
-      // Mettre à jour les axes si ils existent
-      if (g.axes) {
-        return {
-          ...g,
-          axes: updateAxesWithAutoLimits(g.axes, newLimits)
-        };
-      }
-
-      return g;
-    }));
-  }, [graphs, axesMargin]);
 
   const handlePointClick = useCallback((x: number, y: number) => {
     if (!selectedCurveId || !selectedGraphId) return;
 
     const point: XYPoint = { x, y, id: uuidv4() };
 
-    setGraphs(prev => {
-      const updated = prev.map(g =>
-        g.id === selectedGraphId
-          ? {
-              ...g,
-              curves: g.curves.map(c =>
-                c.id === selectedCurveId
-                  // R14 — toute retouche de points INVALIDE l'interpolation :
-                  // sinon le trait affiché (fitted, prioritaire au rendu) reste
-                  // figé sur l'ancienne courbe pendant que le point bouge.
-                  // La validation ré-interpole tout (onFinish → fitAll).
-                  ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x), fitted: undefined }
-                  : c
-              )
-            }
-          : g
-      );
-
-      // Si l'ajustement automatique est activé, recalculer les limites
-      if (autoAdjustEnabled) {
-        return updated.map(g => {
-          if (g.id === selectedGraphId && g.axes) {
-            // Collecter tous les points
-            const allPoints: XYPoint[] = [];
-            for (const curve of g.curves) {
-              if (curve.points && curve.points.length > 0) {
-                allPoints.push(...curve.points);
-              }
-            }
-            const newLimits = calculateAutoAxesLimits(allPoints, axesMargin);
-            return {
-              ...g,
-              axes: updateAxesWithAutoLimits(g.axes, newLimits)
-            };
+    setGraphs(prev => prev.map(g =>
+      g.id === selectedGraphId
+        ? {
+            ...g,
+            curves: g.curves.map(c =>
+              c.id === selectedCurveId
+                // R14 — toute retouche de points INVALIDE l'interpolation :
+                // sinon le trait affiché (fitted, prioritaire au rendu) reste
+                // figé sur l'ancienne courbe pendant que le point bouge.
+                // La validation ré-interpole tout (onFinish → fitAll).
+                ? { ...c, points: [...c.points, point].sort((a, b) => a.x - b.x), fitted: undefined }
+                : c
+            )
           }
-          return g;
-        });
-      }
-
-      return updated;
-    });
-  }, [selectedCurveId, selectedGraphId, autoAdjustEnabled, axesMargin]);
+        : g
+    ));
+  }, [selectedCurveId, selectedGraphId]);
 
   const handlePointDrag = useCallback((curveId: string, pointId: string, x: number, y: number) => {
     if (!selectedGraphId) return;
@@ -1019,109 +653,7 @@ function AbacBuilderComponent(
     ));
   }, [selectedGraphId]);
 
-  const handleFitCurve = useCallback((curveId: string, options: FitOptions) => {
-                
-    if (!selectedGraphId) {
-            return;
-    }
 
-    // Trouver la courbe dans les graphiques
-    const graph = graphs.find(g => g.id === selectedGraphId);
-    
-    const curve = graph?.curves.find(c => c.id === curveId);
-
-    if (!curve || !curve.points || curve.points.length < 2) {
-      console.log('Cannot fit curve: not enough points');
-      return;
-    }
-
-    console.log('Points:', curve.points.map(p => `(${p.x.toFixed(2)}, ${p.y.toFixed(2)})`).join(', '));
-
-    try {
-            const tempManager = new AbacCurveManager();
-
-      const tempCurveData = {
-        name: curve.name,
-        color: curve.color,
-        points: curve.points
-      };
-
-            const tempCurveId = tempManager.addCurve(tempCurveData);
-      
-            const result = tempManager.fitCurve(tempCurveId, {
-        ...options,
-        method: interpolationMethod,
-        numPoints: interpolationPoints
-      });
-
-      
-      setFitResults(prev => {
-                return { ...prev, [curveId]: result };
-      });
-
-      if (result.warnings.length > 0) {
-                setWarnings(prev => ({ ...prev, [curveId]: result.warnings }));
-      } else {
-        setWarnings(prev => {
-          const newWarnings = { ...prev };
-          delete newWarnings[curveId];
-          return newWarnings;
-        });
-      }
-
-      // Mettre à jour les graphiques
-            setGraphs(prev => prev.map(g => {
-        if (g.id === selectedGraphId) {
-                    return {
-            ...g,
-            curves: g.curves.map(c => {
-              if (c.id === curveId) {
-                                return {
-                  ...c,
-                  fitted: {
-                    points: result.fittedPoints,
-                    rmse: result.rmse,
-                    method: result.method
-                  }
-                };
-              }
-              return c;
-            })
-          };
-        }
-        return g;
-      }));
-
-          } catch (error) {
-      console.error(`❌ Erreur lors de l'interpolation de la courbe ${curveId}:`, error);
-      console.error('📦 Stack trace:', (error as Error).stack);
-    }
-  }, [selectedGraphId, graphs]);
-
-  const handleGenerateIntermediateCurves = useCallback(() => {
-    const manager = getManager(selectedGraphId);
-    if (!manager) return;
-
-
-    // Générer les courbes intermédiaires
-    const newCurveIds = manager.generateIntermediateCurves(numIntermediateCurves);
-
-    if (newCurveIds.length > 0) {
-      // Mettre à jour l'état avec les nouvelles courbes
-      const allCurves = manager.getAllCurves();
-
-      setGraphs(prev => prev.map(graph => {
-        if (graph.id === selectedGraphId) {
-          return {
-            ...graph,
-            curves: allCurves
-          };
-        }
-        return graph;
-      }));
-
-          }
-  }, [selectedGraphId, numIntermediateCurves, getManager]);
 
   const handleFitAll = useCallback((options: FitOptions = {}) => {
     console.log('Starting fit all curves');
@@ -1158,8 +690,8 @@ function AbacBuilderComponent(
             // Utiliser l'ID temporaire pour l'interpolation
             const result = tempManager.fitCurve(tempCurveId, {
               ...options,
-              method: interpolationMethod,
-              numPoints: interpolationPoints
+              method: INTERPOLATION_METHOD,
+              numPoints: INTERPOLATION_POINTS
             });
 
             console.log(`    Interpolation result: ${result.fittedPoints.length} points`);
@@ -1204,9 +736,8 @@ function AbacBuilderComponent(
     console.log('Total curves fitted:', Object.keys(allResults).length);
     console.log('Total warnings:', Object.keys(newWarnings).length);
 
-    setFitResults(allResults);
     setWarnings(newWarnings);
-  }, [graphs, interpolationMethod, interpolationPoints]);
+  }, [graphs]);
 
   const handleClearPoints = useCallback((curveId: string) => {
     const manager = getManager(selectedGraphId);
@@ -1242,70 +773,6 @@ function AbacBuilderComponent(
   //  currentStep ne vaut jamais 'fit' depuis SPRINT B, l'effet était mort.
   //  L'interpolation se déclenche via onFinish → handleFitAll.)
 
-  const handleImportPoints = useCallback((curveId: string, points: XYPoint[]) => {
-    const manager = getManager(selectedGraphId);
-    if (!manager) return;
-
-    points.forEach(p => {
-      manager.addPoint(curveId, { ...p, id: uuidv4() });
-    });
-
-    setGraphs(prev => prev.map(graph => {
-      if (graph.id === selectedGraphId) {
-        return {
-          ...graph,
-          curves: graph.curves.map(c =>
-            c.id === curveId
-              ? { ...c, points: [...c.points, ...points].sort((a, b) => a.x - b.x) }
-              : c
-          )
-        };
-      }
-      return graph;
-    }));
-  }, [selectedGraphId, getManager]);
-
-  // Fonction d'export d'itération (étape 2)
-  // Fonction d'import d'itération (étape 2)
-  const handleImportIteration = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const iterationData = JSON.parse(e.target?.result as string);
-
-        if (iterationData.version?.includes('iteration')) {
-          // Charger les données de l'itération
-          setGraphs(iterationData.graphs || []);
-          setSelectedGraphId(iterationData.selectedGraphId || null);
-          setSelectedCurveId(iterationData.selectedCurveId || null);
-
-          // Rester sur l'étape actuelle ou aller à l'étape sauvegardée.
-          // Compat fichiers d'itération LEGACY : les anciennes étapes 'axes' et
-          // 'fit' n'existent plus (R0) → remappées sur les étapes vivantes.
-          if (iterationData.step) {
-            const legacyMap: Record<string, Step> = { axes: 'points', points: 'points', fit: 'final', final: 'final' };
-            const mapped = legacyMap[iterationData.step];
-            if (mapped) setCurrentStep(mapped);
-          }
-
-          // Message de succès
-          setImportSuccess(true);
-          setTimeout(() => setImportSuccess(false), 3000);
-        } else {
-          alert('Ce fichier n\'est pas une itération valide');
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
-        alert('Erreur lors de l\'import du fichier');
-      }
-    };
-    reader.readAsText(file);
-
-    // Import réussi
-  }, []);
 
   const handleExportJSON = useCallback(() => {
     // ─── 🔒 VERROU DE SÉCURITÉ — Validation des operationId (graphiques PRIMAIRES uniquement) ───
@@ -1411,64 +878,6 @@ function AbacBuilderComponent(
     sessionClosedRef.current = true;
   }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases, sessionRef]);
 
-  const handleImportJSON = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const importedData = JSON.parse(e.target?.result as string);
-
-        // Vérifier la version
-        if (importedData.version && importedData.graphs) {
-          // Importer les graphiques avec détection automatique du vent
-          const updatedGraphs = importedData.graphs.map((graph: GraphConfig) => ({
-            ...graph,
-            isWindRelated: graph.isWindRelated !== undefined ? graph.isWindRelated : isWindRelatedGraph(graph)
-          }));
-
-          setGraphs(updatedGraphs);
-
-          // Restaurer les métadonnées
-          if (importedData.metadata) {
-            if (importedData.metadata.systemType) {
-              setSystemType(importedData.metadata.systemType);
-            }
-            // Utiliser aircraftModel en priorité, sinon utiliser le modelName importé
-            // Vérifier que modelName n'est pas une description complète (ne contient pas "pour")
-            if (importedData.metadata.modelName && !aircraftModel && !importedData.metadata.modelName.includes(' pour ')) {
-              setModelNameInput(importedData.metadata.modelName);
-            } else if (importedData.metadata.aircraftModel && !aircraftModel) {
-              // Utiliser le champ aircraftModel s'il existe
-              setModelNameInput(importedData.metadata.aircraftModel);
-            }
-            // Si un modèle d'avion est fourni par le wizard, l'utiliser en priorité
-            if (importedData.metadata.aircraftModel) {
-              setAircraftModelDisplay(importedData.metadata.aircraftModel);
-            }
-          }
-
-          if (updatedGraphs.length > 0) {
-            setSelectedGraphId(updatedGraphs[0].id);
-          }
-
-          setCurrentStep('points');
-          setImportSuccess(true);
-          setTimeout(() => setImportSuccess(false), 3000);
-        } else {
-          alert('Format de fichier non reconnu');
-        }
-      } catch (error) {
-        console.error('Erreur lors de l\'import:', error);
-        alert('Erreur lors de l\'import du fichier');
-      }
-    };
-    reader.readAsText(file);
-
-    // Reset le champ fichier
-    event.target.value = '';
-  }, [aircraftModel]);
 
 const renderStepContent = () => {
     switch (currentStep) {
@@ -1525,9 +934,6 @@ const renderStepContent = () => {
           const idToRemove = currentGraphForWizard.id;
           setWorkshop(prev => ({ ...prev, frames: prev.frames.filter(f => f.graphId !== idToRemove) }));
           setGraphs(prev => prev.filter(g => g.id !== idToRemove));
-          setBackgroundImages(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
-          setCustomAxisTicks(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
-          setChartSizes(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
           setSubStepGraphIndex(i => Math.max(0, i - 1));
           setSelectedCurveId(null);
         };
@@ -1742,7 +1148,6 @@ const renderStepContent = () => {
                 « Créer un cadre par graphe » (D4, non destructif). */}
             {workshop.frames.length > 0 && (
             <AbacGraphWizard
-              atelierMode
               bezierActive={!!bezierSession}
               onStartBezier={startBezierSession}
               onApplyBezier={applyBezierSession}
@@ -1750,39 +1155,8 @@ const renderStepContent = () => {
               onEditorModeChange={setWizardEditorMode}
               editorModeCommand={wizardModeCommand}
               graph={currentGraphForWizard}
-              graphIndex={subStepGraphIndex}
               totalGraphs={graphs.length}
-              backgroundImage={backgroundImages[currentGraphForWizard.id] || null}
-              customAxisTicks={customAxisTicks[currentGraphForWizard.id]}
-              chartSize={{ width: getChartWidth(currentGraphForWizard.id), height: getChartHeight(currentGraphForWizard.id) }}
               selectedCurveId={selectedCurveId}
-              onUpdateGraph={updateCurrentGraph}
-              onSetBackgroundImage={(img) => {
-                setBackgroundImages(prev => {
-                  if (img === null) { const { [currentGraphForWizard.id]: _, ...rest } = prev; return rest; }
-                  return { ...prev, [currentGraphForWizard.id]: img };
-                });
-              }}
-              onSetCustomAxisTicks={(axis, ticks) => {
-                setCustomAxisTicks(prev => {
-                  const cur = prev[currentGraphForWizard.id] || {};
-                  if (ticks === null) {
-                    const { [axis]: _, ...rest } = cur;
-                    if (Object.keys(rest).length === 0) {
-                      const { [currentGraphForWizard.id]: __, ...others } = prev;
-                      return others;
-                    }
-                    return { ...prev, [currentGraphForWizard.id]: rest };
-                  }
-                  return { ...prev, [currentGraphForWizard.id]: { ...cur, [axis]: ticks } };
-                });
-              }}
-              onSetChartSize={(size) => {
-                setChartSizes(prev => {
-                  if (size === null) { const { [currentGraphForWizard.id]: _, ...rest } = prev; return rest; }
-                  return { ...prev, [currentGraphForWizard.id]: size };
-                });
-              }}
               onSelectCurve={setSelectedCurveId}
               onAddCurve={handleAddCurve}
               onRemoveCurve={handleRemoveCurve}
@@ -1791,26 +1165,8 @@ const renderStepContent = () => {
               onPointClick={handlePointClick}
               onPointDrag={handlePointDrag}
               onPointDelete={handlePointDelete}
-              onPreviousGraph={() => {
-                if (subStepGraphIndex > 0) setSubStepGraphIndex(subStepGraphIndex - 1);
-                else if (onBack) onBack();
-              }}
-              onNextGraph={() => {
-                if (subStepGraphIndex < graphs.length - 1) setSubStepGraphIndex(subStepGraphIndex + 1);
-              }}
-              onAddGraph={addGraphToWorkshop}
-              onRemoveGraph={() => {
-                const idToRemove = currentGraphForWizard.id;
-                const newIndex = Math.max(0, subStepGraphIndex - (subStepGraphIndex >= graphs.length - 1 ? 1 : 0));
-                setGraphs(prev => prev.filter(g => g.id !== idToRemove));
-                setBackgroundImages(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
-                setCustomAxisTicks(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
-                setChartSizes(prev => { const { [idToRemove]: _, ...rest } = prev; return rest; });
-                setSubStepGraphIndex(newIndex);
-                setSelectedCurveId(null);
-              }}
               onFinish={() => {
-                handleFitAll({ method: interpolationMethod, numPoints: interpolationPoints });
+                handleFitAll({ method: INTERPOLATION_METHOD, numPoints: INTERPOLATION_POINTS });
                 setCurrentStep('final');
               }}
             />
@@ -1823,19 +1179,6 @@ const renderStepContent = () => {
       //  AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md : jamais atteignables depuis SPRINT B.)
 
       case 'final':
-        graphs.forEach(graph => {
-          console.log('Graph:', {
-            name: graph.name,
-            curves: graph.curves.length,
-            points: graph.curves.map(c => ({
-              name: c.name,
-              originalPoints: c.points?.length,
-              fittedPoints: c.fitted?.points?.length || 0,
-              rmse: c.fitted?.rmse
-            }))
-          });
-        });
-
         return (
           <div className={styles.stepContent}>
             <h2>Étape 3: Validation finale</h2>
@@ -1852,7 +1195,9 @@ const renderStepContent = () => {
                   Configuration du système
                 </h3>
                 <div style={{ fontSize: 'var(--fs-body)', lineHeight: '1.6' }}>
-                  <div><strong>Type de système :</strong> {SYSTEM_TYPES.find(t => t.value === systemType)?.label}</div>
+                  {/* Lot 0 — systemType est un operationId depuis SPRINT B+ : lecture via le
+                      catalogue canonique, repli SYSTEM_TYPES pour les vieux modèles. */}
+                  <div><strong>Type de système :</strong> {getOperation(systemType)?.labelFr || SYSTEM_TYPES.find(t => t.value === systemType)?.label}</div>
                   <div><strong>Modèle d'avion :</strong> {aircraftModel || modelNameInput || 'Non spécifié'}</div>
                   <div><strong>Identifiant système :</strong> <code>{systemType}</code></div>
                   <div style={{ marginTop: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
@@ -1861,105 +1206,6 @@ const renderStepContent = () => {
                 </div>
               </div>
 
-              {/* Filtre pour les courbes vent - visible uniquement si au moins un graphique est lié au vent */}
-              {false && graphs.some(g => g.isWindRelated) && (
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '10px',
-                  backgroundColor: 'var(--bg-overlay)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--accent-primary)'
-                }}>
-                  <h3 style={{ margin: '0 0 12px 0', color: 'var(--accent-primary)' }}>
-                    💨 Filtrer les courbes par direction du vent
-                  </h3>
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{
-                      display: 'flex',
-                      gap: '12px',
-                      flexWrap: 'wrap'
-                    }}>
-                      <button
-                        onClick={() => setWindFilter('all')}
-                        style={{
-                          padding: '8px 16px',
-                          fontSize: 'var(--fs-body)',
-                          backgroundColor: windFilter === 'all' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                          color: windFilter === 'all' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
-                          border: '2px solid var(--accent-primary)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: windFilter === 'all' ? 'bold' : 'normal',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        🌐 Toutes les courbes
-                      </button>
-                      <button
-                        onClick={() => setWindFilter('headwind')}
-                        style={{
-                          padding: '8px 16px',
-                          fontSize: 'var(--fs-body)',
-                          backgroundColor: windFilter === 'headwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                          color: windFilter === 'headwind' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
-                          border: '2px solid var(--accent-primary)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: windFilter === 'headwind' ? 'bold' : 'normal',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        ⬅️ Vent de face (Headwind)
-                      </button>
-                      <button
-                        onClick={() => setWindFilter('tailwind')}
-                        style={{
-                          padding: '8px 16px',
-                          fontSize: 'var(--fs-body)',
-                          backgroundColor: windFilter === 'tailwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                          color: windFilter === 'tailwind' ? 'var(--bg-overlay)' : 'var(--accent-primary)',
-                          border: '2px solid var(--accent-primary)',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: windFilter === 'tailwind' ? 'bold' : 'normal',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        ➡️ Vent arrière (Tailwind)
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{
-                    fontSize: 'var(--fs-body)',
-                    color: 'var(--text-secondary)',
-                    backgroundColor: 'var(--bg-overlay)',
-                    padding: '8px',
-                    borderRadius: '4px'
-                  }}>
-                    {windFilter === 'all' && (
-                      <>
-                        <strong>Mode actuel :</strong> Affichage de toutes les courbes
-                        <br />
-                        Les graphiques ci-dessous montrent toutes les courbes, quel que soit le type de vent.
-                      </>
-                    )}
-                    {windFilter === 'headwind' && (
-                      <>
-                        <strong>Mode actuel :</strong> Courbes avec vent de face uniquement
-                        <br />
-                        Les graphiques ci-dessous affichent uniquement les courbes correspondant à un vent de face.
-                      </>
-                    )}
-                    {windFilter === 'tailwind' && (
-                      <>
-                        <strong>Mode actuel :</strong> Courbes avec vent arrière uniquement
-                        <br />
-                        Les graphiques ci-dessous affichent uniquement les courbes correspondant à un vent arrière.
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
 
 
               {/* Affichage des graphiques en colonne */}
@@ -1989,22 +1235,7 @@ const renderStepContent = () => {
                 padding: 8
               }}>
                 {graphs.map(graph => {
-                  // Appliquer le filtre vent si le graphique est lié au vent
-                  let displayCurves = graph.curves;
-                  if (graph.isWindRelated && windFilter !== 'all') {
-                    displayCurves = graph.curves.filter(curve => {
-                      if (windFilter === 'headwind') {
-                        return curve.windDirection === 'headwind' ||
-                               curve.name.toLowerCase().includes('headwind') ||
-                               curve.name.toLowerCase().includes('vent de face');
-                      } else if (windFilter === 'tailwind') {
-                        return curve.windDirection === 'tailwind' ||
-                               curve.name.toLowerCase().includes('tailwind') ||
-                               curve.name.toLowerCase().includes('vent arrière');
-                      }
-                      return true;
-                    });
-                  }
+                  const displayCurves = graph.curves;
 
                   return (
                     <div key={graph.id} style={{ border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '8px', overflow: 'hidden', flex: '0 0 auto', maxWidth: 340 }}>
@@ -2019,7 +1250,7 @@ const renderStepContent = () => {
                             padding: '2px 4px',
                             borderRadius: '3px'
                           }}>
-                            💨 {windFilter === 'headwind' ? 'Face' : windFilter === 'tailwind' ? 'Arrière' : 'Tous'}
+                            💨 Tous
                           </span>
                         )}
                         {graph.linkedFrom && graph.linkedFrom.length > 0 && (
@@ -2054,7 +1285,7 @@ const renderStepContent = () => {
                           backgroundColor: 'var(--bg-overlay)',
                           borderRadius: '4px'
                         }}>
-                          Aucune courbe {windFilter === 'headwind' ? 'vent de face' : 'vent arrière'} dans ce graphique
+                          Aucune courbe vent arrière dans ce graphique
                         </div>
                       )}
                     </div>
@@ -2188,21 +1419,6 @@ const renderStepContent = () => {
         );
     }
   };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 'points':
-        // Au moins une courbe avec 2 points minimum
-        return graphs.some(g => g.curves.some(c => c.points.length >= 2));
-      case 'final':
-        return true;
-      default:
-        return false;
-    }
-  };
-
-  const steps: Step[] = ['points', 'final'];
-  const currentStepIndex = steps.indexOf(currentStep);
 
   return (
     <div className={styles.abacBuilder}>
