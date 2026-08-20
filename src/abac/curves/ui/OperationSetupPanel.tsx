@@ -17,7 +17,7 @@
 import React, { useState } from 'react';
 import { OperationClassifier } from './OperationClassifier';
 import { getOperation } from '../core/operationCatalog';
-import { PlancheType, DEFAULT_PANEL_COUNT } from '../core/plancheSetup';
+import { PlancheType, DEFAULT_PANEL_COUNT, defaultPanelName } from '../core/plancheSetup';
 
 export interface OperationSetupPanelProps {
   /** operationId déjà connu (Modifier / session) — '' pour un set vierge. */
@@ -162,6 +162,7 @@ export const OperationSetupPanel: React.FC<OperationSetupPanelProps> = ({
             return (
               <button
                 key={n}
+                aria-pressed={active}
                 onClick={() => setCountOverride(n)}
                 disabled={disabled}
                 title={disabled
@@ -188,6 +189,12 @@ export const OperationSetupPanel: React.FC<OperationSetupPanelProps> = ({
             Le 1er panneau (à gauche) est l'entrée ; les suivants corrigent la valeur
             {plancheType === 'descendante' ? ' ; le dernier porte les guides de vent et se lit en bas.' : '.'}
           </span>
+        </div>
+        {/* Écho EXPLICITE du choix (retour pilote 20/08 : « on ne comprend pas
+            qu'il va générer deux cadres ») : ce qui sera créé, en toutes
+            lettres, mis à jour à chaque clic. */}
+        <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: 'var(--accent-primary)' }}>
+          → {panelCount} cadre{panelCount > 1 ? 's' : ''} : {Array.from({ length: panelCount }, (_, i) => defaultPanelName(i, panelCount, plancheType)).join(' · ')}
         </div>
       </div>
 
@@ -228,7 +235,7 @@ export const OperationSetupPanel: React.FC<OperationSetupPanelProps> = ({
             marginLeft: 'auto'
           }}
         >
-          {applyMode ? 'Appliquer' : 'Créer les cadres →'}
+          {applyMode ? 'Appliquer' : `Créer les ${panelCount} cadre${panelCount > 1 ? 's' : ''} →`}
         </button>
       </div>
       {blockedReason && (
