@@ -1115,7 +1115,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               Valeur attendue du papier
               <span style={{ fontWeight: 'normal' }}>
                 {' '}(optionnel{(() => {
-                  const u = graphChain[graphChain.length - 1]?.axes?.yAxis?.unit;
+                  const lg = graphChain[graphChain.length - 1];
+                  // Lecture descendante : le résultat sort sur l'axe X.
+                  const u = lg?.readoutAxis === 'x' ? lg?.axes?.xAxis?.unit : lg?.axes?.yAxis?.unit;
                   return u ? <> — <strong>{u}</strong></> : null;
                 })()})
               </span>

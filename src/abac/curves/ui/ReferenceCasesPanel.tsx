@@ -49,8 +49,14 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
   const chain = useMemo(() => buildChain(graphs), [graphs]);
   const results = useMemo(() => runAllReferenceCases(graphs, cases), [graphs, cases]);
   const lastGraph = chain[chain.length - 1];
-  const expectedUnit = lastGraph?.axes?.yAxis?.unit || '';
-  const hasWindGraph = chain.some(g => g.isWindRelated);
+  // Lecture descendante : le résultat (et donc l'attendu papier) sort sur
+  // l'axe X du dernier graphe — l'unité suit (cf. ReferenceCase.expected).
+  const expectedUnit = (lastGraph?.readoutAxis === 'x'
+    ? lastGraph?.axes?.xAxis?.unit
+    : lastGraph?.axes?.yAxis?.unit) || '';
+  // Les graphes en lecture descendante n'ont PAS de direction de vent : le
+  // paramètre signé choisit le guide — ne pas exiger une direction sans objet.
+  const hasWindGraph = chain.some(g => g.isWindRelated && g.readoutAxis !== 'x');
 
   // ─── Formulaire d'ajout ───
   const [formOpen, setFormOpen] = useState(false);
