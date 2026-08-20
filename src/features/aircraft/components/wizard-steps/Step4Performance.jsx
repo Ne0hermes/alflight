@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import PerformanceWizard from '../PerformanceWizard';
 import AdvancedPerformanceAnalyzer from '../AdvancedPerformanceAnalyzer';
+// Lot 0 — la voie « abaques » (nouvel abaque / édition d'un modèle) monte
+// l'atelier DIRECTEMENT, sans transiter par PerformanceWizard.
+import { AbacBuilder } from '../../../../abac/curves/ui/AbacBuilder';
 import { Button, Box, Checkbox } from '@mui/material';
 import {
-  ChevronRight as ChevronRightIcon,
-  ChevronLeft as ChevronLeftIcon,
   FileDownload as FileDownloadIcon,
   FileUpload as FileUploadIcon,
   Flight as FlightIcon
@@ -23,7 +24,10 @@ import PerformanceCorrectionsEditor from '../PerformanceCorrectionsEditor';
 import ImportPerformanceFromAircraftDialog from '../ImportPerformanceFromAircraftDialog';
 import { PERF_BYPASS_PREFIX } from '../../utils/performanceCoverage';
 
-const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav, abacSessionRef }) => {
+// Lot 0 — props mortes retirées de la signature : setIsEditingAbaque,
+// setOnConstruireCourbes, setCurrentStep, onNext, onPrevious n'ont JAMAIS été
+// passées par AircraftCreationWizard (unique site de montage, l.1518).
+const Step4Performance = ({ data, updateData, errors = {}, registerStepNav, abacSessionRef }) => {
   // ─── Session d'atelier restaurée ──────────────────────────────────────────
   // Ce composant est démonté au moindre Précédent/Suivant de l'assistant avion :
   // sans reprise, on retombait TOUJOURS sur le récapitulatif (effet de montage
@@ -65,22 +69,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   
   
 
-  // Mettre à jour le callback "Construire les courbes" quand setOnConstruireCourbes change
-  useEffect(() => {
-    if (setOnConstruireCourbes) {
-      
-      setOnConstruireCourbes(() => () => {
-        
-        if (abacBuilderRef.current) {
-          
-          abacBuilderRef.current.goToNextStep();
-        } else {
-          
-        }
-      });
-    }
-  }, [setOnConstruireCourbes]); // Ne pas inclure abacBuilderRef dans les dépendances
-
   // ─── Contrat de navigation en cascade (pied de page unique) ────────────────
   // Quand on édite un tableau (vue editingTables), "Précédent"/"Suivant" du
   // pied de page reviennent d'abord à la liste des tableaux. On ne change
@@ -112,10 +100,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     // localStorage ont déjà eu lieu au premier montage de cette session.
     if (H) return;
 
-    // Désactiver le mode édition quand on monte le composant avec des données existantes
-    if (setIsEditingAbaque && (data.advancedPerformance || data.performanceTables || data.performanceModels)) {
-      setIsEditingAbaque(false);
-    }
     // Vérifier si des données existent déjà dans le wizard
     if (data.advancedPerformance || data.performanceTables || data.performanceModels) {
       // 🔧 Migration: Normaliser les types de modèles anciens 'abac' vers 'abaque'
@@ -440,32 +424,26 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       try { localStorage.removeItem('wizard_performance_temp'); } catch { /* noop */ }
     }
 
-    // Navigation automatique vers l'étape suivante (équipement)
+    // ─── Lot 0 — retour VISIBLE au récapitulatif après un save d'abaque ─────
+    // L'ancienne « navigation automatique » dépendait d'un prop onNext jamais
+    // passé par AircraftCreationWizard : l'écran ne bougeait pas. Désormais :
+    // snapshot local mis à jour (le récapitulatif lit savedPerformanceData),
+    // sortie des modes atelier/édition, retour au récapitulatif Performance.
+    // AbacBuilder a effacé la partie `atelier` de la session au même moment ;
+    // la partie `pdf` (pages MANEX rendues) est volontairement conservée, et
+    // la partie `host` est re-déposée par l'effet de persistance avec l'état
+    // « récapitulatif » + le snapshot à jour — le récap reste donc correct
+    // même après un démontage/remontage de l'étape.
     if (performanceData.abacCurves) {
-      // ─── Fin de session d'atelier ── l'enregistrement final clôt la partie
-      // hôte de la session : au prochain passage sur l'étape, l'effet de
-      // montage reprend la main et affiche le récapitulatif À JOUR (AbacBuilder
-      // a retiré la partie `atelier` de son côté au même moment). La partie
-      // `pdf` (pages MANEX rendues) est volontairement conservée : coûteuse à
-      // régénérer et sans risque de doublon.
-      if (abacSessionRef?.current) {
-        abacSessionRef.current = { ...abacSessionRef.current, host: null };
-      }
-
-      // Dans les deux cas (création ou modification), naviguer vers l'étape équipement
-      const action = performanceData.editingModelIndex !== undefined ? 'modifié' : 'créé';
-      
-      if (onNext) {
-        onNext();
-      }
-    }
-
-    // Navigation automatique pour les performances avancées (tables)
-    if (performanceData.advancedPerformance?.extractionMetadata?.completedAt) {
-      
-      if (onNext) {
-        setTimeout(() => onNext(), 500); // Petit délai pour laisser la sauvegarde se terminer
-      }
+      setSavedPerformanceData(prev => ({
+        ...(prev || {}),
+        performanceModels: dataToSave.performanceModels,
+        editingModel: null,
+        editingModelIndex: null
+      }));
+      setDirectNewAbaque(false);
+      setShowExistingData(true);
+      setForceShowSummary(true);
     }
   };
 
@@ -1051,8 +1029,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={() => {
-
-                      // Stocker l'abaque à modifier et ouvrir le wizard
+                      // Lot 0 — stocker l'abaque à modifier : l'atelier
+                      // AbacBuilder est monté DIRECTEMENT au prochain rendu
+                      // (plus de transit par PerformanceWizard ni de
+                      // wizardStep intermédiaire).
                       setSavedPerformanceData({
                         ...savedPerformanceData,
                         editingModel: model,
@@ -1060,24 +1040,6 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                       });
                       setShowExistingData(false);
                       setForceShowSummary(false);
-                      setWizardStep(2); // Démarrer à l'étape 2 (le wizard redirigera automatiquement vers l'étape 4 en mode édition)
-                      // Notifier le wizard principal qu'on est en mode édition
-                      if (setIsEditingAbaque) {
-                        setIsEditingAbaque(true);
-                      }
-                      // Fournir une fonction pour avancer dans le wizard de performance
-                      if (setOnConstruireCourbes) {
-                        setOnConstruireCourbes(() => () => {
-                          // Cette fonction sera appelée par le bouton "Construire les courbes"
-
-                          if (abacBuilderRef.current) {
-
-                            abacBuilderRef.current.goToNextStep();
-                          } else {
-
-                          }
-                        });
-                      }
                     }}
                     style={{
                       flex: 1,
@@ -1389,66 +1351,79 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
           onChange={(list) => updateData('performanceCorrections', list)}
         />
 
-        {/* Boutons de navigation */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-          {/* Bouton Précédent */}
-          {onPrevious && (
-            <Button
-              variant="outlined"
-              color="primary"
-              size="large"
-              onClick={onPrevious}
-              startIcon={<ChevronLeftIcon />}
-            >
-              Précédent
-            </Button>
-          )}
-
-          {/* Bouton Suivant */}
-          {onNext && (
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={onNext}
-              endIcon={<ChevronRightIcon />}
-            >
-              Suivant
-            </Button>
-          )}
-        </Box>
+        {/* Lot 0 — boutons Précédent/Suivant supprimés : ils dépendaient des
+            props onPrevious/onNext jamais passées (jamais rendus). La
+            navigation d'étape appartient au pied de page global du wizard. */}
       </div>
     );
   }
 
-  // Sinon, afficher le wizard de création/édition
-  // Si on édite un abaque existant, passer ses données
-  // Si on édite des tableaux, passer les données des tableaux
-  // Sinon, ne pas passer de données initiales pour éviter le saut automatique à l'étape 4
-  // R5 — « Nouvel abaque » : saut DIRECT vers l'atelier image unique (priorité).
-  const wizardInitialData = directNewAbaque
-    ? { directToBuilder: true }
-    : savedPerformanceData?.editingModel
-    ? {
-        abacCurves: savedPerformanceData.editingModel.data,
-        editingModelIndex: savedPerformanceData.editingModelIndex
-      }
-    : savedPerformanceData?.editingTables
-    ? {
-        advancedPerformance: {
-          tables: savedPerformanceData.editingTables.tables,
-          extractionMetadata: {
-            classification: savedPerformanceData.editingTables.classification,
-            editMode: true
-          }
-        }
-      }
-    : null;
+  // ─── Annulation depuis l'atelier abaques ou le wizard ─────────────────────
+  // Comportement conservé : retour au récapitulatif si des données existent.
+  // Partagé entre le onBack de l'AbacBuilder monté en direct (ci-dessous) et
+  // le onCancel de PerformanceWizard (voie « Ajouter des données »).
+  const handleAbacCancel = () => {
+    // R5 — sortir du mode « Nouvel abaque direct » en quittant l'atelier
+    setDirectNewAbaque(false);
 
-  
-  
-  
-    // Si on édite des tableaux, afficher directement l'AdvancedPerformanceAnalyzer
+    // Si on a des données de performance, revenir à la vue récapitulative
+    if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
+      setShowExistingData(true);
+      setForceShowSummary(true);
+      // Nettoyer le mode édition
+      setSavedPerformanceData({
+        ...savedPerformanceData,
+        editingModel: null,
+        editingModelIndex: null
+      });
+    }
+  };
+
+  // ─── Lot 0 — voie « abaques » : montage DIRECT de l'AbacBuilder ───────────
+  // « ➕ Nouvel abaque » (directNewAbaque) et « Modifier » un modèle d'abaque
+  // existant (editingModel) ne transitent plus par PerformanceWizard, qui ne
+  // servait qu'à sauter à son étape 4 — même motif que editingTables plus bas,
+  // qui monte déjà AdvancedPerformanceAnalyzer directement.
+  // Props reprises à l'identique du montage PerformanceWizard → AbacBuilder
+  // (le prop `aircraft` n'est pas repris : absent d'AbacBuilderProps, ignoré).
+  if (directNewAbaque || savedPerformanceData?.editingModel) {
+    // Priorité au « Nouvel abaque » (même précédence qu'avant : atelier vierge).
+    const editingModel = directNewAbaque ? null : savedPerformanceData.editingModel;
+    return (
+      <div>
+        {renderExcelActions()}
+        <AbacBuilder
+          ref={handleAbacBuilderRefCallback}
+          onSave={(abacData) => {
+            // Du wrapper onSave de PerformanceWizard on ne conserve que ce que
+            // handlePerformanceUpdate consomme réellement pour un abaque :
+            //  - classification / classificationValue dérivées des métadonnées
+            //    du set (systemName / systemType) — mêmes valeurs qu'avant ;
+            //  - editingModelIndex (édition en place).
+            // Éliminés : le flightManual factice « Manuel existant » (persisté,
+            // il devenait un manex bidon à l'enregistrement final de la fiche)
+            // et le systemType hérité des pages MANEX (pageSystemTypes) —
+            // handlePerformanceUpdate retombe sur 'abaque' / le type existant.
+            handlePerformanceUpdate({
+              abacCurves: abacData,
+              classification: abacData?.metadata?.systemName || 'Non classifié',
+              classificationValue: abacData?.metadata?.systemName
+                ? (abacData.metadata.systemType || '')
+                : '',
+              editingModelIndex: editingModel ? savedPerformanceData.editingModelIndex : undefined
+            });
+          }}
+          onBack={handleAbacCancel}
+          initialData={editingModel?.data || null}
+          modelName={editingModel?.data?.metadata?.modelName || null}
+          aircraftModel={aircraft?.model || null}
+          sessionRef={abacSessionRef}
+        />
+      </div>
+    );
+  }
+
+  // Si on édite des tableaux, afficher directement l'AdvancedPerformanceAnalyzer
   if (savedPerformanceData?.editingTables) {
     // Callback pour retour
     const handleRetour = () => {
@@ -1466,7 +1441,15 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
         {renderExcelActions()}
         <AdvancedPerformanceAnalyzer
           aircraft={aircraft}
-          initialData={wizardInitialData}
+          initialData={{
+            advancedPerformance: {
+              tables: savedPerformanceData.editingTables.tables,
+              extractionMetadata: {
+                classification: savedPerformanceData.editingTables.classification,
+                editMode: true
+              }
+            }
+          }}
           hideInternalNav={true}
           onRetourClick={handleRetour}
           onPerformanceUpdate={(updatedData) => {
@@ -1576,7 +1559,10 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     );
   }
 
-  // Sinon, afficher le wizard de création/édition
+  // Sinon, afficher le wizard « Ajouter des données de performance » (choix de
+  // type + extraction de tableaux). Les chemins abaques (nouvel abaque /
+  // édition d'un modèle) sont montés directement plus haut : initialData est
+  // donc toujours null ici.
   // Le banner Excel est affiché EN HAUT pour rester accessible (export
   // possible si des modèles existent, sinon orientation vers l'extraction).
   return (
@@ -1585,30 +1571,11 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
       <PerformanceWizard
         aircraft={aircraft}
         onPerformanceUpdate={handlePerformanceUpdate}
-        initialData={wizardInitialData}
+        initialData={null}
         startAtStep={wizardStep}
         sessionRef={abacSessionRef}
         abacBuilderRefCallback={handleAbacBuilderRefCallback}
-        onCancel={() => {
-          // R5 — sortir du mode « Nouvel abaque direct » en quittant l'atelier
-          setDirectNewAbaque(false);
-
-          // Si on a des données de performance, revenir à la vue récapitulative
-          if (savedPerformanceData && (data.performanceModels?.length > 0 || data.advancedPerformance || data.performanceTables)) {
-            setShowExistingData(true);
-            setForceShowSummary(true);
-            // Nettoyer le mode édition
-            setSavedPerformanceData({
-              ...savedPerformanceData,
-              editingModel: null,
-              editingModelIndex: null
-            });
-            // Désactiver le mode édition dans le wizard principal
-            if (setIsEditingAbaque) {
-              setIsEditingAbaque(false);
-            }
-          }
-        }}
+        onCancel={handleAbacCancel}
       />
     </div>
   );

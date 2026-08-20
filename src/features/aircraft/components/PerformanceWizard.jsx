@@ -121,7 +121,6 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
   const [manualFile, setManualFile] = useState(S?.manualFile ?? null);
   const [extractedPages, setExtractedPages] = useState(S?.extractedPages ?? []);
   const [selectedPages, setSelectedPages] = useState(S?.selectedPages ?? []);
-  const [autoExtractPages, setAutoExtractPages] = useState(null);
   const [performanceType, setPerformanceType] = useState(navRestored ? (S.performanceType ?? null) : null);
   const [pageSystemTypes, setPageSystemTypes] = useState(S?.pageSystemTypes ?? {}); // Type de système pour chaque page (table ou abaque)
   const [isProcessing, setIsProcessing] = useState(false);
@@ -202,33 +201,11 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
         return;
       }
 
-      // Si on a des tables/performances avancées
-      if (initialData.advancedPerformance || initialData.performanceTables) {
-        
-
-        // Créer des pages factices pour l'étape 2
-        const mockPages = [];
-        if (initialData.performanceTables) {
-          initialData.performanceTables.forEach((table, index) => {
-            mockPages.push({
-              pageNumber: index + 1,
-              image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-              category: table.table_type || 'performance'
-            });
-          });
-        }
-
-        if (mockPages.length > 0) {
-          setExtractedPages(mockPages);
-          setSelectedPages(mockPages.map((_, index) => index));
-          
-        }
-
-        setManualFile({ name: 'Manuel existant', restored: true });
-        setPerformanceType('tables');
-        setCurrentStep(4); // ✅ Changement d'état UNIQUE vers l'étape 4
-        return;
-      }
+      // ⚠️ Lot 0 — branche legacy supprimée : initialData.advancedPerformance /
+      // performanceTables fabriquait des pages factices base64 1×1 px et menait
+      // à l'écran blanc (currentStep=4 + performanceType='tables' → switch sans
+      // case). Inatteignable : Step4Performance intercepte editingTables avant
+      // ce wizard et monte AdvancedPerformanceAnalyzer directement.
 
       // Cas par défaut
       
@@ -544,19 +521,6 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
     extractPagesFromManex();
   }, [currentStep, extractedPages.length, aircraft]);
 
-  // Navigation vers l'outil approprié
-  const handleToolSelection = async (type) => {
-    setPerformanceType(type);
-
-    if (type === 'tables') {
-      // Pour les tableaux, aller à l'étape 3 (sélection des pages)
-      setCurrentStep(3);
-    } else if (type === 'abacs') {
-      // Pour les abaques, aller directement à l'étape 4 (construction manuelle)
-      setCurrentStep(4);
-    }
-  };
-
   // Rendu des étapes
   const renderStep = () => {
     
@@ -783,7 +747,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                     });
                   }
                 }}
-                preloadedImages={autoExtractPages || extractedPages
+                preloadedImages={extractedPages
                   .filter((_, idx) => selectedPages.includes(idx))
                   .map((page, i) => {
                     const originalIndex = selectedPages[i];
