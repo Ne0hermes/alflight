@@ -13,7 +13,7 @@
 import React from 'react';
 import { GraphConfig } from '../core/types';
 import { getOperation } from '../core/operationCatalog';
-import { getAxisVariable, getAxisVariablesGroupedFor, isWindAxisVariable } from '../core/axisVariables';
+import { getAxisVariable, getFamilyVariablesGrouped, isWindAxisVariable } from '../core/axisVariables';
 // R23 — le classifieur 3-listes (Phase/Métrique/Volets) est extrait en
 // composant partagé, réutilisé aussi par l'extraction MANEX par tableau.
 import { OperationClassifier } from './OperationClassifier';
@@ -89,28 +89,44 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
         >
           Variable de famille des courbes
         </span>
-        <select
-          value={graph.familyAxisVariable || ''}
-          onChange={(e) => {
-            const varId = e.target.value || undefined;
-            // Famille vent → active isWindRelated (débloque les tags face /
-            // arrière des courbes) ; jamais désactivé automatiquement.
-            onUpdateGraph({
-              familyAxisVariable: varId,
-              ...(isWindAxisVariable(varId) && !graph.isWindRelated ? { isWindRelated: true } : {})
-            });
-          }}
-          style={{ ...selectStyle, flex: 1, minWidth: 220 }}
-        >
-          <option value="">— héritée des noms de courbes (fragile) —</option>
-          {getAxisVariablesGroupedFor('x').map(g => (
-            <optgroup key={g.category} label={g.label}>
-              {g.items.map(v => (
-                <option key={v.id} value={v.id}>{v.label}{v.defaultUnit ? ` (${v.defaultUnit})` : ''}</option>
+        {(() => {
+          // Lot 1-A — liste COURTE des variables de FAMILLE (une famille n'est
+          // pas un axe : la liste d'axe X entretenait la confusion). Valeur
+          // stockée hors liste courte : injectée en tête avec son label normal
+          // si connue du catalogue, avec « ⚠ … (legacy) » si inconnue.
+          const groups = getFamilyVariablesGrouped();
+          const stored = graph.familyAxisVariable || '';
+          const known = getAxisVariable(stored);
+          const inShortList = groups.some(g => g.items.some(v => v.id === stored));
+          return (
+            <select
+              value={stored}
+              onChange={(e) => {
+                const varId = e.target.value || undefined;
+                // Famille vent → active isWindRelated (débloque les tags face /
+                // arrière des courbes) ; jamais désactivé automatiquement.
+                onUpdateGraph({
+                  familyAxisVariable: varId,
+                  ...(isWindAxisVariable(varId) && !graph.isWindRelated ? { isWindRelated: true } : {})
+                });
+              }}
+              style={{ ...selectStyle, flex: 1, minWidth: 220 }}
+            >
+              <option value="">— héritée des noms de courbes (fragile) —</option>
+              {stored !== '' && !known && <option value={stored}>⚠ {stored} (legacy)</option>}
+              {known && !inShortList && (
+                <option value={known.id}>{known.label}{known.defaultUnit ? ` (${known.defaultUnit})` : ''}</option>
+              )}
+              {groups.map(g => (
+                <optgroup key={g.category} label={g.label}>
+                  {g.items.map(v => (
+                    <option key={v.id} value={v.id}>{v.label}{v.defaultUnit ? ` (${v.defaultUnit})` : ''}</option>
+                  ))}
+                </optgroup>
               ))}
-            </optgroup>
-          ))}
-        </select>
+            </select>
+          );
+        })()}
         {(() => {
           const fam = getAxisVariable(graph.familyAxisVariable);
           return fam?.defaultUnit

@@ -53,37 +53,49 @@ export interface AxisVariable {
   units?: string[];
   /** Description courte pour tooltip. */
   description?: string;
+  /**
+   * Lot 1-A (décision pilote 20/08) — cœur perf : seules les variables
+   * marquées `perfCore` sont PROPOSÉES dans les listes déroulantes vivantes
+   * de l'atelier. La préparation de vol ne sait router que 4 familles
+   * d'entrée (température, altitude pression, masse, vent) ; toute autre
+   * entrée rend le modèle incalculable en vol. Les entrées non marquées
+   * RESTENT dans le catalogue (ids persistés, affichage des vieux modèles)
+   * mais ne sont plus offertes à la création.
+   */
+  perfCore?: boolean;
 }
 
 export const AXIS_VARIABLES: AxisVariable[] = [
   // === Environnement (INPUT) ===
-  { id: 'oat',                label: 'Température extérieure (OAT)', symbol: 'OAT', category: 'environment', axisRole: 'input', defaultUnit: '°C', units: ['°C', '°F'] },
+  { id: 'oat',                label: 'Température extérieure (OAT)', symbol: 'OAT', category: 'environment', axisRole: 'input', defaultUnit: '°C', units: ['°C', '°F'], perfCore: true },
   { id: 'qnh',                label: 'QNH',                          symbol: 'QNH', category: 'environment', axisRole: 'input', defaultUnit: 'hPa', units: ['hPa', 'inHg'] },
   { id: 'humidity',           label: 'Humidité relative',                            category: 'environment', axisRole: 'input', defaultUnit: '%' },
   { id: 'runway_slope',       label: 'Pente de piste',                               category: 'environment', axisRole: 'input', defaultUnit: '%' },
   { id: 'runway_condition',   label: 'État de piste',                                category: 'environment', axisRole: 'input', defaultUnit: '' },
 
   // === Altitude (INPUT, mais altitude peut être sortie d'un graphe de plafond → both) ===
-  { id: 'pressure_altitude',  label: 'Altitude pression', symbol: 'PA', category: 'altitude', axisRole: 'input', defaultUnit: 'ft', units: ['ft', 'm'] },
+  { id: 'pressure_altitude',  label: 'Altitude pression', symbol: 'PA', category: 'altitude', axisRole: 'input', defaultUnit: 'ft', units: ['ft', 'm'], perfCore: true },
   { id: 'density_altitude',   label: 'Altitude densité',  symbol: 'DA', category: 'altitude', axisRole: 'input', defaultUnit: 'ft', units: ['ft', 'm'] },
   { id: 'altitude',           label: 'Altitude',                        category: 'altitude', axisRole: 'both',  defaultUnit: 'ft', units: ['ft', 'm'] },
 
   // === Masse (INPUT) ===
-  { id: 'mass',               label: 'Masse',                  category: 'weight', axisRole: 'input', defaultUnit: 'kg', units: ['kg', 'lb'] },
+  { id: 'mass',               label: 'Masse',                  category: 'weight', axisRole: 'input', defaultUnit: 'kg', units: ['kg', 'lb'], perfCore: true },
   { id: 'takeoff_weight',     label: 'Masse au décollage',     category: 'weight', axisRole: 'input', defaultUnit: 'kg', units: ['kg', 'lb'] },
   { id: 'landing_weight',     label: 'Masse à l\'atterrissage', category: 'weight', axisRole: 'input', defaultUnit: 'kg', units: ['kg', 'lb'] },
 
   // === Vent (INPUT) ===
-  { id: 'wind_component',     label: 'Composante de vent', category: 'wind', axisRole: 'input', defaultUnit: 'kt', units: ['kt', 'km/h', 'm/s'] },
+  // Lot 1-A : perfCore sur la COMPOSANTE générique uniquement — le sens du
+  // vent (face / arrière) se choisit sur chaque courbe, pas dans la variable.
+  { id: 'wind_component',     label: 'Composante de vent', category: 'wind', axisRole: 'input', defaultUnit: 'kt', units: ['kt', 'km/h', 'm/s'], perfCore: true },
   { id: 'headwind',           label: 'Vent de face',       category: 'wind', axisRole: 'input', defaultUnit: 'kt', units: ['kt', 'km/h', 'm/s'] },
   { id: 'tailwind',           label: 'Vent arrière',       category: 'wind', axisRole: 'input', defaultUnit: 'kt', units: ['kt', 'km/h', 'm/s'] },
   { id: 'crosswind',          label: 'Vent travers',       category: 'wind', axisRole: 'input', defaultUnit: 'kt', units: ['kt', 'km/h', 'm/s'] },
 
   // === Distance (OUTPUT — résultat final d'un abaque primaire) ===
-  { id: 'takeoff_distance_ground',  label: 'Distance de décollage (roulage)',                 category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'] },
-  { id: 'takeoff_distance_50ft',    label: 'Distance de décollage (franchissement 50ft)',     category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'] },
-  { id: 'landing_distance_ground',  label: 'Distance d\'atterrissage (roulage)',              category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'] },
-  { id: 'landing_distance_50ft',    label: 'Distance d\'atterrissage (franchissement 50ft)',  category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'] },
+  { id: 'takeoff_distance_ground',  label: 'Distance de décollage (roulage)',                 category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'], perfCore: true },
+  { id: 'takeoff_distance_50ft',    label: 'Distance de décollage (franchissement 50ft)',     category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'], perfCore: true },
+  { id: 'landing_distance_ground',  label: 'Distance d\'atterrissage (roulage)',              category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'], perfCore: true },
+  { id: 'landing_distance_50ft',    label: 'Distance d\'atterrissage (franchissement 50ft)',  category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'], perfCore: true },
   { id: 'accelerate_stop',          label: 'Distance accélération-arrêt',                     category: 'distance', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft'] },
   { id: 'range',                    label: 'Distance franchissable',                          category: 'distance', axisRole: 'output', defaultUnit: 'NM', units: ['NM', 'km'] },
 
@@ -93,7 +105,7 @@ export const AXIS_VARIABLES: AxisVariable[] = [
   { id: 'tas',                label: 'Vitesse vraie (TAS)',    symbol: 'TAS', category: 'speed', axisRole: 'output', defaultUnit: 'kt', units: ['kt', 'km/h', 'mph'] },
   { id: 'gs',                 label: 'Vitesse sol (GS)',       symbol: 'GS',  category: 'speed', axisRole: 'output', defaultUnit: 'kt', units: ['kt', 'km/h', 'mph'] },
   { id: 'mach',               label: 'Nombre de Mach',         symbol: 'M',   category: 'speed', axisRole: 'output', defaultUnit: '' },
-  { id: 'rate_of_climb',      label: 'Taux de montée',         symbol: 'VS',  category: 'speed', axisRole: 'output', defaultUnit: 'ft/min', units: ['ft/min', 'm/s'] },
+  { id: 'rate_of_climb',      label: 'Taux de montée',         symbol: 'VS',  category: 'speed', axisRole: 'output', defaultUnit: 'ft/min', units: ['ft/min', 'm/s'], perfCore: true },
   { id: 'climb_angle',        label: 'Angle de montée',                       category: 'speed', axisRole: 'output', defaultUnit: '°' },
   { id: 'glide_ratio',        label: 'Finesse',                               category: 'speed', axisRole: 'output', defaultUnit: '' },
 
@@ -122,8 +134,10 @@ export const AXIS_VARIABLES: AxisVariable[] = [
   { id: 'correction_factor',                      label: 'Facteur de correction (multiplicatif)',           symbol: 'k',  category: 'intermediate', axisRole: 'output', defaultUnit: '',  description: 'Coefficient sans dimension à appliquer à la distance précédente' },
   { id: 'correction_delta',                       label: 'Correction additive (Δ)',                         symbol: 'Δ',  category: 'intermediate', axisRole: 'output', defaultUnit: 'm', units: ['m', 'ft', '%'], description: 'Valeur à ajouter/soustraire à la distance précédente' },
 
-  // === Autre / Personnalisé (both, fallback libre) ===
-  { id: 'custom',             label: 'Personnalisé (libre)', category: 'other', axisRole: 'both', defaultUnit: '' }
+  // === Autre — axe de transfert (both, unité libre) ===
+  // Lot 1-A : renommé (ex-« Personnalisé (libre) ») — son seul usage réel est
+  // l'axe Y commun des lectures descendantes (transfert entre cadres).
+  { id: 'custom',             label: 'Axe de transfert (sans variable précise)', category: 'other', axisRole: 'both', defaultUnit: '', perfCore: true }
 ];
 
 /** Libellés FR des catégories pour l'UI. */
@@ -185,5 +199,36 @@ export function getAxisVariablesGroupedFor(axis: 'x' | 'y'): Array<{ category: A
   const allowed: AxisRole[] = axis === 'x' ? ['input', 'both'] : ['output', 'both'];
   return getAxisVariablesGrouped()
     .map(g => ({ ...g, items: g.items.filter(v => allowed.includes(v.axisRole)) }))
+    .filter(g => g.items.length > 0);
+}
+
+/**
+ * Lot 1-A — variante CŒUR PERF de `getAxisVariablesGroupedFor` : même
+ * filtrage par rôle d'axe, restreint aux variables `perfCore` (les seules que
+ * la préparation de vol sait router). C'est la liste à brancher sur les
+ * dropdowns VIVANTS de l'atelier ; le catalogue complet reste disponible pour
+ * résoudre/afficher les ids persistés des vieux modèles.
+ */
+export function getAxisVariablesGroupedForCore(axis: 'x' | 'y'): Array<{ category: AxisVariableCategory; label: string; items: AxisVariable[] }> {
+  return getAxisVariablesGroupedFor(axis)
+    .map(g => ({ ...g, items: g.items.filter(v => v.perfCore === true) }))
+    .filter(g => g.items.length > 0);
+}
+
+/**
+ * Lot 1-A — ids proposables comme variable de FAMILLE de courbes (le
+ * paramètre qui distingue les courbes d'un même graphe). Une famille n'est
+ * PAS un axe : réutiliser la liste d'axe X entretenait la confusion (audit).
+ * L'OAT n'y figure pas — c'est l'entrée du premier cadre, jamais la famille.
+ */
+export const FAMILY_VARIABLE_IDS: readonly string[] = ['pressure_altitude', 'mass', 'wind_component'];
+
+/**
+ * Lot 1-A — variables de FAMILLE de courbes, groupées par catégorie (même
+ * forme que `getAxisVariablesGroupedFor` pour réutiliser le rendu optgroup).
+ */
+export function getFamilyVariablesGrouped(): Array<{ category: AxisVariableCategory; label: string; items: AxisVariable[] }> {
+  return getAxisVariablesGrouped()
+    .map(g => ({ ...g, items: g.items.filter(v => FAMILY_VARIABLE_IDS.includes(v.id)) }))
     .filter(g => g.items.length > 0);
 }

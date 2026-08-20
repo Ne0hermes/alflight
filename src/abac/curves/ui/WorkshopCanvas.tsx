@@ -22,7 +22,7 @@ import {
   WorkshopTickCalibration
 } from '../core/types';
 import { BezierSegment } from '../core/bezier';
-import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedFor } from '../core/axisVariables';
+import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedForCore } from '../core/axisVariables';
 
 interface WorkshopCanvasProps {
   workshop: WorkshopConfig;
@@ -202,6 +202,11 @@ const TextFieldMini: React.FC<{ label: string; value: string; onChange: (s: stri
 // préparation de vol (température METAR, masse du devis M&C, vent météo).
 // Texte libre INTERDIT — une saisie hors catalogue ne serait jamais matchée.
 // Les valeurs legacy non canoniques restent affichées avec ⚠ (rétro-compat).
+// Lot 1-A — liste COURTE (perfCore) : seules les variables routables par la
+// prépa vol sont proposées. Une valeur stockée connue du catalogue mais hors
+// liste courte (vieux modèles, ex. « Vent de face ») est INJECTÉE en tête
+// avec son label normal — le préfixe « ⚠ legacy » reste réservé aux ids
+// inconnus du catalogue.
 const VarSelectMini: React.FC<{
   label: string;
   axis: 'x' | 'y';
@@ -209,8 +214,10 @@ const VarSelectMini: React.FC<{
   onChange: (variableId: string) => void;
   width?: number;
 }> = ({ label, axis, value, onChange, width = 200 }) => {
-  const groups = getAxisVariablesGroupedFor(axis);
-  const isKnown = !!getAxisVariable(value);
+  const groups = getAxisVariablesGroupedForCore(axis);
+  const known = getAxisVariable(value);
+  const isKnown = !!known;
+  const inShortList = groups.some(g => g.items.some(v => v.id === value));
   return (
     <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, fontSize: 10, color: !isKnown && value ? 'var(--color-red-critical)' : 'var(--text-secondary)' }}>
       {label}{!isKnown && value ? ' — ⚠ non canonique' : ''}
@@ -224,6 +231,9 @@ const VarSelectMini: React.FC<{
         }}
       >
         {!isKnown && value !== '' && <option value={value}>⚠ {value} (legacy)</option>}
+        {known && !inShortList && (
+          <option value={known.id}>{known.label}{known.defaultUnit ? ` (${known.defaultUnit})` : ''}</option>
+        )}
         {value === '' && <option value="">— Choisir la variable —</option>}
         {groups.map(g => (
           <optgroup key={g.category} label={g.label}>
