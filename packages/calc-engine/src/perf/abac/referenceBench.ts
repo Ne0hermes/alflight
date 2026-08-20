@@ -60,7 +60,9 @@ export function runReferenceCase(graphs: GraphConfig[], rc: ReferenceCase): Refe
     params.push({
       graphId: g.id,
       parameter: p,
-      parameterName: g.axes?.xAxis?.title,
+      // Lecture descendante : le paramètre est la famille des guides (vent
+      // signé), pas l'axe X (qui porte la sortie).
+      parameterName: g.readoutAxis === 'x' ? (g.familyAxisVariable || 'famille') : g.axes?.xAxis?.title,
       ...(g.isWindRelated && rc.windDirection ? { windDirection: rc.windDirection } : {})
     });
   }

@@ -170,3 +170,65 @@ describe('P0 — resolveOperation délègue les abaques au moteur de l’atelier
     expect(result.value).toBeUndefined();
   });
 });
+
+describe('Lecture descendante (readoutAxis: x) — zone d\'atterrissage type Piper', () => {
+  // Zone de sortie : guides de vent étiquetés, distance lue EN BAS (axe X).
+  //   vent nul     x = 150 + y        (fv 0,  none)
+  //   15 kt face   x = 150 + 0.75·y   (fv 15, headwind — plus court)
+  //   5 kt arrière x = 150 + 1.25·y   (fv 5 POSITIF + tag tailwind → −5)
+  const mkZone = () => ({
+    id: 'g2',
+    name: 'Zone course atterrissage',
+    role: 'intermediate',
+    readoutAxis: 'x',
+    isWindRelated: true,
+    familyAxisVariable: 'wind_component',
+    linkedFrom: ['g1'],
+    linkedTo: [],
+    axes: {
+      xAxis: { min: 150, max: 450, step: 50, title: 'landing_distance_ground', unit: 'm' },
+      yAxis: { min: 0, max: 400, step: 100, title: 'custom', unit: '' }
+    },
+    curves: [
+      mkCurve('nul', 0, [[150, 0], [550, 400]], 'none'),
+      mkCurve('face15', 15, [[150, 0], [450, 400]], 'headwind'),
+      mkCurve('arriere5', 5, [[150, 0], [650, 400]], 'tailwind')
+    ]
+  });
+
+  // Entrée : OAT 20 → Y transféré 200 (primaire y = 10 × oat).
+  const base = { mass: 1000, oat: 20, pressureAltitude: 2000 };
+  const run = (hw) => resolveOperation(mkAircraft([mkPrimary('takeoff_50ft'), mkZone()]), 'takeoff_50ft', {
+    ...base, headwind: hw, windComponent: hw, tailwind: -hw
+  });
+
+  it('vent nul : lit la distance sur le guide 0, unité de l\'axe X', () => {
+    const r = run(0);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.value).toBeCloseTo(350, 1); // 150 + 200
+    expect(r.unit).toBe('m');            // unité de l'axe X de la zone
+    expect(r.cascadeSteps[1].used).toBe('readout-x');
+  });
+
+  it('vent de face signé : interpole entre vent nul et 15 kt', () => {
+    const r = run(6);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.value).toBeCloseTo(330, 1); // 350 + 0.4 × (300 − 350)
+  });
+
+  it('vent arrière : tag tailwind lu en négatif, guide exact puis interpolé', () => {
+    const exact = run(-5);
+    expect(exact.status).toBe('COMPUTED');
+    expect(exact.value).toBeCloseTo(400, 1); // 150 + 1.25 × 200
+
+    const between = run(-2);
+    expect(between.status).toBe('COMPUTED');
+    expect(between.value).toBeCloseTo(370, 1); // entre 400 (−5) et 350 (0)
+  });
+
+  it('vent hors des guides tracés : refus fail-closed', () => {
+    const r = run(20);
+    expect(r.status).toBe('ERROR');
+    expect(r.value).toBeUndefined();
+  });
+});

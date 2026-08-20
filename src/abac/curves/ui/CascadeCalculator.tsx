@@ -376,6 +376,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     if (windDirection === 'all') {
       const mixedWindGraph = graphChain.find(g => {
         if (!g.isWindRelated) return false;
+        // Lecture descendante : les guides face + nul + arrière coexistent par
+        // construction — le paramètre SIGNÉ choisit le guide, pas de direction.
+        if (g.readoutAxis === 'x') return false;
         const fams = new Set(
           g.curves
             .map(c => c.windDirection && c.windDirection !== 'none'
@@ -416,6 +419,19 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           parameter: paramValue,
           parameterName: 'Altitude pression'
         });
+      } else if (graph.readoutAxis === 'x') {
+        // Lecture descendante : le paramètre est la valeur de FAMILLE des
+        // guides (ex. vent signé) — l'axe X porte la sortie, ses bornes ne
+        // s'appliquent pas au paramètre ; hors des guides, le moteur refuse.
+        if (isNaN(paramValue)) {
+          setError(`Veuillez entrer un paramètre valide pour ${graph.name} (${graph.familyAxisVariable || 'valeur de famille des guides'})`);
+          return;
+        }
+        graphParameters.push({
+          graphId: graph.id,
+          parameter: paramValue,
+          parameterName: graph.familyAxisVariable || 'famille'
+        });
       } else {
         // Graphiques suivants : paramètre obligatoire
         if (isNaN(paramValue)) {
@@ -424,7 +440,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         }
 
         // Pour un graphique de vent, stocker la direction du vent
-        
+
         // Vérifier si le paramètre est dans les bornes définies du graphique
         if (graph.axes) {
           const xMin = graph.axes.xAxis.min;
@@ -793,8 +809,13 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           </>
         )}
         <div style={styles.detailItem}>
-          Sortie (Y):
+          {graph?.readoutAxis === 'x' ? 'Sortie (X, lue en bas):' : 'Sortie (Y):'}
           <span style={styles.detailValue}> {step.outputValue.toFixed(2)}</span>
+          {graph?.readoutAxis === 'x' && graph?.axes?.xAxis?.unit && (
+            <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginLeft: '4px' }}>
+              {graph.axes.xAxis.unit}
+            </span>
+          )}
         </div>
         {step.curveUsed && (
           <div style={styles.detailItem}>
@@ -901,7 +922,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   <strong>{g.name}</strong>
                   {g.axes && (
                     <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
-                      {' '}({g.axes.xAxis.title} → {g.axes.yAxis.title})
+                      {' '}({g.readoutAxis === 'x'
+                        ? `${g.axes.yAxis.title} → ${g.axes.xAxis.title} ↓`
+                        : `${g.axes.xAxis.title} → ${g.axes.yAxis.title}`})
                     </span>
                   )}
                 </span>
@@ -968,6 +991,14 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         })()}
                       </span>
                     </>
+                  ) : graph.readoutAxis === 'x' ? (
+                    <>
+                      Paramètre pour {graph.name}
+                      <span style={{ fontWeight: 'normal' }}>
+                        {' '}— {getAxisVariableLabel(graph.familyAxisVariable) || 'valeur de famille des guides'}
+                        <strong> (signée : + vent de face, − vent arrière)</strong>
+                      </span>
+                    </>
                   ) : (
                     <>
                       Paramètre pour {graph.name}
@@ -993,7 +1024,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   placeholder={
                     index === 0
                       ? 'Valeur sur l\'échelle des courbes du graphe'
-                      : `Valeur en ${graph.axes?.xAxis.unit || '…'}`
+                      : graph.readoutAxis === 'x'
+                        ? 'Valeur signée (+ face, − arrière)'
+                        : `Valeur en ${graph.axes?.xAxis.unit || '…'}`
                   }
                 />
                 {parameterWarnings[graph.id] && (
@@ -1018,8 +1051,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               </div>
             ))}
 
-            {/* Sélecteur de direction du vent pour les graphiques liés au vent */}
-            {graphChain.some(g => g.isWindRelated) && (
+            {/* Sélecteur de direction du vent pour les graphiques liés au vent
+                (inutile en lecture descendante : le paramètre signé choisit le guide) */}
+            {graphChain.some(g => g.isWindRelated && g.readoutAxis !== 'x') && (
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
                   💨 Direction du vent pour le calcul
@@ -1147,8 +1181,12 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           <div style={styles.finalResult}>
             <div>Valeur finale</div>
             {(() => {
-              const lastAxes = graphChain.length > 0 ? graphChain[graphChain.length - 1].axes : undefined;
-              const unit = lastAxes?.yAxis?.unit || '';
+              const lastGraph = graphChain.length > 0 ? graphChain[graphChain.length - 1] : undefined;
+              const lastAxes = lastGraph?.axes;
+              // Lecture descendante : le résultat sort sur l'axe X du dernier
+              // graphe (échelle des distances, en bas) — unité et titre suivent.
+              const readoutX = lastGraph?.readoutAxis === 'x';
+              const unit = (readoutX ? lastAxes?.xAxis?.unit : lastAxes?.yAxis?.unit) || '';
               // R10 — comparatif systématique dans l'unité opposée (ft ↔ m…)
               const opposite = formatOppositeUnit(result.finalValue, unit);
               return (
@@ -1163,7 +1201,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                   </div>
                   {lastAxes && (
                     <div style={{ fontSize: 'var(--fs-body)', marginTop: '5px' }}>
-                      {lastAxes.yAxis.title}
+                      {readoutX ? `${lastAxes.xAxis.title} (lu sur l'axe X)` : lastAxes.yAxis.title}
                     </div>
                   )}
                   {/* R19 — comparaison LIVE avec la valeur attendue du papier :

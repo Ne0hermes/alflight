@@ -106,6 +106,22 @@ export function evaluateAbacWithAtelierEngine(abaqueData, conditions) {
         parameterName: g.familyAxisVariable || 'Altitude pression'
       };
     }
+    if (g.readoutAxis === 'x') {
+      // Lecture DESCENDANTE (planches d'atterrissage Piper) : l'axe X porte la
+      // SORTIE (distance) — le paramètre du graphe est la valeur de famille
+      // des guides (ex. vent), transmise SIGNÉE (positif = face, négatif =
+      // arrière) : le moteur bracket les guides par valeur signée, sans
+      // découpage magnitude/direction.
+      const famDim = titleToConditionDim(g.familyAxisVariable);
+      let famVal = famDim ? num(conditions?.[famDim]) : null;
+      if (famDim === 'wind') famVal = num(conditions?.wind) ?? 0;
+      if (famVal === null) missing.push(g.familyAxisVariable || `famille de « ${g.name} »`);
+      return {
+        graphId: g.id,
+        parameter: famVal === null ? undefined : famVal,
+        parameterName: g.familyAxisVariable || 'famille'
+      };
+    }
     const dim = titleToConditionDim(g.axes?.xAxis?.title);
     let windDirection;
     let value = dim ? num(conditions?.[dim]) : null;
@@ -148,10 +164,11 @@ export function evaluateAbacWithAtelierEngine(abaqueData, conditions) {
       cascadeOrder: g?.cascadeOrder ?? (i === 0 ? null : i),
       operationId: g?.operationId || null,
       // Méthodes réelles du moteur atelier : famille d'altitude sur le
-      // primaire (bracket), suivi de pente sur les panneaux.
-      mode: i === 0 ? 'bracket' : 'slope-follow',
+      // primaire (bracket), suivi de pente sur les panneaux, lecture
+      // descendante (sortie sur X) sur les zones type atterrissage Piper.
+      mode: i === 0 ? 'bracket' : (g?.readoutAxis === 'x' ? 'readout-x' : 'slope-follow'),
       modeDeclared: true,
-      used: i === 0 ? 'bracket' : 'slope-follow',
+      used: i === 0 ? 'bracket' : (g?.readoutAxis === 'x' ? 'readout-x' : 'slope-follow'),
       xDim: i === 0 ? (primary.axes?.xAxis?.title || entryDim) : (g?.axes?.xAxis?.title || ''),
       xTitle: g?.axes?.xAxis?.title || '',
       yTitle: g?.axes?.yAxis?.title || '',
@@ -182,10 +199,17 @@ export function evaluateAbacWithAtelierEngine(abaqueData, conditions) {
 
   const lastGraph = chain[chain.length - 1];
 
+  // Unité du résultat : celle déclarée par le moteur (axe de sortie réel du
+  // dernier graphe — Y standard, ou X en lecture descendante), avec repli
+  // legacy sur l'axe Y pour les vieux résultats sans outputUnit.
+  const fallbackUnit = lastGraph?.readoutAxis === 'x'
+    ? lastGraph?.axes?.xAxis?.unit
+    : lastGraph?.axes?.yAxis?.unit;
+
   return {
     steps,
     finalValue: res.finalValue,
-    outputUnit: lastGraph?.axes?.yAxis?.unit || undefined,
+    outputUnit: res.outputUnit || fallbackUnit || undefined,
     warnings
   };
 }

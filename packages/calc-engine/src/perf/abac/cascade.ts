@@ -1,5 +1,6 @@
 import { GraphConfig, Curve, XYPoint } from './types';
 import { ensureFittedGraphs } from './fittedRuntime';
+import { isWindAxisVariable } from './axisVariables';
 import { trace, traceWarn, traceError } from './trace';
 
 /**
@@ -43,6 +44,11 @@ export interface CascadeResult {
   finalValue: number;
   success: boolean;
   error?: string;
+  /** Axe sur lequel `finalValue` a été lu : 'y' (standard) ou 'x' (lecture
+   *  descendante, dernier graphe en `readoutAxis: 'x'`). Renseigné en succès. */
+  outputAxis?: 'x' | 'y';
+  /** Unité de `finalValue` — celle de l'axe de sortie du dernier graphe. */
+  outputUnit?: string;
 }
 
 /**
@@ -185,6 +191,193 @@ function findXForY(curve: Curve, y: number): number | null {
 
   // Si on n'a pas trouvé d'intersection, retourner null
   return null;
+}
+
+// ─── Lecture DESCENDANTE (readoutAxis: 'x') — planches d'atterrissage Piper ──
+//
+// Géométrie : le graphe reçoit le Y transféré du panneau précédent, choisit un
+// guide de la famille (ex. vent SIGNÉ : +15 face / 0 / −5 arrière), et le
+// résultat se lit EN BAS, sur l'axe X (l'échelle des distances). Le moteur
+// standard ne sait sortir que sur Y — ces fonctions couvrent l'autre géométrie.
+
+/**
+ * Valeur de famille SIGNÉE d'un guide. `familyValue` d'abord (structuré),
+ * parsing du nom en repli. Pour une famille vent, le signe vient du tag
+ * `windDirection` (tailwind → négatif, headwind → positif) ou, à défaut,
+ * des mots du nom ; un guide « vent nul » garde sa valeur telle quelle.
+ */
+function signedFamilyValueOf(curve: Curve, windFamily: boolean): number {
+  let v: number;
+  if (typeof curve.familyValue === 'number' && isFinite(curve.familyValue)) {
+    v = curve.familyValue;
+  } else {
+    const m = (curve.name || '').match(/-?\d+(?:\.\d+)?/);
+    v = m ? parseFloat(m[0]) : NaN;
+  }
+  if (!windFamily || !isFinite(v)) return v;
+  const dir = curve.windDirection
+    || (/tailwind|arri[eè]re/i.test(curve.name || '') ? 'tailwind'
+      : (/headwind|face|debout/i.test(curve.name || '') ? 'headwind' : undefined));
+  if (dir === 'tailwind') return -Math.abs(v);
+  if (dir === 'headwind') return Math.abs(v);
+  return v;
+}
+
+type InverseReadResult =
+  | { x: number }
+  | { failure: 'no-fitted' | 'out-of-range' | 'ambiguous'; minY?: number; maxY?: number };
+
+/**
+ * Intersection de la ligne horizontale Y = y avec un guide, lue en X.
+ * Fail-closed : hors du tracé → refus (pas d'extrapolation) ; plusieurs
+ * intersections distinctes (guide non monotone à ce niveau) → refus.
+ * Les micro-oscillations de spline sont tolérées : des croisements distants
+ * de moins de 0,5 % de la largeur du tracé comptent pour un seul.
+ */
+function findXForYStrict(curve: Curve, y: number): InverseReadResult {
+  if (!curve.fitted || curve.fitted.points.length < 2) {
+    return { failure: 'no-fitted' };
+  }
+  const points = curve.fitted.points;
+
+  let minY = points[0].y;
+  let maxY = points[0].y;
+  for (const p of points) {
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
+  }
+  if (y < minY || y > maxY) {
+    return { failure: 'out-of-range', minY, maxY };
+  }
+
+  const xs: number[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const { x: x1, y: y1 } = points[i];
+    const { x: x2, y: y2 } = points[i + 1];
+    if ((y >= y1 && y <= y2) || (y >= y2 && y <= y1)) {
+      let cx: number;
+      if (Math.abs(y2 - y1) < 1e-9) {
+        cx = (x1 + x2) / 2;
+      } else {
+        cx = x1 + ((y - y1) / (y2 - y1)) * (x2 - x1);
+      }
+      xs.push(cx);
+    }
+  }
+  if (xs.length === 0) {
+    return { failure: 'out-of-range', minY, maxY };
+  }
+
+  xs.sort((a, b) => a - b);
+  const xRange = Math.abs(points[points.length - 1].x - points[0].x) || 1;
+  const clusterTol = xRange * 0.005;
+  for (let i = 1; i < xs.length; i++) {
+    if (xs[i] - xs[i - 1] > clusterTol) {
+      return { failure: 'ambiguous', minY, maxY };
+    }
+  }
+  return { x: xs[0] };
+}
+
+/**
+ * Lecture descendante complète d'un graphe `readoutAxis: 'x'` :
+ * bracket des guides par valeur de famille signée, intersection horizontale
+ * sur chaque guide encadrant, interpolation linéaire en famille → X final.
+ */
+function calculateReadoutOnX(
+  graph: GraphConfig,
+  inputY: number,
+  familyParam: number
+): { outputValue: number; curveUsed?: string; interpolated: boolean } | { failure: string } {
+  const windFamily = !!graph.isWindRelated || isWindAxisVariable(graph.familyAxisVariable);
+  const famLabel = graph.familyAxisVariable || 'famille';
+
+  const guides = (graph.curves || [])
+    .map(c => ({ curve: c, value: signedFamilyValueOf(c, windFamily) }))
+    .filter(g => {
+      if (!isFinite(g.value)) {
+        traceWarn(
+          `⚠️ [lecture X] Guide « ${g.curve.name} » du graphe « ${graph.name} » sans valeur ` +
+          `de famille lisible (familyValue absent, nom non numérique) — guide ÉCARTÉ.`
+        );
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => a.value - b.value);
+
+  if (guides.length === 0) {
+    return {
+      failure:
+        `Aucun guide du graphique « ${graph.name} » ne porte de valeur de famille ` +
+        `(${famLabel}) — renseignez familyValue sur chaque guide dans le gestionnaire de courbes.`
+    };
+  }
+
+  const vMin = guides[0].value;
+  const vMax = guides[guides.length - 1].value;
+  if (familyParam < vMin || familyParam > vMax) {
+    return {
+      failure:
+        `${famLabel} = ${familyParam} hors du domaine des guides tracés [${vMin} … ${vMax}] ` +
+        `du graphique « ${graph.name} » — valeur hors abaque, vérifiez le manuel de vol`
+    };
+  }
+
+  let lower = guides[0];
+  let upper = guides[guides.length - 1];
+  for (const g of guides) {
+    if (g.value <= familyParam) lower = g;
+  }
+  for (let i = guides.length - 1; i >= 0; i--) {
+    if (guides[i].value >= familyParam) upper = guides[i];
+  }
+
+  const readGuide = (g: { curve: Curve; value: number }): { x: number } | { failure: string } => {
+    const r = findXForYStrict(g.curve, inputY);
+    if ('x' in r) return r;
+    if (r.failure === 'no-fitted') {
+      return { failure: `Guide « ${g.curve.name } » du graphique « ${graph.name} » non interpolé (fitted manquant).` };
+    }
+    if (r.failure === 'ambiguous') {
+      return {
+        failure:
+          `Guide « ${g.curve.name} » du graphique « ${graph.name} » non monotone au niveau ` +
+          `Y=${inputY.toFixed(2)} — lecture ambiguë, retracez le guide.`
+      };
+    }
+    const lo = r.minY !== undefined ? r.minY.toFixed(2) : '?';
+    const hi = r.maxY !== undefined ? r.maxY.toFixed(2) : '?';
+    return {
+      failure:
+        `Y=${inputY.toFixed(2)} hors du tracé du guide « ${g.curve.name} » ` +
+        `[${lo} … ${hi}] du graphique « ${graph.name} » — point d'entrée hors abaque, ` +
+        `vérifiez le manuel de vol`
+    };
+  };
+
+  const lowerRead = readGuide(lower);
+  if ('failure' in lowerRead) return lowerRead;
+
+  if (lower === upper || Math.abs(upper.value - lower.value) < 1e-9) {
+    trace(`  [lecture X] Guide exact « ${lower.curve.name} » (${famLabel}=${lower.value}) → X=${lowerRead.x.toFixed(2)}`);
+    return { outputValue: lowerRead.x, curveUsed: lower.curve.name, interpolated: false };
+  }
+
+  const upperRead = readGuide(upper);
+  if ('failure' in upperRead) return upperRead;
+
+  const ratio = (familyParam - lower.value) / (upper.value - lower.value);
+  const x = lowerRead.x + ratio * (upperRead.x - lowerRead.x);
+  trace(
+    `  [lecture X] ${famLabel}=${familyParam} entre « ${lower.curve.name} » (${lower.value} → X=${lowerRead.x.toFixed(2)}) ` +
+    `et « ${upper.curve.name} » (${upper.value} → X=${upperRead.x.toFixed(2)}) — ratio ${ratio.toFixed(3)} → X=${x.toFixed(2)}`
+  );
+  return {
+    outputValue: x,
+    curveUsed: `Interpolé entre ${lower.curve.name} et ${upper.curve.name}`,
+    interpolated: true
+  };
 }
 
 /**
@@ -1063,6 +1256,17 @@ export function performCascadeCalculationWithParameters(
 
     if (i === 0) {
       // Premier graphique : peut aussi avoir un paramètre (altitude pression)
+      if (graph.readoutAxis === 'x') {
+        return {
+          steps,
+          finalValue: currentValue,
+          success: false,
+          error:
+            `Le graphique « ${graph.name} » est en lecture sur X mais est le PREMIER de la ` +
+            `chaîne : le premier graphe reçoit son entrée sur X, la lecture descendante ` +
+            `requiert un graphe précédent qui fournit le Y transféré.`
+        };
+      }
       const paramValue = graphParam?.parameter;
 
       trace(`  Entrée X (${graph.axes.xAxis.title}): ${currentValue}`);
@@ -1220,6 +1424,47 @@ export function performCascadeCalculationWithParameters(
       }
 
       trace(`  Sortie Y: ${result.outputValue}`);
+    } else if (graph.readoutAxis === 'x') {
+      // ── Lecture DESCENDANTE : entrée sur Y, guide de famille, sortie sur X ──
+      if (i !== graphs.length - 1) {
+        return {
+          steps,
+          finalValue: currentValue,
+          success: false,
+          error:
+            `La lecture sur X (résultat en bas) n'est autorisée que sur le DERNIER ` +
+            `graphe de la chaîne — « ${graph.name} » est suivi d'un autre graphe qui ` +
+            `attendrait une entrée sur Y.`
+        };
+      }
+
+      const paramValue = graphParam?.parameter;
+      if (paramValue === undefined) {
+        return {
+          steps,
+          finalValue: currentValue,
+          success: false,
+          error:
+            `Paramètre manquant pour le graphique "${graph.name}". Veuillez spécifier ` +
+            `${graph.familyAxisVariable || 'la valeur de famille des guides'}`
+        };
+      }
+
+      trace(`  Entrée Y: ${currentValue}`);
+      trace(`  Famille (${graphParam.parameterName || graph.familyAxisVariable || 'guides'}): ${paramValue}`);
+
+      const inverse = calculateReadoutOnX(graph, currentValue, paramValue);
+      if ('failure' in inverse) {
+        return {
+          steps,
+          finalValue: currentValue,
+          success: false,
+          error: inverse.failure
+        };
+      }
+      result = inverse;
+
+      trace(`  Sortie X (${graph.axes.xAxis.title}): ${result.outputValue}`);
     } else {
       // Graphiques suivants : valeur sur Y avec paramètre sur X
       const paramValue = graphParam?.parameter;
@@ -1298,10 +1543,18 @@ export function performCascadeCalculationWithParameters(
   trace(`📊 Valeur finale: ${currentValue}`);
   trace('🔄 === Fin du calcul en cascade ===\n');
 
+  const lastGraph = graphs[graphs.length - 1];
+  const outputAxis: 'x' | 'y' = lastGraph?.readoutAxis === 'x' ? 'x' : 'y';
+  const outputUnit = outputAxis === 'x'
+    ? lastGraph?.axes?.xAxis?.unit
+    : lastGraph?.axes?.yAxis?.unit;
+
   return {
     steps,
     finalValue: currentValue,
-    success: true
+    success: true,
+    outputAxis,
+    outputUnit: outputUnit || undefined
   };
 }
 
@@ -1474,6 +1727,24 @@ export function validateGraphChain(graphs: GraphConfig[]): {
       const nextGraph = graphs[i + 1];
       if (graph.linkedTo && !graph.linkedTo.includes(nextGraph.id)) {
         errors.push(`${graph.name}: Liaison manquante vers ${nextGraph.name}`);
+      }
+    }
+
+    // Lecture descendante (readoutAxis: 'x') : dernier graphe uniquement,
+    // jamais le premier, famille de guides obligatoire.
+    if (graph.readoutAxis === 'x') {
+      if (i === 0) {
+        errors.push(`${graph.name}: la lecture sur X est impossible sur le premier graphe (il reçoit son entrée sur X)`);
+      } else if (i !== graphs.length - 1) {
+        errors.push(`${graph.name}: la lecture sur X n'est autorisée que sur le dernier graphe de la chaîne`);
+      }
+      if (!graph.familyAxisVariable) {
+        errors.push(`${graph.name}: lecture sur X — variable de famille des guides requise (ex. composante de vent)`);
+      }
+      const windFamily = !!graph.isWindRelated || isWindAxisVariable(graph.familyAxisVariable);
+      const readable = (graph.curves || []).filter(c => isFinite(signedFamilyValueOf(c, windFamily)));
+      if ((graph.curves || []).length > 0 && readable.length === 0) {
+        errors.push(`${graph.name}: lecture sur X — aucun guide avec valeur de famille lisible (renseignez familyValue)`);
       }
     }
   }

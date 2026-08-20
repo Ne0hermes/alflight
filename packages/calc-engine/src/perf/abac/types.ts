@@ -141,6 +141,21 @@ export interface GraphConfig {
    *   - (undefined)     : auto-détection (mono si 1 courbe, family si familyValue présent, sinon fallback).
    */
   interpolationMode?: 'family' | 'slope-follow' | 'mono';
+  /**
+   * 🔒 Axe de LECTURE du résultat de ce graphe :
+   *   - 'y' (défaut) : géométrie standard — la sortie se lit sur l'axe Y
+   *     (cas des planches de décollage PA-28 : l'échelle de distance est verticale).
+   *   - 'x' : LECTURE DESCENDANTE (planches d'atterrissage Piper) — on entre
+   *     avec le Y transféré du graphe précédent, on choisit le guide de la
+   *     famille (`familyAxisVariable`, ex. vent SIGNÉ : positif = face,
+   *     négatif = arrière) interpolé entre les 2 guides encadrants, et le
+   *     résultat FINAL se lit sur l'axe X (l'échelle des distances, en bas).
+   *     Autorisé UNIQUEMENT sur le DERNIER graphe d'une chaîne. Requiert
+   *     `familyAxisVariable` + `Curve.familyValue` sur chaque guide (pour une
+   *     famille vent, le signe est déduit du tag `windDirection` :
+   *     tailwind → valeur négative).
+   */
+  readoutAxis?: 'y' | 'x';
   curves: Curve[];
   isWindRelated?: boolean; // Indique si ce graphique concerne le vent
   linkedFrom?: string[]; // IDs des graphiques sources
@@ -238,7 +253,8 @@ export interface ReferenceCase {
   /** Paramètre par graphe (graphId → valeur) : altitude, masse, vent… */
   parameters: Record<string, number>;
   windDirection?: 'headwind' | 'tailwind';
-  /** Résultat attendu (papier), dans l'unité du Y du dernier graphe. */
+  /** Résultat attendu (papier), dans l'unité de l'axe de SORTIE du dernier
+   *  graphe : son Y, ou son X si `readoutAxis: 'x'` (lecture descendante). */
   expected: number;
   /** Tolérance en % (défaut 5). */
   tolerancePct?: number;

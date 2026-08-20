@@ -573,8 +573,10 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   <div key={axis} style={{ padding: 12, border: '1px solid var(--border-subtle)', borderRadius: 6, backgroundColor: 'var(--bg-overlay)' }}>
                     <h4 style={{ marginTop: 0 }}>Axe {axis.toUpperCase()}</h4>
                     <AxisVariableSelect
-                      label="Variable (titre)"
-                      axis={axis}
+                      label={axis === 'x' && graph.readoutAxis === 'x' ? 'Variable (titre) — SORTIE, lue en bas' : 'Variable (titre)'}
+                      // Lecture descendante : l'axe X porte la SORTIE (distance) →
+                      // on propose les variables de sortie (filtre du dropdown Y).
+                      axis={axis === 'x' && graph.readoutAxis === 'x' ? 'y' : axis}
                       value={cfg.title}
                       onChange={(varId) => {
                         const v = getAxisVariable(varId);
@@ -636,7 +638,59 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 );
               })}
             </div>
+            {/* === Axe de lecture du résultat (géométrie du graphe) === */}
+            {(graph.role || 'primary') === 'intermediate' && (
+              <div style={{
+                marginTop: 20, padding: 12,
+                backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 6
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  🧭 Où se lit le résultat de ce graphe ?
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { value: '', label: '↕ Sur l\'axe Y (standard)', desc: 'Géométrie habituelle : la sortie du graphe se lit sur l\'axe vertical (cas des planches de décollage — l\'échelle de distance est verticale).' },
+                    { value: 'x', label: '↓ Sur l\'axe X, en bas (lecture descendante)', desc: 'Planches d\'atterrissage type Piper : on entre avec le Y transféré du panneau précédent, on suit le guide de vent (interpolé entre les guides tracés), et la distance se lit sur l\'échelle EN BAS. Uniquement pour le DERNIER cadre de la chaîne.' }
+                  ].map(opt => (
+                    <label key={opt.value} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 8, padding: 8,
+                      backgroundColor: (graph.readoutAxis === 'x' ? 'x' : '') === opt.value ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)',
+                      border: `1px solid ${(graph.readoutAxis === 'x' ? 'x' : '') === opt.value ? 'var(--status-success)' : 'var(--border-subtle)'}`,
+                      borderRadius: 4, cursor: 'pointer'
+                    }}>
+                      <input
+                        type="radio"
+                        name={`readout-axis-${graph.id}`}
+                        value={opt.value}
+                        checked={(graph.readoutAxis === 'x' ? 'x' : '') === opt.value}
+                        onChange={() => onUpdateGraph({ readoutAxis: opt.value === 'x' ? 'x' : undefined })}
+                        style={{ marginTop: 2 }}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 12 }}>{opt.label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{opt.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {graph.readoutAxis === 'x' && (
+                  <div style={{
+                    marginTop: 8, padding: 8, backgroundColor: 'rgba(242, 105, 33, 0.10)',
+                    border: '1px solid var(--accent-primary)', borderRadius: 4, fontSize: 11, color: 'var(--accent-primary)'
+                  }}>
+                    ↓ <strong>Lecture descendante activée.</strong> Marche à suivre :
+                    axe X = la variable de <strong>sortie</strong> (distance, échelle du bas) ;
+                    déclare la <strong>variable de famille</strong> des guides ci-dessous (ex. composante de vent) ;
+                    puis à la sous-étape 5, donne à chaque guide sa <strong>valeur</strong> (ex. 15) et son
+                    <strong> sens</strong> (vent de face / vent nul / vent arrière — le moteur lit « arrière » comme négatif).
+                    Le vent du jour est interpolé entre les 2 guides encadrants ; hors des guides tracés, le calcul est refusé.
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* === Mode d'interpolation === */}
+            {graph.readoutAxis !== 'x' && (
             <div style={{
               marginTop: 20, padding: 12,
               backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '1px solid var(--accent-primary)', borderRadius: 6
@@ -677,9 +731,10 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 ))}
               </div>
             </div>
+            )}
 
-            {/* === Paramètre familial des courbes (requis seulement en mode 'family') === */}
-            {(graph.interpolationMode === 'family' || graph.interpolationMode === undefined) && (
+            {/* === Paramètre familial des courbes (mode 'family' ou lecture descendante) === */}
+            {(graph.interpolationMode === 'family' || graph.interpolationMode === undefined || graph.readoutAxis === 'x') && (
             <div style={{
               marginTop: 20, padding: 12,
               backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 6
@@ -697,7 +752,10 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 const order = graph.cascadeOrder;
                 let suggestion = null;
                 let reason = '';
-                if (role === 'intermediate' && order === 1) {
+                if (graph.readoutAxis === 'x') {
+                  suggestion = 'wind_component';
+                  reason = 'Lecture descendante : les guides sont typiquement paramétrés par la composante de vent (face / nul / arrière)';
+                } else if (role === 'intermediate' && order === 1) {
                   suggestion = 'pressure_altitude';
                   reason = '1ʳᵉ étape de la cascade = correction altitude → famille typique : altitude pression (courbes 0/2000/4000…ft)';
                 } else if (role === 'intermediate' && order === 2) {
@@ -742,7 +800,17 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 </div>
                 <select
                   value={graph.familyAxisVariable || ''}
-                  onChange={(e) => onUpdateGraph({ familyAxisVariable: e.target.value || undefined })}
+                  onChange={(e) => {
+                    const varId = e.target.value || undefined;
+                    // Famille vent → active isWindRelated (débloque les tags
+                    // « face / arrière » des courbes à la sous-étape 5 ; jamais
+                    // désactivé auto pour ne pas perdre des tags déjà saisis).
+                    const shouldBeWind = isWindAxisVariable(varId);
+                    onUpdateGraph({
+                      familyAxisVariable: varId,
+                      ...(shouldBeWind && !graph.isWindRelated ? { isWindRelated: true } : {})
+                    });
+                  }}
                   style={{
                     width: '100%', padding: '6px 8px',
                     border: '1px solid var(--border-subtle)', borderRadius: 3, fontSize: 13, backgroundColor: 'var(--bg-surface)'

@@ -13,7 +13,7 @@
 import React from 'react';
 import { GraphConfig } from '../core/types';
 import { getOperation } from '../core/operationCatalog';
-import { getAxisVariable, getAxisVariablesGroupedFor } from '../core/axisVariables';
+import { getAxisVariable, getAxisVariablesGroupedFor, isWindAxisVariable } from '../core/axisVariables';
 // R23 — le classifieur 3-listes (Phase/Métrique/Volets) est extrait en
 // composant partagé, réutilisé aussi par l'extraction MANEX par tableau.
 import { OperationClassifier } from './OperationClassifier';
@@ -109,7 +109,15 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
         </span>
         <select
           value={graph.familyAxisVariable || ''}
-          onChange={(e) => onUpdateGraph({ familyAxisVariable: e.target.value || undefined })}
+          onChange={(e) => {
+            const varId = e.target.value || undefined;
+            // Famille vent → active isWindRelated (débloque les tags face /
+            // arrière des courbes) ; jamais désactivé automatiquement.
+            onUpdateGraph({
+              familyAxisVariable: varId,
+              ...(isWindAxisVariable(varId) && !graph.isWindRelated ? { isWindRelated: true } : {})
+            });
+          }}
           style={{ ...selectStyle, flex: 1, minWidth: 220 }}
         >
           <option value="">— héritée des noms de courbes (fragile) —</option>
@@ -128,6 +136,27 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({ graph, o
             : null;
         })()}
       </div>
+
+      {/* Lecture descendante (planches d'atterrissage Piper) : le résultat du
+          dernier cadre se lit sur l'axe X, en bas. Intermédiaires seulement. */}
+      {!isPrimary && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span
+            style={labelStyle}
+            title="Standard : la sortie se lit sur l'axe Y (échelle verticale). Lecture descendante : on entre avec le Y transféré, on suit le guide de la famille (ex. vent), et le résultat se lit sur l'échelle du bas (axe X). Uniquement pour le DERNIER cadre de la chaîne."
+          >
+            Lecture du résultat
+          </span>
+          <select
+            value={graph.readoutAxis === 'x' ? 'x' : ''}
+            onChange={(e) => onUpdateGraph({ readoutAxis: e.target.value === 'x' ? 'x' : undefined })}
+            style={selectStyle}
+          >
+            <option value="">Sur l'axe Y (standard)</option>
+            <option value="x">Sur l'axe X, en bas (descendante)</option>
+          </select>
+        </div>
+      )}
 
       {/* Si PRIMAIRE : opération canonique — R23 : classifieur PARTAGÉ (3 listes
           Phase / Métrique / Volets) réutilisé à l'identique par l'extraction
