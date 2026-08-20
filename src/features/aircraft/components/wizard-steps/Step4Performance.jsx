@@ -6,7 +6,8 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   FileDownload as FileDownloadIcon,
-  FileUpload as FileUploadIcon
+  FileUpload as FileUploadIcon,
+  Flight as FlightIcon
 } from '@mui/icons-material';
 import { exportPerformanceModelsToExcel } from '../../../../utils/performanceExcelExport';
 import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../../../utils/performanceExcelImport';
@@ -16,6 +17,11 @@ import { importPerformanceModelsFromExcel, diffPerformanceModels } from '../../.
 import { OperationClassifier } from '../../../../abac/curves/ui/OperationClassifier';
 import { getOperation } from '../../../../abac/curves/core/operationCatalog';
 import PerformanceCorrectionsEditor from '../PerformanceCorrectionsEditor';
+// Import des performances depuis un AUTRE avion de la base communautaire
+// (cas F-GBTU / F-GIEA : deux PA-28-161 du même club — on recopie au lieu de
+// tout ressaisir depuis le manuel).
+import ImportPerformanceFromAircraftDialog from '../ImportPerformanceFromAircraftDialog';
+import { PERF_BYPASS_PREFIX } from '../../utils/performanceCoverage';
 
 const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, setOnConstruireCourbes, setCurrentStep, onNext, onPrevious, registerStepNav, abacSessionRef }) => {
   // ─── Session d'atelier restaurée ──────────────────────────────────────────
@@ -36,6 +42,8 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   const [showExistingData, setShowExistingData] = useState(H?.showExistingData ?? false);
   const [forceShowSummary, setForceShowSummary] = useState(H?.forceShowSummary ?? false);
   const [performanceWizardRef, setPerformanceWizardRef] = useState(null);
+  // Dialogue « Importer depuis un autre avion » (base communautaire)
+  const [showImportFromAircraft, setShowImportFromAircraft] = useState(false);
 
   // ─── Persistance de la session (partie hôte) ──────────────────────────────
   // Un seul effet : à chaque changement, les 5 états d'ORIENTATION (quelle vue
@@ -494,6 +502,15 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
   // Par défaut : tout coché. Re-sync auto quand la liste de modèles change.
   const getModelId = (m, idx) => m.id || `__legacy_idx_${idx}`;
 
+  // Provenance « Importées de F-XXXX le JJ/MM » — JJ/MM suffit à l'œil, la
+  // date ISO complète reste dans importedPerformanceFrom.date.
+  const formatProvenanceDate = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? ''
+      : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  };
+
   const [selectedModelIds, setSelectedModelIds] = useState(() => {
     return new Set(currentPerformanceModels.map((m, idx) => getModelId(m, idx)));
   });
@@ -815,6 +832,79 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     e.target.value = ''; // permettre re-import du même fichier
   };
 
+  // ─── Import des performances DEPUIS UN AUTRE AVION (base communautaire) ──
+  // Reçoit du dialogue un payload par GROUPE coché : copie profonde déjà
+  // faite, id de modèles régénérés, provenance posée sur chaque élément.
+  // Remplacement par groupe — JAMAIS de fusion silencieuse : si l'avion a
+  // déjà des données dans un groupe importé, confirmation explicite avec le
+  // détail de ce qui sera remplacé. Renvoie false si le pilote annule
+  // (le dialogue reste alors ouvert, rien n'est modifié).
+  const handleImportFromAircraft = (payload) => {
+    const { provenance } = payload;
+    const existingCorrections = Array.isArray(data.performanceCorrections) ? data.performanceCorrections : [];
+    const replaced = [];
+    if (payload.performanceModels && currentPerformanceModels.length > 0) {
+      replaced.push(`${currentPerformanceModels.length} abaque(s)`);
+    }
+    if (payload.advancedPerformance && advancedTables.length > 0) {
+      replaced.push(`${advancedTables.length} tableau(x)`);
+    }
+    if (payload.performanceCorrections && existingCorrections.length > 0) {
+      replaced.push(`${existingCorrections.length} facteur(s) correctif(s)`);
+    }
+    if (replaced.length > 0) {
+      const ok = window.confirm(
+        `⚠ L'import depuis ${provenance.registration} remplacera ${replaced.join(' / ')} déjà présent(s) sur cet avion.\n\n` +
+        `Remplacement par groupe coché — pas de fusion. Continuer ?`
+      );
+      if (!ok) return false;
+    }
+
+    const importedParts = [];
+    if (payload.performanceModels) {
+      updateData('performanceModels', payload.performanceModels);
+      importedParts.push(`${payload.performanceModels.length} abaque(s)`);
+    }
+    if (payload.advancedPerformance) {
+      updateData('advancedPerformance', payload.advancedPerformance);
+      importedParts.push(`${payload.advancedPerformance.tables?.length || 0} tableau(x)`);
+    }
+    if (payload.performanceCorrections) {
+      updateData('performanceCorrections', payload.performanceCorrections);
+      importedParts.push(`${payload.performanceCorrections.length} facteur(s) correctif(s)`);
+    }
+    if (payload.bypassedPerformanceKeys?.length) {
+      // Remplacement du GROUPE performance.* : les certifications « absent du
+      // manuel » de la source remplacent celles de l'avion ; les bypass hors
+      // performance (speeds.*, weights.*…) restent intacts.
+      const existingBypass = Array.isArray(data.bypassedFields) ? data.bypassedFields : [];
+      const kept = existingBypass.filter(k => !(typeof k === 'string' && k.startsWith(PERF_BYPASS_PREFIX)));
+      updateData('bypassedFields', Array.from(new Set([...kept, ...payload.bypassedPerformanceKeys])));
+      importedParts.push(`${payload.bypassedPerformanceKeys.length} certification(s) « absent du manuel »`);
+    }
+
+    // Snapshot local + retour au récapitulatif : la complétude et la matrice
+    // de couverture reflètent l'import sans rechargement (tout dérive de
+    // data via updateData, et cette vue lit savedPerformanceData).
+    setSavedPerformanceData(prev => ({
+      ...(prev || {}),
+      performanceModels: payload.performanceModels
+        ?? prev?.performanceModels ?? data.performanceModels,
+      advancedPerformance: payload.advancedPerformance
+        ?? prev?.advancedPerformance ?? data.advancedPerformance
+    }));
+    setShowExistingData(true);
+    setForceShowSummary(true);
+
+    alert(
+      `✅ Performances importées de ${provenance.registration} le ${formatProvenanceDate(provenance.date)} : ${importedParts.join(', ')}.` +
+      (payload.sameModel
+        ? ''
+        : `\n\n⚠ Modèles différents (${payload.sourceModel || '?'} vs ${data.model || '?'}) — vérifiez l'édition du manuel de vol.`)
+    );
+    return true;
+  };
+
   // Debug — confirme que Step4Performance est bien monté
   console.log('🟦 [Step4Performance] Render branches:', {
     showExistingData,
@@ -825,34 +915,53 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
     hasAnyModel
   });
 
-  // Actions Excel (Exporter / Réimporter) — affichées en ligne centrée sous le titre.
+  // Actions Excel (Exporter / Réimporter) + import depuis un autre avion —
+  // affichées en ligne centrée sous le titre. Le Dialog est rendu ici (portail
+  // MUI) pour être disponible dans TOUTES les vues qui affichent ces boutons.
   const renderExcelActions = () => (
-    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2 }}>
-      <Button
-        variant="contained"
-        size="small"
-        startIcon={<FileDownloadIcon />}
-        onClick={handleExportExcel}
-        disabled={!hasAnyModel || selectedCount === 0}
-      >
-        Exporter Excel{hasAnyModel ? ` (${selectedCount})` : ''}
-      </Button>
-      <Button
-        variant="outlined"
-        size="small"
-        color="primary"
-        startIcon={<FileUploadIcon />}
-        component="label"
-      >
-        Réimporter Excel
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          hidden
-          onChange={handleImportExcel}
-        />
-      </Button>
-    </Box>
+    <>
+      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2 }}>
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<FileDownloadIcon />}
+          onClick={handleExportExcel}
+          disabled={!hasAnyModel || selectedCount === 0}
+        >
+          Exporter Excel{hasAnyModel ? ` (${selectedCount})` : ''}
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          color="primary"
+          startIcon={<FileUploadIcon />}
+          component="label"
+        >
+          Réimporter Excel
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            hidden
+            onChange={handleImportExcel}
+          />
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          color="primary"
+          startIcon={<FlightIcon />}
+          onClick={() => setShowImportFromAircraft(true)}
+        >
+          Importer depuis un autre avion
+        </Button>
+      </Box>
+      <ImportPerformanceFromAircraftDialog
+        open={showImportFromAircraft}
+        onClose={() => setShowImportFromAircraft(false)}
+        currentData={data}
+        onImport={handleImportFromAircraft}
+      />
+    </>
   );
 
   if ((showExistingData || forceShowSummary) && savedPerformanceData) {
@@ -915,6 +1024,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                     {model.data?.graphs && (
                       <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                         {model.data.graphs.length} graphique(s) configuré(s)
+                      </div>
+                    )}
+                    {/* Provenance : abaque recopié depuis un autre avion */}
+                    {model.importedPerformanceFrom?.registration && (
+                      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                        Importées de {model.importedPerformanceFrom.registration} le {formatProvenanceDate(model.importedPerformanceFrom.date)}
                       </div>
                     )}
                   </div>
@@ -1079,6 +1194,12 @@ const Step4Performance = ({ data, updateData, errors = {}, setIsEditingAbaque, s
                         <div style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                           {tables.length} tableau(x) extrait(s)
                         </div>
+                        {/* Provenance : tableaux recopiés depuis un autre avion */}
+                        {tables[0]?.importedPerformanceFrom?.registration && (
+                          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>
+                            Importées de {tables[0].importedPerformanceFrom.registration} le {formatProvenanceDate(tables[0].importedPerformanceFrom.date)}
+                          </div>
+                        )}
                       </div>
                     </div>
 
