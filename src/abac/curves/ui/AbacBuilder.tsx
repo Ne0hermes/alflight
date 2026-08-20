@@ -8,7 +8,9 @@ import { WorkshopCanvas } from './WorkshopCanvas';
 // (import ChainCalculator retiré : jamais utilisé comme valeur → esbuild l'élidait,
 //  ce qui a masqué pendant des mois la casse syntaxique de tout le graphe cascade.
 //  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
-import { CascadeCalculator } from './CascadeCalculator';
+import { CascadeCalculator, CascadeTestDraft, makeEmptyCascadeTestDraft } from './CascadeCalculator';
+// Lot 1-F — badge « Banc : x/y OK » du banc monté à l'écran Tracé.
+import { KitBadge } from './kit';
 import { AbacCurveManager } from '../core/manager';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
@@ -181,6 +183,18 @@ function AbacBuilderComponent(
   const [referenceCases, setReferenceCases] = useState<ReferenceCase[]>(S?.referenceCases ?? []);
   const [referencePrefill, setReferencePrefill] = useState<ReferencePrefill | null>(null);
 
+  // Lot 1-F — LE TESTEUR UNIFIÉ : l'état de formulaire du test de cascade est
+  // HISSÉ ici (comme workshop) et passé en props contrôlées aux deux montages
+  // du CascadeCalculator (Tracé replié / Validation ouvert) — une seule
+  // saisie, deux écrans. Persisté en session ET en brouillon IndexedDB
+  // (champ ADDITIF, comme plancheType : défaut sur absence, snapshots
+  // antérieurs intacts).
+  const [testDraft, setTestDraft] = useState<CascadeTestDraft>(S?.testDraft ?? makeEmptyCascadeTestDraft());
+  // Lot 1-F — le banc au Tracé : <details> contrôlé, ouvert au clic « 📌 »
+  // pour que le prefill atterrisse dans un panneau VISIBLE. Volatile (non
+  // persisté, comme wizardEditorMode).
+  const [traceBenchOpen, setTraceBenchOpen] = useState(false);
+
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
   // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
   // Ne réécrit linkedTo/linkedFrom QUE pour les graphes CADRÉS, et seulement
@@ -270,6 +284,11 @@ function AbacBuilderComponent(
   }));
   const [graphs, setGraphs] = useState<GraphConfig[]>(S?.graphs ?? []);
   const [selectedGraphId, setSelectedGraphId] = useState<string | null>(null);
+
+  // Lot 1-F — compteur permanent « Banc : x/y OK » (résumé du banc au Tracé).
+  // runAllReferenceCases est pur ; mémoïsé sur (graphs, referenceCases).
+  const benchResults = React.useMemo(() => runAllReferenceCases(graphs, referenceCases), [graphs, referenceCases]);
+  const benchPass = benchResults.filter(r => r.status === 'pass').length;
   const [selectedCurveId, setSelectedCurveId] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<Record<string, string[]>>({});
   // Liste prédéfinie des types de systèmes d'abaques
@@ -323,11 +342,13 @@ function AbacBuilderComponent(
         workshop, graphs, referenceCases,
         bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
+        // Lot 1-F — saisies du testeur unifié (champ additif).
+        testDraft,
       },
     };
   }, [sessionRef, sessionMarker, workshop, graphs,
       referenceCases, bezierSession, systemType, plancheType, modelNameInput,
-      aircraftModelDisplay, currentStep, subStepGraphIndex]);
+      aircraftModelDisplay, currentStep, subStepGraphIndex, testDraft]);
 
   // ─── Instantané IndexedDB (survie F5) — effet JUMEAU débouncé du précédent.
   // Même payload que la session + contextKey/horodatage, clé unique
@@ -346,12 +367,15 @@ function AbacBuilderComponent(
         workshop, graphs, referenceCases,
         bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
+        // Lot 1-F — saisies du testeur unifié (champ additif, comme
+        // plancheType : les brouillons antérieurs restent lisibles).
+        testDraft,
       });
     }, 1500);
     return () => window.clearTimeout(t);
   }, [restoring, draftContextKey, sessionMarker, workshop, graphs,
       referenceCases, bezierSession, systemType, plancheType, modelNameInput,
-      aircraftModelDisplay, currentStep, subStepGraphIndex]);
+      aircraftModelDisplay, currentStep, subStepGraphIndex, testDraft]);
 
   // ─── Restauration au montage (vrai rechargement uniquement) ───────────────
   // IndexedDB est asynchrone : le montage affiche « Restauration du tracé… »
@@ -378,6 +402,8 @@ function AbacBuilderComponent(
         // Lot 1-C — brouillons antérieurs sans plancheType : null (l'écran
         // Opération et le bandeau du Tracé savent vivre sans).
         setPlancheType(draft.plancheType ?? null);
+        // Lot 1-F — brouillons antérieurs sans testDraft : formulaire vierge.
+        setTestDraft(draft.testDraft ?? makeEmptyCascadeTestDraft());
         setSubStepGraphIndex(draft.subStepGraphIndex ?? 0);
         setRestoredBanner(true);
       }
@@ -1382,9 +1408,61 @@ const renderStepContent = () => {
                 🧪 Tester la cascade sur les graphes en l'état
               </summary>
               <div style={{ padding: 8 }}>
+                {/* Lot 1-F — testeur unifié : MÊME formulaire (testDraft hissé)
+                    que le montage de l'écran Validation ; le « 📌 » alimente le
+                    banc monté juste EN DESSOUS (et l'ouvre). */}
                 <CascadeCalculator
                   graphs={graphs}
-                  onProposeReference={(snap) => setReferencePrefill(snap)}
+                  draft={testDraft}
+                  onDraftChange={setTestDraft}
+                  onProposeReference={(snap) => {
+                    setReferencePrefill(snap);
+                    setTraceBenchOpen(true);
+                  }}
+                />
+              </div>
+            </details>
+            )}
+
+            {/* ─── Lot 1-F : LE BANC VISIBLE PENDANT LE TRACÉ — « le banc EST
+                le testeur ». Le panneau des cas de référence est monté AUSSI
+                ici (replié par défaut), avec un compteur PERMANENT
+                « Banc : x/y OK » dans son résumé. Pur affichage :
+                runAllReferenceCases tourne déjà en pur sur les graphes en
+                l'état. Le clic « 📌 » du testeur ci-dessus alimente désormais
+                un panneau PRÉSENT. */}
+            {workshop.frames.length > 0 && (
+            <details
+              open={traceBenchOpen}
+              onToggle={(e: React.SyntheticEvent<HTMLDetailsElement>) => setTraceBenchOpen(e.currentTarget.open)}
+              style={{
+                marginBottom: 14,
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 6,
+                backgroundColor: 'var(--bg-overlay)'
+              }}
+            >
+              <summary style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--accent-primary)'
+              }}>
+                🧪 Banc de test — cas de référence du manuel
+                <span style={{ marginLeft: 8 }}>
+                  <KitBadge tone={benchResults.length === 0 ? 'neutral' : benchPass === benchResults.length ? 'ok' : 'crit'}>
+                    Banc : {benchPass}/{benchResults.length} OK
+                  </KitBadge>
+                </span>
+              </summary>
+              <div style={{ padding: 8 }}>
+                <ReferenceCasesPanel
+                  graphs={graphs}
+                  cases={referenceCases}
+                  onChange={setReferenceCases}
+                  prefill={referencePrefill}
+                  onPrefillConsumed={() => setReferencePrefill(null)}
                 />
               </div>
             </details>
@@ -1608,8 +1686,12 @@ const renderStepContent = () => {
                   🧪 Tester le modèle avant validation (cascade complète)
                 </summary>
                 <div style={{ padding: 8 }}>
+                  {/* Lot 1-F — MÊME formulaire que le montage du Tracé (état
+                      testDraft hissé) : rien ne se re-tape entre les étapes. */}
                   <CascadeCalculator
                     graphs={graphs}
+                    draft={testDraft}
+                    onDraftChange={setTestDraft}
                     onProposeReference={(snap) => setReferencePrefill(snap)}
                   />
                 </div>
@@ -1684,6 +1766,7 @@ const renderStepContent = () => {
     setWorkshop({ image: null, sharedY: { min: 0, max: 100, unit: '', title: '' }, frames: [] });
     setBezierSession(null);
     setReferenceCases([]);
+    setTestDraft(makeEmptyCascadeTestDraft());
     setCurrentStep('setup');
     setGraphs([]);
     setSelectedGraphId(null);

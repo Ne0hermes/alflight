@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { GraphConfig, ReferenceCase } from '../core/types';
 import { buildChain, runAllReferenceCases, DEFAULT_TOLERANCE_PCT } from '../core/referenceBench';
-import { getAxisVariableLabel } from '../core/axisVariables';
+import { getAxisVariable, getAxisVariableLabel } from '../core/axisVariables';
 import { formatOppositeUnit } from './CascadeCalculator';
 
 export interface ReferencePrefill {
@@ -158,7 +158,11 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
                   `${rc.inputValue}${chain[0]?.axes?.xAxis?.unit ? ' ' + chain[0].axes.xAxis.unit : ''}`,
                   ...chain.map(g => rc.parameters[g.id] !== undefined && g.id !== chain[0]?.id
                     ? `${getAxisVariableLabel(g.axes?.xAxis?.title)} ${rc.parameters[g.id]}${g.axes?.xAxis?.unit ? ' ' + g.axes.xAxis.unit : ''}`
-                    : (g.id === chain[0]?.id && rc.parameters[g.id] !== undefined ? `alt ${rc.parameters[g.id]}` : null)
+                    // Lot 1-F — plus de « alt » en dur : symbole/label de la
+                    // FAMILLE du graphe 1 (un abaque à famille masse dit « Masse »).
+                    : (g.id === chain[0]?.id && rc.parameters[g.id] !== undefined
+                      ? `${getAxisVariable(g.familyAxisVariable)?.symbol || getAxisVariableLabel(g.familyAxisVariable) || 'famille'} ${rc.parameters[g.id]}`
+                      : null)
                   ).filter(Boolean),
                   ...(rc.windDirection ? [rc.windDirection === 'headwind' ? 'vent de face' : 'vent arrière'] : [])
                 ].join(' · ');
@@ -213,7 +217,11 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
           </label>
           {chain.map((g, i) => (
             <label key={g.id} style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
-              {i === 0 ? 'Altitude (optionnel)' : `${getAxisVariableLabel(g.axes?.xAxis?.title)}${g.axes?.xAxis?.unit ? ` (${g.axes.xAxis.unit})` : ''}`}
+              {/* Lot 1-F — fini « Altitude (optionnel) » codé en dur : le
+                  paramètre du graphe 1 porte le libellé de SA famille. */}
+              {i === 0
+                ? `${getAxisVariableLabel(g.familyAxisVariable) || 'Famille'} (optionnel)`
+                : `${getAxisVariableLabel(g.axes?.xAxis?.title)}${g.axes?.xAxis?.unit ? ` (${g.axes.xAxis.unit})` : ''}`}
               <input
                 style={inputStyle}
                 type="number"

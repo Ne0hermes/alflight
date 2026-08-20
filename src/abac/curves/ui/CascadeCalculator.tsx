@@ -9,8 +9,33 @@ import {
   CascadeStep,
   GraphParameters
 } from '../core/cascade';
+import { ensureFittedGraphs } from '../core/fittedRuntime';
+import { DEFAULT_TOLERANCE_PCT } from '../core/referenceBench';
 import { Chart } from './Chart';
 import { getAxisVariable, getAxisVariableLabel } from '../core/axisVariables';
+
+// ─── Lot 1-F : LE TESTEUR UNIFIÉ — état de formulaire HISSÉ ─────────────────
+// Les deux montages du testeur (écran Tracé replié / écran Validation ouvert)
+// ne partageaient AUCUN état : tout se re-tapait à chaque changement d'étape.
+// L'état de saisie vit désormais dans AbacBuilder (testDraft) et arrive ici en
+// props contrôlées : les deux montages sont le MÊME formulaire à deux endroits,
+// et le brouillon suit la session (abacSessionRef) + l'instantané IndexedDB.
+export interface CascadeTestDraft {
+  /** Valeur d'entrée initiale (texte brut du champ). */
+  inputValue: string;
+  /** Paramètre par graphe (texte brut), clé = graph.id. */
+  parameters: { [graphId: string]: string };
+  /** Direction du vent ('all' = pas encore choisie). */
+  windDirection: 'headwind' | 'tailwind' | 'all';
+  /** Valeur attendue du papier (texte brut, optionnelle). */
+  expectedValue: string;
+  /** Système d'abaques sélectionné (id du graphe de départ, '' = défaut). */
+  selectedSystemId: string;
+}
+
+export function makeEmptyCascadeTestDraft(): CascadeTestDraft {
+  return { inputValue: '', parameters: {}, windDirection: 'all', expectedValue: '', selectedSystemId: '' };
+}
 
 interface CascadeCalculatorProps {
   graphs: GraphConfig[];
@@ -20,6 +45,10 @@ interface CascadeCalculatorProps {
     name: string;
   }[];
   onClose?: () => void;
+  /** Lot 1-F — état de formulaire hissé (contrôlé par AbacBuilder). Absent :
+   *  repli sur un état local (montage autonome). */
+  draft?: CascadeTestDraft;
+  onDraftChange?: (next: CascadeTestDraft) => void;
   /** R13 — banc de test : propose les ENTRÉES du calcul courant comme futur
    *  cas de référence (le pilote tape ensuite le résultat ATTENDU du papier). */
   onProposeReference?: (snapshot: {
@@ -119,17 +148,8 @@ const styles = {
     marginTop: '10px',
     fontSize: 'var(--fs-body)'
   },
-  calculateButton: {
-    padding: '10px 20px',
-    backgroundColor: 'var(--accent-primary)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    fontSize: 'var(--fs-body)',
-    fontWeight: 500,
-    cursor: 'pointer',
-    marginTop: '10px'
-  },
+  // (calculateButton supprimé — Lot 1-F : le calcul est LIVE, débouncé à la
+  //  frappe ; le bouton « Calculer » n'existe plus.)
   resultsSection: {
     marginTop: '20px',
     padding: '15px',
@@ -214,27 +234,37 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   graphs,
   systems,
   onClose,
+  draft: draftProp,
+  onDraftChange,
   onProposeReference
 }) => {
-  const [initialValue, setInitialValue] = useState<string>('');
-  const [parameters, setParameters] = useState<{[graphId: string]: string}>({});
-  const [windDirection, setWindDirection] = useState<'headwind' | 'tailwind' | 'all'>('all');
-  // R19 — valeur ATTENDUE du papier (optionnelle) : comparée EN LIVE au
-  // résultat calculé (écart % coloré) pour corriger les courbes à vue.
-  const [expectedValue, setExpectedValue] = useState<string>('');
-  const [selectedSystemId, setSelectedSystemId] = useState<string>('');
+  // Lot 1-F — formulaire CONTRÔLÉ par AbacBuilder (testDraft hissé), avec
+  // repli local pour un montage autonome. Champs : valeur d'entrée, paramètre
+  // par graphe, direction du vent, attendu papier (R19), système sélectionné.
+  const [localDraft, setLocalDraft] = useState<CascadeTestDraft>(makeEmptyCascadeTestDraft);
+  const draft = draftProp ?? localDraft;
+  const setDraft = onDraftChange ?? setLocalDraft;
+  const patchDraft = (patch: Partial<CascadeTestDraft>) => setDraft({ ...draft, ...patch });
+
   const [result, setResult] = useState<CascadeResult | null>(null);
+  // Boîte ROUGE réservée aux REFUS DU MOTEUR (hors domaine, guide non
+  // monotone…) ; les saisies incomplètes vont dans incompleteNote (discret).
   const [error, setError] = useState<string>('');
+  const [incompleteNote, setIncompleteNote] = useState<string>('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [parameterWarnings, setParameterWarnings] = useState<{[graphId: string]: string}>({});
-  // Retour visuel du « 📌 » : depuis l'étape construction, le panneau banc de
-  // test n'est monté qu'à l'étape Validation — sans confirmation locale, le
-  // clic est muet. Remis à zéro dès que les entrées du calcul changent.
+  // Retour visuel du « 📌 » — remis à zéro dès que les entrées changent.
   const [referencePinned, setReferencePinned] = useState(false);
 
   useEffect(() => {
     setReferencePinned(false);
-  }, [initialValue, parameters, windDirection, expectedValue, selectedSystemId]);
+  }, [draft]);
+
+  // R20/Lot 1-F — les courbes en cours de tracé n'ont pas toujours leur
+  // `fitted` (invalidé à chaque retouche de point, régénéré à la validation) :
+  // on le régénère ICI aussi, pour que le testeur voie les graphes calculables
+  // PENDANT le tracé. Pur, idempotent, identité préservée si rien à faire.
+  const fittedGraphs = useMemo(() => ensureFittedGraphs(graphs), [graphs]);
 
   // Trouver tous les systèmes disponibles avec leurs métadonnées
   const availableSystems = useMemo(() => {
@@ -254,10 +284,14 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
       }).filter(s => s !== null);
     }
 
-    // Sinon, utiliser l'ancienne méthode
-    const startGraphs = graphs.filter(g => !g.linkedFrom || g.linkedFrom.length === 0);
+    // Sinon : racines de chaîne = graphes sans amont. Lot 1-F — un graphe
+    // ISOLÉ (ni amont ni aval : non cadré dans l'atelier) n'est PAS un
+    // « système » quand une vraie chaîne existe — fini les fantômes du menu.
+    const roots = fittedGraphs.filter(g => !g.linkedFrom || g.linkedFrom.length === 0);
+    const chained = roots.filter(g => g.linkedTo && g.linkedTo.length > 0);
+    const startGraphs = chained.length > 0 ? chained : roots;
     return startGraphs.map(startGraph => {
-      const chain = findGraphChain(graphs, startGraph.id);
+      const chain = findGraphChain(fittedGraphs, startGraph.id);
       let systemName = '';
 
       if (chain.length > 1) {
@@ -273,27 +307,57 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         chainLength: chain.length
       };
     });
-  }, [graphs, systems]);
+  }, [fittedGraphs, systems]);
 
-  // Utiliser le système sélectionné ou le premier par défaut
+  // Utiliser le système sélectionné ou le premier par défaut (id périmé —
+  // graphe supprimé — : repli silencieux sur le premier système).
   const startGraph = useMemo(() => {
-    if (selectedSystemId) {
-      return graphs.find(g => g.id === selectedSystemId) || null;
+    if (draft.selectedSystemId) {
+      const g = fittedGraphs.find(g => g.id === draft.selectedSystemId);
+      if (g) return g;
     }
     return availableSystems.length > 0 ? availableSystems[0] : null;
-  }, [graphs, selectedSystemId, availableSystems]);
+  }, [fittedGraphs, draft.selectedSystemId, availableSystems]);
 
   // Construire automatiquement la chaîne complète de graphiques
   const graphChain = useMemo(() => {
     if (!startGraph) return [];
-    return findGraphChain(graphs, startGraph.id);
-  }, [graphs, startGraph]);
+    return findGraphChain(fittedGraphs, startGraph.id);
+  }, [fittedGraphs, startGraph]);
 
   // Valider la chaîne
   const chainValidation = useMemo(() => {
     if (graphChain.length === 0) return { valid: true, errors: [] };
     return validateGraphChain(graphChain);
   }, [graphChain]);
+
+  // ─── Lot 1-F : CASCADE PARTIELLE — le plus long PRÉFIXE calculable ────────
+  // Fini le verrou « chaîne entière ou rien » : on calcule jusqu'au dernier
+  // graphe COMPLET (axes + courbes interpolées — validateGraphChain rejoué sur
+  // des préfixes décroissants). Le pilote valide chaque panneau contre le
+  // papier AVANT de tracer la zone suivante.
+  const evaluableChain = useMemo(() => {
+    for (let n = graphChain.length; n >= 1; n--) {
+      if (validateGraphChain(graphChain.slice(0, n)).valid) {
+        return graphChain.slice(0, n);
+      }
+    }
+    return [] as GraphConfig[];
+  }, [graphChain]);
+  const isPartial = evaluableChain.length > 0 && evaluableChain.length < graphChain.length;
+
+  // Lot 1-F — pré-remplissage CONSERVATEUR du paramètre VENT : défaut 0
+  // (convention resolveWindComponent : direction indéterminée ⇒ composante
+  // nulle, jamais un vent de face favorable). Seulement quand le champ n'a
+  // JAMAIS été touché (clé absente) — l'effacer reste possible.
+  useEffect(() => {
+    const missing = graphChain.filter((g, i) => i > 0 && g.isWindRelated && draft.parameters[g.id] === undefined);
+    if (missing.length === 0) return;
+    const parameters = { ...draft.parameters };
+    for (const g of missing) parameters[g.id] = '0';
+    setDraft({ ...draft, parameters });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graphChain, draft]);
 
   // Fonction pour vérifier un paramètre et retourner un avertissement si nécessaire
   const checkParameterBounds = useCallback((graph: GraphConfig, value: number, isWindGraph: boolean = false) => {
@@ -315,8 +379,8 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   }, []);
 
   // Gérer le changement de paramètre avec vérification en temps réel
-  const handleParameterChange = useCallback((graphId: string, value: string) => {
-    setParameters(prev => ({ ...prev, [graphId]: value }));
+  const handleParameterChange = (graphId: string, value: string) => {
+    patchDraft({ parameters: { ...draft.parameters, [graphId]: value } });
 
     // Vérifier les bornes en temps réel
     const graph = graphChain.find(g => g.id === graphId);
@@ -325,9 +389,11 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     if (graph && value !== '') {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        // Ne pas vérifier les bornes pour le premier graphique (altitude)
-        // car l'altitude est un paramètre d'interpolation, pas une entrée X
-        if (graphIndex === 0) {
+        // Ne pas vérifier les bornes pour le premier graphique (famille :
+        // paramètre d'interpolation entre les courbes, pas une entrée X), ni
+        // en lecture descendante (paramètre = famille des guides, l'axe X
+        // porte la SORTIE — ses bornes ne s'appliquent pas au paramètre).
+        if (graphIndex === 0 || graph.readoutAxis === 'x') {
           setParameterWarnings(prev => ({
             ...prev,
             [graphId]: ''
@@ -353,26 +419,22 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         [graphId]: ''
       }));
     }
-  }, [graphChain, checkParameterBounds]);
+  };
 
-  const handleCalculate = useCallback(() => {
-    setError('');
-    setWarnings([]);
-    setResult(null);
+  // ─── Lot 1-F : CALCUL LIVE — le résultat (et le badge d'écart papier) se
+  // recalcule à la frappe, débouncé ~300 ms, dès que les entrées requises du
+  // PRÉFIXE calculable sont valides. Plus de bouton « Calculer ». Saisie
+  // incomplète → note discrète (incompleteNote) ; refus moteur → boîte rouge.
+  const runLiveCalculation = useCallback(() => {
+    if (evaluableChain.length === 0 || draft.inputValue.trim() === '') {
+      setResult(null); setError(''); setWarnings([]); setIncompleteNote('');
+      return;
+    }
 
-    const value = parseFloat(initialValue);
+    const value = parseFloat(draft.inputValue);
     if (isNaN(value)) {
-      setError('Veuillez entrer une valeur numérique valide');
-      return;
-    }
-
-    if (graphChain.length === 0) {
-      setError('Veuillez sélectionner un graphique de départ');
-      return;
-    }
-
-    if (!chainValidation.valid) {
-      setError('La chaîne de graphiques contient des erreurs. Veuillez les corriger.');
+      setResult(null); setError(''); setWarnings([]);
+      setIncompleteNote('Valeur d\'entrée non numérique.');
       return;
     }
 
@@ -380,9 +442,10 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
     // se calcule JAMAIS sans direction explicite : interpoler entre les deux
     // familles est physiquement absurde (test de référence PA-28 : 2968 ft au
     // lieu de 1900 avec le sélecteur resté sur « toutes »). Le moteur a la
-    // même garde — ceci donne le message AVANT de lancer le calcul.
-    if (windDirection === 'all') {
-      const mixedWindGraph = graphChain.find(g => {
+    // même garde — ici c'est une SAISIE INCOMPLÈTE (le sélecteur est à
+    // l'écran), pas un refus moteur.
+    if (draft.windDirection === 'all') {
+      const mixedWindGraph = evaluableChain.find(g => {
         if (!g.isWindRelated) return false;
         // Lecture descendante : les guides face + nul + arrière coexistent par
         // construction — le paramètre SIGNÉ choisit le guide, pas de direction.
@@ -398,42 +461,48 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         return fams.size > 1;
       });
       if (mixedWindGraph) {
-        setError(`⛔ « ${mixedWindGraph.name} » contient des courbes vent de face ET vent arrière : choisis la direction du vent (boutons ci-dessus) avant de calculer.`);
+        setResult(null); setError(''); setWarnings([]);
+        setIncompleteNote(`Choisis la direction du vent : « ${mixedWindGraph.name} » contient des courbes vent de face ET vent arrière.`);
         return;
       }
     }
 
-    // Préparer les paramètres pour TOUS les graphiques (y compris le premier pour l'altitude)
+    // Préparer les paramètres pour les graphiques du PRÉFIXE calculable
+    // (y compris le premier pour la famille — ex. altitude pression).
     const graphParameters: GraphParameters[] = [];
     const warningsList: string[] = [];
+    const missingLabels: string[] = [];
 
-    for (let i = 0; i < graphChain.length; i++) {
-      const graph = graphChain[i];
-      const paramValue = parseFloat(parameters[graph.id] || '');
+    for (let i = 0; i < evaluableChain.length; i++) {
+      const graph = evaluableChain[i];
+      const paramValue = parseFloat(draft.parameters[graph.id] || '');
 
       // Le paramètre est obligatoire pour tous les graphiques
       if (i === 0) {
-        // Premier graphique : altitude pression OBLIGATOIRE
+        // Premier graphique : la FAMILLE des courbes (Lot 1-F — fini le
+        // « Altitude pression » codé en dur : un abaque à famille masse dit
+        // « Masse », via getAxisVariableLabel(graph.familyAxisVariable)).
+        const famLabel = getAxisVariableLabel(graph.familyAxisVariable) || 'Paramètre du premier graphique';
         if (isNaN(paramValue)) {
-          setError('L\'altitude pression est requise pour le calcul');
-          return;
+          missingLabels.push(`${famLabel} (${graph.name})`);
+          continue;
         }
 
-        // NE PAS vérifier les bornes pour l'altitude car c'est un paramètre, pas une entrée X
-        // L'altitude sera interpolée entre les courbes disponibles (ex: entre 2000ft et 4000ft)
+        // NE PAS vérifier les bornes : c'est un paramètre d'interpolation
+        // entre les courbes disponibles (ex: entre 2000 ft et 4000 ft).
 
         graphParameters.push({
           graphId: graph.id,
           parameter: paramValue,
-          parameterName: 'Altitude pression'
+          parameterName: famLabel
         });
       } else if (graph.readoutAxis === 'x') {
         // Lecture descendante : le paramètre est la valeur de FAMILLE des
         // guides (ex. vent signé) — l'axe X porte la sortie, ses bornes ne
         // s'appliquent pas au paramètre ; hors des guides, le moteur refuse.
         if (isNaN(paramValue)) {
-          setError(`Veuillez entrer un paramètre valide pour ${graph.name} (${graph.familyAxisVariable || 'valeur de famille des guides'})`);
-          return;
+          missingLabels.push(`${getAxisVariableLabel(graph.familyAxisVariable) || 'valeur de famille des guides'} (${graph.name})`);
+          continue;
         }
         graphParameters.push({
           graphId: graph.id,
@@ -443,11 +512,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
       } else {
         // Graphiques suivants : paramètre obligatoire
         if (isNaN(paramValue)) {
-          setError(`Veuillez entrer un paramètre valide pour ${graph.name} (${graph.axes?.xAxis.title})`);
-          return;
+          missingLabels.push(`${getAxisVariableLabel(graph.axes?.xAxis.title) || 'paramètre'} (${graph.name})`);
+          continue;
         }
-
-        // Pour un graphique de vent, stocker la direction du vent
 
         // Vérifier si le paramètre est dans les bornes définies du graphique
         if (graph.axes) {
@@ -463,9 +530,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         }
 
         // Passer la direction du vent dans les paramètres si c'est un graphique de vent
-        const graphWindDirection = graph.isWindRelated && windDirection !== 'all' ? windDirection : undefined;
+        const graphWindDirection = graph.isWindRelated && draft.windDirection !== 'all' ? draft.windDirection : undefined;
 
-                graphParameters.push({
+        graphParameters.push({
           graphId: graph.id,
           parameter: paramValue,
           parameterName: graph.axes?.xAxis.title,
@@ -474,24 +541,36 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
       }
     }
 
-    // Stocker les avertissements sans bloquer le calcul
-    if (warningsList.length > 0) {
-      setWarnings(warningsList);
+    if (missingLabels.length > 0) {
+      setResult(null); setError(''); setWarnings([]);
+      setIncompleteNote(`Saisie incomplète — ${missingLabels.join(' · ')}.`);
+      return;
     }
 
-    const calcResult = performCascadeCalculationWithParameters(graphChain, value, graphParameters);
+    const calcResult = performCascadeCalculationWithParameters(evaluableChain, value, graphParameters);
+
+    setIncompleteNote('');
+    setWarnings(warningsList);
 
     if (!calcResult.success) {
+      setResult(null);
       setError(calcResult.error || 'Erreur lors du calcul');
       return;
     }
 
+    setError('');
     setResult(calcResult);
-  }, [initialValue, graphChain, chainValidation, parameters, windDirection]);
+  }, [draft, evaluableChain]);
+
+  useEffect(() => {
+    const t = window.setTimeout(runLiveCalculation, 300);
+    return () => window.clearTimeout(t);
+  }, [runLiveCalculation]);
 
   const renderStep = (step: CascadeStep, index: number) => {
-    // Trouver le graphique correspondant
-    const graph = graphChain[index];
+    // Trouver le graphique correspondant (les étapes viennent du PRÉFIXE
+    // calculable — identique à graphChain sur ses index).
+    const graph = evaluableChain[index];
 
     return (
     // R10 — chaque étape est une CARTE de largeur fixe : les mini-graphiques se
@@ -600,10 +679,11 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     X={step.inputValue.toFixed(0)}
                   </text>
 
-                  {/* Si altitude fournie, montrer les courbes d'interpolation */}
+                  {/* Si paramètre de famille fourni, montrer les courbes d'interpolation */}
                   {step.parameter !== undefined && step.referenceCurves && (
                     <>
-                      {/* Indicateur d'altitude */}
+                      {/* Indicateur de famille (Lot 1-F — plus de « Alt … ft »
+                          en dur : symbole/label de la famille du graphe) */}
                       <text
                         x="5"
                         y="-10"
@@ -611,7 +691,10 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                         fill="var(--accent-primary)"
                         fontWeight="bold"
                       >
-                        Alt: {step.parameter.toFixed(0)} ft
+                        {getAxisVariable(graph.familyAxisVariable)?.symbol || getAxisVariableLabel(graph.familyAxisVariable) || 'Fam'}: {step.parameter.toFixed(0)}{(() => {
+                          const u = getAxisVariable(graph.familyAxisVariable)?.defaultUnit;
+                          return u ? ` ${u}` : '';
+                        })()}
                       </text>
 
                       {/* Point de sortie interpolé */}
@@ -840,7 +923,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
 
       <div style={styles.stepDetails}>
         {index === 0 ? (
-          // Premier graphique : entrée sur X avec altitude optionnelle
+          // Premier graphique : entrée sur X avec paramètre de famille optionnel
           <>
             <div style={styles.detailItem}>
               Entrée (X):
@@ -848,8 +931,12 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             </div>
             {step.parameter !== undefined && (
               <div style={styles.detailItem}>
-                Altitude pression:
-                <span style={styles.detailValue}> {step.parameter.toFixed(0)} ft</span>
+                {/* Lot 1-F — libellé de FAMILLE (plus de « Altitude pression … ft » en dur) */}
+                {step.parameterName || getAxisVariableLabel(graph?.familyAxisVariable) || 'Paramètre'}:
+                <span style={styles.detailValue}> {step.parameter.toFixed(0)}{(() => {
+                  const u = getAxisVariable(graph?.familyAxisVariable)?.defaultUnit;
+                  return u ? ` ${u}` : '';
+                })()}</span>
               </div>
             )}
           </>
@@ -862,13 +949,6 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--accent-primary)', marginLeft: '4px' }}>
                 (valeur précédente)
               </span>
-              {step.referenceCurves && (
-                <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px', marginLeft: '10px' }}>
-                  Position entre courbes:
-                  <br />• {step.referenceCurves.lowerCurveName} (Y={step.referenceCurves.lowerYAtRef?.toFixed(2)})
-                  <br />• {step.referenceCurves.upperCurveName} (Y={step.referenceCurves.upperYAtRef?.toFixed(2)})
-                </div>
-              )}
             </div>
             {step.parameter !== undefined && (
               <div style={styles.detailItem}>
@@ -892,40 +972,46 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             Courbe: <span style={styles.detailValue}>{step.curveUsed}</span>
           </div>
         )}
-        {step.offset !== undefined && step.offset !== 0 && (
-          <div style={styles.detailItem}>
-            Trajectoire:
-            <span style={styles.detailValue}>
-              {step.offset > 0 ? ' Au-dessus ' : ' En-dessous '}
-              de {Math.abs(step.offset).toFixed(2)} unités
-            </span>
-          </div>
-        )}
-        {step.valuesAtCrossing && (
-          <div style={styles.detailItem}>
-            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              <strong>Croisements verticaux à X={step.parameter?.toFixed(2)}:</strong>
-              <div style={{ marginLeft: '10px', marginTop: '2px' }}>
-                • Courbe inférieure: Y={step.valuesAtCrossing.lowerValue?.toFixed(2) || 'N/A'}<br />
-                • Courbe supérieure: Y={step.valuesAtCrossing.upperValue?.toFixed(2) || 'N/A'}
+      </div>
+
+      {/* Lot 1-F — DÉGRAISSAGE : la grille textuelle répétait les nombres du
+          SVG (position entre courbes, croisements verticaux, formule
+          d'interpolation) — repliée ici, à la demande. « Trajectoire » (jargon
+          offset moteur) et le warning permanent « ⚠ Valeur interpolée »
+          (l'interpolation est le cas NORMAL) sont supprimés. */}
+      {(step.referenceCurves || step.valuesAtCrossing) && (
+        <details style={{ marginTop: 8, paddingLeft: 34 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+            Détail du calcul
+          </summary>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: 4, paddingLeft: 10 }}>
+            {step.referenceCurves && (
+              <div>
+                Position entre courbes:
+                <br />• {step.referenceCurves.lowerCurveName} (Y={step.referenceCurves.lowerYAtRef?.toFixed(2)})
+                <br />• {step.referenceCurves.upperCurveName} (Y={step.referenceCurves.upperYAtRef?.toFixed(2)})
               </div>
-            </div>
-          </div>
-        )}
-        {step.interpolated && (
-          <div style={styles.detailItem}>
-            <span style={{ color: 'var(--accent-primary)' }}>⚠ Valeur interpolée</span>
+            )}
             {step.valuesAtCrossing && (
-              <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                Calcul: {step.valuesAtCrossing.lowerValue?.toFixed(2)} +
+              <div style={{ marginTop: 4 }}>
+                <strong>Croisements verticaux à X={step.parameter?.toFixed(2)}:</strong>
+                <div style={{ marginLeft: '10px', marginTop: '2px' }}>
+                  • Courbe inférieure: Y={step.valuesAtCrossing.lowerValue?.toFixed(2) || 'N/A'}<br />
+                  • Courbe supérieure: Y={step.valuesAtCrossing.upperValue?.toFixed(2) || 'N/A'}
+                </div>
+              </div>
+            )}
+            {step.interpolated && step.valuesAtCrossing && (
+              <div style={{ marginTop: 4 }}>
+                Interpolation: {step.valuesAtCrossing.lowerValue?.toFixed(2)} +
                 {' '}{step.offset?.toFixed(2)} ×
                 ({step.valuesAtCrossing.upperValue?.toFixed(2)} - {step.valuesAtCrossing.lowerValue?.toFixed(2)})
                 = {step.outputValue.toFixed(2)}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </details>
+      )}
     </div>
     );
   };
@@ -940,16 +1026,19 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
       </div>
 
       <div style={styles.inputSection}>
-        {/* Sélecteur de système d'abaques */}
-        {availableSystems.length > 0 ? (
+        {/* Sélecteur de système d'abaques — Lot 1-F : MASQUÉ quand une seule
+            chaîne existe (cas nominal atelier image unique) : un menu à une
+            option est du bruit. Les graphes isolés (non cadrés) ne comptent
+            plus comme « systèmes » fantômes (cf. availableSystems). */}
+        {availableSystems.length > 1 && (
           <div style={styles.inputGroup}>
             <label style={styles.label}>
               📊 Sélectionnez le système d'abaques
             </label>
             <select
               style={styles.select}
-              value={selectedSystemId || (startGraph?.id || '')}
-              onChange={(e) => setSelectedSystemId(e.target.value)}
+              value={draft.selectedSystemId || (startGraph?.id || '')}
+              onChange={(e) => patchDraft({ selectedSystemId: e.target.value })}
             >
               {availableSystems.map(system => (
                 <option key={system.id} value={system.id}>
@@ -965,7 +1054,8 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               </div>
             )}
           </div>
-        ) : (
+        )}
+        {availableSystems.length === 0 && (
           <div style={{
             padding: '12px',
             backgroundColor: 'var(--status-error-bg)',
@@ -987,7 +1077,13 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             <strong>Chaîne de calcul:</strong>
             <div style={{ marginTop: '5px' }}>
               {graphChain.map((g, i) => (
-                <span key={g.id}>
+                // Lot 1-F — cascade partielle : les graphes AU-DELÀ du préfixe
+                // calculable sont grisés (pas encore complets), pas bloquants.
+                <span
+                  key={g.id}
+                  style={i < evaluableChain.length ? undefined : { opacity: 0.45 }}
+                  title={i < evaluableChain.length ? undefined : 'Graphe incomplet (axes ou courbes interpolées manquantes) — pas encore évalué'}
+                >
                   {i > 0 && ' → '}
                   <strong>{g.name}</strong>
                   {g.axes && (
@@ -1000,10 +1096,19 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 </span>
               ))}
             </div>
+            {isPartial && (
+              <div style={{ marginTop: 6, fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+                Cascade partielle : le calcul s'arrête après « {evaluableChain[evaluableChain.length - 1].name} » —
+                les graphes grisés ne sont pas encore complets (axes + courbes interpolées).
+              </div>
+            )}
           </div>
         )}
 
-        {chainValidation.errors.length > 0 && (
+        {/* Lot 1-F — les problèmes de chaîne ne s'affichent que quand RIEN
+            n'est calculable (sinon la cascade partielle prend le relais et la
+            liste ferait doublon avec les graphes grisés ci-dessus). */}
+        {evaluableChain.length === 0 && chainValidation.errors.length > 0 && (
           <div style={styles.validationWarning}>
             <strong>⚠ Problèmes détectés:</strong>
             <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
@@ -1014,7 +1119,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           </div>
         )}
 
-        {startGraph && chainValidation.valid && (
+        {startGraph && evaluableChain.length > 0 && (
           <>
             <div style={styles.inputGroup}>
               <label style={styles.label}>
@@ -1033,32 +1138,33 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
               <input
                 type="number"
                 style={styles.input}
-                value={initialValue}
-                onChange={(e) => setInitialValue(e.target.value)}
+                value={draft.inputValue}
+                onChange={(e) => patchDraft({ inputValue: e.target.value })}
                 placeholder="Entrez une valeur numérique"
               />
             </div>
 
-            {/* Champs pour les paramètres de chaque graphique */}
-            {graphChain.map((graph, index) => (
+            {/* Champs pour les paramètres de chaque graphique du PRÉFIXE
+                calculable (Lot 1-F — cascade partielle : les graphes pas
+                encore complets n'exigent rien) */}
+            {evaluableChain.map((graph, index) => (
               <div key={graph.id} style={styles.inputGroup}>
                 <label style={styles.label}>
                   {index === 0 ? (
                     <>
-                      Altitude pression pour {graph.name}
+                      {/* Lot 1-F — fini « Altitude pression » codé en dur : le
+                          paramètre du graphe 0 porte le libellé de SA famille
+                          (getAxisVariableLabel) — un abaque à famille masse
+                          dit « Masse ». R16b — l'unité de la famille reste
+                          affichée explicitement (fini le « ft ou m » ambigu). */}
+                      {(() => {
+                        const fam = getAxisVariable(graph.familyAxisVariable);
+                        if (fam) return <>{fam.label} pour {graph.name}{fam.defaultUnit && <strong> ({fam.defaultUnit})</strong>}</>;
+                        const names = graph.curves.slice(0, 3).map(c => c.name).join(', ');
+                        return <>Paramètre pour {graph.name} — même échelle que les courbes : <strong>{names}{graph.curves.length > 3 ? '…' : ''}</strong></>;
+                      })()}
                       <span style={{ fontWeight: 'normal', color: 'var(--color-red-critical)' }}>
                         {' '}(obligatoire)
-                      </span>
-                      {/* R16b — l'altitude s'interpole ENTRE LES COURBES : son
-                          unité est celle de la famille de courbes, affichée
-                          explicitement (fini le « ft ou m » ambigu). */}
-                      <span style={{ fontWeight: 'normal' }}>
-                        {' '}— {(() => {
-                          const fam = getAxisVariable(graph.familyAxisVariable);
-                          if (fam) return <>{fam.label}{fam.defaultUnit && <strong> ({fam.defaultUnit})</strong>}</>;
-                          const names = graph.curves.slice(0, 3).map(c => c.name).join(', ');
-                          return <>même échelle que les courbes : <strong>{names}{graph.curves.length > 3 ? '…' : ''}</strong></>;
-                        })()}
                       </span>
                     </>
                   ) : graph.readoutAxis === 'x' ? (
@@ -1089,7 +1195,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     ...styles.input,
                     borderColor: parameterWarnings[graph.id] ? 'var(--accent-primary)' : 'var(--border-subtle)'
                   }}
-                  value={parameters[graph.id] || ''}
+                  value={draft.parameters[graph.id] || ''}
                   onChange={(e) => handleParameterChange(graph.id, e.target.value)}
                   placeholder={
                     index === 0
@@ -1114,7 +1220,7 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                 )}
                 {graph.curves && graph.curves.length > 0 && (
                   <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    {index === 0 ? 'Courbes d\'altitude: ' : 'Courbes disponibles: '}
+                    {index === 0 ? 'Courbes de la famille : ' : 'Courbes disponibles: '}
                     {graph.curves.map(c => c.name).join(', ')}
                   </div>
                 )}
@@ -1122,54 +1228,57 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             ))}
 
             {/* Sélecteur de direction du vent pour les graphiques liés au vent
-                (inutile en lecture descendante : le paramètre signé choisit le guide) */}
-            {graphChain.some(g => g.isWindRelated && g.readoutAxis !== 'x') && (
+                (inutile en lecture descendante : le paramètre signé choisit le
+                guide ; limité au préfixe calculable — Lot 1-F) */}
+            {evaluableChain.some(g => g.isWindRelated && g.readoutAxis !== 'x') && (
               <div style={styles.inputGroup}>
                 <label style={styles.label}>
                   💨 Direction du vent pour le calcul
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
-                    onClick={() => setWindDirection('headwind')}
+                    onClick={() => patchDraft({ windDirection: 'headwind' })}
                     style={{
                       flex: 1,
                       padding: '8px',
-                      backgroundColor: windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                      color: windDirection === 'headwind' ? 'white' : 'var(--text-primary)',
-                      border: '1px solid ' + (windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
+                      backgroundColor: draft.windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
+                      color: draft.windDirection === 'headwind' ? 'white' : 'var(--text-primary)',
+                      border: '1px solid ' + (draft.windDirection === 'headwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
                       borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: 'var(--fs-body)',
-                      fontWeight: windDirection === 'headwind' ? 'bold' : 'normal'
+                      fontWeight: draft.windDirection === 'headwind' ? 'bold' : 'normal'
                     }}
                   >
                     ⬅️ Vent de face
                   </button>
                   <button
-                    onClick={() => setWindDirection('tailwind')}
+                    onClick={() => patchDraft({ windDirection: 'tailwind' })}
                     style={{
                       flex: 1,
                       padding: '8px',
-                      backgroundColor: windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                      color: windDirection === 'tailwind' ? 'white' : 'var(--text-primary)',
-                      border: '1px solid ' + (windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
+                      backgroundColor: draft.windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--bg-overlay)',
+                      color: draft.windDirection === 'tailwind' ? 'white' : 'var(--text-primary)',
+                      border: '1px solid ' + (draft.windDirection === 'tailwind' ? 'var(--accent-primary)' : 'var(--border-subtle)'),
                       borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: 'var(--fs-body)',
-                      fontWeight: windDirection === 'tailwind' ? 'bold' : 'normal'
+                      fontWeight: draft.windDirection === 'tailwind' ? 'bold' : 'normal'
                     }}
                   >
                     ➡️ Vent arrière
                   </button>
                 </div>
-                {windDirection === 'all' && (
-                  <div style={{ marginTop: 6, fontSize: 'var(--fs-caption)', color: 'var(--color-red-critical)', fontWeight: 600 }}>
-                    Direction obligatoire : le calcul ne mélange jamais vent de face et vent arrière.
+                {/* Lot 1-F — note DISCRÈTE (saisie incomplète, pas un refus
+                    moteur : la boîte rouge est réservée au moteur). */}
+                {draft.windDirection === 'all' && (
+                  <div style={{ marginTop: 6, fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+                    Choisis la direction : le calcul ne mélange jamais vent de face et vent arrière.
                   </div>
                 )}
-                {windDirection !== 'all' && (
+                {draft.windDirection !== 'all' && (
                   <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                    Seules les courbes {windDirection === 'headwind' ? 'vent de face' : 'vent arrière'} seront utilisées
+                    Seules les courbes {draft.windDirection === 'headwind' ? 'vent de face' : 'vent arrière'} seront utilisées
                   </div>
                 )}
               </div>
@@ -1178,8 +1287,9 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
         )}
 
         {/* R19 — valeur attendue du PAPIER (optionnelle) : l'écart % s'affiche
-            en live sur le résultat, pour corriger les courbes à vue. */}
-        {startGraph && chainValidation.valid && (
+            en live sur le résultat, pour corriger les courbes à vue. Le badge
+            d'écart ne s'affiche que sur la CHAÎNE COMPLÈTE (Lot 1-F). */}
+        {startGraph && evaluableChain.length > 0 && (
           <div style={styles.inputGroup}>
             <label style={styles.label}>
               Valeur attendue du papier
@@ -1195,20 +1305,20 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
             <input
               type="number"
               style={styles.input}
-              value={expectedValue}
-              onChange={(e) => setExpectedValue(e.target.value)}
+              value={draft.expectedValue}
+              onChange={(e) => patchDraft({ expectedValue: e.target.value })}
               placeholder="Résultat lu sur l'abaque du manuel de vol"
             />
           </div>
         )}
 
-        {startGraph && initialValue && chainValidation.valid && (
-          <button
-            style={styles.calculateButton}
-            onClick={handleCalculate}
-          >
-            Calculer
-          </button>
+        {/* Lot 1-F — CALCUL LIVE : plus de bouton « Calculer ». La saisie
+            incomplète s'affiche en note discrète (la boîte rouge plus bas est
+            réservée aux refus du moteur : hors domaine, guide non monotone…). */}
+        {incompleteNote && (
+          <div style={{ marginTop: 8, fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
+            {incompleteNote}
+          </div>
         )}
       </div>
 
@@ -1251,14 +1361,21 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
           </div>
 
           <div style={styles.finalResult}>
-            <div>Valeur finale</div>
+            {/* Lot 1-F — cascade partielle : le résultat d'un PRÉFIXE est
+                annoncé comme tel, avec le dernier graphe évalué. */}
+            <div>
+              {isPartial
+                ? `Résultat partiel — jusqu'à « ${evaluableChain[evaluableChain.length - 1]?.name} »`
+                : 'Valeur finale'}
+            </div>
             {(() => {
-              const lastGraph = graphChain.length > 0 ? graphChain[graphChain.length - 1] : undefined;
+              const lastGraph = evaluableChain.length > 0 ? evaluableChain[evaluableChain.length - 1] : undefined;
               const lastAxes = lastGraph?.axes;
               // Lecture descendante : le résultat sort sur l'axe X du dernier
-              // graphe (échelle des distances, en bas) — unité et titre suivent.
+              // graphe ÉVALUÉ (échelle des distances, en bas) — unité et titre
+              // suivent ; le moteur renseigne outputUnit en priorité.
               const readoutX = lastGraph?.readoutAxis === 'x';
-              const unit = (readoutX ? lastAxes?.xAxis?.unit : lastAxes?.yAxis?.unit) || '';
+              const unit = result.outputUnit || (readoutX ? lastAxes?.xAxis?.unit : lastAxes?.yAxis?.unit) || '';
               // R10 — comparatif systématique dans l'unité opposée (ft ↔ m…)
               const opposite = formatOppositeUnit(result.finalValue, unit);
               return (
@@ -1277,12 +1394,15 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                     </div>
                   )}
                   {/* R19 — comparaison LIVE avec la valeur attendue du papier :
-                      écart % signé, vert ≤5 % (tolérance banc), rouge au-delà. */}
-                  {(() => {
-                    const exp = parseFloat(expectedValue);
+                      écart % signé, vert dans la tolérance du banc
+                      (DEFAULT_TOLERANCE_PCT — source unique), rouge au-delà.
+                      Lot 1-F : uniquement sur la CHAÎNE COMPLÈTE (un écart
+                      contre un résultat partiel n'a pas de sens papier). */}
+                  {!isPartial && (() => {
+                    const exp = parseFloat(draft.expectedValue);
                     if (!Number.isFinite(exp) || exp === 0) return null;
                     const deltaPct = ((result.finalValue - exp) / Math.abs(exp)) * 100;
-                    const ok = Math.abs(deltaPct) <= 5;
+                    const ok = Math.abs(deltaPct) <= DEFAULT_TOLERANCE_PCT;
                     return (
                       <div style={{
                         display: 'inline-block', marginTop: 10, padding: '6px 14px', borderRadius: 6,
@@ -1291,29 +1411,30 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       }}>
                         Papier : {exp}{unit ? ` ${unit}` : ''} · écart {deltaPct >= 0 ? '+' : ''}{deltaPct.toFixed(1)} %
                         <span style={{ fontWeight: 400, marginLeft: 8 }}>
-                          {ok ? '✓ dans la tolérance (±5 %)' : deltaPct > 0 ? 'calcul AU-DESSUS du papier' : 'calcul EN DESSOUS du papier'}
+                          {ok ? `✓ dans la tolérance (±${DEFAULT_TOLERANCE_PCT} %)` : deltaPct > 0 ? 'calcul AU-DESSUS du papier' : 'calcul EN DESSOUS du papier'}
                         </span>
                       </div>
                     );
                   })()}
                   {/* R13 — un clic transforme ce calcul en cas de référence du
                       banc de test : les entrées sont reprises, il ne reste qu'à
-                      taper le résultat ATTENDU lu sur le papier. */}
-                  {onProposeReference && (
+                      taper le résultat ATTENDU lu sur le papier. Lot 1-F :
+                      chaîne complète uniquement (le banc rejoue tout le set). */}
+                  {!isPartial && onProposeReference && (
                     <button
                       onClick={() => {
                         const parametersNum: Record<string, number> = {};
-                        for (const g of graphChain) {
-                          const v = parseFloat(parameters[g.id]);
+                        for (const g of evaluableChain) {
+                          const v = parseFloat(draft.parameters[g.id]);
                           if (!isNaN(v)) parametersNum[g.id] = v;
                         }
                         // R19 — l'attendu saisi pour la comparaison live part
                         // avec le snapshot : le cas de référence naît complet.
-                        const exp = parseFloat(expectedValue);
+                        const exp = parseFloat(draft.expectedValue);
                         onProposeReference({
-                          inputValue: parseFloat(initialValue),
+                          inputValue: parseFloat(draft.inputValue),
                           parameters: parametersNum,
-                          ...(windDirection !== 'all' ? { windDirection } : {}),
+                          ...(draft.windDirection !== 'all' ? { windDirection: draft.windDirection } : {}),
                           computed: result.finalValue,
                           ...(Number.isFinite(exp) ? { expected: exp } : {})
                         });
@@ -1329,14 +1450,14 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
                       📌 En faire un cas de référence
                     </button>
                   )}
-                  {/* Confirmation discrète du 📌 (indispensable depuis l'étape
-                      construction où le panneau du banc n'est pas monté). */}
-                  {onProposeReference && referencePinned && (
+                  {/* Confirmation discrète du 📌 (Lot 1-F : le panneau du banc
+                      est désormais monté sous le testeur, aux deux écrans). */}
+                  {!isPartial && onProposeReference && referencePinned && (
                     <div style={{
                       marginTop: 6, fontSize: 'var(--fs-caption)',
                       color: 'rgba(255,255,255,0.9)', fontWeight: 500
                     }}>
-                      ✓ Repris dans le banc de test — visible à l'étape Validation
+                      ✓ Repris dans le banc de test (panneau ci-dessous)
                     </div>
                   )}
                 </>
