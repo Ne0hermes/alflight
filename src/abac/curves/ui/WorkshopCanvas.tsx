@@ -25,7 +25,10 @@ import { BezierSegment } from '../core/bezier';
 import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedForCore } from '../core/axisVariables';
 // Lot 1-E — kit visuel de l'atelier : bandeau de mode permanent (Échap
 // universel embarqué) + bouton à raison de désactivation affichée.
-import { KitButton, ModeBanner } from './kit';
+// Lot 1-G — libellés STABLES + kit partout : KitButton sur la barre d'outils
+// et le panneau Axes, l'état (« 3 pts ✓ », « importée ✓ ») porté par des
+// KitBadge À CÔTÉ des boutons, anatomie KitPanel pour l'atelier et les axes.
+import { KitBadge, KitButton, KitPanel, ModeBanner, SPACING } from './kit';
 
 interface WorkshopCanvasProps {
   workshop: WorkshopConfig;
@@ -662,53 +665,58 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   }, [tracingMode]);
 
   return (
-    <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 6, backgroundColor: 'var(--bg-surface)', padding: 10, marginBottom: 14 }}>
-      {/* ─── Barre d'outils du canevas ─── */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
-        <strong style={{ fontSize: 13, color: 'var(--accent-primary)' }}>🗺 Atelier — image unique</strong>
-        <button
+    <KitPanel title="Atelier — image unique">
+      {/* ─── Barre d'outils du canevas — libellés STABLES (Lot 1-G) : l'état
+          (« importée ✓ », « n à cadrer ») vit dans des KitBadge à côté des
+          boutons, jamais dans leur texte. ─── */}
+      <div style={{ display: 'flex', gap: SPACING.sm, alignItems: 'center', flexWrap: 'wrap', marginBottom: SPACING.sm }}>
+        <KitButton
+          level="secondary"
+          size="compact"
+          icon="📷"
           onClick={() => fileInputRef.current?.click()}
-          style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--accent-primary)', borderRadius: 3, fontSize: 12 }}
+          title={workshop.image ? 'Remplace l\'image actuelle du set' : 'Importe la page du manuel de vol (filigrane du set)'}
         >
-          📷 {workshop.image ? 'Changer l\'image' : 'Importer l\'image du manuel de vol'}
-        </button>
+          Importer l'image
+        </KitButton>
+        {workshop.image && <KitBadge tone="ok">importée ✓</KitBadge>}
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleImageUpload} />
         {workshop.image && (
           // Lot 1-E — KitButton à raison affichée : l'ajustement est
           // INACCESSIBLE pendant un tracé ou une calibration, et VERROUILLÉ
           // dès qu'une calibration existe (elle est en pixels : déplacer
-          // l'image la fausserait). En mode cadrage, le bouton devient la
-          // sortie explicite (le bandeau de mode offre aussi Échap).
-          imageAdjust ? (
-            <KitButton level="primary" size="compact" icon="✓" onClick={() => setImageAdjust(false)}>
-              Terminer l'ajustement
-            </KitButton>
-          ) : (
-            <KitButton
-              level="secondary"
-              size="compact"
-              icon="✥"
-              disabled={hasCalibrations || tracingActive || !!calib}
-              disabledReason={
-                hasCalibrations
-                  ? 'Image verrouillée : des calibrations existent (elles sont en pixels — déplacer l\'image les fausserait). Réinitialisez les calibrations pour ajuster.'
-                  : tracingActive
-                    ? 'Tracé en cours — terminez la courbe (Échap) avant d\'ajuster l\'image.'
-                    : 'Calibration en cours — terminez-la avant d\'ajuster l\'image.'
-              }
-              onClick={enterImageAdjust}
-            >
-              Ajuster l'image
-            </KitButton>
-          )
+          // l'image la fausserait).
+          // Lot 1-G — libellé STABLE : l'état actif est porté par le
+          // ModeBanner (« Cadrage de l'image », Échap/Annuler pour sortir) ;
+          // re-cliquer le bouton sort aussi du mode.
+          <KitButton
+            level="secondary"
+            size="compact"
+            icon="✥"
+            disabled={!imageAdjust && (hasCalibrations || tracingActive || !!calib)}
+            disabledReason={
+              hasCalibrations
+                ? 'Image verrouillée : des calibrations existent (elles sont en pixels — déplacer l\'image les fausserait). Réinitialisez les calibrations pour ajuster.'
+                : tracingActive
+                  ? 'Tracé en cours — terminez la courbe (Échap) avant d\'ajuster l\'image.'
+                  : 'Calibration en cours — terminez-la avant d\'ajuster l\'image.'
+            }
+            onClick={() => (imageAdjust ? setImageAdjust(false) : enterImageAdjust())}
+            title={imageAdjust ? 'Termine l\'ajustement de l\'image (Échap marche aussi)' : 'Positionner et recadrer l\'image sous les cadres'}
+          >
+            Ajuster l'image
+          </KitButton>
         )}
-        <button
+        <KitButton
+          level="secondary"
+          size="compact"
+          icon="＋"
           onClick={handleAddFrame}
-          style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px dashed var(--border-regular)', borderRadius: 3, fontSize: 12 }}
-          title={unframedCount > 0 ? `Cadrer le prochain graphe non cadré (${unframedCount} restant)` : 'Créer un nouveau graphe et son cadre'}
+          title={unframedCount > 0 ? 'Cadrer le prochain graphe non cadré' : 'Créer un nouveau graphe et son cadre'}
         >
-          ＋ Ajouter un cadre {unframedCount > 0 ? `(${unframedCount} graphe(s) à cadrer)` : ''}
-        </button>
+          Ajouter un cadre
+        </KitButton>
+        {unframedCount > 0 && <KitBadge tone="warn">{unframedCount} graphe{unframedCount > 1 ? 's' : ''} à cadrer</KitBadge>}
 
         {/* ─── ZOOM — 19/08 (demande pilote) : les boutons loupe et « Vue 100 % »
             sont retirés, la molette suffit (zoomBy reste branché sur l'événement
@@ -735,12 +743,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           <span>
             Ce modèle a <strong>{graphs.length} graphe(s)</strong> sans cadre (construit avant l'atelier image unique).
           </span>
-          <button
-            onClick={handleConvertExisting}
-            style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
-          >
+          <KitButton level="secondary" size="compact" onClick={handleConvertExisting}>
             Créer un cadre par graphe
-          </button>
+          </KitButton>
           <span style={{ color: 'var(--text-tertiary)' }}>puis recalez-les sur l'image et ré-importez le filigrane si besoin.</span>
         </div>
       )}
@@ -784,12 +789,13 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
       )}
 
       {/* ─── Le canevas ─── */}
-      {/* ─── R2b+R8 : panneau AXES — AU-DESSUS de l'atelier (demande pilote), variables canoniques + unités verrouillées ─── */}
-      <div style={{
-        display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap',
-        marginBottom: 8, padding: '8px 10px', borderRadius: 4,
-        backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-subtle)'
-      }}>
+      {/* ─── R2b+R8 : panneau AXES — AU-DESSUS de l'atelier (demande pilote),
+          variables canoniques + unités verrouillées.
+          Lot 1-G : anatomie KitPanel + libellés STABLES (« Calibrer Y » /
+          « Calibrer X » — l'état « n pts ✓ » vit dans un KitBadge à côté). ─── */}
+      <div style={{ marginBottom: SPACING.sm }}>
+      <KitPanel title="Axes">
+        <div style={{ display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         {/* Y commun */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>Y COMMUN</strong>
@@ -812,21 +818,30 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             <input type="checkbox" checked={!!workshop.sharedY.reversed} onChange={(e) => patchSharedY({ reversed: e.target.checked })} />
             inversé
           </label>
-          <button
-            onClick={startCalibY}
+          <KitButton
+            level="secondary"
+            size="compact"
+            icon="🎯"
             disabled={!!calib}
-            style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: workshop.yTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
+            disabledReason="Calibration en cours — termine-la (ou Échap) avant d'en lancer une autre."
+            onClick={startCalibY}
+            title="Clique les graduations Y de l'image pour caler l'échelle commune"
           >
-            🎯 Calibrer Y {workshop.yTicks?.length ? `(${workshop.yTicks.length} pts ✓)` : ''}
-          </button>
+            Calibrer Y
+          </KitButton>
+          {workshop.yTicks?.length ? <KitBadge tone="ok">{workshop.yTicks.length} pts ✓</KitBadge> : null}
           {workshop.yTicks?.length ? (
-            <button
-              onClick={() => onWorkshopChange({ ...workshop, yTicks: undefined })}
+            <KitButton
+              level="tertiary"
+              size="compact"
+              icon="↺"
               disabled={!!calib}
-              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
+              disabledReason="Calibration en cours — termine-la avant de réinitialiser."
+              onClick={() => onWorkshopChange({ ...workshop, yTicks: undefined })}
+              title="Efface la calibration Y (les clics de graduations)"
             >
-              ↺ Reset Y
-            </button>
+              Réinitialiser Y
+            </KitButton>
           ) : null}
         </div>
 
@@ -860,24 +875,33 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               <input type="checkbox" checked={!!focusedX.reversed} onChange={(e) => onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, reversed: e.target.checked })} />
               inversé (ex. masse décroissante)
             </label>
-            <button
-              onClick={() => startCalibX(focusedGraph.id)}
+            <KitButton
+              level="secondary"
+              size="compact"
+              icon="🎯"
               disabled={!!calib}
-              style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: focusedFrame.xTicks?.length ? 'rgba(79, 174, 127, 0.12)' : 'var(--bg-surface)', border: '1px solid var(--accent-primary)', color: 'var(--text-primary)' }}
+              disabledReason="Calibration en cours — termine-la (ou Échap) avant d'en lancer une autre."
+              onClick={() => startCalibX(focusedGraph.id)}
+              title="Clique les graduations X du cadre actif pour caler son échelle"
             >
-              🎯 Calibrer X {focusedFrame.xTicks?.length ? `(${focusedFrame.xTicks.length} pts ✓)` : ''}
-            </button>
+              Calibrer X
+            </KitButton>
+            {focusedFrame.xTicks?.length ? <KitBadge tone="ok">{focusedFrame.xTicks.length} pts ✓</KitBadge> : null}
             {focusedFrame.xTicks?.length ? (
-              <button
+              <KitButton
+                level="tertiary"
+                size="compact"
+                icon="↺"
+                disabled={!!calib}
+                disabledReason="Calibration en cours — termine-la avant de réinitialiser."
                 onClick={() => onWorkshopChange({
                   ...workshop,
                   frames: workshop.frames.map(f => f.graphId === focusedGraph.id ? { ...f, xTicks: undefined } : f)
                 })}
-                disabled={!!calib}
-                style={{ padding: '4px 8px', cursor: 'pointer', fontSize: 11, borderRadius: 3, backgroundColor: 'var(--bg-surface)', border: '1px solid var(--color-red-critical)', color: 'var(--color-red-critical)' }}
+                title="Efface la calibration X du cadre actif"
               >
-                ↺ Reset X
-              </button>
+                Réinitialiser X
+              </KitButton>
             ) : null}
           </div>
         ) : (
@@ -885,6 +909,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             Cliquez un cadre pour régler son axe X (le Y est commun à tous).
           </span>
         )}
+        </div>
+      </KitPanel>
       </div>
 
       {/* ─── CAPSULE « NOUVELLE COURBE » — entre le panneau Axes (valeurs X/Y)
@@ -1426,6 +1452,6 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         </g>
       </svg>
 
-    </div>
+    </KitPanel>
   );
 };

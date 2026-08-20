@@ -15,6 +15,9 @@ import { CurveManager } from './CurveManager';
 import { PointsTable } from './PointsTable';
 import { AxesConfig, Curve, GraphConfig, WindDirection } from '../core/types';
 import { getAxisVariable } from '../core/axisVariables';
+// Lot 1-G — anatomie KitPanel pour le bloc « Courbes du cadre actif » et
+// KitButton partout ; « Interpoler & Valider » est LA primaire de l'écran Tracé.
+import { KitBadge, KitButton, KitPanel, SPACING } from './kit';
 
 export type EditorMode = 'idle' | 'placing-points';
 
@@ -102,53 +105,52 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
   const selectedCurve = selectedCurveId ? graph.curves.find(c => c.id === selectedCurveId) : null;
 
   return (
-    <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 8, backgroundColor: 'var(--bg-surface)' }}>
+    <KitPanel
+      title="Courbes du cadre actif"
+      badge={<KitBadge tone="neutral">{graph.curves.length} courbe{graph.curves.length > 1 ? 's' : ''}</KitBadge>}
+    >
       {/* === Outillage courbes du cadre actif (ex-sous-étape 5, seule vivante) === */}
-          <div style={{ padding: 16 }}>
-            <h3 style={{ marginTop: 0 }}>✏️ Courbes du cadre actif</h3>
-
+          <div>
             {editorMode === 'placing-points' && selectedCurve ? (
               /* Mode placement de points en cours */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4 }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4, display: 'flex', gap: SPACING.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>📍 Tracé de "{selectedCurve.name}" en cours.</strong>{' '}
-                Clique sur la courbe de l'image pour ajouter des points. Glisse un point pour le déplacer, clic droit pour le supprimer.
-                <span style={{ marginLeft: 8, color: 'var(--text-primary)' }}>
+                <span>Clique sur la courbe de l'image pour ajouter des points. Glisse un point pour le déplacer, clic droit pour le supprimer.</span>
+                <span style={{ color: 'var(--text-primary)' }}>
                   {selectedCurve.points.length} point(s) placé(s)
                 </span>
-                <button
-                  onClick={handleFinishCurve}
-                  style={{ marginLeft: 12, padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
-                >
-                  ✓ Terminer cette courbe
-                </button>
+                <span style={{ marginLeft: 'auto' }}>
+                  <KitButton level="secondary" size="compact" icon="✓" onClick={handleFinishCurve}>
+                    Terminer cette courbe
+                  </KitButton>
+                </span>
               </div>
             ) : bezierActive && selectedCurve ? (
               /* P2b/R7 — Mode Bézier : la session vit dans le BUILDER et les
                  poignées se tirent sur le CANEVAS (par-dessus l'image) : cette
                  bannière ne fait que piloter Appliquer / Annuler. */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', borderRadius: 4, display: 'flex', gap: SPACING.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>〰 Façonnage Bézier de "{selectedCurve.name}"</strong>
                 <span style={{ fontSize: 13 }}>
                   Tire les <strong>poignées rondes</strong> directement sur l'image, dans le cadre actif, pour faire suivre le trait à la courbe (les points restent déplaçables). La courbe doit rester une fonction de X.
                 </span>
                 <span style={{ marginLeft: 'auto' }} />
-                <button
+                <KitButton
+                  level="secondary"
+                  size="compact"
+                  icon="✓"
                   onClick={onApplyBezier}
-                  style={{ padding: '4px 10px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3, fontWeight: 500 }}
                   title="Remplace les points de la courbe par un échantillonnage fidèle du tracé"
                 >
-                  ✓ Appliquer le tracé
-                </button>
-                <button
-                  onClick={onCancelBezier}
-                  style={btnStyle('var(--text-secondary)', true)}
-                >
-                  ✕ Annuler
-                </button>
+                  Appliquer le tracé
+                </KitButton>
+                <KitButton level="tertiary" size="compact" icon="✕" onClick={onCancelBezier}>
+                  Annuler
+                </KitButton>
               </div>
             ) : selectedCurve ? (
               /* Courbe sélectionnée mais hors mode placement : édition libre */
-              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '2px solid var(--status-success)', borderRadius: 4, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ padding: 12, marginBottom: 12, backgroundColor: 'var(--bg-overlay)', border: '2px solid var(--status-success)', borderRadius: 4, display: 'flex', gap: SPACING.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong style={{ color: 'var(--status-success)' }}>✏ Édition de "{selectedCurve.name}"</strong>
                 <span style={{ color: 'var(--status-success)', fontSize: 13 }}>
                   → <strong>glisse un point</strong> pour le repositionner, <strong>clic droit</strong> pour le supprimer,
@@ -157,30 +159,35 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                 <span style={{ marginLeft: 'auto', color: 'var(--text-primary)', fontSize: 12 }}>
                   {selectedCurve.points.length} point(s)
                 </span>
-                <button
+                <KitButton
+                  level="secondary"
+                  size="compact"
+                  icon="📍"
                   onClick={() => setEditorMode('placing-points')}
-                  style={btnStyle('var(--accent-primary)')}
                   title="Reprendre le placement de points par clic sur l'image"
                 >
-                  📍 Ajouter des points
-                </button>
-                <button
-                  onClick={onStartBezier}
+                  Ajouter des points
+                </KitButton>
+                <KitButton
+                  level="secondary"
+                  size="compact"
+                  icon="〰"
                   disabled={selectedCurve.points.length < 2}
-                  style={{ ...btnStyle('var(--accent-primary)', true), opacity: selectedCurve.points.length < 2 ? 0.4 : 1 }}
-                  title={selectedCurve.points.length < 2
-                    ? 'Place au moins 2 points avant de façonner en Bézier'
-                    : 'Façonner la courbe en tirant des poignées directement sur l\'image (Bézier)'}
+                  disabledReason="Place au moins 2 points avant de façonner en Bézier."
+                  onClick={onStartBezier}
+                  title="Façonner la courbe en tirant des poignées directement sur l'image (Bézier)"
                 >
-                  〰 Affiner en Bézier
-                </button>
-                <button
+                  Affiner en Bézier
+                </KitButton>
+                <KitButton
+                  level="tertiary"
+                  size="compact"
+                  icon="✕"
                   onClick={() => onSelectCurve(null)}
-                  style={btnStyle('var(--text-secondary)', true)}
                   title="Désélectionner la courbe"
                 >
-                  ✕ Désélectionner
-                </button>
+                  Désélectionner
+                </KitButton>
               </div>
             ) : null}
 
@@ -239,30 +246,21 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
 
       {/* Navigation : seul reste le geste de sortie « Interpoler & Valider »
           — l'unique chemin vers l'écran de validation (test de cascade +
-          enregistrement). */}
-      <div style={{ display: 'flex', gap: 8, padding: 16, borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-overlay)', flexWrap: 'wrap' }}>
+          enregistrement). Lot 1-G : c'est LA primaire de l'écran Tracé
+          (libellé STABLE — le nombre de graphes vit dans le badge du panneau). */}
+      <div style={{ display: 'flex', gap: SPACING.sm, marginTop: SPACING.md, paddingTop: SPACING.md, borderTop: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
         <div style={{ flex: 1 }} />
-        <button
+        <KitButton
+          level="primary"
+          icon="🪄"
           onClick={onFinish}
-          style={btnStyle('var(--status-success)')}
-          title="Interpole toutes les courbes du set puis ouvre l'écran de validation (test de cascade + enregistrement)"
+          title={`Interpole ${totalGraphs > 1 ? `les ${totalGraphs} graphiques` : 'le graphique'} du set puis ouvre l'écran de validation (test de cascade + enregistrement)`}
         >
-          🪄 Interpoler {totalGraphs > 1 ? `les ${totalGraphs} graphiques` : 'le graphique'} & Valider →
-        </button>
+          Interpoler & Valider
+        </KitButton>
       </div>
-    </div>
+    </KitPanel>
   );
 };
-
-const btnStyle = (bg: string, outline = false): React.CSSProperties => ({
-  padding: '6px 12px',
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: 'pointer',
-  backgroundColor: outline ? 'var(--bg-surface)' : bg,
-  color: outline ? bg : 'white',
-  border: outline ? `1px solid ${bg}` : 'none',
-  borderRadius: 4
-});
 
 export default AbacGraphWizard;

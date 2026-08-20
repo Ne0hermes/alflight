@@ -144,6 +144,33 @@ describe('KitPanel', () => {
     );
     expect(html).toContain('border:1px solid var(--accent-primary)');
   });
+
+  // Lot 1-G — variante repliable : même anatomie, en <details>/<summary>.
+  it('collapsible : rend un <details> fermé par défaut, titre et badge dans le <summary>', () => {
+    const html = renderToStaticMarkup(
+      <KitPanel collapsible title="Banc de test" badge={<KitBadge tone="ok">3/4 OK</KitBadge>}>
+        <p>Cas du manuel</p>
+      </KitPanel>
+    );
+    expect(html).toContain('<details');
+    expect(html).not.toMatch(/<details[^>]* open/);
+    expect(html).toContain('<summary');
+    expect(html).toContain('Banc de test');
+    expect(html).toContain('3/4 OK');
+    expect(html).toContain('Cas du manuel');
+    expect(html).toContain('border:1px solid var(--border-subtle)');
+  });
+
+  it('collapsible : defaultOpen / open contrôlé posent l’attribut open', () => {
+    const opened = renderToStaticMarkup(
+      <KitPanel collapsible defaultOpen title="Testeur"><span>x</span></KitPanel>
+    );
+    expect(opened).toMatch(/<details[^>]* open/);
+    const controlled = renderToStaticMarkup(
+      <KitPanel collapsible open onToggle={() => {}} title="Banc"><span>x</span></KitPanel>
+    );
+    expect(controlled).toMatch(/<details[^>]* open/);
+  });
 });
 
 describe('ModeBanner', () => {

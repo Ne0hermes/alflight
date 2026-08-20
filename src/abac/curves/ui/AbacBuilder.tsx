@@ -10,7 +10,15 @@ import { WorkshopCanvas } from './WorkshopCanvas';
 //  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
 import { CascadeCalculator, CascadeTestDraft, makeEmptyCascadeTestDraft } from './CascadeCalculator';
 // Lot 1-F — badge « Banc : x/y OK » du banc monté à l'écran Tracé.
-import { KitBadge } from './kit';
+// Lot 1-G — assemblage final : rail de checklist permanent (ChecklistRail +
+// modelReadiness), KitPanel sur les grands blocs, KitButton sur les actions.
+import { ChecklistRail, ChecklistStep, KitBadge, KitButton, KitPanel, SPACING, FONT } from './kit';
+import {
+  computeGraphReadiness,
+  computeSetReadiness,
+  READINESS_BENCH_ITEM_ID,
+  ReadinessItem
+} from '../core/modelReadiness';
 import { AbacCurveManager } from '../core/manager';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
@@ -327,6 +335,58 @@ function AbacBuilderComponent(
   // Sous-étape par graphique dans l'étape "Construction et Interpolation"
   // Permet de traiter les graphiques un par un au lieu de les afficher tous ensemble.
   const [subStepGraphIndex, setSubStepGraphIndex] = useState<number>(S?.subStepGraphIndex ?? 0);
+
+  // ─── Lot 1-G : LE RAIL DE CHECKLIST PERMANENT ─────────────────────────────
+  // modelReadiness (Lot 1-D) alimente un ChecklistRail sticky sur les écrans
+  // Tracé et Validation : items du SET en tête, puis un groupe par CADRE
+  // (ordre des cadres). Recalcul mémoïsé — computeSetReadiness rejoue le banc,
+  // c'est voulu (léger, même cadence que benchResults plus haut).
+  const orderedFrames = React.useMemo(
+    () => [...workshop.frames].sort((a, b) => a.xLeftPx - b.xLeftPx),
+    [workshop.frames]
+  );
+  const setReadiness = React.useMemo(
+    () => computeSetReadiness(graphs, workshop, referenceCases, modelNameInput),
+    [graphs, workshop, referenceCases, modelNameInput]
+  );
+  const graphReadinessById = React.useMemo(() => {
+    const y = workshop.sharedY;
+    const sharedYCalibrated = (workshop.yTicks?.length ?? 0) >= 2
+      || (isFinite(y.min) && isFinite(y.max) && y.min !== y.max
+          && typeof y.step === 'number' && isFinite(y.step) && y.step > 0);
+    const chain = orderedFrames
+      .map(f => graphs.find(g => g.id === f.graphId))
+      .filter((g): g is GraphConfig => !!g);
+    const map = new Map<string, ReadinessItem[]>();
+    chain.forEach((g, i) => {
+      map.set(g.id, computeGraphReadiness(g, {
+        isFirst: i === 0,
+        isLast: i === chain.length - 1,
+        frame: orderedFrames.find(f => f.graphId === g.id),
+        sharedYCalibrated
+      }));
+    });
+    return map;
+  }, [graphs, orderedFrames, workshop.sharedY, workshop.yTicks]);
+
+  // Écran étroit (< 1100 px) : le rail passe AU-DESSUS, horizontal, items du
+  // set seulement — et ne provoque jamais de scroll horizontal.
+  const [narrowScreen, setNarrowScreen] = useState<boolean>(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(max-width: 1099px)').matches
+      : false
+  );
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(max-width: 1099px)');
+    const onChange = () => setNarrowScreen(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Champ « Nom du modèle » de l'écran Validation — ciblé par l'item de
+  // checklist « Nom du modèle » (clic → focus du champ marqué).
+  const modelNameFieldRef = useRef<HTMLInputElement>(null);
 
   // ─── Persistance de la session ────────────────────────────────────────────
   // Un seul effet : à chaque changement, l'intégralité du travail en cours est
@@ -943,33 +1003,13 @@ function AbacBuilderComponent(
 
 
   const handleExportJSON = useCallback(() => {
-    // ─── 🔒 VERROU DE SÉCURITÉ — Validation des operationId (graphiques PRIMAIRES uniquement) ───
-    // Les graphiques primaires DOIVENT porter un operationId valide.
-    // Les graphiques intermédiaires (role: 'intermediate') sont des étapes de correction
-    // et n'ont pas besoin d'operationId — ils sont chaînés en amont d'un primaire.
-    // Le set doit contenir au moins un graphique primaire avec operationId valide.
-    const issues: string[] = [];
-    const primaries = graphs.filter(g => (g.role || 'primary') === 'primary');
-    primaries.forEach((g) => {
-      const globalIdx = graphs.indexOf(g) + 1;
-      if (!g.operationId) {
-        issues.push(`• Graphique ${globalIdx} (primaire) : aucune opération canonique sélectionnée (sous-étape 1).`);
-      } else if (!isValidOperationId(g.operationId)) {
-        issues.push(`• Graphique ${globalIdx} (primaire) : operationId "${g.operationId}" inconnu du catalogue.`);
-      }
-    });
-    if (primaries.length === 0) {
-      issues.push(`• Le set ne contient aucun graphique primaire — il ne produira aucune valeur exploitable. Marque au moins un graphique comme "Primaire" en sous-étape 1.`);
-    }
-    if (issues.length > 0) {
-      const proceed = window.confirm(
-        `⚠ Le set d'abaques a ${issues.length} problème(s) bloquant(s) :\n\n` +
-        issues.join('\n') +
-        `\n\nSans cela, ces abaques NE SERONT PAS consommés par la préparation de vol.\n\n` +
-        `Veux-tu quand même sauvegarder ?`
-      );
-      if (!proceed) return;
-    }
+    // ─── Lot 1-G : FIN DU POPUP « problème(s) bloquant(s) » ───
+    // Le verrou operationId/primaire vit désormais dans la checklist
+    // (computeSetReadiness → canSave) : le bouton « Valider et enregistrer »
+    // est DÉSACTIVÉ tant qu'un item bloquant subsiste, avec la raison
+    // affichée — le window.confirm ne peut plus se produire. Garde de
+    // défense (le KitButton neutralise déjà le clic désactivé) :
+    if (!setReadiness.canSave) return;
 
     // ─── R13 : BANC DE TEST — rejouer les cas de référence avant d'enregistrer.
     // Un cas en échec n'est pas bloquant dur (le pilote juge), mais il doit
@@ -1053,8 +1093,102 @@ function AbacBuilderComponent(
     // sessionClosedRef (revérifié dans le timer du dépôt débouncé) empêche un
     // dépôt en attente de le ressusciter.
     void deleteAtelierDraft();
-  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, plancheType, workshop, workshopActive, referenceCases, sessionRef]);
+  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, plancheType, workshop, workshopActive, referenceCases, sessionRef, setReadiness.canSave]);
 
+
+  // ─── Lot 1-G : étapes du rail de checklist ────────────────────────────────
+  // Clic sur un cadre replié (ou un item de cadre depuis la Validation) :
+  // focus du cadre — et retour au Tracé si on était sur la Validation.
+  const focusFrameGraph = useCallback((graphId: string) => {
+    const gi = graphs.findIndex(g => g.id === graphId);
+    if (gi >= 0) setSubStepGraphIndex(gi);
+    setCurrentStep(prev => (prev === 'final' ? 'points' : prev));
+  }, [graphs]);
+
+  // Mapping checklist → action : un item n'est cliquable QUE s'il amène
+  // quelque part de raisonnable (sinon pas de onClick — règle du rail).
+  const setItemAction = (id: string): (() => void) | undefined => {
+    switch (id) {
+      case 'set:primary':
+        // L'opération du set se règle à l'écran « Opération ».
+        return () => setCurrentStep('setup');
+      case 'set:model-name':
+        // Champ marqué de l'écran Validation.
+        return () => {
+          setCurrentStep('final');
+          window.setTimeout(() => modelNameFieldRef.current?.focus(), 60);
+        };
+      case READINESS_BENCH_ITEM_ID:
+        // Au Tracé le banc est replié : l'ouvrir. En Validation il est déjà là.
+        return currentStep === 'points' ? () => setTraceBenchOpen(true) : undefined;
+      case 'set:frames':
+      case 'set:shared-y':
+      case 'set:chain':
+        // Cadres / Y commun / chaîne se règlent sur le canevas du Tracé.
+        return currentStep === 'final' ? () => setCurrentStep('points') : undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  const railSetSteps: ChecklistStep[] = setReadiness.items.map(it => ({
+    id: it.id,
+    label: it.label,
+    state: it.state,
+    detail: it.detail,
+    onClick: setItemAction(it.id)
+  }));
+
+  // Un groupe par CADRE (ordre des cadres) — compact : seul le cadre FOCUS
+  // est détaillé, les autres sont repliés en une ligne « x/y ✓ » cliquable.
+  const railFrameSteps: ChecklistStep[] = [];
+  orderedFrames.forEach((f, i) => {
+    const g = graphs.find(x => x.id === f.graphId);
+    if (!g) return;
+    const items = graphReadinessById.get(g.id) || [];
+    const done = items.filter(it => it.state === 'done').length;
+    const anyBlocked = items.some(it => it.state === 'blocked');
+    if (g.id === selectedGraphId) {
+      railFrameSteps.push({
+        id: `frame:${g.id}`,
+        label: `${i + 1} · ${g.name}`,
+        state: 'current',
+        detail: `${done}/${items.length} ✓`
+      });
+      items.forEach(it => railFrameSteps.push({
+        id: it.id,
+        label: it.label,
+        state: it.state,
+        detail: it.detail,
+        // Depuis la Validation, l'item ramène au Tracé (les panneaux du cadre
+        // y sont visibles) ; au Tracé, tout est déjà sous les yeux.
+        onClick: currentStep === 'final' ? () => focusFrameGraph(g.id) : undefined
+      }));
+    } else {
+      railFrameSteps.push({
+        id: `frame:${g.id}`,
+        label: `${i + 1} · ${g.name}`,
+        state: anyBlocked ? 'blocked' : items.length > 0 && done === items.length ? 'done' : 'todo',
+        detail: `${done}/${items.length} ✓`,
+        onClick: () => focusFrameGraph(g.id)
+      });
+    }
+  });
+
+  const showRail = currentStep === 'points' || currentStep === 'final';
+
+  // Bouton « Valider et enregistrer » : disabled/raison dérivés de canSave +
+  // items bloquants (fin du window.confirm « problème(s) bloquant(s) »).
+  const blockingItems = setReadiness.items.filter(
+    it => it.state === 'blocked' && it.id !== READINESS_BENCH_ITEM_ID
+  );
+  const modelNameMissing = !(modelNameInput || '').trim();
+  const saveDisabled = !setReadiness.canSave || modelNameMissing;
+  const saveDisabledReason = !setReadiness.canSave
+    ? `À corriger avant l'enregistrement (voir la checklist) : ${blockingItems.map(it => it.label).join(' · ')}`
+    : modelNameMissing
+      ? 'Saisis le nom du modèle (champ « Nom du modèle » ci-dessus).'
+      : undefined;
 
 const renderStepContent = () => {
     switch (currentStep) {
@@ -1193,18 +1327,17 @@ const renderStepContent = () => {
               <p style={{ padding: 16, color: 'var(--color-red-critical)' }}>
                 ⚠ Aucun graphique configuré.
               </p>
-              <button
-                onClick={() => setCurrentStep('setup')}
-                style={{ padding: '8px 16px', cursor: 'pointer' }}
-              >
-                ← Revenir à l'écran Opération
-              </button>
+              <KitButton level="secondary" icon="←" onClick={() => setCurrentStep('setup')}>
+                Revenir à l'écran Opération
+              </KitButton>
             </div>
           );
         }
         return (
           <div className={styles.stepContent}>
             <h2>Tracé</h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: SPACING.md }}>
 
             {/* L'identité du set est DÉDUITE du graphique primaire (cf. handleExportJSON).
                 Lot 1-C — rappel compact des choix de l'écran « Opération »
@@ -1213,7 +1346,7 @@ const renderStepContent = () => {
                 l'écran devient alors « Appliquer »). */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-              marginBottom: 12, padding: '6px 10px',
+              padding: '6px 10px',
               backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 4,
               fontSize: 12, color: 'var(--accent-primary)'
             }}>
@@ -1232,71 +1365,42 @@ const renderStepContent = () => {
                     : '↕ Standard (lue sur l\'axe vertical)'}</strong>
                 </span>
               )}
-              <button
-                onClick={() => setCurrentStep('setup')}
-                title="Revenir à l'écran Opération — graphes et cadres conservés (le bouton devient « Appliquer »)"
-                style={{
-                  marginLeft: 'auto', padding: '3px 10px', fontSize: 11, cursor: 'pointer',
-                  backgroundColor: 'transparent', color: 'var(--accent-primary)',
-                  border: '1px solid var(--accent-primary)', borderRadius: 4
-                }}
-              >
-                Modifier
-              </button>
+              <span style={{ marginLeft: 'auto' }}>
+                <KitButton
+                  level="tertiary"
+                  size="compact"
+                  onClick={() => setCurrentStep('setup')}
+                  title="Revenir à l'écran Opération — graphes et cadres conservés (le bouton devient « Appliquer »)"
+                >
+                  Modifier
+                </KitButton>
+              </span>
             </div>
 
-            {/* ─── R6+R9 : IDENTITÉ DU CADRE ACTIF — zone REPLIABLE au-dessus de
-                l'atelier (demande pilote). Ouverte tant que l'opération canonique
-                du primaire manque (sans elle le set n'est pas consommé par la
-                préparation de vol), repliée une fois complète ; remontée du
-                wizard dont la sous-étape 1 était masquée en atelier. La clé par
-                graphe ré-évalue l'ouverture à chaque changement de cadre. */}
+            {/* ─── Lot 1-G : IDENTITÉ DU CADRE FOCUS — KitPanel TOUJOURS VISIBLE
+                (fin du <details> replié « Identité du graphique N » : les
+                réglages qui conditionnent d'autres panneaux ne se cachent
+                plus). Nom, famille, lecture du résultat, rappel d'opération,
+                badge x/y ✓ ; radios de rôle en « Réglages avancés » pour les
+                seuls modèles legacy hors convention. */}
             {workshop.frames.length > 0 && (() => {
               const g = currentGraphForWizard;
-              const gIsPrimary = (g.role || 'primary') === 'primary';
-              const gOp = g.operationId ? getOperation(g.operationId) : undefined;
-              const needsAttention = gIsPrimary && !gOp;
+              const chainIds = orderedFrames.map(f => f.graphId);
+              const chainIdx = chainIds.indexOf(g.id);
+              const expectedRole = chainIdx === 0 ? 'primary' : 'intermediate';
+              const rolesOffConvention = chainIdx === -1 || (g.role || 'primary') !== expectedRole;
               return (
-                <details
+                <GraphIdentityPanel
                   key={`identity-${g.id}`}
-                  {...(needsAttention ? { open: true } : {})}
-                  style={{
-                    marginBottom: 10,
-                    border: `1px solid ${needsAttention ? 'var(--color-red-critical)' : 'var(--border-subtle)'}`,
-                    borderRadius: 6,
-                    backgroundColor: 'var(--bg-overlay)'
-                  }}
-                >
-                  <summary style={{ padding: '7px 12px', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--accent-primary)' }}>
-                    Identité du graphique {subStepGraphIndex + 1}
-                    <span style={{ fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 8, fontSize: 12 }}>
-                      {gIsPrimary
-                        ? (gOp ? `Primaire · ${gOp.labelFr}` : 'Primaire')
-                        : `Intermédiaire${g.cascadeOrder ? ` · tableau ${g.cascadeOrder}` : ''}`}
-                    </span>
-                    {needsAttention && (
-                      <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: 'var(--color-red-critical)' }}>
-                        opération canonique à choisir
-                      </span>
-                    )}
-                  </summary>
-                  <div style={{ padding: '4px 12px 10px' }}>
-                    <GraphIdentityPanel graph={g} onUpdateGraph={updateCurrentGraph} />
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                      <button
-                        onClick={removeCurrentGraphAndFrame}
-                        title="Supprime le graphique focalisé, ses courbes et son cadre sur l'image"
-                        style={{
-                          padding: '3px 10px', fontSize: 11, cursor: 'pointer',
-                          backgroundColor: 'transparent', color: 'var(--color-red-critical)',
-                          border: '1px solid var(--color-red-critical)', borderRadius: 4
-                        }}
-                      >
-                        Supprimer ce graphique (et son cadre)
-                      </button>
-                    </div>
-                  </div>
-                </details>
+                  graph={g}
+                  onUpdateGraph={updateCurrentGraph}
+                  frameNumber={chainIdx >= 0 ? chainIdx + 1 : subStepGraphIndex + 1}
+                  isFirst={chainIdx === 0}
+                  readiness={graphReadinessById.get(g.id) || []}
+                  showAdvancedRoles={rolesOffConvention}
+                  onEditOperation={() => setCurrentStep('setup')}
+                  onRemoveGraph={removeCurrentGraphAndFrame}
+                />
               );
             })()}
 
@@ -1392,36 +1496,20 @@ const renderStepContent = () => {
                 R6 : n'apparaît qu'une fois les cadres posés (rien sous le canevas
                 tant que l'atelier n'est pas engagé). */}
             {workshop.frames.length > 0 && (
-            <details style={{
-              marginBottom: 14,
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 6,
-              backgroundColor: 'var(--bg-overlay)'
-            }}>
-              <summary style={{
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--accent-primary)'
-              }}>
-                🧪 Tester la cascade sur les graphes en l'état
-              </summary>
-              <div style={{ padding: 8 }}>
-                {/* Lot 1-F — testeur unifié : MÊME formulaire (testDraft hissé)
-                    que le montage de l'écran Validation ; le « 📌 » alimente le
-                    banc monté juste EN DESSOUS (et l'ouvre). */}
-                <CascadeCalculator
-                  graphs={graphs}
-                  draft={testDraft}
-                  onDraftChange={setTestDraft}
-                  onProposeReference={(snap) => {
-                    setReferencePrefill(snap);
-                    setTraceBenchOpen(true);
-                  }}
-                />
-              </div>
-            </details>
+            <KitPanel collapsible title="Testeur — cascade sur les graphes en l'état">
+              {/* Lot 1-F — testeur unifié : MÊME formulaire (testDraft hissé)
+                  que le montage de l'écran Validation ; le « 📌 » alimente le
+                  banc monté juste EN DESSOUS (et l'ouvre). */}
+              <CascadeCalculator
+                graphs={graphs}
+                draft={testDraft}
+                onDraftChange={setTestDraft}
+                onProposeReference={(snap) => {
+                  setReferencePrefill(snap);
+                  setTraceBenchOpen(true);
+                }}
+              />
+            </KitPanel>
             )}
 
             {/* ─── Lot 1-F : LE BANC VISIBLE PENDANT LE TRACÉ — « le banc EST
@@ -1432,40 +1520,25 @@ const renderStepContent = () => {
                 l'état. Le clic « 📌 » du testeur ci-dessus alimente désormais
                 un panneau PRÉSENT. */}
             {workshop.frames.length > 0 && (
-            <details
+            <KitPanel
+              collapsible
               open={traceBenchOpen}
-              onToggle={(e: React.SyntheticEvent<HTMLDetailsElement>) => setTraceBenchOpen(e.currentTarget.open)}
-              style={{
-                marginBottom: 14,
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 6,
-                backgroundColor: 'var(--bg-overlay)'
-              }}
+              onToggle={setTraceBenchOpen}
+              title="Banc de test — cas de référence du manuel"
+              badge={
+                <KitBadge tone={benchResults.length === 0 ? 'neutral' : benchPass === benchResults.length ? 'ok' : 'crit'}>
+                  Banc : {benchPass}/{benchResults.length} OK
+                </KitBadge>
+              }
             >
-              <summary style={{
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--accent-primary)'
-              }}>
-                🧪 Banc de test — cas de référence du manuel
-                <span style={{ marginLeft: 8 }}>
-                  <KitBadge tone={benchResults.length === 0 ? 'neutral' : benchPass === benchResults.length ? 'ok' : 'crit'}>
-                    Banc : {benchPass}/{benchResults.length} OK
-                  </KitBadge>
-                </span>
-              </summary>
-              <div style={{ padding: 8 }}>
-                <ReferenceCasesPanel
-                  graphs={graphs}
-                  cases={referenceCases}
-                  onChange={setReferenceCases}
-                  prefill={referencePrefill}
-                  onPrefillConsumed={() => setReferencePrefill(null)}
-                />
-              </div>
-            </details>
+              <ReferenceCasesPanel
+                graphs={graphs}
+                cases={referenceCases}
+                onChange={setReferenceCases}
+                prefill={referencePrefill}
+                onPrefillConsumed={() => setReferencePrefill(null)}
+              />
+            </KitPanel>
             )}
 
             {/* R6 — wizard RÉDUIT : uniquement l'outillage courbes (création,
@@ -1499,6 +1572,8 @@ const renderStepContent = () => {
               }}
             />
             )}
+
+            </div>
           </div>
         );
       }
@@ -1511,28 +1586,43 @@ const renderStepContent = () => {
           <div className={styles.stepContent}>
             <h2>Validation</h2>
             <div className={styles.finalView}>
-              {/* Affichage des informations du système */}
-              <div style={{
-                marginBottom: '20px',
-                padding: '10px',
-                backgroundColor: 'var(--bg-overlay)',
-                borderRadius: '8px',
-                border: '1px solid var(--accent-primary)'
-              }}>
-                <h3 style={{ margin: '0 0 12px 0', color: 'var(--accent-primary)' }}>
-                  Configuration du système
-                </h3>
+              {/* Lot 1-G — Configuration du système en KitPanel + champ « Nom du
+                  modèle » MARQUÉ quand vide (l'item de checklist du même nom
+                  cible ce champ ; le bouton d'enregistrement dit la raison). */}
+              <KitPanel title="Configuration du système">
                 <div style={{ fontSize: 'var(--fs-body)', lineHeight: '1.6' }}>
                   {/* Lot 0 — systemType est un operationId depuis SPRINT B+ : lecture via le
                       catalogue canonique, repli SYSTEM_TYPES pour les vieux modèles. */}
                   <div><strong>Type de système :</strong> {getOperation(systemType)?.labelFr || SYSTEM_TYPES.find(t => t.value === systemType)?.label}</div>
                   <div><strong>Modèle d'avion :</strong> {aircraftModel || modelNameInput || 'Non spécifié'}</div>
                   <div><strong>Identifiant système :</strong> <code>{systemType}</code></div>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: SPACING.sm, flexWrap: 'wrap',
+                    marginTop: SPACING.sm
+                  }}>
+                    <label htmlFor="abac-model-name" style={{ fontWeight: 600 }}>Nom du modèle</label>
+                    <input
+                      id="abac-model-name"
+                      ref={modelNameFieldRef}
+                      type="text"
+                      value={modelNameInput}
+                      onChange={(e) => setModelNameInput(e.target.value)}
+                      placeholder="ex. Distance de décollage (50 ft)"
+                      style={{
+                        flex: 1, minWidth: 220, padding: '5px 10px', fontSize: 'var(--fs-body)',
+                        borderRadius: 4, backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)',
+                        border: `1px solid ${(modelNameInput || '').trim() ? 'var(--border-regular)' : 'var(--status-error)'}`
+                      }}
+                    />
+                    {!(modelNameInput || '').trim() && (
+                      <KitBadge tone="crit">requis pour enregistrer</KitBadge>
+                    )}
+                  </div>
                   <div style={{ marginTop: '8px', fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
                     Cet identifiant sera utilisé pour référencer ce système dans l'application
                   </div>
                 </div>
-              </div>
+              </KitPanel>
 
 
 
@@ -1540,27 +1630,16 @@ const renderStepContent = () => {
               {/* R10 — aperçus des graphes REPLIÉS par défaut (demande pilote :
                   l'écran de validation se concentre sur le test de cascade) ;
                   dépliés, ils se posent côte à côte pour suivre la chaîne. */}
-              <details style={{
-                marginBottom: 20,
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 6,
-                backgroundColor: 'var(--bg-overlay)'
-              }}>
-              <summary style={{
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--accent-primary)'
-              }}>
-                Graphiques du set ({graphs.length}) — courbes interpolées
-              </summary>
+              <KitPanel
+                collapsible
+                title="Graphiques du set — courbes interpolées"
+                badge={<KitBadge tone="neutral">{graphs.length} graphique{graphs.length > 1 ? 's' : ''}</KitBadge>}
+              >
               <div style={{
                 display: 'flex',
                 flexWrap: 'wrap',
                 gap: '12px',
-                alignItems: 'flex-start',
-                padding: 8
+                alignItems: 'flex-start'
               }}>
                 {graphs.map(graph => {
                   const displayCurves = graph.curves;
@@ -1620,7 +1699,7 @@ const renderStepContent = () => {
                   );
                 })}
               </div>
-              </details>
+              </KitPanel>
 
               {importSuccess && (
                 <div style={{
@@ -1654,9 +1733,16 @@ const renderStepContent = () => {
 
               {/* ─── R13 : BANC DE TEST PERMANENT — les cas de référence du
                   manuel sont rejoués sur les graphes EN L'ÉTAT à chaque venue
-                  sur cet écran (PASS/FAIL ± tolérance), et le bouton Valider
-                  re-vérifie une dernière fois avant d'enregistrer. */}
-              <div style={{ marginTop: 16 }}>
+                  sur cet écran (PASS/FAIL ± tolérance). Un banc en échec reste
+                  un AVERTISSEMENT au save (confirm conservé — le pilote juge). */}
+              <KitPanel
+                title="Banc de test — cas de référence du manuel"
+                badge={
+                  <KitBadge tone={benchResults.length === 0 ? 'neutral' : benchPass === benchResults.length ? 'ok' : 'crit'}>
+                    Banc : {benchPass}/{benchResults.length} OK
+                  </KitBadge>
+                }
+              >
                 <ReferenceCasesPanel
                   graphs={graphs}
                   cases={referenceCases}
@@ -1664,87 +1750,46 @@ const renderStepContent = () => {
                   prefill={referencePrefill}
                   onPrefillConsumed={() => setReferencePrefill(null)}
                 />
-              </div>
+              </KitPanel>
 
               {/* ─── R4 : TEST DE CASCADE intégré à la VALIDATION — vérifier le
                   modèle complet (entrée → G1 → G2 → G3 → résultat) AVANT de
                   l'enregistrer, sur le même écran. Les courbes ont été
                   interpolées à l'entrée de cette étape (onFinish → fitAll). */}
-              <details open style={{
-                marginTop: 16,
-                border: '1px solid var(--accent-primary)',
-                borderRadius: 6,
-                backgroundColor: 'var(--bg-overlay)'
-              }}>
-                <summary style={{
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: 'var(--accent-primary)'
-                }}>
-                  🧪 Tester le modèle avant validation (cascade complète)
-                </summary>
-                <div style={{ padding: 8 }}>
-                  {/* Lot 1-F — MÊME formulaire que le montage du Tracé (état
-                      testDraft hissé) : rien ne se re-tape entre les étapes. */}
-                  <CascadeCalculator
-                    graphs={graphs}
-                    draft={testDraft}
-                    onDraftChange={setTestDraft}
-                    onProposeReference={(snap) => setReferencePrefill(snap)}
-                  />
-                </div>
-              </details>
+              <KitPanel collapsible defaultOpen title="Testeur — cascade complète avant enregistrement">
+                {/* Lot 1-F — MÊME formulaire que le montage du Tracé (état
+                    testDraft hissé) : rien ne se re-tape entre les étapes. */}
+                <CascadeCalculator
+                  graphs={graphs}
+                  draft={testDraft}
+                  onDraftChange={setTestDraft}
+                  onProposeReference={(snap) => setReferencePrefill(snap)}
+                />
+              </KitPanel>
 
-              {/* Boutons de navigation */}
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
-                {/* Bouton Précédent pour retourner à Construire et Interpoler */}
-                <button
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: 'var(--bg-overlay)',
-                    color: 'var(--text-inverse)',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: 'var(--fs-body)',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    flex: 1
-                  }}
+              {/* Lot 1-G — navigation au kit : UNE action primaire par écran
+                  (« Valider et enregistrer »), disabled/raison dérivés de
+                  canSave + items bloquants de la checklist (fin du popup
+                  « problème(s) bloquant(s) »). */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: SPACING.sm, flexWrap: 'wrap' }}>
+                <KitButton
+                  level="secondary"
+                  icon="←"
                   onClick={() => setCurrentStep('points')}
-                  title="Retourner à l'étape de construction et interpolation"
+                  title="Retourner à l'écran Tracé"
                 >
-                  <span style={{ fontSize: 'var(--fs-title)' }}>←</span>
                   Précédent
-                </button>
-
-                {/* Bouton Suivant pour sauvegarder et passer à l'équipement */}
-                <button
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: modelNameInput ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-                    color: 'var(--text-inverse)',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: modelNameInput ? 'pointer' : 'not-allowed',
-                    fontSize: 'var(--fs-body)',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    flex: 1
-                  }}
+                </KitButton>
+                <KitButton
+                  level="primary"
+                  icon="✓"
+                  disabled={saveDisabled}
+                  disabledReason={saveDisabledReason}
                   onClick={handleExportJSON}
-                  disabled={!modelNameInput}
-                  title="Interpoler + valider + enregistrer le modèle d'abaque en un geste"
+                  title="Valider + enregistrer le modèle d'abaque en un geste"
                 >
-                  ✓ Valider et enregistrer le modèle
-                </button>
+                  Valider et enregistrer le modèle
+                </KitButton>
               </div>
             </div>
           </div>
@@ -1812,7 +1857,65 @@ const renderStepContent = () => {
                 </button>
               </div>
             )}
-            {renderStepContent()}
+            {/* ─── Lot 1-G : RAIL DE CHECKLIST PERMANENT (Tracé + Validation).
+                Large : colonne latérale sticky de 250 px à droite de la
+                colonne principale (items du set puis un groupe par cadre).
+                Étroit (< 1100 px) : bandeau horizontal AU-DESSUS, items du
+                set seulement — jamais de scroll horizontal. */}
+            {showRail && narrowScreen && (
+              <div style={{
+                marginBottom: SPACING.sm,
+                padding: SPACING.xs,
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 6
+              }}>
+                <ChecklistRail steps={railSetSteps} orientation="horizontal" />
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACING.md }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {renderStepContent()}
+              </div>
+              {showRail && !narrowScreen && (
+                <aside style={{
+                  width: 250,
+                  flexShrink: 0,
+                  position: 'sticky',
+                  top: 0,
+                  maxHeight: 'calc(100vh - 24px)',
+                  overflowY: 'auto',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 6,
+                  padding: SPACING.sm
+                }}>
+                  <div style={{
+                    fontSize: FONT.note, fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.05em', color: 'var(--text-tertiary)',
+                    padding: `${SPACING.xs}px ${SPACING.sm}px`
+                  }}>
+                    Check-list du modèle
+                  </div>
+                  <ChecklistRail steps={railSetSteps} />
+                  {railFrameSteps.length > 0 && (
+                    <>
+                      <div style={{
+                        fontSize: FONT.note, fontWeight: 700, textTransform: 'uppercase',
+                        letterSpacing: '0.05em', color: 'var(--text-tertiary)',
+                        padding: `${SPACING.xs}px ${SPACING.sm}px`,
+                        marginTop: SPACING.sm,
+                        borderTop: '1px solid var(--border-subtle)',
+                        paddingTop: SPACING.sm
+                      }}>
+                        Cadres
+                      </div>
+                      <ChecklistRail steps={railFrameSteps} />
+                    </>
+                  )}
+                </aside>
+              )}
+            </div>
           </>
         )}
       </div>

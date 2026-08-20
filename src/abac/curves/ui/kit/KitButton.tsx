@@ -31,6 +31,9 @@ export interface KitButtonProps {
   disabled?: boolean;
   /** Obligatoire moralement dès que disabled : la raison, en clair. */
   disabledReason?: string;
+  /** Info-bulle du bouton ACTIF (jamais un état — libellés stables) ;
+   *  quand le bouton est désactivé, `disabledReason` prime. */
+  title?: string;
   onClick?: () => void;
   children: ReactNode;
 }
@@ -54,6 +57,7 @@ export function KitButton({
   icon,
   disabled = false,
   disabledReason,
+  title,
   onClick,
   children,
 }: KitButtonProps) {
@@ -104,7 +108,7 @@ export function KitButton({
   return (
     <button
       type="button"
-      title={showReason ? disabledReason : undefined}
+      title={showReason ? disabledReason : title}
       aria-disabled={disabled || undefined}
       aria-describedby={showReason ? reasonId : undefined}
       onClick={disabled ? undefined : onClick}
