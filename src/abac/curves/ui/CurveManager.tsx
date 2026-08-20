@@ -5,7 +5,6 @@ import styles from './styles.module.css';
 interface CurveManagerProps {
   curves: Curve[];
   selectedCurveId: string | null;
-  onAddCurve: (name: string, color: string, windDirection?: WindDirection) => void;
   onRemoveCurve: (curveId: string) => void;
   onSelectCurve: (curveId: string | null) => void;
   onUpdateCurve: (curveId: string, updates: Partial<Curve>) => void;
@@ -22,27 +21,9 @@ interface CurveManagerProps {
 // courbes a besoin de séries DISTINGUABLES (impossible avec une seule teinte
 // orange). Palette re-tonée « cockpit » : orange de marque en tête + ivoire +
 // tons sourds/désaturés harmonisés au canvas sombre, au lieu de l'arc-en-ciel
-// Material d'origine. 12 entrées conservées (préserve le mapping d'index des
-// courbes déjà sauvegardées). Ajuster les valeurs ici si besoin.
-const DEFAULT_COLORS = [
-  { value: '#F26921', label: 'Orange' },
-  { value: '#F5F2EC', label: 'Ivoire' },
-  { value: '#4FC3D9', label: 'Cyan' },
-  { value: '#E0A33E', label: 'Ambre' },
-  { value: '#C77B9E', label: 'Rose' },
-  { value: '#8FB573', label: 'Vert' },
-  { value: '#6E8BB5', label: 'Bleu' },
-  { value: '#A78BBE', label: 'Violet' },
-  { value: '#FF7E36', label: 'Orange clair' },
-  { value: '#5BA89E', label: 'Sarcelle' },
-  { value: '#C9C5BD', label: 'Gris' },
-  { value: '#D85410', label: 'Orange foncé' }
-];
-
 export const CurveManager: React.FC<CurveManagerProps> = ({
   curves,
   selectedCurveId,
-  onAddCurve,
   onRemoveCurve,
   onSelectCurve,
   onUpdateCurve,
@@ -51,27 +32,13 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
   familyAxisVariable,
   familyAxisLabel
 }) => {
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newCurveName, setNewCurveName] = useState('');
-  const [newCurveColor, setNewCurveColor] = useState(DEFAULT_COLORS[0].value);
-  const [newCurveWindDirection, setNewCurveWindDirection] = useState<WindDirection>('none');
+  // Lot 1 (décision pilote 20/08) : la CRÉATION de courbe vit UNIQUEMENT dans
+  // la capsule « ➕ Nouvelle courbe » de l'atelier (nom par valeur + sens du
+  // vent obligatoire). Ce panneau est la LISTE : sélection, renommage,
+  // familyValue, sens du vent, suppression — le formulaire d'ajout en doublon
+  // a été retiré.
   const [editingCurveId, setEditingCurveId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-
-  const getNextColor = useCallback(() => {
-    const usedColors = curves.map(c => c.color);
-    const availableColor = DEFAULT_COLORS.find(c => !usedColors.includes(c.value));
-    return availableColor ? availableColor.value : DEFAULT_COLORS[curves.length % DEFAULT_COLORS.length].value;
-  }, [curves]);
-
-  const handleAddCurve = useCallback(() => {
-    const name = newCurveName.trim() || `Curve ${curves.length + 1}`;
-    onAddCurve(name, newCurveColor, isWindRelated ? newCurveWindDirection : undefined);
-    setNewCurveName('');
-    setNewCurveColor(getNextColor());
-    setNewCurveWindDirection('none');
-    setShowAddForm(false);
-  }, [newCurveName, newCurveColor, newCurveWindDirection, curves.length, onAddCurve, getNextColor, isWindRelated]);
 
   const handleStartEdit = useCallback((curveId: string, currentName: string) => {
     setEditingCurveId(curveId);
@@ -124,106 +91,20 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
 
   return (
     <div className={styles.curveManager}>
-      <div className={styles.curveManagerHeader}>
-        <button
-          onClick={() => {
-            setShowAddForm(!showAddForm);
-            setNewCurveColor(getNextColor());
-          }}
-          style={{
-            padding: '8px 16px',
-            fontSize: 'var(--fs-body)',
-            fontWeight: 500,
-            backgroundColor: 'var(--accent-primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {showAddForm ? 'Annuler' : 'Ajouter une courbe'}
-        </button>
-        {/* R16b — visible quand le graphe a une variable de famille et qu'il
-            reste des courbes sans valeur : un clic remplit depuis les noms. */}
-        {familyAxisVariable && curves.some(c => typeof c.familyValue !== 'number') && (
+      {/* R16b — visible quand le graphe a une variable de famille et qu'il
+          reste des courbes sans valeur : un clic remplit depuis les noms. */}
+      {familyAxisVariable && curves.some(c => typeof c.familyValue !== 'number') && (
+        <div className={styles.curveManagerHeader}>
           <button
             onClick={deduceFamilyFromNames}
             title="Pré-remplit la valeur de famille des courbes qui n'en ont pas, en lisant leur nom (« 0ft » → 0, « Headwind 2 » → 2…). Vérifie ensuite les badges."
             style={{
-              marginLeft: 8, padding: '8px 12px', fontSize: 'var(--fs-body)',
+              height: 24, boxSizing: 'border-box', padding: '0 12px', fontSize: 12,
               backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)',
-              border: '1px solid var(--accent-primary)', borderRadius: '4px', cursor: 'pointer'
+              border: '1px solid var(--accent-primary)', borderRadius: 6, cursor: 'pointer'
             }}
           >
             Déduire des noms
-          </button>
-        )}
-      </div>
-
-      {showAddForm && (
-        <div className={styles.addCurveForm}>
-          <input
-            type="text"
-            placeholder="Nom de la courbe (optionnel)"
-            value={newCurveName}
-            onChange={(e) => setNewCurveName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddCurve()}
-            style={{ marginBottom: '8px' }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Couleur:</label>
-            <select
-              value={newCurveColor}
-              onChange={(e) => setNewCurveColor(e.target.value)}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                borderRadius: '4px',
-                border: '1px solid var(--border-subtle)',
-                fontSize: 'var(--fs-body)',
-                backgroundColor: 'var(--bg-overlay)'
-              }}
-            >
-              {DEFAULT_COLORS.map((color) => (
-                <option key={color.value} value={color.value}>
-                  {color.label}
-                </option>
-              ))}
-            </select>
-            <div
-              style={{
-                width: '30px',
-                height: '30px',
-                backgroundColor: newCurveColor,
-                borderRadius: '4px',
-                border: '1px solid var(--border-subtle)'
-              }}
-              title="Aperçu de la couleur"
-            />
-          </div>
-          {isWindRelated && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <label style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>Direction du vent (Wind direction) :</label>
-              <select
-                value={newCurveWindDirection}
-                onChange={(e) => setNewCurveWindDirection(e.target.value as WindDirection)}
-                style={{
-                  flex: 1,
-                  padding: '6px 8px',
-                  borderRadius: '4px',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: 'var(--fs-body)',
-                  backgroundColor: 'var(--bg-overlay)'
-                }}
-              >
-                <option value="none">Sans vent / No wind</option>
-                <option value="headwind">Vent de face / Headwind ↑</option>
-                <option value="tailwind">Vent arrière / Tailwind ↓</option>
-              </select>
-            </div>
-          )}
-          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleAddCurve}>
-            Créer la courbe
           </button>
         </div>
       )}
@@ -231,7 +112,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
       <div className={styles.curvesList}>
         {curves.length === 0 ? (
           <div className={styles.emptyState}>
-            Aucune courbe. Ajoutez une courbe pour commencer à tracer des points.
+            Aucune courbe. Créez-en une avec « ➕ Nouvelle courbe », la capsule au-dessus de l'atelier.
           </div>
         ) : (
           curves.map((curve, index) => (

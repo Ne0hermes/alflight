@@ -1559,7 +1559,6 @@ const renderStepContent = () => {
               totalGraphs={graphs.length}
               selectedCurveId={selectedCurveId}
               onSelectCurve={setSelectedCurveId}
-              onAddCurve={handleAddCurve}
               onRemoveCurve={handleRemoveCurve}
               onUpdateCurve={handleUpdateCurve}
               onReorderCurves={handleReorderCurves}

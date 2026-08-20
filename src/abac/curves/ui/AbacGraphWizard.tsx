@@ -30,7 +30,6 @@ interface AbacGraphWizardProps {
 
   /** Lot 0 — signature alignée sur handleAddCurve du builder : le 4ᵉ paramètre
    *  (familyValue) n'est plus perdu en traversant le wizard (audit-1 §4). */
-  onAddCurve: (name: string, color: string, windDirection?: WindDirection, familyValue?: number) => string;
   onRemoveCurve: (curveId: string) => void;
   onUpdateCurve: (curveId: string, updates: Partial<Curve>) => void;
   /** Lot 0 — type corrigé : toute la chaîne réelle (CurveManager → builder)
@@ -63,7 +62,7 @@ interface AbacGraphWizardProps {
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
   const {
     graph, totalGraphs, selectedCurveId,
-    onSelectCurve, onAddCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
+    onSelectCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
     onFinish, onEditorModeChange,
     bezierActive, onStartBezier, onApplyBezier, onCancelBezier,
@@ -196,12 +195,12 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   le façonnage Bézier vivent sur le CANEVAS du builder (il faut
                   pouvoir suivre les traits de l'image — retour pilote). */}
               <div style={{ flex: '1 1 280px', minWidth: 280 }}>
-                {/* Lot 0 — onAddCurve passé DIRECT au builder : le 4ᵉ paramètre
-                    (familyValue) n'est plus perdu en traversant le wizard. */}
+                {/* Lot 1 (décision pilote 20/08) — la création de courbe vit
+                    UNIQUEMENT dans la capsule de l'atelier : ce panneau est
+                    la liste (sélection, renommage, valeurs, suppression). */}
                 <CurveManager
                   curves={graph.curves}
                   selectedCurveId={selectedCurveId}
-                  onAddCurve={onAddCurve}
                   onRemoveCurve={onRemoveCurve}
                   onSelectCurve={onSelectCurve}
                   onUpdateCurve={onUpdateCurve}

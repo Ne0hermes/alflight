@@ -29,17 +29,18 @@ describe('tokens', () => {
     expect(Object.values(SPACING)).toEqual([4, 8, 16, 24, 32]);
   });
 
-  it('expose exactement 3 corps de texte mappés sur les var --fs-* existantes', () => {
+  it('expose 3 corps de texte (--fs-*) + le corps des contrôles (12px, aligné champs)', () => {
     expect(FONT).toEqual({
       title: 'var(--fs-title)',
       body: 'var(--fs-body)',
       note: 'var(--fs-caption)',
+      control: '12px',
     });
   });
 
-  it('fixe le rayon à 6 et les 2 hauteurs de contrôle à 32/26', () => {
+  it('fixe le rayon à 6 et les 2 hauteurs de contrôle à 28/24 (compact = hauteur des champs, demande pilote 20/08)', () => {
     expect(RADIUS).toBe(6);
-    expect(CONTROL_HEIGHT).toEqual({ normal: 32, compact: 26 });
+    expect(CONTROL_HEIGHT).toEqual({ normal: 28, compact: 24 });
   });
 });
 
@@ -50,7 +51,7 @@ describe('KitButton', () => {
     );
     expect(html).toContain('Calibrer les axes');
     expect(html).toContain('background-color:var(--accent-primary)');
-    expect(html).toContain('height:32px');
+    expect(html).toContain('height:28px');
   });
 
   it('secondary : fond transparent, contour accent', () => {
@@ -71,11 +72,11 @@ describe('KitButton', () => {
     expect(html).not.toContain('var(--accent-primary)');
   });
 
-  it('compact : hauteur 26px', () => {
+  it('compact : hauteur 24px — exactement celle des champs de saisie', () => {
     const html = renderToStaticMarkup(
       <KitButton level="secondary" size="compact" onClick={() => {}}>OK</KitButton>
     );
-    expect(html).toContain('height:26px');
+    expect(html).toContain('height:24px');
   });
 
   it('désactivé : la raison est rendue en title ET en texte accessible', () => {

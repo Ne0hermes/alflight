@@ -187,7 +187,7 @@ const NumField: React.FC<{ label: string; value: number | undefined; onChange: (
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value === '' ? undefined : parseFloat(e.target.value))}
         style={{
-          width, padding: '3px 6px', fontSize: 12, borderRadius: 3,
+          width, height: 24, boxSizing: 'border-box', padding: '3px 6px', fontSize: 12, borderRadius: 3,
           border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)'
         }}
       />
@@ -203,7 +203,7 @@ const TextFieldMini: React.FC<{ label: string; value: string; onChange: (s: stri
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          width, padding: '3px 6px', fontSize: 12, borderRadius: 3,
+          width, height: 24, boxSizing: 'border-box', padding: '3px 6px', fontSize: 12, borderRadius: 3,
           border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)'
         }}
       />
@@ -238,7 +238,7 @@ const VarSelectMini: React.FC<{
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{
-          width, padding: '3px 6px', fontSize: 12, borderRadius: 3,
+          width, height: 24, boxSizing: 'border-box', padding: '3px 6px', fontSize: 12, borderRadius: 3,
           border: `1px solid ${!isKnown && value ? 'var(--color-red-critical)' : 'var(--border-regular)'}`,
           backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)'
         }}
@@ -280,7 +280,7 @@ const UnitFieldMini: React.FC<{
           <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            style={{ width: 64, padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)' }}
+            style={{ width: 64, height: 24, boxSizing: 'border-box', padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)' }}
           >
             {value && !allowed.includes(value) && <option value={value}>⚠ {value}</option>}
             {allowed.map(u => <option key={u} value={u}>{u || '—'}</option>)}
@@ -293,7 +293,7 @@ const UnitFieldMini: React.FC<{
         Unité
         <span
           title="Unité fixée par la variable canonique"
-          style={{ minWidth: 36, padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', textAlign: 'center' }}
+          style={{ minWidth: 36, height: 24, boxSizing: 'border-box', padding: '3px 6px', fontSize: 12, borderRadius: 3, border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
         >
           {v.defaultUnit || '—'}
         </span>
@@ -798,7 +798,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         <div style={{ display: 'flex', gap: 18, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         {/* Y commun */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>Y COMMUN</strong>
+          {/* Aligné sur le CENTRE des champs (rangée en flex-end : les champs
+              font 24 px en bas de colonne — le titre prend la même boîte). */}
+          <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'flex-end', height: 24, display: 'inline-flex', alignItems: 'center' }}>Y COMMUN</strong>
           {/* R8 — variable canonique OBLIGATOIRE : title = id du catalogue
               (clé de branchement de la cascade), unité verrouillée. */}
           <VarSelectMini
@@ -850,7 +852,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         {/* X du cadre actif */}
         {focusedFrame && focusedGraph ? (
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>
+            <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'flex-end', height: 24, display: 'inline-flex', alignItems: 'center' }}>
               X · {focusedGraph.name || 'cadre actif'}
               {focusedGraph.readoutAxis === 'x' ? ' — SORTIE (lue en bas)' : ''}
             </strong>
@@ -920,9 +922,12 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           du builder, mais plus liés visuellement. ─── */}
       {onCreateCurve && !calib && workshop.frames.length > 0 && (() => {
         // (focusedCurve est calculée plus haut — état dérivé des modes Lot 1-E.)
+        // Arrondi du kit (6) — la capsule « pilule » à 999 tranchait avec les
+        // panneaux (retour pilote 20/08 : arrondi beaucoup plus intense que
+        // les sections Atelier / Identité).
         const pill: React.CSSProperties = {
           display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
-          margin: '0 0 8px', padding: '6px 14px', borderRadius: 999,
+          margin: '0 0 8px', padding: '6px 12px', borderRadius: 6,
           backgroundColor: 'var(--bg-overlay)'
         };
         // Tracé en cours sur le cadre actif : la capsule pilote la FIN du geste
@@ -939,7 +944,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               {onFinishCurve && (
                 <button
                   onClick={onFinishCurve}
-                  style={{ marginLeft: 'auto', padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
+                  style={{ marginLeft: 'auto', height: 24, boxSizing: 'border-box', padding: '0 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap' }}
                 >
                   ✓ Terminer la courbe
                 </button>
@@ -985,7 +990,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                     value={newCurveValue}
                     disabled={!focusedFrame}
                     onChange={(e) => setNewCurveValue(e.target.value)}
-                    style={{ minWidth: 110, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                    style={{ minWidth: 110, height: 24, boxSizing: 'border-box', padding: '0 10px', fontSize: 12, borderRadius: 6, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
                   >
                     <option value="">— valeur —</option>
                     {ALTITUDE_STEPS.map(v => <option key={v} value={v}>{v}{famUnit ? ` ${famUnit}` : ''}</option>)}
@@ -998,7 +1003,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                     disabled={!focusedFrame}
                     onChange={(e) => setNewCurveValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') createByValue(); }}
-                    style={{ width: 110, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                    style={{ width: 110, height: 24, boxSizing: 'border-box', padding: '0 10px', fontSize: 12, borderRadius: 6, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
                   />
                 )}
                 {isWindGraph && (
@@ -1006,7 +1011,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                     value={newCurveWindDir}
                     onChange={(e) => setNewCurveWindDir(e.target.value as '' | 'headwind' | 'tailwind' | 'none')}
                     style={{
-                      padding: '4px 10px', fontSize: 12, borderRadius: 999,
+                      height: 24, boxSizing: 'border-box', padding: '0 10px', fontSize: 12, borderRadius: 6,
                       border: `1px solid ${windMissing ? 'var(--accent-primary)' : 'var(--border-regular)'}`,
                       backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)'
                     }}
@@ -1045,7 +1050,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                     setNewCurveName('');
                   }
                 }}
-                style={{ flex: 1, minWidth: 170, padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                style={{ flex: 1, minWidth: 170, height: 24, boxSizing: 'border-box', padding: '0 10px', fontSize: 12, borderRadius: 6, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
               />
             )}
             <input
@@ -1064,7 +1069,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               }}
               disabled={createDisabled}
               title={windMissing ? 'Choisissez le sens du vent du guide' : undefined}
-              style={{ padding: '4px 14px', cursor: createDisabled ? 'not-allowed' : 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: createDisabled ? 0.45 : 1 }}
+              style={{ height: 24, boxSizing: 'border-box', padding: '0 14px', cursor: createDisabled ? 'not-allowed' : 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: createDisabled ? 0.45 : 1 }}
             >
               Créer & tracer
             </button>

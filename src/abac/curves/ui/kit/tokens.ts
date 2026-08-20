@@ -35,15 +35,21 @@ export const FONT = {
   title: 'var(--fs-title)',
   body: 'var(--fs-body)',
   note: 'var(--fs-caption)',
+  /** Corps des CONTRÔLES (boutons, champs, selects) — 12 px, aligné sur les
+   *  champs historiques de l'atelier (demande pilote 20/08 : boutons plus
+   *  petits, même hauteur que les champs). */
+  control: '12px',
 } as const;
 
 /** Rayon d'arrondi unique du kit (px). */
 export const RADIUS = 6;
 
-/** Les 2 hauteurs de contrôle autorisées (px) : normal 32, compact 26. */
+/** Les 2 hauteurs de contrôle autorisées (px) — demande pilote 20/08 :
+ *  compact (24) = EXACTEMENT la hauteur des champs de saisie de l'atelier
+ *  (variables, unités, bornes) pour un alignement au pixel. */
 export const CONTROL_HEIGHT = {
-  normal: 32,
-  compact: 26,
+  normal: 28,
+  compact: 24,
 } as const;
 
 /**

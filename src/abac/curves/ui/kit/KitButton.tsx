@@ -75,7 +75,7 @@ export function KitButton({
     padding: `0 ${size === 'compact' ? SPACING.sm : SPACING.md}px`,
     borderRadius: RADIUS,
     fontFamily: 'inherit',
-    fontSize: FONT.body,
+    fontSize: FONT.control,
     fontWeight: 600,
     lineHeight: 1,
     whiteSpace: 'nowrap',
