@@ -17,6 +17,12 @@ import { runAllReferenceCases } from '../core/referenceBench';
 import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
 import { isValidOperationId, getOperation } from '../core/operationCatalog';
 import {
+  makeAtelierContextKey,
+  getAtelierDraft,
+  putAtelierDraft,
+  deleteAtelierDraft
+} from '../core/atelierDraftStore';
+import {
   Curve,
   XYPoint,
   FitOptions,
@@ -109,6 +115,23 @@ function AbacBuilderComponent(
   // sinon le prochain « Nouvel abaque » restaurerait le set qu'on vient
   // d'enregistrer → double enregistrement du même travail.
   const sessionClosedRef = useRef(false);
+
+  // ─── Lot 0 — SURVIE AU RECHARGEMENT DE PAGE (F5) ──────────────────────────
+  // La session ci-dessus vit dans un useRef du wizard avion : elle survit aux
+  // allers-retours d'étape mais PAS à un rechargement (F5 = image, cadres,
+  // calibrations, courbes perdus — douleur pilote n°1). Le MÊME payload est
+  // donc déposé, débouncé, dans IndexedDB (atelierDraftStore — l'image dataURL
+  // pèse plusieurs Mo, localStorage interdit) et restauré au montage UNIQUEMENT
+  // quand la session du wizard est VIDE (vrai rechargement, pas un simple
+  // changement d'étape) ET que le contexte (avion|modèle) correspond.
+  const draftContextKey = makeAtelierContextKey(aircraftModel, modelName);
+  // Décision figée AVANT le premier effet : session vide ⇔ vrai rechargement.
+  const shouldTryRestoreRef = useRef(!(sessionRef?.current?.atelier));
+  // Tant que la décision de restauration n'est pas rendue, l'instantané
+  // débouncé est SUSPENDU (sinon l'état initial du montage écraserait le
+  // brouillon qu'on s'apprête à restaurer).
+  const [restoring, setRestoring] = useState<boolean>(shouldTryRestoreRef.current);
+  const [restoredBanner, setRestoredBanner] = useState(false);
 
   // ─── R1 — Atelier « image unique » (AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md) ───
   // État du workshop : UNE image pour le SET, un axe Y COMMUN, des cadres (un
@@ -277,6 +300,60 @@ function AbacBuilderComponent(
       referenceCases, bezierSession, systemType, modelNameInput,
       aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
+  // ─── Instantané IndexedDB (survie F5) — effet JUMEAU débouncé du précédent.
+  // Même payload que la session + contextKey/horodatage, clé unique
+  // 'atelier-draft'. Débounce 1,5 s : l'image dataURL peut peser plusieurs Mo,
+  // on n'écrit pas à chaque frappe. Le garde sessionClosedRef est revérifié
+  // DANS le timer : un dépôt en attente au moment de l'enregistrement final ne
+  // doit pas ressusciter le brouillon qu'on vient d'effacer.
+  React.useEffect(() => {
+    if (sessionClosedRef.current || restoring) return;
+    const t = window.setTimeout(() => {
+      if (sessionClosedRef.current) return;
+      void putAtelierDraft({
+        contextKey: draftContextKey,
+        savedAt: Date.now(),
+        marker: sessionMarker,
+        workshop, graphs, referenceCases,
+        bezierSession, systemType, modelNameInput, aircraftModelDisplay,
+        currentStep, subStepGraphIndex,
+      });
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, [restoring, draftContextKey, sessionMarker, workshop, graphs,
+      referenceCases, bezierSession, systemType, modelNameInput,
+      aircraftModelDisplay, currentStep, subStepGraphIndex]);
+
+  // ─── Restauration au montage (vrai rechargement uniquement) ───────────────
+  // IndexedDB est asynchrone : le montage affiche « Restauration du tracé… »
+  // (voir le return) puis hydrate les états EN UN SEUL PASSAGE, dans le même
+  // ordre que les initialiseurs paresseux S?. ci-dessus — le snapshot devient
+  // la session au prochain run de l'effet de persistance. contextKey ≠
+  // contexte courant : snapshot ignoré (il appartient à un autre tracé), on le
+  // laisse en place. Pas de garde d'annulation : les setters d'un composant
+  // démonté sont inoffensifs (React 18) et le flag interdit toute ré-entrée.
+  React.useEffect(() => {
+    if (!shouldTryRestoreRef.current) return;
+    shouldTryRestoreRef.current = false;
+    (async () => {
+      const draft = await getAtelierDraft();
+      if (draft && draft.contextKey === draftContextKey) {
+        if (draft.workshop) setWorkshop(draft.workshop);
+        setBezierSession(draft.bezierSession ?? null);
+        setReferenceCases(draft.referenceCases ?? []);
+        if (draft.currentStep) setCurrentStep(draft.currentStep as Step);
+        setGraphs(draft.graphs ?? []);
+        if (draft.modelNameInput !== undefined) setModelNameInput(draft.modelNameInput);
+        if (draft.aircraftModelDisplay !== undefined) setAircraftModelDisplay(draft.aircraftModelDisplay);
+        if (draft.systemType !== undefined) setSystemType(draft.systemType);
+        setSubStepGraphIndex(draft.subStepGraphIndex ?? 0);
+        setRestoredBanner(true);
+      }
+      setRestoring(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Synchronise selectedGraphId avec le graphique courant de la sous-étape
   // et clamp l'index si le nombre de graphiques change.
   React.useEffect(() => {
@@ -359,14 +436,11 @@ function AbacBuilderComponent(
   };
 
   // Initialize with data if provided
-  React.useEffect(() => {
-    // Session reprise : le travail en cours fait foi — rejouer l'hydratation
-    // depuis initialData écraserait les graphs/workshop/systemType qu'on vient
-    // de restaurer par les initialiseurs paresseux. Quand initialData change
-    // RÉELLEMENT (ouverture d'un AUTRE abaque), le marqueur de session ne
-    // correspond plus : S est null et l'hydratation ci-dessous reprend —
-    // l'ouverture normale d'un abaque existant reste donc intacte.
-    if (S) return;
+  // 🔧 Survie F5 : corps extrait en callback, rejoué tel quel par le bouton
+  // « Abandonner ce tracé » de la bannière de restauration — un modèle en
+  // édition revient ainsi à l'état d'un montage vierge (re-hydraté depuis
+  // initialData) au lieu d'un atelier vide.
+  const hydrateFromInitialData = useCallback(() => {
     if (initialData) {
       // Restaurer le systemType depuis les métadonnées si disponible
       if (initialData.metadata?.systemType) {
@@ -422,7 +496,20 @@ function AbacBuilderComponent(
       // Les axes restent éditables via la sous-étape 3 du wizard.
       setCurrentStep('points');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, aircraftModel]);
+
+  React.useEffect(() => {
+    // Session reprise : le travail en cours fait foi — rejouer l'hydratation
+    // depuis initialData écraserait les graphs/workshop/systemType qu'on vient
+    // de restaurer par les initialiseurs paresseux. Quand initialData change
+    // RÉELLEMENT (ouverture d'un AUTRE abaque), le marqueur de session ne
+    // correspond plus : S est null et l'hydratation (hydrateFromInitialData)
+    // reprend — l'ouverture normale d'un abaque existant reste donc intacte.
+    if (S) return;
+    hydrateFromInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, aircraftModel, hydrateFromInitialData]);
 
   // Synchroniser modelNameInput avec systemType
   React.useEffect(() => {
@@ -876,6 +963,12 @@ function AbacBuilderComponent(
       sessionRef.current = { ...sessionRef.current, atelier: null };
     }
     sessionClosedRef.current = true;
+    // Survie F5 : l'enregistrement réussi efface AUSSI l'instantané IndexedDB
+    // — sinon le prochain montage « session vide » restaurerait le set qu'on
+    // vient d'enregistrer (même doublon que pour la session). Le garde
+    // sessionClosedRef (revérifié dans le timer du dépôt débouncé) empêche un
+    // dépôt en attente de le ressusciter.
+    void deleteAtelierDraft();
   }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases, sessionRef]);
 
 
@@ -1420,10 +1513,65 @@ const renderStepContent = () => {
     }
   };
 
+  // ─── Survie F5 : abandon du tracé restauré ────────────────────────────────
+  // Efface l'instantané IndexedDB puis remet l'atelier à l'état d'un montage
+  // vierge : valeurs par défaut (mêmes que les initialiseurs sans session),
+  // puis re-hydratation depuis initialData si un modèle était en édition.
+  // L'auto-création du « Graphique 1 » (effet dédié) repart d'elle-même en
+  // création pure. Le dépôt débouncé re-déposera ensuite cet état propre.
+  const handleDiscardRestoredDraft = () => {
+    void deleteAtelierDraft();
+    setRestoredBanner(false);
+    setWorkshop({ image: null, sharedY: { min: 0, max: 100, unit: '', title: '' }, frames: [] });
+    setBezierSession(null);
+    setReferenceCases([]);
+    setCurrentStep('points');
+    setGraphs([]);
+    setSelectedGraphId(null);
+    setSelectedCurveId(null);
+    setModelNameInput(modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || '');
+    setAircraftModelDisplay(aircraftModel || '');
+    setSystemType('');
+    setSubStepGraphIndex(0);
+    hydrateFromInitialData();
+  };
+
   return (
     <div className={styles.abacBuilder}>
       <div className={styles.builderContent}>
-        {renderStepContent()}
+        {restoring ? (
+          // IndexedDB est asynchrone : bref état d'attente avant l'hydratation
+          // (évite un flash de l'atelier vide puis un saut vers le tracé).
+          <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)', fontSize: 13 }}>
+            ⤴ Restauration du tracé…
+          </div>
+        ) : (
+          <>
+            {restoredBanner && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                margin: '0 0 10px', padding: '6px 12px',
+                backgroundColor: 'var(--bg-overlay)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 6, fontSize: 12, color: 'var(--text-secondary)'
+              }}>
+                <span>⤴ Tracé restauré après rechargement de la page</span>
+                <button
+                  onClick={handleDiscardRestoredDraft}
+                  title="Efface le tracé restauré et repart d'un atelier vierge"
+                  style={{
+                    padding: '3px 10px', fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap',
+                    backgroundColor: 'transparent', color: 'var(--color-red-critical)',
+                    border: '1px solid var(--color-red-critical)', borderRadius: 4
+                  }}
+                >
+                  Abandonner ce tracé
+                </button>
+              </div>
+            )}
+            {renderStepContent()}
+          </>
+        )}
       </div>
     </div>
   );
