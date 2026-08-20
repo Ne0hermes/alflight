@@ -201,7 +201,6 @@ function AbacBuilderComponent(
   // Lot 1-F — le banc au Tracé : <details> contrôlé, ouvert au clic « 📌 »
   // pour que le prefill atterrisse dans un panneau VISIBLE. Volatile (non
   // persisté, comme wizardEditorMode).
-  const [traceBenchOpen, setTraceBenchOpen] = useState(false);
 
   // R2a — La CHAÎNE de cascade suit l'ordre des cadres sur l'image :
   // gauche→droite = G1→G2→G3 (le geste de lecture de l'abaque papier).
@@ -368,21 +367,6 @@ function AbacBuilderComponent(
     });
     return map;
   }, [graphs, orderedFrames, workshop.sharedY, workshop.yTicks]);
-
-  // Écran étroit (< 1100 px) : le rail passe AU-DESSUS, horizontal, items du
-  // set seulement — et ne provoque jamais de scroll horizontal.
-  const [narrowScreen, setNarrowScreen] = useState<boolean>(
-    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(max-width: 1099px)').matches
-      : false
-  );
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-    const mq = window.matchMedia('(max-width: 1099px)');
-    const onChange = () => setNarrowScreen(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
 
   // Champ « Nom du modèle » de l'écran Validation — ciblé par l'item de
   // checklist « Nom du modèle » (clic → focus du champ marqué).
@@ -1119,8 +1103,9 @@ function AbacBuilderComponent(
           window.setTimeout(() => modelNameFieldRef.current?.focus(), 60);
         };
       case READINESS_BENCH_ITEM_ID:
-        // Au Tracé le banc est replié : l'ouvrir. En Validation il est déjà là.
-        return currentStep === 'points' ? () => setTraceBenchOpen(true) : undefined;
+        // Le banc ne vit qu'à l'écran Validation (retour pilote 20/08) — la
+        // check-list y est affichée juste au-dessus : rien à ouvrir.
+        return undefined;
       case 'set:frames':
       case 'set:shared-y':
       case 'set:chain':
@@ -1139,43 +1124,9 @@ function AbacBuilderComponent(
     onClick: setItemAction(it.id)
   }));
 
-  // Un groupe par CADRE (ordre des cadres) — compact : seul le cadre FOCUS
-  // est détaillé, les autres sont repliés en une ligne « x/y ✓ » cliquable.
-  const railFrameSteps: ChecklistStep[] = [];
-  orderedFrames.forEach((f, i) => {
-    const g = graphs.find(x => x.id === f.graphId);
-    if (!g) return;
-    const items = graphReadinessById.get(g.id) || [];
-    const done = items.filter(it => it.state === 'done').length;
-    const anyBlocked = items.some(it => it.state === 'blocked');
-    if (g.id === selectedGraphId) {
-      railFrameSteps.push({
-        id: `frame:${g.id}`,
-        label: `${i + 1} · ${g.name}`,
-        state: 'current',
-        detail: `${done}/${items.length} ✓`
-      });
-      items.forEach(it => railFrameSteps.push({
-        id: it.id,
-        label: it.label,
-        state: it.state,
-        detail: it.detail,
-        // Depuis la Validation, l'item ramène au Tracé (les panneaux du cadre
-        // y sont visibles) ; au Tracé, tout est déjà sous les yeux.
-        onClick: currentStep === 'final' ? () => focusFrameGraph(g.id) : undefined
-      }));
-    } else {
-      railFrameSteps.push({
-        id: `frame:${g.id}`,
-        label: `${i + 1} · ${g.name}`,
-        state: anyBlocked ? 'blocked' : items.length > 0 && done === items.length ? 'done' : 'todo',
-        detail: `${done}/${items.length} ✓`,
-        onClick: () => focusFrameGraph(g.id)
-      });
-    }
-  });
-
-  const showRail = currentStep === 'points' || currentStep === 'final';
+  // (Retour pilote 20/08 : le rail latéral et ses groupes par cadre ont été
+  // retirés — les badges « x/y ✓ » des panneaux de cadre suffisent au Tracé,
+  // et la check-list du SET vit en tête de l'écran Validation.)
 
   // Bouton « Valider et enregistrer » : disabled/raison dérivés de canSave +
   // items bloquants (fin du window.confirm « problème(s) bloquant(s) »).
@@ -1494,34 +1445,10 @@ const renderStepContent = () => {
                 formulaire persistant (testDraft). Le banc replié reste ici en
                 sentinelle : son badge alerte si une retouche casse un cas.) */}
 
-            {/* ─── Lot 1-F : LE BANC VISIBLE PENDANT LE TRACÉ — « le banc EST
-                le testeur ». Le panneau des cas de référence est monté AUSSI
-                ici (replié par défaut), avec un compteur PERMANENT
-                « Banc : x/y OK » dans son résumé. Pur affichage :
-                runAllReferenceCases tourne déjà en pur sur les graphes en
-                l'état. Le clic « 📌 » du testeur ci-dessus alimente désormais
-                un panneau PRÉSENT. */}
-            {workshop.frames.length > 0 && (
-            <KitPanel
-              collapsible
-              open={traceBenchOpen}
-              onToggle={setTraceBenchOpen}
-              title="Banc de test — cas de référence du manuel"
-              badge={
-                <KitBadge tone={benchResults.length === 0 ? 'neutral' : benchPass === benchResults.length ? 'ok' : 'crit'}>
-                  Banc : {benchPass}/{benchResults.length} OK
-                </KitBadge>
-              }
-            >
-              <ReferenceCasesPanel
-                graphs={graphs}
-                cases={referenceCases}
-                onChange={setReferenceCases}
-                prefill={referencePrefill}
-                onPrefillConsumed={() => setReferencePrefill(null)}
-              />
-            </KitPanel>
-            )}
+            {/* (Retour pilote 20/08 : le BANC quitte aussi l'écran Tracé —
+                « faire un banc de test alors que les données ne sont pas
+                rentrées, ça ne sert à rien ». Il ne vit qu'à l'écran
+                Validation, après l'interpolation, avec le testeur.) */}
 
             {/* R6 — wizard RÉDUIT : uniquement l'outillage courbes (création,
                 Chart pour le Bézier, table de points repliable) + le bouton
@@ -1567,6 +1494,19 @@ const renderStepContent = () => {
           <div className={styles.stepContent}>
             <h2>Validation</h2>
             <div className={styles.finalView}>
+              {/* Retour pilote 20/08 : la check-list quitte le rail latéral
+                  (lisibilité du Tracé) et vit ICI, pleine largeur — le
+                  récapitulatif avant enregistrement, items cliquables. */}
+              <KitPanel
+                title="Check-list du modèle"
+                badge={
+                  <KitBadge tone={setReadiness.canSave ? 'ok' : 'crit'}>
+                    {setReadiness.canSave ? 'prêt à enregistrer' : 'points à régler'}
+                  </KitBadge>
+                }
+              >
+                <ChecklistRail steps={railSetSteps} />
+              </KitPanel>
               {/* Lot 1-G — Configuration du système en KitPanel + champ « Nom du
                   modèle » MARQUÉ quand vide (l'item de checklist du même nom
                   cible ce champ ; le bouton d'enregistrement dit la raison). */}
@@ -1838,65 +1778,12 @@ const renderStepContent = () => {
                 </button>
               </div>
             )}
-            {/* ─── Lot 1-G : RAIL DE CHECKLIST PERMANENT (Tracé + Validation).
-                Large : colonne latérale sticky de 250 px à droite de la
-                colonne principale (items du set puis un groupe par cadre).
-                Étroit (< 1100 px) : bandeau horizontal AU-DESSUS, items du
-                set seulement — jamais de scroll horizontal. */}
-            {showRail && narrowScreen && (
-              <div style={{
-                marginBottom: SPACING.sm,
-                padding: SPACING.xs,
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 6
-              }}>
-                <ChecklistRail steps={railSetSteps} orientation="horizontal" />
-              </div>
-            )}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACING.md }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {renderStepContent()}
-              </div>
-              {showRail && !narrowScreen && (
-                <aside style={{
-                  width: 250,
-                  flexShrink: 0,
-                  position: 'sticky',
-                  top: 0,
-                  maxHeight: 'calc(100vh - 24px)',
-                  overflowY: 'auto',
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 6,
-                  padding: SPACING.sm
-                }}>
-                  <div style={{
-                    fontSize: FONT.note, fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.05em', color: 'var(--text-tertiary)',
-                    padding: `${SPACING.xs}px ${SPACING.sm}px`
-                  }}>
-                    Check-list du modèle
-                  </div>
-                  <ChecklistRail steps={railSetSteps} />
-                  {railFrameSteps.length > 0 && (
-                    <>
-                      <div style={{
-                        fontSize: FONT.note, fontWeight: 700, textTransform: 'uppercase',
-                        letterSpacing: '0.05em', color: 'var(--text-tertiary)',
-                        padding: `${SPACING.xs}px ${SPACING.sm}px`,
-                        marginTop: SPACING.sm,
-                        borderTop: '1px solid var(--border-subtle)',
-                        paddingTop: SPACING.sm
-                      }}>
-                        Cadres
-                      </div>
-                      <ChecklistRail steps={railFrameSteps} />
-                    </>
-                  )}
-                </aside>
-              )}
-            </div>
+            {/* (Retour pilote 20/08 : le rail latéral de checklist nuisait à
+                la lisibilité du Tracé — retiré. La check-list du modèle vit
+                désormais en tête de l'écran VALIDATION, pleine largeur, là où
+                elle sert : le récapitulatif avant enregistrement. Le bouton
+                « Valider » garde sa raison de refus via canSave.) */}
+            {renderStepContent()}
           </>
         )}
       </div>

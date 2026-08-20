@@ -91,16 +91,9 @@ const render = (session) =>
 describe('AbacBuilder — assemblage écran Tracé (Lot 1-G)', () => {
   const html = render(mkSession());
 
-  it('monte le RAIL de checklist permanent (set + groupes par cadre)', () => {
-    expect(html).toContain('Check-list du modèle');
-    // Items du set (modelReadiness)
-    expect(html).toContain('Graphique primaire et opération du set');
-    expect(html).toContain('Axe Y commun paramétré');
-    expect(html).toContain('Banc de test (cas de référence du manuel)');
-    // Groupes par cadre, ordre des cadres, ligne compacte « x/y ✓ »
-    expect(html).toContain('Cadres');
-    expect(html).toContain('1 · Panneau d&#x27;entrée');
-    expect(html).toContain('2 · Correction 2');
+  it('PAS de rail latéral au Tracé (retour pilote 20/08 : lisibilité) — la check-list vit à la Validation', () => {
+    expect(html).not.toContain('Check-list du modèle');
+    // Les badges « x/y ✓ » des panneaux de cadre restent le repère d'avancement.
     expect(html).toMatch(/\d+\/\d+ ✓/);
   });
 
@@ -135,9 +128,9 @@ describe('AbacBuilder — assemblage écran Tracé (Lot 1-G)', () => {
     expect(primaries).toBe(1);
   });
 
-  it('grands blocs du Tracé : banc replié et courbes — SANS le calculateur de test (décision pilote 20/08 : les tests se font après interpolation, sur l\'écran Validation)', () => {
+  it('grands blocs du Tracé : courbes seulement — SANS testeur NI banc (décision pilote 20/08 : tests et banc vivent après interpolation, sur l\'écran Validation)', () => {
     expect(html).not.toContain('Testeur — cascade sur les graphes en l&#x27;état');
-    expect(html).toContain('Banc de test — cas de référence du manuel');
+    expect(html).not.toContain('Banc de test — cas de référence du manuel');
     expect(html).toContain('Courbes du cadre actif');
   });
 });
