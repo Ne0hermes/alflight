@@ -52,14 +52,26 @@ export interface OperationClassifierProps {
   showLabel?: boolean;
   /** Style additionnel sur le conteneur. */
   style?: React.CSSProperties;
+  /** Lot 1-C — mode EXPLICITE (écran « Opération » de l'atelier) : AUCUNE
+   *  résolution implicite. Choisir une Phase n'émet plus la première
+   *  opération de la phase (piège identifié par l'audit-7) : l'operationId
+   *  n'est émis que lorsque Phase + Métrique + Volets sont résolus par des
+   *  choix explicites — les volets ne sont auto-résolus que s'il n'existe
+   *  qu'UNE variante (résolution non ambiguë, pas un défaut).
+   *  false (défaut) = comportement historique inchangé (GraphIdentityPanel,
+   *  PerformanceWizard). */
+  requireExplicit?: boolean;
 }
 
 export const OperationClassifier: React.FC<OperationClassifierProps> = ({
-  value, onChange, direction = 'row', compact = false, showLabel = false, style
+  value, onChange, direction = 'row', compact = false, showLabel = false, style, requireExplicit = false
 }) => {
+  // Lot 1-C — sélections EN ATTENTE du mode explicite : tant que l'opération
+  // n'est pas résolue, `value` est vide et ne peut pas porter Phase/Métrique.
+  const [pending, setPending] = React.useState<{ phase: string; metric: string }>({ phase: '', metric: '' });
   const currentOp = value ? getOperation(value) : undefined;
-  const phaseSel = currentOp?.phase || '';
-  const metricSel = currentOp ? metricOf(currentOp) : '';
+  const phaseSel = currentOp?.phase || (requireExplicit ? pending.phase : '');
+  const metricSel = currentOp ? metricOf(currentOp) : (requireExplicit ? pending.metric : '');
   const flapsSel = currentOp ? flapsOf(currentOp) : '';
 
   const phases = [...new Set(OPERATION_CATALOG.map(op => op.phase))];
@@ -83,15 +95,34 @@ export const OperationClassifier: React.FC<OperationClassifierProps> = ({
 
   const apply = (op: OperationDefinition | undefined) => { if (op) onChange(op.id); };
   const onPhase = (p: string) => {
+    if (requireExplicit) {
+      // Mode explicite : on N'ÉMET RIEN au clic de Phase — la métrique (et
+      // les volets s'il existe plusieurs variantes) restent à choisir.
+      setPending({ phase: p, metric: '' });
+      if (value) onChange('');
+      return;
+    }
     if (!p) { onChange(''); return; }
     const first = OPERATION_CATALOG.find(op => op.phase === p);
     if (first) apply(resolveOperation(p, metricOf(first), flapsOf(first)) || first);
   };
   const onMetric = (m: string) => {
+    if (requireExplicit) {
+      const candidates = OPERATION_CATALOG.filter(op => op.phase === phaseSel && metricOf(op) === m);
+      setPending({ phase: phaseSel, metric: m });
+      // Une seule variante ⇒ l'opération est ENTIÈREMENT déterminée par
+      // Phase + Métrique : émission non ambiguë. Plusieurs ⇒ volets requis.
+      if (m && candidates.length === 1) onChange(candidates[0].id);
+      else if (value) onChange('');
+      return;
+    }
     const candidates = OPERATION_CATALOG.filter(op => op.phase === phaseSel && metricOf(op) === m);
     if (candidates.length) apply(candidates.find(op => flapsOf(op) === flapsSel) || candidates[0]);
   };
-  const onFlaps = (f: string) => apply(resolveOperation(phaseSel, metricSel, f));
+  const onFlaps = (f: string) => {
+    if (requireExplicit && !f) { if (value) onChange(''); return; }
+    apply(resolveOperation(phaseSel, metricSel, f));
+  };
 
   return (
     <div
@@ -126,14 +157,27 @@ export const OperationClassifier: React.FC<OperationClassifierProps> = ({
           value={flapsSel}
           onChange={(e) => onFlaps(e.target.value)}
           disabled={!metricSel}
-          style={{ ...selectStyle, minWidth: direction === 'row' ? 150 : undefined, opacity: metricSel ? 1 : 0.5, borderColor: flapsSel === '__none__' ? 'var(--color-red-critical)' : 'var(--border-subtle)' }}
+          style={{ ...selectStyle, minWidth: direction === 'row' ? 150 : undefined, opacity: metricSel ? 1 : 0.5, borderColor: (flapsSel === '__none__' || (requireExplicit && !flapsSel)) ? 'var(--color-red-critical)' : 'var(--border-subtle)' }}
         >
+          {/* Mode explicite : pas de volets pré-choisis — placeholder tant que
+              l'utilisateur n'a pas tranché. */}
+          {requireExplicit && !flapsSel && <option value="">— Volets —</option>}
           {flapsOptions.map(f => <option key={f} value={f}>{FLAPS_LABELS[f] || f}</option>)}
         </select>
       )}
       {flapsSel === '__none__' && flapsOptions.length > 1 && (
         <span style={{ fontSize: compact ? 9 : 11, fontWeight: 600, color: 'var(--color-red-critical)' }}>
           précise les volets
+        </span>
+      )}
+      {requireExplicit && phaseSel && !metricSel && (
+        <span style={{ fontSize: compact ? 9 : 11, fontWeight: 600, color: 'var(--color-red-critical)' }}>
+          choisis la métrique
+        </span>
+      )}
+      {requireExplicit && metricSel && !currentOp && flapsOptions.length > 1 && (
+        <span style={{ fontSize: compact ? 9 : 11, fontWeight: 600, color: 'var(--color-red-critical)' }}>
+          choisis les volets
         </span>
       )}
     </div>

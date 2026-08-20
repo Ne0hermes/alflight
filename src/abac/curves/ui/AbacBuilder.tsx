@@ -16,6 +16,15 @@ import { ReferenceCasesPanel, ReferencePrefill } from './ReferenceCasesPanel';
 import { runAllReferenceCases } from '../core/referenceBench';
 import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
 import { isValidOperationId, getOperation } from '../core/operationCatalog';
+// Lot 1-C — écran « Opération » (setup) : panneau UI + déduction pure du set
+// (rôles, readoutAxis, familles, cadres pré-répartis) depuis les 3 réponses.
+import { OperationSetupPanel } from './OperationSetupPanel';
+import {
+  PlancheType,
+  buildSetupGraphs,
+  applySetupRoles,
+  appendPanels
+} from '../core/plancheSetup';
 import {
   makeAtelierContextKey,
   getAtelierDraft,
@@ -44,8 +53,13 @@ import {
 import { isWindAxisVariable } from '../core/axisVariables';
 import styles from './styles.module.css';
 
-// R0 : l'étape 'axes' (morte depuis SPRINT B) est retirée du type — séquence réelle : points → final.
-type Step = 'points' | 'final';
+// R0 : l'étape 'axes' (morte depuis SPRINT B) est retirée du type.
+// Lot 1-C : nouvelle étape 'setup' (écran « Opération ») posée UNE FOIS au
+// départ d'un modèle VIERGE — opération canonique + type de planche + nombre
+// de panneaux, tout le reste (rôles, readoutAxis, familles) est DÉDUIT.
+// Un modèle EXISTANT en édition saute directement à 'points' (« Tracé »).
+// Écrans sans numéros : Opération → Tracé → Validation.
+type Step = 'setup' | 'points' | 'final';
 
 // Lot 0 — réglages d'interpolation : leurs setters n'ont jamais été branchés à
 // l'UI (états figés depuis toujours) → constantes assumées.
@@ -216,14 +230,19 @@ function AbacBuilderComponent(
     });
   }, [workshop.frames, workshop.sharedY]);
 
-  // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée du flux).
-  // Le choix du type de système et la config des axes sont assurés par le wizard (sous-étape 3).
-  const [currentStep, setCurrentStep] = useState<Step>((S?.currentStep as Step) ?? 'points');
+  // Lot 1-C : un montage VIERGE (pas d'initialData) démarre sur l'écran
+  // « Opération » (setup) ; l'édition d'un modèle existant reste sur 'points'
+  // (le saut est confirmé/affiné par hydrateFromInitialData, qui renvoie sur
+  // 'setup' un initialData réellement vierge). La session restaurée fait foi.
+  const [currentStep, setCurrentStep] = useState<Step>(
+    (S?.currentStep as Step) ?? (initialData ? 'points' : 'setup')
+  );
 
   // Exposer les méthodes via useImperativeHandle
   React.useImperativeHandle(ref, () => ({
     goToNextStep: () => {
-      // SPRINT B : étape 'axes' supprimée, séquence = points → final
+      // Lot 1-C : 'setup' ne se quitte QUE par « Créer les cadres → » (gardes
+      // de l'écran Opération) — pas de saut impératif possible depuis ici.
       const steps: Step[] = ['points', 'final'];
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex >= 0 && currentIndex < steps.length - 1) {
@@ -232,7 +251,11 @@ function AbacBuilderComponent(
       }
     },
     goToPreviousStep: () => {
-      // SPRINT B : étape 'axes' supprimée, séquence = points → final
+      // Lot 1-C : depuis l'écran Opération, « précédent » = sortie de l'atelier.
+      if (currentStep === 'setup') {
+        if (onBack) onBack();
+        return;
+      }
       const steps: Step[] = ['points', 'final'];
       const currentIndex = steps.indexOf(currentStep);
       if (currentIndex > 0) {
@@ -273,6 +296,12 @@ function AbacBuilderComponent(
   // SPRINT B+ : systemType contient désormais un operationId du catalogue canonique
   // (au lieu d'une valeur SYSTEM_TYPES legacy). Vide par défaut → force l'utilisateur à choisir.
   const [systemType, setSystemType] = useState<string>(S?.systemType ?? '');
+  // Lot 1-C — TYPE DE PLANCHE du set, choisi UNE fois à l'écran « Opération » :
+  // 'standard' (résultat lu sur Y) ou 'descendante' (dernier graphe en
+  // readoutAxis 'x', résultat lu en bas). null = pas encore déterminé.
+  // Persisté en session/brouillon, exporté dans metadata.plancheType ; pour
+  // les modèles antérieurs il est INFÉRÉ à l'ouverture (hydrateFromInitialData).
+  const [plancheType, setPlancheType] = useState<PlancheType | null>(S?.plancheType ?? null);
   const [importSuccess, setImportSuccess] = useState<boolean>(false);
 
 
@@ -292,12 +321,12 @@ function AbacBuilderComponent(
       atelier: {
         marker: sessionMarker,
         workshop, graphs, referenceCases,
-        bezierSession, systemType, modelNameInput, aircraftModelDisplay,
+        bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
       },
     };
   }, [sessionRef, sessionMarker, workshop, graphs,
-      referenceCases, bezierSession, systemType, modelNameInput,
+      referenceCases, bezierSession, systemType, plancheType, modelNameInput,
       aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
   // ─── Instantané IndexedDB (survie F5) — effet JUMEAU débouncé du précédent.
@@ -315,13 +344,13 @@ function AbacBuilderComponent(
         savedAt: Date.now(),
         marker: sessionMarker,
         workshop, graphs, referenceCases,
-        bezierSession, systemType, modelNameInput, aircraftModelDisplay,
+        bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
       });
     }, 1500);
     return () => window.clearTimeout(t);
   }, [restoring, draftContextKey, sessionMarker, workshop, graphs,
-      referenceCases, bezierSession, systemType, modelNameInput,
+      referenceCases, bezierSession, systemType, plancheType, modelNameInput,
       aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
   // ─── Restauration au montage (vrai rechargement uniquement) ───────────────
@@ -346,6 +375,9 @@ function AbacBuilderComponent(
         if (draft.modelNameInput !== undefined) setModelNameInput(draft.modelNameInput);
         if (draft.aircraftModelDisplay !== undefined) setAircraftModelDisplay(draft.aircraftModelDisplay);
         if (draft.systemType !== undefined) setSystemType(draft.systemType);
+        // Lot 1-C — brouillons antérieurs sans plancheType : null (l'écran
+        // Opération et le bandeau du Tracé savent vivre sans).
+        setPlancheType(draft.plancheType ?? null);
         setSubStepGraphIndex(draft.subStepGraphIndex ?? 0);
         setRestoredBanner(true);
       }
@@ -385,27 +417,13 @@ function AbacBuilderComponent(
     }
   }, [currentStep]);
 
-  // SPRINT B : auto-création d'un graphique par défaut si on entre dans le wizard
-  // sans graphique configuré (cas du flux normal Performance avancée → Graphique).
-  React.useEffect(() => {
-    if (currentStep === 'points' && graphs.length === 0) {
-      const defaultGraph: GraphConfig = {
-        id: uuidv4(),
-        name: 'Graphique 1',
-        isWindRelated: false,
-        axes: {
-          // title vide → force l'utilisateur à choisir une variable canonique
-          // dans la sous-étape 3 (dropdown AxisVariableSelect).
-          xAxis: { min: 0, max: 100, unit: '', title: '' },
-          yAxis: { min: 0, max: 100, unit: '', title: '' }
-        },
-        graphType: '',
-        curves: []
-      };
-      setGraphs([defaultGraph]);
-      setSelectedGraphId(defaultGraph.id);
-    }
-  }, [currentStep, graphs.length]);
+  // Lot 1-C — l'auto-création SPRINT B du « Graphique 1 » sur set vide est
+  // SUPPRIMÉE : elle faisait apparaître le bandeau compat « construit avant
+  // l'atelier image unique » sur un projet NEUF (audit-7 §11). Les graphes
+  // d'un nouveau set naissent désormais TOUS à l'écran « Opération » (setup),
+  // cadres compris — le bandeau compat D4 du canevas (frames 0 + graphs > 0)
+  // ne concerne plus que les VRAIS modèles legacy. selectedGraphId est posé
+  // par le setup (et resynchronisé par l'effet subStepGraphIndex ci-dessus).
 
 
   // Pour compatibilité avec l'ancien système
@@ -464,6 +482,19 @@ function AbacBuilderComponent(
         setReferenceCases(initialData.metadata.referenceCases);
       }
 
+      // Lot 1-C — type de planche : métadonnée si présente, sinon INFÉRÉ de la
+      // géométrie (un readoutAxis 'x' quelque part ⇒ descendante, sinon
+      // standard). Un initialData sans aucun graphe/courbe reste null : le
+      // choix appartient à l'écran « Opération ».
+      const hydratedGraphs = initialData.graphs || [];
+      if (initialData.metadata?.plancheType) {
+        setPlancheType(initialData.metadata.plancheType);
+      } else if (hydratedGraphs.length > 0 || (initialData.curves && initialData.curves.length > 0)) {
+        setPlancheType(hydratedGraphs.some(g => g.readoutAxis === 'x') ? 'descendante' : 'standard');
+      } else {
+        setPlancheType(null);
+      }
+
       if (initialData.graphs) {
         // Nouveau format multi-graphiques
         // Vérifier et mettre à jour la propriété isWindRelated si nécessaire
@@ -494,7 +525,14 @@ function AbacBuilderComponent(
       }
       // SPRINT B : on entre directement dans le wizard (l'ancienne étape 'axes' est supprimée).
       // Les axes restent éditables via la sous-étape 3 du wizard.
-      setCurrentStep('points');
+      // Lot 1-C — un modèle EXISTANT saute l'écran « Opération » (aucun
+      // re-défaut appliqué) ; mais un initialData réellement VIERGE (aucune
+      // courbe, aucun operationId/systemType) est traité comme une création :
+      // écran « Opération » d'abord.
+      const virgin = !initialData.metadata?.systemType
+        && !hydratedGraphs.some(g => g.operationId || (g.curves || []).length > 0)
+        && !(initialData.curves && initialData.curves.length > 0);
+      setCurrentStep(virgin ? 'setup' : 'points');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, aircraftModel]);
@@ -943,6 +981,9 @@ function AbacBuilderComponent(
         // R1 — état de l'atelier pour la ré-édition (absent si non utilisé →
         // exports strictement identiques à avant la refonte).
         ...(workshopActive ? { workshop } : {}),
+        // Lot 1-C — type de planche (écran « Opération ») : mémorisé pour la
+        // ré-édition. Absent tant qu'il n'a été ni choisi ni inféré.
+        ...(plancheType ? { plancheType } : {}),
         // R13 — banc de test persisté avec le modèle.
         ...(referenceCases.length > 0 ? { referenceCases } : {})
       }
@@ -969,13 +1010,98 @@ function AbacBuilderComponent(
     // sessionClosedRef (revérifié dans le timer du dépôt débouncé) empêche un
     // dépôt en attente de le ressusciter.
     void deleteAtelierDraft();
-  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, workshop, workshopActive, referenceCases, sessionRef]);
+  }, [onSave, graphs, modelNameInput, aircraftModel, systemType, plancheType, workshop, workshopActive, referenceCases, sessionRef]);
 
 
 const renderStepContent = () => {
     switch (currentStep) {
       // (case morte « axes » supprimée — R0 : retirée de la séquence depuis SPRINT B,
       //  la config des axes vit dans le wizard. AUDIT_ABAC_ATELIER_IMAGE_UNIQUE.md.)
+
+      case 'setup': {
+        // ─── Lot 1-C : écran « OPÉRATION » — LA question structurante, posée
+        // UNE fois : opération canonique + type de planche + nombre de
+        // panneaux. Rôles, readoutAxis, familles et chaîne sont DÉDUITS
+        // (parcours idéal de l'audit-7 : 9 pièges → 0). En retour via
+        // « Modifier » (graphes existants), le bouton devient « Appliquer ».
+        const chainIds = workshop.frames.length > 0
+          ? [...workshop.frames].sort((a, b) => a.xLeftPx - b.xLeftPx).map(f => f.graphId)
+          : graphs.map(g => g.id);
+        const applyMode = graphs.length > 0;
+        const setupInitialOperationId = isValidOperationId(systemType)
+          ? systemType
+          : (graphs.find(g => (g.role || 'primary') === 'primary')?.operationId || '');
+
+        const handleSetupSubmit = (choice: { operationId: string; plancheType: PlancheType; panelCount: number }) => {
+          const op = getOperation(choice.operationId);
+          if (!op) return; // garde du bouton — double sécurité
+
+          if (!applyMode) {
+            // CRÉATION : N graphes entièrement déduits + N cadres pré-répartis
+            // régulièrement sur le canevas (successeur de l'ex-addGraphToWorkshop).
+            const { graphs: newGraphs, frames } = buildSetupGraphs(choice, () => uuidv4());
+            setGraphs(newGraphs);
+            setWorkshop(prev => ({ ...prev, frames }));
+            setSelectedGraphId(newGraphs[0]?.id ?? null);
+          } else {
+            // APPLIQUER : mise à jour operationId/readoutAxis/rôles SANS
+            // recréer les cadres si le nombre n'a pas changé ; sinon
+            // confirmation avant d'ajouter (à droite) / retirer (fin de
+            // chaîne) des panneaux.
+            let targetIds = [...chainIds];
+            let nextGraphs = graphs;
+            let nextFrames = workshop.frames;
+            const delta = choice.panelCount - chainIds.length;
+            if (delta > 0) {
+              if (!window.confirm(`Ajouter ${delta} panneau(x) en fin de chaîne (à droite) ?`)) return;
+              const added = appendPanels(nextFrames, delta, graphs.length, () => uuidv4());
+              targetIds = [...targetIds, ...added.graphs.map(g => g.id)];
+              nextGraphs = [...nextGraphs, ...added.graphs];
+              nextFrames = [...nextFrames, ...added.frames];
+            } else if (delta < 0) {
+              const doomed = targetIds.slice(delta); // les -delta derniers de la chaîne
+              const doomedCurves = graphs
+                .filter(g => doomed.includes(g.id))
+                .reduce((n, g) => n + g.curves.length, 0);
+              if (!window.confirm(
+                `Retirer ${-delta} panneau(x) en fin de chaîne ?` +
+                (doomedCurves > 0 ? ` ${doomedCurves} courbe(s) seront supprimées.` : '') +
+                ' Cette action est irréversible.'
+              )) return;
+              targetIds = targetIds.slice(0, choice.panelCount);
+              const removed = new Set(doomed);
+              nextGraphs = nextGraphs.filter(g => !removed.has(g.id));
+              nextFrames = nextFrames.filter(f => !removed.has(f.graphId));
+            }
+            nextGraphs = applySetupRoles(nextGraphs, targetIds, choice);
+            setGraphs(nextGraphs);
+            setWorkshop(prev => ({ ...prev, frames: nextFrames }));
+            setSelectedGraphId(targetIds[0] ?? null);
+          }
+
+          // Identité du set — même geste que updateCurrentGraph sur le primaire.
+          setSystemType(choice.operationId);
+          setModelNameInput(op.labelFr);
+          setPlancheType(choice.plancheType);
+          setSelectedCurveId(null);
+          setSubStepGraphIndex(0);
+          setCurrentStep('points');
+        };
+
+        return (
+          <div className={styles.stepContent}>
+            <h2>Opération</h2>
+            <OperationSetupPanel
+              initialOperationId={setupInitialOperationId}
+              initialPlancheType={plancheType}
+              initialPanelCount={applyMode ? chainIds.length : null}
+              applyMode={applyMode}
+              onSubmit={handleSetupSubmit}
+              onCancel={applyMode ? () => setCurrentStep('points') : onBack}
+            />
+          </div>
+        );
+      }
 
       case 'points': {
         // ─── REFONTE SPRINT B : mini-wizard par graphique ───
@@ -986,25 +1112,9 @@ const renderStepContent = () => {
         // jusqu'à un cleanup ultérieur — backup dans backups/sprint-B-*.
         const currentGraphForWizard = graphs[Math.min(subStepGraphIndex, Math.max(0, graphs.length - 1))];
 
-        // Ajout d'un graphe au set — partagé entre la carte « ＋ » du bandeau et
-        // le bouton du wizard (création + focus immédiat sur le nouveau).
-        const addGraphToWorkshop = () => {
-          const newGraph: GraphConfig = {
-            id: uuidv4(),
-            name: `Graphique ${graphs.length + 1}`,
-            isWindRelated: false,
-            axes: {
-              xAxis: { min: 0, max: 100, unit: '', title: '' },
-              yAxis: { min: 0, max: 100, unit: '', title: '' }
-            },
-            curves: []
-          };
-          setGraphs(prev => [...prev, newGraph]);
-          setSelectedGraphId(newGraph.id);
-          setSelectedCurveId(null);
-          // On positionne l'index sur le nouveau graphique (length AVANT l'ajout = nouvel index).
-          setSubStepGraphIndex(graphs.length);
-        };
+        // (Lot 1-C : l'ex-closure orpheline addGraphToWorkshop a trouvé son
+        //  consommateur — sa logique vit désormais dans core/plancheSetup.ts
+        //  (buildSetupGraphs/appendPanels), pilotée par l'écran « Opération ».)
 
         // R6 — mise à jour du graphe FOCALISÉ (cadre actif). Hissé du wizard
         // car le panneau d'identité vit désormais sous le canevas. Auto-sync :
@@ -1032,35 +1142,64 @@ const renderStepContent = () => {
         };
 
         if (!currentGraphForWizard) {
+          // Lot 1-C : plus d'auto-création sur set vide — l'issue naturelle
+          // d'un Tracé sans graphe (ex. tout supprimé) est l'écran Opération.
           return (
             <div className={styles.stepContent}>
-              <h2>Étape 2 : Construction & Interpolation</h2>
+              <h2>Tracé</h2>
               <p style={{ padding: 16, color: 'var(--color-red-critical)' }}>
                 ⚠ Aucun graphique configuré.
               </p>
-              <button onClick={() => { if (onBack) onBack(); }} style={{ padding: '8px 16px', cursor: 'pointer' }}>
-                ← Retour
+              <button
+                onClick={() => setCurrentStep('setup')}
+                style={{ padding: '8px 16px', cursor: 'pointer' }}
+              >
+                ← Revenir à l'écran Opération
               </button>
             </div>
           );
         }
         return (
           <div className={styles.stepContent}>
-            <h2>Étape 2 : Construction & Interpolation</h2>
+            <h2>Tracé</h2>
 
             {/* L'identité du set est DÉDUITE du graphique primaire (cf. handleExportJSON).
-                Pas de panneau séparé : identifier le primaire = identifier le set. */}
+                Lot 1-C — rappel compact des choix de l'écran « Opération »
+                (opération + type de planche) + bouton tertiaire « Modifier »
+                qui y retourne EN CONSERVANT graphes et cadres (le bouton de
+                l'écran devient alors « Appliquer »). */}
             <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
               marginBottom: 12, padding: '6px 10px',
               backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-regular)', borderRadius: 4,
               fontSize: 12, color: 'var(--accent-primary)'
             }}>
-              Avion : <strong>{aircraftModel || aircraftModelDisplay || '(non spécifié)'}</strong>
+              <span>
+                Avion : <strong>{aircraftModel || aircraftModelDisplay || '(non spécifié)'}</strong>
+              </span>
               {systemType && (
-                <span style={{ marginLeft: 12 }}>
-                  · Set : <strong>{getOperation(systemType)?.labelFr || systemType}</strong>
+                <span>
+                  · Opération : <strong>{getOperation(systemType)?.labelFr || systemType}</strong>
                 </span>
               )}
+              {plancheType && (
+                <span>
+                  · Planche : <strong>{plancheType === 'descendante'
+                    ? '↓ Lecture descendante (lue en bas)'
+                    : '↕ Standard (lue sur l\'axe vertical)'}</strong>
+                </span>
+              )}
+              <button
+                onClick={() => setCurrentStep('setup')}
+                title="Revenir à l'écran Opération — graphes et cadres conservés (le bouton devient « Appliquer »)"
+                style={{
+                  marginLeft: 'auto', padding: '3px 10px', fontSize: 11, cursor: 'pointer',
+                  backgroundColor: 'transparent', color: 'var(--accent-primary)',
+                  border: '1px solid var(--accent-primary)', borderRadius: 4
+                }}
+              >
+                Modifier
+              </button>
             </div>
 
             {/* ─── R6+R9 : IDENTITÉ DU CADRE ACTIF — zone REPLIABLE au-dessus de
@@ -1274,7 +1413,7 @@ const renderStepContent = () => {
       case 'final':
         return (
           <div className={styles.stepContent}>
-            <h2>Étape 3: Validation finale</h2>
+            <h2>Validation</h2>
             <div className={styles.finalView}>
               {/* Affichage des informations du système */}
               <div style={{
@@ -1517,21 +1656,24 @@ const renderStepContent = () => {
   // Efface l'instantané IndexedDB puis remet l'atelier à l'état d'un montage
   // vierge : valeurs par défaut (mêmes que les initialiseurs sans session),
   // puis re-hydratation depuis initialData si un modèle était en édition.
-  // L'auto-création du « Graphique 1 » (effet dédié) repart d'elle-même en
-  // création pure. Le dépôt débouncé re-déposera ensuite cet état propre.
+  // Lot 1-C : une création pure repart de l'écran « Opération » (setup) —
+  // plus d'auto-création de « Graphique 1 » ; hydrateFromInitialData ramène
+  // sur 'points' un modèle en édition. Le dépôt débouncé re-déposera ensuite
+  // cet état propre.
   const handleDiscardRestoredDraft = () => {
     void deleteAtelierDraft();
     setRestoredBanner(false);
     setWorkshop({ image: null, sharedY: { min: 0, max: 100, unit: '', title: '' }, frames: [] });
     setBezierSession(null);
     setReferenceCases([]);
-    setCurrentStep('points');
+    setCurrentStep('setup');
     setGraphs([]);
     setSelectedGraphId(null);
     setSelectedCurveId(null);
     setModelNameInput(modelName || SYSTEM_TYPES.find(t => t.value === 'takeoff_distance')?.label || '');
     setAircraftModelDisplay(aircraftModel || '');
     setSystemType('');
+    setPlancheType(null);
     setSubStepGraphIndex(0);
     hydrateFromInitialData();
   };

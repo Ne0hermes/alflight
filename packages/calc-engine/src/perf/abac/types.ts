@@ -205,6 +205,14 @@ export interface AbacCurvesJSON {
     /** R1 — état de l'atelier « image unique » (ré-édition). Absent sur les
      *  modèles construits avant la refonte → ouverture en mode compat (D4). */
     workshop?: WorkshopConfig;
+    /** Lot 1-C — type de planche choisi à l'écran « Opération » de l'atelier :
+     *  'standard' = résultat lu sur l'axe Y (planches de décollage) ;
+     *  'descendante' = dernier graphe en `readoutAxis: 'x'`, résultat lu sur
+     *  l'échelle du bas (planches d'atterrissage type Piper).
+     *  INFORMATIF (pré-remplit l'écran Opération en ré-édition) — le moteur
+     *  ne lit que `GraphConfig.readoutAxis`. Absent des modèles antérieurs :
+     *  l'atelier l'infère alors de la géométrie des graphes. */
+    plancheType?: 'standard' | 'descendante';
     /** R13 — banc de test permanent : cas de référence MANEX rejoués
      *  automatiquement à la validation (PASS/FAIL ± tolérance). */
     referenceCases?: ReferenceCase[];
