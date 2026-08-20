@@ -54,7 +54,7 @@ interface WorkshopCanvasProps {
    *  création extraite du bloc « Courbes du cadre actif » — qui RESTE sous
    *  l'atelier (liste, édition, Bézier, points). Connexion fonctionnelle
    *  inchangée : ces callbacks rejoignent les mêmes handlers du builder. */
-  onCreateCurve?: (name: string, color: string, familyValue?: number, windDirection?: 'headwind' | 'tailwind') => void;
+  onCreateCurve?: (name: string, color: string, familyValue?: number, windDirection?: 'headwind' | 'tailwind' | 'none') => void;
   onFinishCurve?: () => void;
   width?: number;
   height?: number;
@@ -356,7 +356,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   // de famille, on choisit la valeur (liste 0→10 000 ft / 500 pour l'altitude,
   // saisie numérique sinon) et le NOM naît de la valeur — fini le nom libre.
   const [newCurveValue, setNewCurveValue] = useState('');
-  const [newCurveWindDir, setNewCurveWindDir] = useState<'headwind' | 'tailwind'>('headwind');
+  const [newCurveWindDir, setNewCurveWindDir] = useState<'headwind' | 'tailwind' | 'none'>('headwind');
   const ALTITUDE_FAMILIES = ['pressure_altitude', 'density_altitude', 'altitude'];
   const ALTITUDE_STEPS = Array.from({ length: 21 }, (_, i) => i * 500); // 0 → 10 000 ft / 500
 
@@ -736,12 +736,15 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <strong style={{ fontSize: 11, color: 'var(--accent-primary)', alignSelf: 'center' }}>
               X · {focusedGraph.name || 'cadre actif'}
+              {focusedGraph.readoutAxis === 'x' ? ' — SORTIE (lue en bas)' : ''}
             </strong>
             {/* R8 — l'axe X = l'ENTRÉE consommée en prépa vol (OAT METAR,
-                masse M&C, vent météo…) : variable canonique obligatoire. */}
+                masse M&C, vent météo…) : variable canonique obligatoire.
+                Lecture descendante (readoutAxis 'x') : l'axe X porte la
+                SORTIE (distance) → variables de sortie (filtre du dropdown Y). */}
             <VarSelectMini
               label="Variable"
-              axis="x"
+              axis={focusedGraph.readoutAxis === 'x' ? 'y' : 'x'}
               value={focusedX.title}
               onChange={(id) => {
                 const v = getAxisVariable(id);
@@ -829,7 +832,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         const valueNum = parseFloat(newCurveValue);
         const valueOk = Number.isFinite(valueNum);
         const autoName = valueOk
-          ? `${isWindGraph ? (newCurveWindDir === 'headwind' ? 'Face ' : 'Arrière ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
+          ? `${isWindGraph ? (newCurveWindDir === 'headwind' ? 'Face ' : newCurveWindDir === 'tailwind' ? 'Arrière ' : 'Vent nul ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
           : '';
         const createByValue = () => {
           if (!valueOk || !focusedFrame) return;
@@ -868,10 +871,11 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                 {isWindGraph && (
                   <select
                     value={newCurveWindDir}
-                    onChange={(e) => setNewCurveWindDir(e.target.value as 'headwind' | 'tailwind')}
+                    onChange={(e) => setNewCurveWindDir(e.target.value as 'headwind' | 'tailwind' | 'none')}
                     style={{ padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
                   >
                     <option value="headwind">Vent de face</option>
+                    <option value="none">Vent nul</option>
                     <option value="tailwind">Vent arrière</option>
                   </select>
                 )}

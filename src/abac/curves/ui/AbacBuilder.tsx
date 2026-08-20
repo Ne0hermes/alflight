@@ -1680,15 +1680,18 @@ const renderStepContent = () => {
               onPointDelete={handlePointDelete}
               bezierSegments={bezierSegments}
               onBezierHandleDrag={handleBezierHandleDrag}
-              onCreateCurve={(name, color, familyValue) => {
+              onCreateCurve={(name, color, familyValue, windDirection) => {
                 // Capsule du canevas — MÊME flux que « Nouvelle courbe » du
                 // wizard : handleAddCurve sélectionne déjà la courbe créée.
                 // R17 : la valeur de famille choisie dans la liste déroulante
                 // arrive ici et naît AVEC la courbe (nom = valeur + unité).
+                // Le SENS DU VENT choisi dans la capsule naît aussi avec la
+                // courbe (il restait perdu : tag à re-saisir dans le
+                // gestionnaire — indispensable en lecture descendante).
                 // Une session Bézier en cours est abandonnée (elle façonnait
                 // l'ancienne courbe, ses poignées n'ont plus de cible).
                 if (bezierSession) cancelBezierSession();
-                const id = handleAddCurve(name, color, undefined, familyValue);
+                const id = handleAddCurve(name, color, windDirection, familyValue);
                 if (!id) return;
                 setWizardModeCommand(c => ({ mode: 'placing-points', nonce: (c?.nonce || 0) + 1 }));
               }}
