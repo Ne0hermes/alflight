@@ -363,6 +363,33 @@ export const CascadeCalculator: React.FC<CascadeCalculatorProps> = ({
   const checkParameterBounds = useCallback((graph: GraphConfig, value: number, isWindGraph: boolean = false) => {
     if (!graph.axes) return null;
 
+    // Lecture descendante : le paramètre est la valeur de FAMILLE des guides
+    // (vent SIGNÉ), PAS une position sur l'axe X — qui porte la SORTIE
+    // (distance). Comparer 0 kt aux bornes 400-1600 de l'échelle des
+    // distances était un non-sens (bug vécu pilote, 20/08). On borne contre
+    // le domaine des guides tracés (signes résolus comme dans le moteur :
+    // arrière → négatif).
+    if (graph.readoutAxis === 'x') {
+      const signed = (graph.curves || [])
+        .map(c => {
+          let v = typeof c.familyValue === 'number' && isFinite(c.familyValue)
+            ? c.familyValue
+            : parseFloat(((c.name || '').match(/-?\d+(?:\.\d+)?/) || [''])[0]);
+          if (!isFinite(v)) return NaN;
+          if (c.windDirection === 'tailwind') return -Math.abs(v);
+          if (c.windDirection === 'headwind') return Math.abs(v);
+          return v;
+        })
+        .filter(v => isFinite(v));
+      if (signed.length === 0) return null;
+      const lo = Math.min(...signed);
+      const hi = Math.max(...signed);
+      if (value < lo || value > hi) {
+        return `⚠️ Hors des guides tracés : le vent signé doit être entre ${lo} (arrière) et +${hi} (face). Le calcul sera refusé au-delà.`;
+      }
+      return null;
+    }
+
     // Pour les graphiques de vent, utiliser la valeur absolue pour la vérification
     const checkValue = isWindGraph ? Math.abs(value) : value;
 
