@@ -81,10 +81,17 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
 
+  // Retour pilote 20/08 : le paramètre de famille du graphe 1 (altitude…)
+  // n'est PAS optionnel quand le modèle déclare une famille — un cas sans
+  // altitude testerait une courbe arbitraire. Et son unité (celle du modèle)
+  // doit être affichée.
+  const firstFamilyRequired = !!chain[0]?.familyAxisVariable;
+  const firstParamMissing = firstFamilyRequired && isNaN(parseFloat(paramValues[chain[0]?.id ?? ''] ?? ''));
+
   const addCase = () => {
     const iv = parseFloat(inputValue);
     const exp = parseFloat(expected);
-    if (isNaN(iv) || isNaN(exp)) return;
+    if (isNaN(iv) || isNaN(exp) || firstParamMissing) return;
     const parameters: Record<string, number> = {};
     for (const g of chain) {
       const v = parseFloat(paramValues[g.id]);
@@ -217,10 +224,13 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
           </label>
           {chain.map((g, i) => (
             <label key={g.id} style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
-              {/* Lot 1-F — fini « Altitude (optionnel) » codé en dur : le
-                  paramètre du graphe 1 porte le libellé de SA famille. */}
+              {/* Le paramètre du graphe 1 porte le libellé de SA famille,
+                  SON unité (celle du modèle), et il est OBLIGATOIRE dès
+                  qu'une famille est déclarée (retour pilote 20/08). */}
               {i === 0
-                ? `${getAxisVariableLabel(g.familyAxisVariable) || 'Famille'} (optionnel)`
+                ? (g.familyAxisVariable
+                    ? `${getAxisVariableLabel(g.familyAxisVariable)}${getAxisVariable(g.familyAxisVariable)?.defaultUnit ? ` (${getAxisVariable(g.familyAxisVariable)!.defaultUnit})` : ''} — obligatoire`
+                    : 'Famille (optionnel)')
                 : `${getAxisVariableLabel(g.axes?.xAxis?.title)}${g.axes?.xAxis?.unit ? ` (${g.axes.xAxis.unit})` : ''}`}
               <input
                 style={inputStyle}
@@ -250,11 +260,12 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
           </label>
           <button
             onClick={addCase}
-            disabled={isNaN(parseFloat(inputValue)) || isNaN(parseFloat(expected)) || (hasWindGraph && !windDirection)}
+            disabled={isNaN(parseFloat(inputValue)) || isNaN(parseFloat(expected)) || (hasWindGraph && !windDirection) || firstParamMissing}
+            title={firstParamMissing ? `Renseignez ${getAxisVariableLabel(chain[0]?.familyAxisVariable)} — le cas doit fixer la famille du graphe 1` : undefined}
             style={{
               padding: '5px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 3,
-              opacity: isNaN(parseFloat(inputValue)) || isNaN(parseFloat(expected)) || (hasWindGraph && !windDirection) ? 0.4 : 1
+              opacity: isNaN(parseFloat(inputValue)) || isNaN(parseFloat(expected)) || (hasWindGraph && !windDirection) || firstParamMissing ? 0.4 : 1
             }}
           >
             ✓ Enregistrer ce cas
