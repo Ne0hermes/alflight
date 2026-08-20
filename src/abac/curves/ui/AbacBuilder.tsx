@@ -398,11 +398,18 @@ function AbacBuilderComponent(
     const targetGraph = graphs[clamped];
     if (targetGraph && targetGraph.id !== selectedGraphId) {
       setSelectedGraphId(targetGraph.id);
-      if (targetGraph.curves.length > 0 && !targetGraph.curves.find(c => c.id === selectedCurveId)) {
+      // Lot 1-E (piège « contamination croisée ») : en mode TRACÉ, changer de
+      // cadre ne doit PAS auto-sélectionner la 1ʳᵉ courbe du nouveau graphe —
+      // le clic vient de terminer la courbe en cours, un guide du nouveau
+      // cadre serait silencieusement réarmé pour le tracé. Hors tracé,
+      // comportement historique conservé.
+      if (wizardEditorMode !== 'placing-points'
+        && targetGraph.curves.length > 0
+        && !targetGraph.curves.find(c => c.id === selectedCurveId)) {
         setSelectedCurveId(targetGraph.curves[0].id);
       }
     }
-  }, [subStepGraphIndex, graphs.length, graphs, selectedGraphId, selectedCurveId]);
+  }, [subStepGraphIndex, graphs.length, graphs, selectedGraphId, selectedCurveId, wizardEditorMode]);
 
   // Réinitialise l'index à 0 quand on (re)rentre dans l'étape "points".
   // 🔧 Session : au MONTAGE (prev === null), on respecte l'index restauré —
@@ -708,6 +715,16 @@ function AbacBuilderComponent(
       ? { ...prev, overrides: { ...prev.overrides, [segIdx]: { ...(prev.overrides[segIdx] || {}), [which]: { x, y } } } }
       : prev);
   }, []);
+
+  // Lot 1-E — clôture PROPRE de la session (Échap sur le bandeau de mode,
+  // entrée en cadrage d'image) : le façonnage réellement effectué est APPLIQUÉ
+  // (même geste que « ✓ Appliquer le tracé ») ; une session où aucune poignée
+  // n'a été tirée se referme sans toucher aux points de la courbe.
+  const finishBezierSession = useCallback(() => {
+    if (!bezierSession) return;
+    if (Object.keys(bezierSession.overrides).length > 0) applyBezierSession();
+    else cancelBezierSession();
+  }, [bezierSession, applyBezierSession, cancelBezierSession]);
 
   // Changer de courbe, de cadre (focus) ou d'étape ABANDONNE la session.
   React.useEffect(() => { setBezierSession(null); }, [selectedCurveId, selectedGraphId, currentStep]);
@@ -1318,6 +1335,7 @@ const renderStepContent = () => {
               onPointDelete={handlePointDelete}
               bezierSegments={bezierSegments}
               onBezierHandleDrag={handleBezierHandleDrag}
+              onFinishBezier={finishBezierSession}
               onCreateCurve={(name, color, familyValue, windDirection) => {
                 // Capsule du canevas — MÊME flux que « Nouvelle courbe » du
                 // wizard : handleAddCurve sélectionne déjà la courbe créée.

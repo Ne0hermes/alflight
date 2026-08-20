@@ -23,6 +23,9 @@ import {
 } from '../core/types';
 import { BezierSegment } from '../core/bezier';
 import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedForCore } from '../core/axisVariables';
+// Lot 1-E — kit visuel de l'atelier : bandeau de mode permanent (Échap
+// universel embarqué) + bouton à raison de désactivation affichée.
+import { KitButton, ModeBanner } from './kit';
 
 interface WorkshopCanvasProps {
   workshop: WorkshopConfig;
@@ -50,6 +53,10 @@ interface WorkshopCanvasProps {
    *  par-dessus l'image pour suivre ses traits. */
   bezierSegments?: BezierSegment[] | null;
   onBezierHandleDrag?: (segIdx: number, which: 'cp1' | 'cp2', x: number, y: number) => void;
+  /** Lot 1-E — clôture PROPRE de la session Bézier (Échap, entrée en cadrage) :
+   *  le builder applique le façonnage réellement effectué (même geste que
+   *  « ✓ Appliquer ») ou referme sans toucher aux points si rien n'a été tiré. */
+  onFinishBezier?: () => void;
   /** Capsule « Nouvelle courbe » (sous le panneau Axes, au-dessus du canevas) :
    *  création extraite du bloc « Courbes du cadre actif » — qui RESTE sous
    *  l'atelier (liste, édition, Bézier, points). Connexion fonctionnelle
@@ -63,7 +70,10 @@ interface WorkshopCanvasProps {
 // Marges des règles d'axes : Y commun à gauche, X sous les cadres.
 const MARGIN = { top: 30, right: 16, bottom: 46, left: 64 };
 const FRAME_MIN_W = 60;   // largeur minimale d'un cadre (px inner)
-const HANDLE_W = 7;       // largeur des poignées de bord
+// Lot 1-E — les poignées de bord ne sont plus des bandes invisibles de 7 px :
+// la barre-poignée VISIBLE à mi-hauteur est la zone interactive, élargie.
+const HANDLE_HIT_W = 12;  // largeur de la zone interactive des barres-poignées
+const HANDLE_HIT_H = 48;  // hauteur de la zone interactive (barre visible : 28)
 const MAX_ZOOM = 8;       // zoom dynamique : 100 % → 800 %
 
 /** Borne le rectangle de vue (zoom) à l'intérieur du viewBox d'origine. */
@@ -305,6 +315,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   onPointDelete,
   bezierSegments = null,
   onBezierHandleDrag,
+  onFinishBezier,
   onCreateCurve,
   onFinishCurve,
   width = 960,
@@ -366,7 +377,10 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   // de famille, on choisit la valeur (liste 0→10 000 ft / 500 pour l'altitude,
   // saisie numérique sinon) et le NOM naît de la valeur — fini le nom libre.
   const [newCurveValue, setNewCurveValue] = useState('');
-  const [newCurveWindDir, setNewCurveWindDir] = useState<'headwind' | 'tailwind' | 'none'>('headwind');
+  // Lot 1-E (piège « sens du vent par défaut ») : AUCUN sens présélectionné —
+  // le sélecteur démarre vide et se REVIDE après chaque création. Un guide
+  // arrière ne peut plus naître tagué « face » par oubli.
+  const [newCurveWindDir, setNewCurveWindDir] = useState<'' | 'headwind' | 'tailwind' | 'none'>('');
   const ALTITUDE_FAMILIES = ['pressure_altitude', 'density_altitude', 'altitude'];
   const ALTITUDE_STEPS = Array.from({ length: 21 }, (_, i) => i * 500); // 0 → 10 000 ft / 500
 
@@ -389,6 +403,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     | { kind: 'bezier'; graphId: string; segIdx: number; which: 'cp1' | 'cp2' }
     | { kind: 'pan'; startX: number; startY: number; origin: { x: number; y: number; w: number; h: number } };
   const [drag, setDrag] = useState<DragState | null>(null);
+
+  // Lot 1-E — barre-poignée de cadre survolée (mise en évidence accent).
+  const [hoverHandle, setHoverHandle] = useState<{ graphId: string; side: 'left' | 'right' } | null>(null);
 
   // Les conversions client→viewBox passent par la VUE zoomée (sous-rectangle) :
   // au zoom 1 elles sont identiques à l'ancien calcul plein cadre.
@@ -509,7 +526,12 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         ...workshop,
         image: { url, x: 0, y: 0, width: inner.w, height: inner.h }
       });
-      setImageAdjust(true);
+      // Lot 1-E — l'auto-ajustement post-import passe par l'entrée COMMUNE
+      // (referme tracé/Bézier proprement) et respecte le verrou calibrations :
+      // si des calibrations existent, l'image ne doit pas bouger sous elles.
+      if (tracingActive) onFinishCurve?.();
+      if (bezierActive) onFinishBezier?.();
+      if (!hasCalibrations) setImageAdjust(true);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -519,6 +541,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   const handleAddFrame = () => {
     const graphId = onRequestGraphForFrame();
     if (!graphId) return;
+    // Lot 1-E (piège « mode image qui traîne ») : poser un cadre est le
+    // premier geste HORS de l'image → l'ajustement auto-activé se referme.
+    setImageAdjust(false);
     const sorted = [...workshop.frames].sort((a, b) => a.xRightPx - b.xRightPx);
     const last = sorted[sorted.length - 1];
     const left = last ? Math.min(last.xRightPx + 14, Math.max(0, inner.w - FRAME_MIN_W - 4)) : 6;
@@ -550,6 +575,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
   // ─── R2b : calibration ───
   const startCalibY = () => {
     if (!workshop.sharedY.step) { alert('Définis d\'abord le pas de l\'axe Y commun (panneau Axes).'); return; }
+    // Lot 1-E — garde croisée : entrer en calibration SORT du mode cadrage.
+    setImageAdjust(false);
     // Ordre VISUEL haut→bas : max→min (non inversé), min→max (inversé)
     const vals = buildAxisValues(workshop.sharedY);
     const visual = workshop.sharedY.reversed ? vals : [...vals].reverse();
@@ -560,6 +587,8 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
     const g = graphs.find(x => x.id === graphId);
     const xAxis = g?.axes?.xAxis;
     if (!xAxis?.step) { alert('Définis d\'abord le pas de l\'axe X de ce cadre (panneau Axes).'); return; }
+    // Lot 1-E — garde croisée : entrer en calibration SORT du mode cadrage.
+    setImageAdjust(false);
     const vals = buildAxisValues(xAxis);
     const visual = xAxis.reversed ? [...vals].reverse() : vals;
     setCalib({ kind: 'x', graphId, values: visual, index: 0, collected: [] });
@@ -605,6 +634,33 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
 
   const yTickValues = buildAxisValues(workshop.sharedY);
 
+  // ─── Lot 1-E : UN SEUL MODE À LA FOIS — état dérivé des 4 modes du canevas.
+  // calib et imageAdjust sont locaux ; tracé et Bézier appartiennent au parent
+  // (le canevas ne peut que les REFERMER via onFinishCurve / onFinishBezier).
+  const focusedCurve = focusedGraph?.curves.find(c => c.id === selectedCurveId) || null;
+  const tracingActive = tracingMode && !!focusedCurve;
+  const bezierActive = !!(bezierSegments && bezierSegments.length > 0);
+  // Piège « mode image qui traîne » : dès qu'UNE calibration (Y ou X) existe,
+  // l'image est verrouillée — les calibrations sont en pixels, la déplacer
+  // les fausserait toutes.
+  const hasCalibrations = !!(workshop.yTicks && workshop.yTicks.length > 0)
+    || workshop.frames.some(f => !!f.xTicks && f.xTicks.length > 0);
+
+  /** Entrée en mode cadrage : referme PROPREMENT le tracé (même chemin que
+   *  « Terminer la courbe ») et la session Bézier avant d'armer l'ajustement. */
+  const enterImageAdjust = () => {
+    if (tracingActive) onFinishCurve?.();
+    if (bezierActive) onFinishBezier?.();
+    setImageAdjust(true);
+  };
+
+  // Garde croisée : ENTRER en tracé (capsule « Créer & tracer » ou wizard
+  // « Ajouter des points ») sort du mode cadrage — les modes ne se
+  // télescopent plus.
+  useEffect(() => {
+    if (tracingMode) setImageAdjust(false);
+  }, [tracingMode]);
+
   return (
     <div style={{ border: '1px solid var(--border-subtle)', borderRadius: 6, backgroundColor: 'var(--bg-surface)', padding: 10, marginBottom: 14 }}>
       {/* ─── Barre d'outils du canevas ─── */}
@@ -618,17 +674,33 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         </button>
         <input ref={fileInputRef} type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={handleImageUpload} />
         {workshop.image && (
-          <button
-            onClick={() => setImageAdjust(v => !v)}
-            style={{
-              padding: '4px 10px', cursor: 'pointer', borderRadius: 3, fontSize: 12,
-              backgroundColor: imageAdjust ? 'var(--accent-primary)' : 'var(--bg-overlay)',
-              color: imageAdjust ? 'white' : 'var(--text-primary)',
-              border: '1px solid var(--accent-primary)'
-            }}
-          >
-            {imageAdjust ? '✓ Terminer l\'ajustement' : '✥ Ajuster l\'image'}
-          </button>
+          // Lot 1-E — KitButton à raison affichée : l'ajustement est
+          // INACCESSIBLE pendant un tracé ou une calibration, et VERROUILLÉ
+          // dès qu'une calibration existe (elle est en pixels : déplacer
+          // l'image la fausserait). En mode cadrage, le bouton devient la
+          // sortie explicite (le bandeau de mode offre aussi Échap).
+          imageAdjust ? (
+            <KitButton level="primary" size="compact" icon="✓" onClick={() => setImageAdjust(false)}>
+              Terminer l'ajustement
+            </KitButton>
+          ) : (
+            <KitButton
+              level="secondary"
+              size="compact"
+              icon="✥"
+              disabled={hasCalibrations || tracingActive || !!calib}
+              disabledReason={
+                hasCalibrations
+                  ? 'Image verrouillée : des calibrations existent (elles sont en pixels — déplacer l\'image les fausserait). Réinitialisez les calibrations pour ajuster.'
+                  : tracingActive
+                    ? 'Tracé en cours — terminez la courbe (Échap) avant d\'ajuster l\'image.'
+                    : 'Calibration en cours — terminez-la avant d\'ajuster l\'image.'
+              }
+              onClick={enterImageAdjust}
+            >
+              Ajuster l'image
+            </KitButton>
+          )
         )}
         <button
           onClick={handleAddFrame}
@@ -673,22 +745,41 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         </div>
       )}
 
-      {/* ─── R2b : bannière de calibration en cours ─── */}
-      {calib && (
-        <div style={{
-          display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
-          padding: '8px 10px', marginBottom: 8, borderRadius: 4,
-          backgroundColor: 'rgba(242, 105, 33, 0.10)', border: '2px solid var(--accent-primary)', fontSize: 12
-        }}>
-          <strong>🎯 Calibration {calib.kind === 'y' ? 'Y commun' : `X · ${graphs.find(g => g.id === calib.graphId)?.name || 'cadre'}`} :</strong>
-          <span>clique sur la graduation <strong style={{ fontSize: 14 }}>{calib.values[calib.index]}</strong> de l'image.</span>
-          <span style={{ marginLeft: 'auto' }}>{calib.index + 1} / {calib.values.length}</span>
-          <button
-            onClick={() => setCalib(null)}
-            style={{ padding: '3px 10px', cursor: 'pointer', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--accent-primary)', borderRadius: 3, color: 'var(--text-primary)' }}
-          >
-            ✕ Annuler
-          </button>
+      {/* ─── Lot 1-E : BANDEAU DE MODE PERMANENT (ModeBanner du kit) ───
+          UN bandeau, UN mode à la fois — priorité : calibration (verrouillage
+          total existant) > tracé > Bézier > cadrage. L'écouteur Échap vit dans
+          ModeBanner (Échap → onCancel) : chaque mode y branche SA sortie —
+          calibration → annuler (✕ historique), tracé → terminer la courbe,
+          Bézier → clore la session (builder), cadrage → terminer. */}
+      {(calib || tracingActive || bezierActive || imageAdjust) && (
+        <div style={{ marginBottom: 8 }}>
+          {calib ? (
+            <ModeBanner
+              mode={`Calibration ${calib.kind === 'y' ? 'Y commun' : `X · ${graphs.find(g => g.id === calib.graphId)?.name || 'cadre'}`}`}
+              instruction={`Clique sur la graduation ${calib.values[calib.index]} de l'image.`}
+              progress={`${calib.index + 1} / ${calib.values.length}`}
+              onCancel={() => setCalib(null)}
+            />
+          ) : tracingActive && focusedCurve ? (
+            <ModeBanner
+              mode={`Tracé de « ${focusedCurve.name} »`}
+              instruction="Cliquez dans le cadre actif — Échap pour terminer"
+              progress={`${focusedCurve.points.length} pt`}
+              onCancel={() => onFinishCurve?.()}
+            />
+          ) : bezierActive ? (
+            <ModeBanner
+              mode="Façonnage Bézier"
+              instruction="Tirez les poignées — Échap pour terminer"
+              onCancel={() => onFinishBezier?.()}
+            />
+          ) : (
+            <ModeBanner
+              mode="Cadrage de l'image"
+              instruction="Glissez l'image, poignées pour redimensionner — Échap ou premier cadre posé pour terminer"
+              onCancel={() => setImageAdjust(false)}
+            />
+          )}
         </div>
       )}
 
@@ -802,7 +893,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           édition, Bézier, table de points) — connectés par les mêmes handlers
           du builder, mais plus liés visuellement. ─── */}
       {onCreateCurve && !calib && workshop.frames.length > 0 && (() => {
-        const focusedCurve = focusedGraph?.curves.find(c => c.id === selectedCurveId) || null;
+        // (focusedCurve est calculée plus haut — état dérivé des modes Lot 1-E.)
         const pill: React.CSSProperties = {
           display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
           margin: '0 0 8px', padding: '6px 14px', borderRadius: 999,
@@ -841,13 +932,19 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         const isWindGraph = !!focusedGraph?.isWindRelated;
         const valueNum = parseFloat(newCurveValue);
         const valueOk = Number.isFinite(valueNum);
+        // Lot 1-E (piège « sens du vent par défaut ») : tant que le sens n'est
+        // pas choisi, pas de nom, pas de création — la raison est affichée.
+        const windMissing = !!fam && isWindGraph && newCurveWindDir === '';
         const autoName = valueOk
-          ? `${isWindGraph ? (newCurveWindDir === 'headwind' ? 'Face ' : newCurveWindDir === 'tailwind' ? 'Arrière ' : 'Vent nul ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
+          ? `${isWindGraph && newCurveWindDir !== '' ? (newCurveWindDir === 'headwind' ? 'Face ' : newCurveWindDir === 'tailwind' ? 'Arrière ' : 'Vent nul ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
           : '';
+        const createDisabled = (fam ? !valueOk || windMissing : !newCurveName.trim()) || !focusedFrame;
         const createByValue = () => {
-          if (!valueOk || !focusedFrame) return;
-          onCreateCurve(autoName, newCurveColor, valueNum, isWindGraph ? newCurveWindDir : undefined);
+          if (!valueOk || !focusedFrame || windMissing) return;
+          onCreateCurve(autoName, newCurveColor, valueNum, isWindGraph ? (newCurveWindDir as 'headwind' | 'tailwind' | 'none') : undefined);
           setNewCurveValue('');
+          // Le sens se re-choisit à CHAQUE guide (jamais de sens hérité par oubli).
+          if (isWindGraph) setNewCurveWindDir('');
         };
         return (
           <div style={{ ...pill, border: '1px solid var(--border-regular)' }}>
@@ -881,15 +978,27 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                 {isWindGraph && (
                   <select
                     value={newCurveWindDir}
-                    onChange={(e) => setNewCurveWindDir(e.target.value as 'headwind' | 'tailwind' | 'none')}
-                    style={{ padding: '4px 10px', fontSize: 12, borderRadius: 999, border: '1px solid var(--border-regular)', backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)' }}
+                    onChange={(e) => setNewCurveWindDir(e.target.value as '' | 'headwind' | 'tailwind' | 'none')}
+                    style={{
+                      padding: '4px 10px', fontSize: 12, borderRadius: 999,
+                      border: `1px solid ${windMissing ? 'var(--accent-primary)' : 'var(--border-regular)'}`,
+                      backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)'
+                    }}
                   >
+                    {/* Lot 1-E — option vide de départ : le sens se CHOISIT, il
+                        n'est jamais hérité d'un défaut. */}
+                    <option value="" disabled>— sens du vent ? —</option>
                     <option value="headwind">Vent de face</option>
                     <option value="none">Vent nul</option>
                     <option value="tailwind">Vent arrière</option>
                   </select>
                 )}
-                {valueOk && (
+                {windMissing && (
+                  <span style={{ fontSize: 11, color: 'var(--accent-primary)', whiteSpace: 'nowrap' }}>
+                    Choisissez le sens du vent du guide
+                  </span>
+                )}
+                {valueOk && !windMissing && (
                   <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                     → « {autoName} »
                   </span>
@@ -927,8 +1036,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                 onCreateCurve(newCurveName.trim(), newCurveColor);
                 setNewCurveName('');
               }}
-              disabled={(fam ? !valueOk : !newCurveName.trim()) || !focusedFrame}
-              style={{ padding: '4px 14px', cursor: 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: ((fam ? !valueOk : !newCurveName.trim()) || !focusedFrame) ? 0.45 : 1 }}
+              disabled={createDisabled}
+              title={windMissing ? 'Choisissez le sens du vent du guide' : undefined}
+              style={{ padding: '4px 14px', cursor: createDisabled ? 'not-allowed' : 'pointer', backgroundColor: 'var(--status-success)', color: 'white', border: 'none', borderRadius: 999, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', opacity: createDisabled ? 0.45 : 1 }}
             >
               Créer & tracer
             </button>
@@ -1084,6 +1194,20 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                   onPointerDown={(e) => {
                     if (calib) return; // la calibration capture les clics via l'overlay
                     e.stopPropagation();
+                    // Lot 1-E (piège « mode image qui traîne ») : tout geste sur
+                    // un cadre referme l'ajustement d'image auto-activé.
+                    setImageAdjust(false);
+                    // Lot 1-E (piège « contamination croisée ») : cliquer un
+                    // AUTRE cadre pendant un tracé TERMINE la courbe proprement
+                    // (même chemin que « Terminer la courbe ») et change le
+                    // focus SANS démarrer de drag sur ce clic. L'auto-sélection
+                    // d'une courbe du nouveau graphe est neutralisée côté
+                    // AbacBuilder (effet de focus, garde mode tracé).
+                    if (tracingActive && !isFocus) {
+                      onFinishCurve?.();
+                      onFocusGraph(f.graphId);
+                      return;
+                    }
                     onFocusGraph(f.graphId);
                     // R3 — mode TRACÉ sur le cadre actif : le clic AJOUTE un point
                     // (le déplacement du cadre est gelé tant qu'on trace).
@@ -1110,30 +1234,55 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                 >
                   ✕<title>Retirer le cadre (le graphe et ses courbes sont conservés)</title>
                 </text>
-                {!calib && (
-                  <>
-                    <rect
-                      x={f.xLeftPx - HANDLE_W / 2} y={0} width={HANDLE_W} height={inner.h}
-                      fill="transparent" style={{ cursor: 'ew-resize' }}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        onFocusGraph(f.graphId);
-                        setDrag({ kind: 'frame-left', graphId: f.graphId, startX: e.clientX, origin: f });
-                      }}
-                    />
-                    <rect
-                      x={f.xRightPx - HANDLE_W / 2} y={0} width={HANDLE_W} height={inner.h}
-                      fill="transparent" style={{ cursor: 'ew-resize' }}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        onFocusGraph(f.graphId);
-                        setDrag({ kind: 'frame-right', graphId: f.graphId, startX: e.clientX, origin: f });
-                      }}
-                    />
-                  </>
-                )}
-                <rect x={f.xLeftPx - 2.5} y={inner.h / 2 - 14} width={5} height={28} rx={2} fill={color} opacity={0.9} pointerEvents="none" />
-                <rect x={f.xRightPx - 2.5} y={inner.h / 2 - 14} width={5} height={28} rx={2} fill={color} opacity={0.9} pointerEvents="none" />
+                {/* ─── Lot 1-E (affordance) : les barres-poignées visibles à
+                    mi-hauteur SONT la zone interactive du redimensionnement —
+                    élargie (12 px) et allumée en accent au survol. Les bandes
+                    transparentes pleine hauteur de 7 px ont disparu : le geste
+                    n'est plus invisible. ─── */}
+                {(['left', 'right'] as const).map(side => {
+                  const hx = side === 'left' ? f.xLeftPx : f.xRightPx;
+                  const dragKind = side === 'left' ? 'frame-left' as const : 'frame-right' as const;
+                  const lit = !calib && (
+                    (hoverHandle?.graphId === f.graphId && hoverHandle.side === side) ||
+                    (!!drag && drag.kind === dragKind && drag.graphId === f.graphId)
+                  );
+                  return (
+                    <g key={`handle-${side}`}>
+                      {/* barre visible (l'affordance) */}
+                      <rect
+                        x={hx - (lit ? 3.5 : 2.5)} y={inner.h / 2 - (lit ? 18 : 14)}
+                        width={lit ? 7 : 5} height={lit ? 36 : 28} rx={2}
+                        fill={lit ? 'var(--accent-primary)' : color} opacity={lit ? 1 : 0.9}
+                        pointerEvents="none"
+                      />
+                      {/* zone interactive élargie autour de la barre */}
+                      {!calib && (
+                        <rect
+                          x={hx - HANDLE_HIT_W / 2} y={inner.h / 2 - HANDLE_HIT_H / 2}
+                          width={HANDLE_HIT_W} height={HANDLE_HIT_H}
+                          fill="transparent" style={{ cursor: 'ew-resize' }}
+                          onPointerEnter={() => setHoverHandle({ graphId: f.graphId, side })}
+                          onPointerLeave={() => setHoverHandle(null)}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            // Mêmes gardes croisées que le corps du cadre :
+                            // geste de cadre → sortie du mode cadrage ; autre
+                            // cadre pendant un tracé → terminer + focus, pas
+                            // de drag sur ce clic.
+                            setImageAdjust(false);
+                            if (tracingActive && !isFocus) {
+                              onFinishCurve?.();
+                              onFocusGraph(f.graphId);
+                              return;
+                            }
+                            onFocusGraph(f.graphId);
+                            setDrag({ kind: dragKind, graphId: f.graphId, startX: e.clientX, origin: f });
+                          }}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
 
                 {/* ─── R2b : règle X du cadre (sous le cadre) ─── */}
                 <line x1={f.xLeftPx} y1={inner.h + 6} x2={f.xRightPx} y2={inner.h + 6} stroke={color} strokeWidth={2} opacity={0.9} pointerEvents="none" />
