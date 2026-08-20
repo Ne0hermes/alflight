@@ -628,37 +628,15 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
           ＋ Ajouter un cadre {unframedCount > 0 ? `(${unframedCount} graphe(s) à cadrer)` : ''}
         </button>
 
-        {/* ─── ZOOM dynamique — précision du positionnement des points ─── */}
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 4 }}>
-          <button
-            onClick={() => zoomBy(1 / 1.4)}
-            disabled={zoomFactor <= 1}
-            title="Dézoomer (ou molette vers le bas sur le canevas)"
-            style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-regular)', borderRadius: 3, fontSize: 12, opacity: zoomFactor <= 1 ? 0.45 : 1 }}
-          >
-            🔍−
-          </button>
-          <span style={{ fontSize: 11, minWidth: 44, textAlign: 'center', fontWeight: 600, color: zoomFactor > 1 ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+        {/* ─── ZOOM — 19/08 (demande pilote) : les boutons loupe et « Vue 100 % »
+            sont retirés, la molette suffit (zoomBy reste branché sur l'événement
+            wheel, ligne ~346). Seul l'indicateur de niveau demeure : savoir
+            qu'on est zoomé évite les points posés hors du cadre visible. */}
+        {zoomFactor > 1 && (
+          <span style={{ fontSize: 11, minWidth: 44, textAlign: 'center', fontWeight: 600, marginLeft: 4, color: 'var(--accent-primary)' }}>
             {Math.round(zoomFactor * 100)} %
           </span>
-          <button
-            onClick={() => zoomBy(1.4)}
-            disabled={zoomFactor >= MAX_ZOOM}
-            title="Zoomer (ou molette vers le haut sur le canevas)"
-            style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--text-primary)', border: '1px solid var(--border-regular)', borderRadius: 3, fontSize: 12, opacity: zoomFactor >= MAX_ZOOM ? 0.45 : 1 }}
-          >
-            🔍+
-          </button>
-          {zoomFactor > 1 && (
-            <button
-              onClick={() => setView({ x: 0, y: 0, w: width, h: height })}
-              title="Revenir à la vue complète"
-              style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: 'var(--bg-overlay)', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)', borderRadius: 3, fontSize: 12 }}
-            >
-              ⤢ Vue 100 %
-            </button>
-          )}
-        </span>
+        )}
 
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)' }}>
           Ordre gauche→droite des cadres = chaîne G1→G2→G3 · molette = zoom, glisser le fond = déplacer la vue
