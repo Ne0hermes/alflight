@@ -1,6 +1,14 @@
 // src/services/performanceTrilinearInterpolation.js
 
 /**
+ * Tolérance (en unités de l'axe) pour considérer qu'une cible tombe SUR un nœud.
+ * Même valeur que l'égalité « sur le nœud » de `findBracketingIndices` (0.001) ;
+ * utilisée par le refus au-delà du plafond pour ne pas rejeter une cible qui
+ * serait par ailleurs reconnue comme le dernier nœud exact.
+ */
+const TOLERANCE_NOEUD = 0.001;
+
+/**
  * Interpolation linéaire simple entre deux points
  */
 function linearInterpolate(x1, y1, x2, y2, x) {
@@ -79,6 +87,28 @@ export function trilinearInterpolate(
 
   if (masses.length === 0 || altitudes.length === 0 || temperatures.length === 0) {
     console.warn('[TrilinearInterpolation] Tableaux vides');
+    return null;
+  }
+
+  // 🔧 2026-08-21 — REFUS AU-DELÀ DU PLAFOND DE LA GRILLE (altitude, température).
+  // `findBracketingIndices` ramène toute cible ≥ au dernier nœud sur ce dernier
+  // nœud : au-dessus du plafond, la distance rendue était celle du plafond. Or une
+  // altitude-pression plus haute ou une journée plus chaude ALLONGENT la distance
+  // réelle : l'écrêtage vers le haut est OPTIMISTE. Constaté sur F-BXQT / F-BXNG
+  // (ré-audit du 21/08) : (726 kg, 0 ft, 25 °C) rendait la distance des 15 °C.
+  // Règle du projet (fail-closed) : on refuse plutôt que d'inventer. L'écrêtage
+  // vers le BAS (altitude sous le plancher, température sous le minimum) reste :
+  // il rend une distance PLUS LONGUE que la réalité, donc conservatrice. La masse
+  // n'est pas concernée ici : l'adaptateur la traite à part (extrapolation ou
+  // « tableau le plus proche », décision pilote 2026-06-23).
+  // La température reçue est déjà dans le repère de l'axe (écart à l'ISA si la
+  // grille est ISA-relative — cf. tableInterpolationAdapter).
+  const plafondAlt = altitudes[altitudes.length - 1];
+  const plafondTemp = temperatures[temperatures.length - 1];
+  if (targetAlt > plafondAlt + TOLERANCE_NOEUD || targetTemp > plafondTemp + TOLERANCE_NOEUD) {
+    console.warn('[TrilinearInterpolation] Cible au-delà du plafond de la grille — refus de calculer (écrêtage optimiste interdit)', {
+      targetAlt, plafondAlt, targetTemp, plafondTemp
+    });
     return null;
   }
 

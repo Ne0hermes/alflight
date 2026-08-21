@@ -18,7 +18,10 @@
 // ║   déléguée à performanceTrilinearInterpolation.js.                   ║
 // ║                                                                      ║
 // ║   Hors plage masse : extrapolation linéaire avec WARNING explicite.  ║
-// ║   Hors plage altitude/température : clamp aux bornes + warning.      ║
+// ║   Hors plage altitude/température (2026-08-21, fail-closed) :        ║
+// ║     - AU-DELÀ du max (altitude plus haute, OAT plus chaude) : REFUS  ║
+// ║       (status ERROR + motif) — l'écrêtage y serait OPTIMISTE ;       ║
+// ║     - SOUS le min : clamp à la borne + warning (conservateur).       ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import { getOperation, isValidOperationId } from '../abac/curves/core/operationCatalog';
@@ -184,23 +187,64 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   // Le warning « masse hors plage » est poussé APRÈS le calcul (plus bas) pour
   // refléter le mode réellement utilisé : extrapolation linéaire OU repli
   // « tableau le plus proche » (masse clampée).
-  if (targetAlt < minAlt || targetAlt > maxAlt) {
-    warnings.push(
-      targetAlt < minAlt
-        ? `⚠ Altitude ${targetAlt} ft sous la plage (min ${minAlt} ft) — clamp aux bornes`
-        : `⚠ Altitude ${targetAlt} ft au-delà de la plage (max ${maxAlt} ft) — clamp aux bornes`
+  const ecart = (v) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
+
+  // 🔧 2026-08-21 — AU-DELÀ DU PLAFOND DE LA GRILLE : REFUS (fail-closed).
+  // Jusqu'ici, une altitude-pression au-dessus du dernier palier ou une OAT
+  // au-dessus de la dernière colonne étaient ÉCRÊTÉES sur la borne, avec un simple
+  // avertissement. Or les deux ALLONGENT la distance réelle : la valeur rendue
+  // était OPTIMISTE. Constaté au ré-audit du 21/08 sur F-BXQT / F-BXNG (grille
+  // réduite à la seule ligne ISA) : (726 kg, 0 ft, 25 °C) rendait la distance
+  // des 15 °C. On refuse désormais de calculer, avec un motif explicite.
+  // Quand la grille est ISA-relative, le jugement se fait en ÉCART À L'ISA
+  // (`tempGrille`), c'est-à-dire dans le repère du manuel.
+  // Sous le plancher (altitude plus basse, OAT plus froide), l'écrêtage rend une
+  // distance PLUS LONGUE que la réalité : il est conservé, et signalé.
+  const TOLERANCE_BORNE = 0.001; // même tolérance « sur le nœud » que le moteur
+  const refus = [];
+  if (targetAlt > maxAlt + TOLERANCE_BORNE) {
+    refus.push(`Altitude-pression ${targetAlt} ft au-delà de la grille du manuel (max ${maxAlt} ft)`);
+  }
+  if (tempGrille > maxTemp + TOLERANCE_BORNE) {
+    refus.push(
+      enEcartISA
+        ? `OAT ${targetTemp} °C à ${targetAlt} ft, soit ISA${ecart(tempGrille)}, au-delà de la grille du manuel (max ISA${ecart(maxTemp)})`
+        : `OAT ${targetTemp} °C au-delà de la grille du manuel (max ${maxTemp} °C)`
     );
   }
-  if (tempGrille < minTemp || tempGrille > maxTemp) {
-    const ecart = (v) => `${v > 0 ? '+' : ''}${Math.round(v)}`;
+  if (refus.length > 0) {
+    return {
+      operationId,
+      operationLabel: opDef.labelFr,
+      status: 'ERROR',
+      reason: `${refus.join(' ; ')} — distance non calculable, vérifiez le manuel de vol`,
+      source: {
+        kind: 'table',
+        tableCount: group.tables.length,
+        method: 'Interpolation trilinéaire',
+        masses,
+        altitudeRange: [minAlt, maxAlt],
+        temperatureRange: [minTemp, maxTemp],
+        temperatureScale
+      },
+      inputs: {
+        temperature: conditions.temperature,
+        pressure_altitude: conditions.pressure_altitude,
+        mass: conditions.mass,
+        wind: conditions.wind
+      },
+      warnings
+    };
+  }
+
+  if (targetAlt < minAlt) {
+    warnings.push(`⚠ Altitude ${targetAlt} ft sous la plage (min ${minAlt} ft) — clamp aux bornes (conservateur : distance ≥ réelle)`);
+  }
+  if (tempGrille < minTemp) {
     warnings.push(
       enEcartISA
-        ? (tempGrille < minTemp
-            ? `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — sous la plage du manuel (ISA${ecart(minTemp)}) — clamp aux bornes`
-            : `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — au-delà de la plage du manuel (ISA${ecart(maxTemp)}) — clamp aux bornes`)
-        : (tempGrille < minTemp
-            ? `⚠ Température ${targetTemp}°C sous la plage (min ${minTemp}°C) — clamp aux bornes`
-            : `⚠ Température ${targetTemp}°C au-delà de la plage (max ${maxTemp}°C) — clamp aux bornes`)
+        ? `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — sous la plage du manuel (ISA${ecart(minTemp)}) — clamp aux bornes (conservateur : distance ≥ réelle)`
+        : `⚠ Température ${targetTemp}°C sous la plage (min ${minTemp}°C) — clamp aux bornes (conservateur : distance ≥ réelle)`
     );
   }
 

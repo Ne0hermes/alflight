@@ -9,9 +9,12 @@
 // ⚠️ Ces valeurs figent le comportement PRÉSENT, défauts compris. Elles ne
 // disent PAS ce que le code devrait faire. Sont notamment figés ici, et
 // SIGNALÉS car ils peuvent SOUS-ESTIMER une distance de piste :
-//   - hors domaine en ALTITUDE et en TEMPÉRATURE : clamp SILENCIEUX sur la
-//     dernière courbe, sans alerte, avec `method: 'interpolation'` et
-//     `warning: null` (seule la MASSE est surveillée) ;
+//   - hors domaine en ALTITUDE et en TEMPÉRATURE vers le BAS (plancher, froid) :
+//     clamp SILENCIEUX sur la première courbe, sans alerte, avec
+//     `method: 'interpolation'` et `warning: null` (seule la MASSE est
+//     surveillée) — conservateur, donc conservé. Vers le HAUT (plafond, chaud)
+//     le clamp était OPTIMISTE : depuis le 21/08/2026 le moteur REFUSE (null),
+//     cf. le bloc « hors domaine » ci-dessous ;
 //   - une entrée NaN / undefined / null retombe sur l'indice 0, c'est-à-dire
 //     la masse MINIMALE, l'altitude la plus BASSE et la température la plus
 //     BASSE — donc la distance la plus courte du tableau ;
@@ -168,19 +171,60 @@ describe('trilinearInterpolate — point entre nœuds', () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-describe('trilinearInterpolate — hors domaine : CLAMP silencieux (jamais null)', () => {
-  it('⚠️ masse, altitude ET température au-dessus du domaine → dernière courbe, sans alerte', () => {
+// ─────────────────────────────────────────────────────────────────────────
+// COMPORTEMENT DÉLIBÉRÉMENT MODIFIÉ — 21/08/2026 (ré-audit F-BXQT / F-BXNG)
+//
+// AVANT : au-dessus du plafond de la grille, `findBracketingIndices` ramenait la
+//   cible sur le dernier nœud : 6000 ft rendait la distance de 4000 ft, 50 °C
+//   celle de 40 °C. Or une altitude-pression plus haute ou une journée plus
+//   chaude ALLONGENT la distance réelle : l'écrêtage vers le haut est OPTIMISTE.
+//   Constaté sur la base réelle : F-BXQT (Cessna F150, grille réduite à la
+//   ligne ISA) rendait à (726 kg, 0 ft, 25 °C) la distance des 15 °C.
+//
+// APRÈS : altitude ou température au-delà du plafond → `null` (refus). Le
+//   résolveur remonte un ERROR motivé, le pilote lit « — ». L'écrêtage vers le
+//   BAS (plancher, froid) rend une distance PLUS LONGUE que la réalité : il est
+//   conservé tel quel. La MASSE n'est pas concernée (gérée par l'adaptateur :
+//   extrapolation ou « tableau le plus proche », décision pilote 2026-06-23).
+//
+// Assertions changées : les trois « au-dessus du domaine » passent de la
+// valeur du plafond à `toBeNull()`. Celles « en dessous » sont inchangées.
+// ─────────────────────────────────────────────────────────────────────────
+describe('trilinearInterpolate — hors domaine : REFUS vers le haut (alt/temp), clamp vers le bas', () => {
+  it('masse, altitude ET température au-dessus du domaine → null (refus), plus jamais le coin 1100 kg / 4000 ft / 40 °C', () => {
     // 1200 kg / 6000 ft / 50 °C ne sont couverts par AUCUNE courbe :
-    // la valeur rendue est celle du coin 1100 kg / 4000 ft / 40 °C.
-    expect(tri(1200, 6000, 50)).toBe(620);
+    // la valeur rendue était celle du coin 1100 kg / 4000 ft / 40 °C (620).
+    expect(tri(1200, 6000, 50)).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('au-delà du plafond de la grille'),
+      expect.objectContaining({ targetAlt: 6000, plafondAlt: 4000, targetTemp: 50, plafondTemp: 40 })
+    );
   });
 
-  it('⚠️ altitude hors domaine seule → distance du plafond du tableau (sous-estimation)', () => {
-    expect(tri(1000, 99000, 20)).toBeCloseTo(560, 6);  // = V(1000, 4000 ft, 20 °C)
+  it('altitude au-dessus du plafond seule → null (était la distance du plafond, 560 : sous-estimation)', () => {
+    expect(tri(1000, 99000, 20)).toBeNull();
   });
 
-  it('⚠️ température hors domaine seule → distance de la dernière colonne', () => {
-    expect(tri(1000, 2000, 60)).toBeCloseTo(500, 6);   // = V(1000, 2000 ft, 40 °C)
+  it('température au-dessus du plafond seule → null (était la dernière colonne, 500)', () => {
+    expect(tri(1000, 2000, 60)).toBeNull();
+  });
+
+  it('pile sur le plafond (4000 ft / 40 °C) → valeur du plafond, pas de refus', () => {
+    expect(tri(1000, 4000, 40)).toBe(600);
+  });
+
+  it('tolérance du nœud : 4000,0005 ft / 40,0005 °C est encore le plafond ; 4000,01 ft ne l’est plus', () => {
+    expect(tri(1000, 4000.0005, 40.0005)).toBe(600);
+    expect(tri(1000, 4000.01, 40)).toBeNull();
+    expect(tri(1000, 4000, 40.01)).toBeNull();
+  });
+
+  it('température seule SOUS le plancher → clamp sur la première colonne (conservateur, conservé)', () => {
+    expect(tri(1000, 2000, -10)).toBeCloseTo(420, 6);  // = V(1000, 2000 ft, 0 °C)
+  });
+
+  it('altitude seule SOUS le plancher → clamp sur le premier palier (conservateur, conservé)', () => {
+    expect(tri(1000, -500, 20)).toBeCloseTo(360, 6);   // = V(1000, 0 ft, 20 °C)
   });
 
   it('en dessous du domaine → première courbe (masse min / 0 ft / 0 °C)', () => {
@@ -273,8 +317,13 @@ describe('trilinearInterpolate — tableaux dégénérés', () => {
     expect(trilinearInterpolate(m, a, t, v, 1089, 2000, 20)).toBeCloseTo(495, 6);
   });
 
-  it('tableau à UN SEUL point (1×1×1) : cette valeur est renvoyée pour toute entrée', () => {
-    expect(trilinearInterpolate([1000], [0], [0], [[[555]]], 1234, 9999, 99)).toBeCloseTo(555, 6);
+  it('tableau à UN SEUL point (1×1×1) : renvoyé pour toute MASSE, refusé au-dessus du point en altitude/température', () => {
+    // 21/08/2026 : avant, (1234 kg, 9999 ft, 99 °C) rendait 555 — l'unique case,
+    // pour n'importe quelle entrée. Le refus au-delà du plafond s'applique
+    // aussi à cette grille dégénérée ; seule la masse reste écrêtée.
+    expect(trilinearInterpolate([1000], [0], [0], [[[555]]], 1234, 0, 0)).toBeCloseTo(555, 6);
+    expect(trilinearInterpolate([1000], [0], [0], [[[555]]], 1234, 9999, 99)).toBeNull();
+    expect(trilinearInterpolate([1000], [0], [0], [[[555]]], 1000, 0, 1)).toBeNull();
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -357,9 +406,13 @@ describe('calculatePerformanceDistance', () => {
     expect(warnSpy).toHaveBeenCalledWith('[TrilinearInterpolation] Données manquantes');
   });
 
-  it('⚠️ hors domaine : renvoie une distance clampée, indistinguable d’un calcul valide', () => {
+  it('au-dessus du plafond (8000 ft / 55 °C) → null depuis le 21/08/2026 (rendait 620, le coin du tableau)', () => {
+    expect(calculatePerformanceDistance(groupe(), FIELD, 1400, 8000, 55)).toBeNull();
+  });
+
+  it('⚠️ masse seule hors domaine : distance clampée, indistinguable d’un calcul valide', () => {
     // Aucune métadonnée, aucun signal : le résultat ressemble à un calcul normal.
-    expect(calculatePerformanceDistance(groupe(), FIELD, 1400, 8000, 55)).toBe(620);
+    expect(calculatePerformanceDistance(groupe(), FIELD, 1400, 4000, 40)).toBe(620);
   });
 });
 
@@ -380,11 +433,18 @@ describe('calculatePerformanceWithExtrapolation — masse DANS la plage', () => 
     expect(calculatePerformanceWithExtrapolation(groupe(), FIELD, 1100, 4000, 40).value).toBe(620);
   });
 
-  it('⚠️ altitude ET température hors domaine → method:"interpolation", warning:null', () => {
-    // Seule la MASSE est surveillée : 6000 ft / 50 °C sortent du tableau sans
-    // qu’aucune alerte ne soit levée, et la distance est celle de 4000 ft / 40 °C.
-    const res = calculatePerformanceWithExtrapolation(groupe(), FIELD, 1000, 6000, 50);
-    expect(res.value).toBe(600);
+  it('altitude ET température au-dessus du plafond → null depuis le 21/08/2026 (rendait 600 en « interpolation » sans alerte)', () => {
+    // 6000 ft / 50 °C sortent du tableau par le haut : le moteur refuse, la
+    // masse étant dans la plage aucun repli n'existe → null (et non un objet).
+    expect(calculatePerformanceWithExtrapolation(groupe(), FIELD, 1000, 6000, 50)).toBeNull();
+  });
+
+  it('⚠️ altitude ET température SOUS le plancher → method:"interpolation", warning:null (clamp conservateur, silencieux)', () => {
+    // Seule la MASSE est surveillée : −1000 ft / −10 °C sortent du tableau par
+    // le bas sans qu’aucune alerte ne soit levée ; la distance est celle de
+    // 0 ft / 0 °C — plus longue que la réalité, donc conservatrice.
+    const res = calculatePerformanceWithExtrapolation(groupe(), FIELD, 1000, -1000, -10);
+    expect(res.value).toBe(320);
     expect(res.method).toBe('interpolation');
     expect(res.warning).toBeNull();
     expect(res.massUsed).toBe(1000);
