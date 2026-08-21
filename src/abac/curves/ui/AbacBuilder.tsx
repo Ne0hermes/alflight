@@ -8,11 +8,10 @@ import { WorkshopCanvas } from './WorkshopCanvas';
 // (import ChainCalculator retiré : jamais utilisé comme valeur → esbuild l'élidait,
 //  ce qui a masqué pendant des mois la casse syntaxique de tout le graphe cascade.
 //  Le composant, restauré et sain, reste disponible dans ./ChainCalculator.)
-import { CascadeCalculator, CascadeTestDraft, makeEmptyCascadeTestDraft } from './CascadeCalculator';
 // Lot 1-F — badge « Banc : x/y OK » du banc monté à l'écran Tracé.
 // Lot 1-G — assemblage final : rail de checklist permanent (ChecklistRail +
 // modelReadiness), KitPanel sur les grands blocs, KitButton sur les actions.
-import { ChecklistRail, ChecklistStep, KitBadge, KitButton, KitPanel, SPACING, FONT } from './kit';
+import { KitBadge, KitButton, KitPanel, SPACING } from './kit';
 import {
   computeGraphReadiness,
   computeSetReadiness,
@@ -22,7 +21,7 @@ import {
 import { AbacCurveManager } from '../core/manager';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
-import { ReferenceCasesPanel, ReferencePrefill } from './ReferenceCasesPanel';
+import { ReferenceCasesPanel } from './ReferenceCasesPanel';
 import { runAllReferenceCases } from '../core/referenceBench';
 import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
 import { isValidOperationId, getOperation } from '../core/operationCatalog';
@@ -189,15 +188,9 @@ function AbacBuilderComponent(
   // R13 — BANC DE TEST PERMANENT : cas de référence du manuel, persistés dans
   // metadata.referenceCases et rejoués à la validation (PASS/FAIL ± tolérance).
   const [referenceCases, setReferenceCases] = useState<ReferenceCase[]>(S?.referenceCases ?? []);
-  const [referencePrefill, setReferencePrefill] = useState<ReferencePrefill | null>(null);
-
-  // Lot 1-F — LE TESTEUR UNIFIÉ : l'état de formulaire du test de cascade est
-  // HISSÉ ici (comme workshop) et passé en props contrôlées aux deux montages
-  // du CascadeCalculator (Tracé replié / Validation ouvert) — une seule
-  // saisie, deux écrans. Persisté en session ET en brouillon IndexedDB
-  // (champ ADDITIF, comme plancheType : défaut sur absence, snapshots
-  // antérieurs intacts).
-  const [testDraft, setTestDraft] = useState<CascadeTestDraft>(S?.testDraft ?? makeEmptyCascadeTestDraft());
+  // (Retour pilote 20/08 : le calculateur en cascade a été RETIRÉ de l'atelier
+  // — « je ne m'en sers jamais ». Le banc de test est le seul outil de
+  // vérification : entrées + attendu → PASS/FAIL immédiat.)
   // Lot 1-F — le banc au Tracé : <details> contrôlé, ouvert au clic « 📌 »
   // pour que le prefill atterrisse dans un panneau VISIBLE. Volatile (non
   // persisté, comme wizardEditorMode).
@@ -386,13 +379,11 @@ function AbacBuilderComponent(
         workshop, graphs, referenceCases,
         bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
-        // Lot 1-F — saisies du testeur unifié (champ additif).
-        testDraft,
       },
     };
   }, [sessionRef, sessionMarker, workshop, graphs,
       referenceCases, bezierSession, systemType, plancheType, modelNameInput,
-      aircraftModelDisplay, currentStep, subStepGraphIndex, testDraft]);
+      aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
   // ─── Instantané IndexedDB (survie F5) — effet JUMEAU débouncé du précédent.
   // Même payload que la session + contextKey/horodatage, clé unique
@@ -411,15 +402,12 @@ function AbacBuilderComponent(
         workshop, graphs, referenceCases,
         bezierSession, systemType, plancheType, modelNameInput, aircraftModelDisplay,
         currentStep, subStepGraphIndex,
-        // Lot 1-F — saisies du testeur unifié (champ additif, comme
-        // plancheType : les brouillons antérieurs restent lisibles).
-        testDraft,
       });
     }, 1500);
     return () => window.clearTimeout(t);
   }, [restoring, draftContextKey, sessionMarker, workshop, graphs,
       referenceCases, bezierSession, systemType, plancheType, modelNameInput,
-      aircraftModelDisplay, currentStep, subStepGraphIndex, testDraft]);
+      aircraftModelDisplay, currentStep, subStepGraphIndex]);
 
   // ─── Restauration au montage (vrai rechargement uniquement) ───────────────
   // IndexedDB est asynchrone : le montage affiche « Restauration du tracé… »
@@ -446,8 +434,6 @@ function AbacBuilderComponent(
         // Lot 1-C — brouillons antérieurs sans plancheType : null (l'écran
         // Opération et le bandeau du Tracé savent vivre sans).
         setPlancheType(draft.plancheType ?? null);
-        // Lot 1-F — brouillons antérieurs sans testDraft : formulaire vierge.
-        setTestDraft(draft.testDraft ?? makeEmptyCascadeTestDraft());
         setSubStepGraphIndex(draft.subStepGraphIndex ?? 0);
         setRestoredBanner(true);
       }
@@ -1089,41 +1075,6 @@ function AbacBuilderComponent(
     setCurrentStep(prev => (prev === 'final' ? 'points' : prev));
   }, [graphs]);
 
-  // Mapping checklist → action : un item n'est cliquable QUE s'il amène
-  // quelque part de raisonnable (sinon pas de onClick — règle du rail).
-  const setItemAction = (id: string): (() => void) | undefined => {
-    switch (id) {
-      case 'set:primary':
-        // L'opération du set se règle à l'écran « Opération ».
-        return () => setCurrentStep('setup');
-      case 'set:model-name':
-        // Champ marqué de l'écran Validation.
-        return () => {
-          setCurrentStep('final');
-          window.setTimeout(() => modelNameFieldRef.current?.focus(), 60);
-        };
-      case READINESS_BENCH_ITEM_ID:
-        // Le banc ne vit qu'à l'écran Validation (retour pilote 20/08) — la
-        // check-list y est affichée juste au-dessus : rien à ouvrir.
-        return undefined;
-      case 'set:frames':
-      case 'set:shared-y':
-      case 'set:chain':
-        // Cadres / Y commun / chaîne se règlent sur le canevas du Tracé.
-        return currentStep === 'final' ? () => setCurrentStep('points') : undefined;
-      default:
-        return undefined;
-    }
-  };
-
-  const railSetSteps: ChecklistStep[] = setReadiness.items.map(it => ({
-    id: it.id,
-    label: it.label,
-    state: it.state,
-    detail: it.detail,
-    onClick: setItemAction(it.id)
-  }));
-
   // (Retour pilote 20/08 : le rail latéral et ses groupes par cadre ont été
   // retirés — les badges « x/y ✓ » des panneaux de cadre suffisent au Tracé,
   // et la check-list du SET vit en tête de l'écran Validation.)
@@ -1494,19 +1445,10 @@ const renderStepContent = () => {
           <div className={styles.stepContent}>
             <h2>Validation</h2>
             <div className={styles.finalView}>
-              {/* Retour pilote 20/08 : la check-list quitte le rail latéral
-                  (lisibilité du Tracé) et vit ICI, pleine largeur — le
-                  récapitulatif avant enregistrement, items cliquables. */}
-              <KitPanel
-                title="Check-list du modèle"
-                badge={
-                  <KitBadge tone={setReadiness.canSave ? 'ok' : 'crit'}>
-                    {setReadiness.canSave ? 'prêt à enregistrer' : 'points à régler'}
-                  </KitBadge>
-                }
-              >
-                <ChecklistRail steps={railSetSteps} />
-              </KitPanel>
+              {/* (Retour pilote 20/08 : plus de check-list affichée — « ça ne sert
+                  à rien ». Son calcul (modelReadiness) ne sert plus qu'à une
+                  chose : la raison affichée sur le bouton « Valider » quand il
+                  refuse.) */}
               {/* Lot 1-G — Configuration du système en KitPanel + champ « Nom du
                   modèle » MARQUÉ quand vide (l'item de checklist du même nom
                   cible ce champ ; le bouton d'enregistrement dit la raison). */}
@@ -1668,23 +1610,6 @@ const renderStepContent = () => {
                   graphs={graphs}
                   cases={referenceCases}
                   onChange={setReferenceCases}
-                  prefill={referencePrefill}
-                  onPrefillConsumed={() => setReferencePrefill(null)}
-                />
-              </KitPanel>
-
-              {/* ─── R4 : TEST DE CASCADE intégré à la VALIDATION — vérifier le
-                  modèle complet (entrée → G1 → G2 → G3 → résultat) AVANT de
-                  l'enregistrer, sur le même écran. Les courbes ont été
-                  interpolées à l'entrée de cette étape (onFinish → fitAll). */}
-              <KitPanel collapsible defaultOpen title="Testeur — cascade complète avant enregistrement">
-                {/* Lot 1-F — MÊME formulaire que le montage du Tracé (état
-                    testDraft hissé) : rien ne se re-tape entre les étapes. */}
-                <CascadeCalculator
-                  graphs={graphs}
-                  draft={testDraft}
-                  onDraftChange={setTestDraft}
-                  onProposeReference={(snap) => setReferencePrefill(snap)}
                 />
               </KitPanel>
 
@@ -1732,7 +1657,6 @@ const renderStepContent = () => {
     setWorkshop({ image: null, sharedY: { min: 0, max: 100, unit: '', title: '' }, frames: [] });
     setBezierSession(null);
     setReferenceCases([]);
-    setTestDraft(makeEmptyCascadeTestDraft());
     setCurrentStep('setup');
     setGraphs([]);
     setSelectedGraphId(null);

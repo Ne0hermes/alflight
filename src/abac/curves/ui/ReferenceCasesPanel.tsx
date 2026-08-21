@@ -164,7 +164,10 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
                 const entries = [
                   `${rc.inputValue}${chain[0]?.axes?.xAxis?.unit ? ' ' + chain[0].axes.xAxis.unit : ''}`,
                   ...chain.map(g => rc.parameters[g.id] !== undefined && g.id !== chain[0]?.id
-                    ? `${getAxisVariableLabel(g.axes?.xAxis?.title)} ${rc.parameters[g.id]}${g.axes?.xAxis?.unit ? ' ' + g.axes.xAxis.unit : ''}`
+                    ? (g.readoutAxis === 'x'
+                      // Lecture descendante : paramètre = famille (vent signé), pas l'axe X.
+                      ? `${getAxisVariableLabel(g.familyAxisVariable) || 'famille'} ${rc.parameters[g.id]}${getAxisVariable(g.familyAxisVariable)?.defaultUnit ? ' ' + getAxisVariable(g.familyAxisVariable)!.defaultUnit : ''}`
+                      : `${getAxisVariableLabel(g.axes?.xAxis?.title)} ${rc.parameters[g.id]}${g.axes?.xAxis?.unit ? ' ' + g.axes.xAxis.unit : ''}`)
                     // Lot 1-F — plus de « alt » en dur : symbole/label de la
                     // FAMILLE du graphe 1 (un abaque à famille masse dit « Masse »).
                     : (g.id === chain[0]?.id && rc.parameters[g.id] !== undefined
@@ -214,10 +217,8 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
       {/* ─── Formulaire d'ajout ─── */}
       {formOpen && (
         <div style={{ padding: '8px 12px 12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', fontSize: 11, color: 'var(--text-secondary)' }}>
-          <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
-            Libellé (optionnel)
-            <input style={{ ...inputStyle, width: 150 }} value={label} onChange={e => setLabel(e.target.value)} placeholder="Exemple POH p.5-9" />
-          </label>
+          {/* (Retour pilote 20/08 : plus de champ « Libellé » — le cas se décrit
+              par ses entrées. Seuls comptent température, altitude, vent, attendu.) */}
           <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2 }}>
             {getAxisVariableLabel(chain[0]?.axes?.xAxis?.title) || 'Entrée'}{chain[0]?.axes?.xAxis?.unit ? ` (${chain[0].axes.xAxis.unit})` : ''}
             <input style={inputStyle} type="number" value={inputValue} onChange={e => setInputValue(e.target.value)} />
@@ -229,9 +230,15 @@ export const ReferenceCasesPanel: React.FC<ReferenceCasesPanelProps> = ({
                   qu'une famille est déclarée (retour pilote 20/08). */}
               {i === 0
                 ? (g.familyAxisVariable
-                    ? `${getAxisVariableLabel(g.familyAxisVariable)}${getAxisVariable(g.familyAxisVariable)?.defaultUnit ? ` (${getAxisVariable(g.familyAxisVariable)!.defaultUnit})` : ''} — obligatoire`
+                    ? `${getAxisVariableLabel(g.familyAxisVariable)}${getAxisVariable(g.familyAxisVariable)?.defaultUnit ? ` (${getAxisVariable(g.familyAxisVariable)!.defaultUnit})` : ''}`
                     : 'Famille (optionnel)')
-                : `${getAxisVariableLabel(g.axes?.xAxis?.title)}${g.axes?.xAxis?.unit ? ` (${g.axes.xAxis.unit})` : ''}`}
+                : g.readoutAxis === 'x'
+                  // Lecture descendante : le paramètre est la FAMILLE des guides
+                  // (vent signé), pas l'axe X — qui porte la sortie. Étiqueter
+                  // « Distance d'atterrissage » ici faisait croire que le champ
+                  // vent manquait (retour pilote 20/08).
+                  ? `${getAxisVariableLabel(g.familyAxisVariable) || 'Famille des guides'}${getAxisVariable(g.familyAxisVariable)?.defaultUnit ? ` (${getAxisVariable(g.familyAxisVariable)!.defaultUnit}` : ' ('}+ face / − arrière)`
+                  : `${getAxisVariableLabel(g.axes?.xAxis?.title)}${g.axes?.xAxis?.unit ? ` (${g.axes.xAxis.unit})` : ''}`}
               <input
                 style={inputStyle}
                 type="number"

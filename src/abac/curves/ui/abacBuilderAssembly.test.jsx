@@ -140,7 +140,9 @@ describe('AbacBuilder — assemblage écran Tracé (Lot 1-G)', () => {
 describe('AbacBuilder — assemblage écran Validation (Lot 1-G)', () => {
   it('checklist OK : bouton primaire « Valider et enregistrer » actif, champ nom présent', () => {
     const html = render(mkSession({ currentStep: 'final' }));
-    expect(html).toContain('Check-list du modèle');
+    // Retour pilote 20/08 : plus de check-list affichée nulle part — seule la
+    // raison du bouton « Valider » survit de modelReadiness.
+    expect(html).not.toContain('Check-list du modèle');
     expect(html).toContain('Nom du modèle');
     expect(html).toContain('Valider et enregistrer le modèle');
     // Rien ne bloque : pas d'aria-disabled sur la primaire
