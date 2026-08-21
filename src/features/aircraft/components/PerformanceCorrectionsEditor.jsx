@@ -89,10 +89,17 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
 
   // Une règle du même type existe-t-elle déjà pour cette phase ? Le moteur
   // refuse d'appliquer des règles ambiguës : autant l'empêcher à la saisie.
-  const dejaPresent = isWindType && (corrections || []).some(
-    (c) => c.type === draft.type
-      && (c.appliesTo === draft.appliesTo || c.appliesTo === 'both' || draft.appliesTo === 'both')
-  );
+  // Retour pilote 20/08 : le message doit dire QUELLE règle bloque et pour
+  // QUELLE phase — le formulaire compare à la phase sélectionnée ci-dessus
+  // (défaut « Décollage »), pas à la colonne qu'on regarde.
+  const collisions = isWindType
+    ? (corrections || []).filter(
+        (c) => c.type === draft.type
+          && (c.appliesTo === draft.appliesTo || c.appliesTo === 'both' || draft.appliesTo === 'both')
+      )
+    : [];
+  const dejaPresent = collisions.length > 0;
+  const phaseLabel = (p) => APPLIES_OPTIONS.find((o) => o.value === p)?.label || p;
 
   const canAddDraft = !dejaPresent && (isTableMode
     ? paliersValides.length >= 1
@@ -276,9 +283,12 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
 
       {dejaPresent && (
         <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1.5 }}>
-          Une règle « {CORRECTION_TYPES[draft.type]?.label} » existe déjà pour cette phase.
-          Deux règles du même type se multiplieraient au lieu de se lire : le moteur refuserait
-          alors de les appliquer. Supprimez l'existante, ou complétez-la avec des paliers.
+          Le formulaire est réglé sur « {phaseLabel(draft.appliesTo)} », et une règle
+          « {CORRECTION_TYPES[draft.type]?.label} » y existe déjà :
+          {' '}{collisions.map((c) => `${describeCorrection(c)} (${phaseLabel(c.appliesTo)})`).join(' ; ')}.
+          Deux règles du même type se multiplieraient au lieu de se lire — le moteur refuserait
+          de les appliquer. Pour l'autre phase, changez « Phase » ci-dessus ; sinon supprimez
+          l'existante ou complétez-la avec des paliers.
         </Typography>
       )}
     </Paper>

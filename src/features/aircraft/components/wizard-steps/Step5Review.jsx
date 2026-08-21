@@ -147,7 +147,6 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   // Récupérer les préférences d'unités de l'utilisateur
   const units = useUnitsStore(state => state.units);
   const [showDifferencesDialog, setShowDifferencesDialog] = useState(false);
-  const [submissionMode, setSubmissionMode] = useState(null);
   const [differences, setDifferences] = useState([]);
   const [isUpdatingSupabase, setIsUpdatingSupabase] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
@@ -277,8 +276,9 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       // Champs de premier niveau (anciens formats) - doublons avec sous-objets
       'emptyWeight', 'mtow', 'mlw',
       'vso', 'vs1', 'vne', 'vno', 'vfe', 'vr', 'vx', 'vy', 'va', 'vlo', 'vle',
-      // Les abaques sont traités séparément dans le tableau comparatif
-      'performanceModels',
+      // (performanceModels : comparé par NOM de modèle dans un bloc dédié
+      // ci-dessous — il était exclu et les abaques n'apparaissaient JAMAIS
+      // dans les modifications détectées ; retour pilote 20/08.)
       // MANEX et flightManual - ignorer car structure peut varier sans modification réelle
       'manex', 'flightManual'
     ];
@@ -388,6 +388,48 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
         }
       });
     };
+
+    // ─── Abaques de performance (performanceModels) : comparaison par NOM ───
+    // Retour pilote 20/08 : les abaques ajoutés/modifiés n'apparaissaient
+    // jamais dans « Modifications détectées » (clé exclue du diff générique).
+    // Les points interpolés (fitted) et les horodatages sont ignorés — ils
+    // changent sans modification réelle du modèle.
+    {
+      const baseModels = Array.isArray(base.performanceModels) ? base.performanceModels : [];
+      const curModels = Array.isArray(current.performanceModels) ? current.performanceModels : [];
+      const nameOf = (m) => m?.name || m?.data?.metadata?.modelName || m?.id || '(sans nom)';
+      const fingerprint = (m) => {
+        const data = m?.data || {};
+        const graphs = (data.graphs || []).map(g => ({
+          ...g,
+          curves: (g.curves || []).map(c => ({ ...c, fitted: undefined }))
+        }));
+        const { createdAt, updatedAt, ...meta } = data.metadata || {};
+        return JSON.stringify({ graphs, metadata: meta, referenceCases: data.metadata?.referenceCases });
+      };
+      const emptiedByWizard = opts?.skipEmptyOverwrites && baseModels.length > 0 && curModels.length === 0;
+      if (!emptiedByWizard && (baseModels.length > 0 || curModels.length > 0)) {
+        const baseByName = new Map(baseModels.map(m => [nameOf(m), m]));
+        const curByName = new Map(curModels.map(m => [nameOf(m), m]));
+        const added = curModels.filter(m => !baseByName.has(nameOf(m))).map(nameOf);
+        const removed = baseModels.filter(m => !curByName.has(nameOf(m))).map(nameOf);
+        const modified = curModels
+          .filter(m => baseByName.has(nameOf(m)) && fingerprint(baseByName.get(nameOf(m))) !== fingerprint(m))
+          .map(nameOf);
+        if (added.length || removed.length || modified.length) {
+          const summary = [
+            ...added.map(n => `➕ ajouté : ${n}`),
+            ...modified.map(n => `✏️ modifié : ${n}`),
+            ...removed.map(n => `➖ supprimé : ${n}`)
+          ].join('  ·  ');
+          diffs.push({
+            field: 'Abaques de performance',
+            original: baseModels.length ? `${baseModels.length} abaque(s) : ${baseModels.map(nameOf).join(' · ')}` : '-',
+            modified: `${curModels.length} abaque(s) — ${summary}`
+          });
+        }
+      }
+    }
 
     // Récupérer tous les champs uniques des deux objets
     const allFields = new Set([...Object.keys(base), ...Object.keys(current)]);
@@ -2191,8 +2233,8 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
         <DialogContent>
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              {differences.length} champ(s) diffèrent de la version actuelle sur Supabase.
-              Vérifie les changements ci-dessous, puis confirme pour enregistrer.
+              {differences.length} champ(s) diffèrent de la version actuelle sur le serveur.
+              Vérifie les changements ci-dessous, puis confirme : « Enregistrer » écrit la fiche sur le serveur.
             </Typography>
           </Alert>
 
@@ -2256,57 +2298,12 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
             </TableContainer>
           )}
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* DÉSACTIVÉ TEMPORAIREMENT - À réimplémenter plus tard
-            <Paper
-              sx={{
-                p: 2,
-                border: '2px solid',
-                borderColor: submissionMode === 'community' ? 'primary.main' : 'divider',
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => setSubmissionMode('community')}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CloudUploadIcon color="primary" />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Soumettre à la communauté
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Proposer vos modifications comme mise à jour de la configuration existante.
-                    La communauté pourra voter pour valider vos changements.
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-            */}
-
-            <Paper
-              sx={{
-                p: 2,
-                border: '2px solid',
-                borderColor: submissionMode === 'local' ? 'primary.main' : 'divider',
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-              onClick={() => setSubmissionMode('local')}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <SaveIcon color="action" />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Enregistrer localement
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Conserver vos modifications uniquement sur votre appareil.
-                    Elles ne seront pas partagées avec la communauté.
-                  </Typography>
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
+          {/* (Retour pilote 20/08 : les cartes « Soumettre à la communauté » /
+              « Enregistrer localement » ont été retirées. La seconde MENTAIT :
+              « Enregistrer » écrit bien la fiche sur le serveur (Supabase, via
+              handleAircraftSave) — le mode « local » n'était qu'un vestige du
+              vote communautaire désactivé. Les modifications de l'administrateur
+              sont envoyées au serveur, point.) */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowDifferencesDialog(false)}>
@@ -2325,4 +2322,4 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   );
 };
 
-export default Step5Review;
+export default Step5Review;
