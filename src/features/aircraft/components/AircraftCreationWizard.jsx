@@ -199,8 +199,9 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
     // Vitesses caractéristiques
     speeds: {
-      ...existingAircraft?.speeds, // 🆕 préserve les sous-champs non listés (ex. vsTO)
+      ...existingAircraft?.speeds, // 🆕 préserve les sous-champs non listés (ex. stallByBank)
       vso: existingAircraft?.speeds?.vso || '',
+      vsTO: existingAircraft?.speeds?.vsTO || '', // 21/08/2026 : décrochage volets décollage, requise
       vs1: existingAircraft?.speeds?.vs1 || '',
       vfe: existingAircraft?.speeds?.vfe || '',
       vfeLdg: existingAircraft?.speeds?.vfeLdg || '',
@@ -821,11 +822,14 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         if (!aircraftData.speeds?.vs1 || aircraftData.speeds.vs1 === '') {
           newErrors['speeds.vs1'] = "VS1 est requise";
         }
+        // 21/08/2026 (demande pilote) : les TROIS vitesses de décrochage à 0°
+        // sont requises — VS T/O (volets décollage) rejoint VSO et VS1.
+        // VFE T/O n'est PLUS requise (facultative, panneau « Vitesses d'utilisation »).
+        if (!aircraftData.speeds?.vsTO || aircraftData.speeds.vsTO === '') {
+          newErrors['speeds.vsTO'] = "VS T/O est requise";
+        }
         if (!aircraftData.speeds?.vne || aircraftData.speeds.vne === '') {
           newErrors['speeds.vne'] = "VNE est requise";
-        }
-        if (!aircraftData.speeds?.vfeTO || aircraftData.speeds.vfeTO === '') {
-          newErrors['speeds.vfeTO'] = "VFE T/O est requise";
         }
         if (!aircraftData.speeds?.vfeLdg || aircraftData.speeds.vfeLdg === '') {
           newErrors['speeds.vfeLdg'] = "VFE LDG est requise";

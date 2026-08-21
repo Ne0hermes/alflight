@@ -15,7 +15,12 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Alert
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import {
   Speed as SpeedIcon,
@@ -31,6 +36,7 @@ import {
 import { unitsSelectors } from '@core/stores/unitsStore';
 import { getUnitSymbol } from '@utils/unitConversions';
 import { StyledTextField } from './FormFieldStyles';
+import { STALL_CONFIGS, STALL_BANKS, setStallByBank, stallSpeedWarnings } from '../../utils/stallSpeedTable';
 
 const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   const units = unitsSelectors.useUnits();
@@ -41,6 +47,11 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   // page → recopier la page Limitations du MANEX demandait des allers-retours.
   // Désormais : 1 panneau « Repères anémomètre » (visu EN TÊTE + saisie par arc),
   // puis VO, vitesses d'utilisation, croisière (panneau 4) et vent.
+  // 21/08/2026 (demande pilote) : le bloc « Repères additionnels » est devenu un
+  // TABLEAU DE VITESSES DE DÉCROCHAGE (lisse / décollage / atterrissage ×
+  // 0° / 20° / 40° / 60°) — colonne 0° obligatoire = vs1 / vsTO / vso (mêmes
+  // champs que les arcs) ; VFE T/O est facultative et vit dans « Vitesses
+  // d'utilisation » (elle reste le trait cyan de la visualisation).
   const [expandedPanels, setExpandedPanels] = useState({
     arcs: true,     // auto-ouvert : c'est la saisie principale (arcs du badin)
     vo: false,
@@ -296,6 +307,14 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       category: "optional",
       required: false
     },
+    vfeTO: {
+      name: "VFE T/O",
+      label: "VFE T/O - Vitesse max volets décollage",
+      description: "Trait cyan sur la visualisation des arcs — à renseigner si l'avion a une position volets décollage",
+      color: "#5FA3AE",
+      category: "optional",
+      required: false
+    },
     initialClimb: {
       name: "V Montée initiale",
       label: "V Montée initiale - Vitesse de montée initiale",
@@ -419,6 +438,10 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
     if (vno !== null && vne !== null && vno >= vne) w.push('VNE devrait être supérieure à VNO (sinon l\'arc jaune est vide).');
     if (vfeLdg !== null && vne !== null && vfeLdg > vne) w.push('VFE LDG dépasse VNE.');
     if (vfeTO !== null && vne !== null && vfeTO > vne) w.push('VFE T/O dépasse VNE.');
+    // Tableau de décrochage : croissance avec l'inclinaison (0° < 20° < 40° < 60°)
+    // et, à inclinaison égale, ordre habituel lisse ≥ décollage ≥ atterrissage —
+    // avertissements seulement, le manuel fait foi.
+    w.push(...stallSpeedWarnings(s));
     return w;
   })();
 
@@ -443,6 +466,30 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       InputLabelProps={{ shrink: true }}
     />
   );
+
+  // Cellule du tableau de décrochage : champ compact SANS libellé flottant (la
+  // ligne « configuration » et l'en-tête « inclinaison » suffisent), unité en
+  // suffixe. Une erreur de présence (validation wizard) colore la cellule ; le
+  // texte des erreurs est regroupé sous le tableau.
+  const stallCell = ({ value, onChange, required = false, error = false, ariaLabel }) => (
+    <StyledTextField
+      fullWidth
+      size="small"
+      variant="outlined"
+      type="number"
+      value={value}
+      onChange={onChange}
+      placeholder="---"
+      required={required}
+      error={error}
+      inputProps={{ 'aria-label': ariaLabel }}
+      InputProps={{
+        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
+      }}
+      sx={{ minWidth: 96 }}
+    />
+  );
+  const stallFieldErrors = STALL_CONFIGS.map((c) => errors[`speeds.${c.field}`]).filter(Boolean);
 
   // Pastille couleur d'arc + libellé de groupe
   const arcGroupLabel = (swatch, text, extra = null) => (
@@ -842,7 +889,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
             {speedWarnings.length > 0 && (
               <Alert severity="warning">
                 <Typography variant="body2" fontWeight={600}>
-                  Cohérence des arcs (non bloquant)
+                  Cohérence des vitesses (non bloquant)
                 </Typography>
                 <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                   {speedWarnings.map((w, i) => (
@@ -902,22 +949,76 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
               </Grid>
             </Box>
 
-            {/* Repères additionnels — VFE T/O (trait cyan) + VS T/O */}
+            {/* Tableau des vitesses de décrochage (demande pilote 21/08/2026) —
+                lignes = configuration volets, colonnes = inclinaison. La colonne
+                0° EST vs1 / vsTO / vso : MÊMES champs que les arcs ci-dessus (une
+                seule source de vérité, obligatoire) ; 20 / 40 / 60° vivent dans
+                speeds.stallByBank (facultatif, absent tant que rien n'est saisi —
+                cf. setStallByBank, jamais de 0 fabriqué). */}
             <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                Repères additionnels
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Vitesses de décrochage selon l'inclinaison
               </Typography>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {arcField('vfeTO', 'VFE T/O (max volets décollage) *', true)}
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  {arcField('vsTO', 'VS T/O (décrochage volets décollage)')}
-                </Grid>
-              </Grid>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                VFE T/O = trait cyan sur la visualisation. VS T/O : utile si l'avion a une position volets décollage intermédiaire.
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Colonne 0° obligatoire : VS1 / VS T/O / VSO — mêmes champs que les arcs ci-dessus.
+                Colonnes 20°, 40°, 60° facultatives, d'après la table de décrochage du manuel de vol.
               </Typography>
+              {/* overflow-x : lisible sur écran étroit, le tableau défile dans son conteneur */}
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 560, '& td, & th': { border: 0, px: 0.5, py: 0.5 } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ width: 130 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>Configuration</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>0° *</Typography>
+                      </TableCell>
+                      {STALL_BANKS.map((b) => (
+                        <TableCell key={b.key} align="center">
+                          <Typography variant="caption" sx={{ fontWeight: 600 }}>{b.deg}°</Typography>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {STALL_CONFIGS.map((cfg) => (
+                      <TableRow key={cfg.key}>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ lineHeight: 1.2 }}>{cfg.label}</Typography>
+                          <Typography variant="caption" color="text.secondary">{cfg.short}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          {stallCell({
+                            value: data.speeds?.[cfg.field] ?? '',
+                            onChange: (e) => writeNumeric(`speeds.${cfg.field}`, e.target.value),
+                            required: true,
+                            error: !!errors[`speeds.${cfg.field}`],
+                            ariaLabel: `${cfg.short} — décrochage ${cfg.label.toLowerCase()} à 0° d'inclinaison`
+                          })}
+                        </TableCell>
+                        {STALL_BANKS.map((b) => (
+                          <TableCell key={b.key}>
+                            {stallCell({
+                              value: data.speeds?.stallByBank?.[cfg.key]?.[b.key] ?? '',
+                              onChange: (e) => updateData(
+                                'speeds.stallByBank',
+                                setStallByBank(data.speeds?.stallByBank, cfg.key, b.key, e.target.value)
+                              ),
+                              ariaLabel: `Décrochage ${cfg.label.toLowerCase()} à ${b.deg}° d'inclinaison`
+                            })}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+              {stallFieldErrors.length > 0 && (
+                <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                  {stallFieldErrors.join(' · ')}
+                </Typography>
+              )}
             </Box>
           </Box>
         </AccordionDetails>
@@ -1110,6 +1211,11 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   {renderSpeedInput('vy', optionalSpeeds.vy)}
+                </Grid>
+                {/* VFE T/O — facultative depuis le 21/08/2026 (sortie du panneau des
+                    arcs, même champ speeds.vfeTO) ; reste le trait cyan de la visu. */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  {renderSpeedInput('vfeTO', optionalSpeeds.vfeTO)}
                 </Grid>
               </Grid>
             </Box>

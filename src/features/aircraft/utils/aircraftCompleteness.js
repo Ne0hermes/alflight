@@ -151,15 +151,22 @@ export const FIELD_DEFINITIONS = [
   { path: 'weighingReport | hasWeighingReport | weighingReport.fileName | weighingReport.pdfData', label: 'Rapport de pesée (PDF)', severity: 'CRITICAL', weight: 4 },
 
   // === CRITICAL — vitesses ===
+  // 21/08/2026 (demande pilote) : les TROIS vitesses de décrochage à 0°
+  // d'inclinaison sont obligatoires — lisse (VS1), décollage (VS T/O),
+  // atterrissage (VSO) — au même poids. VFE T/O, VX et VY deviennent
+  // facultatives : OPTIONAL (le niveau « pondération faible » du projet, affiché
+  // sous « Optionnels »). Les colonnes 20/40/60° du tableau de décrochage
+  // (speeds.stallByBank) sont facultatives et n'entrent pas dans le score.
   { path: 'speeds.vso',           label: 'VSO',                       severity: 'CRITICAL', weight: 4 },
+  { path: 'speeds.vsTO',          label: 'VS T/O',                    severity: 'CRITICAL', weight: 4 },
   { path: 'speeds.vs1',           label: 'VS1',                       severity: 'CRITICAL', weight: 4 },
   { path: 'speeds.vne',           label: 'VNE',                       severity: 'CRITICAL', weight: 4 },
   { path: 'speeds.vno',           label: 'VNO',                       severity: 'CRITICAL', weight: 3 },
-  { path: 'speeds.vfeTO',         label: 'VFE T/O',                   severity: 'CRITICAL', weight: 3 },
   { path: 'speeds.vfeLdg',        label: 'VFE LDG',                   severity: 'CRITICAL', weight: 3 },
+  { path: 'speeds.vfeTO',         label: 'VFE T/O',                   severity: 'OPTIONAL', weight: 1 },
   { path: 'speeds.vr',            label: 'VR (rotation)',             severity: 'REQUIRED', weight: 2 },
-  { path: 'speeds.vx',            label: 'VX (config. takeoff)',      severity: 'REQUIRED', weight: 2 },
-  { path: 'speeds.vy',            label: 'VY (config. takeoff)',      severity: 'REQUIRED', weight: 2 },
+  { path: 'speeds.vx',            label: 'VX (config. takeoff)',      severity: 'OPTIONAL', weight: 1 },
+  { path: 'speeds.vy',            label: 'VY (config. takeoff)',      severity: 'OPTIONAL', weight: 1 },
   { path: 'speeds.vapp',          label: 'V approche',                severity: 'REQUIRED', weight: 2 },
   { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
 
