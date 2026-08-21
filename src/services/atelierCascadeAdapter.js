@@ -44,6 +44,35 @@ export function titleToConditionDim(title) {
 }
 
 /**
+ * La chaîne de lecture INTÈGRE-t-elle le vent ? (2026-08-21, ré-audit F-HFGI :
+ * le vent était compté DEUX fois — par le panneau vent de l'abaque, puis par
+ * les règles headwind/tailwind de la fiche avion appliquées en aval.)
+ *
+ * Vrai dès qu'un graphe de la chaîne consomme `conditions.wind`, selon les
+ * MÊMES branches que le mapping `parameters` ci-dessous :
+ *   - panneau déclaré vent dans l'atelier (isWindRelated) ;
+ *   - axe X en variable vent (wind_component / headwind / tailwind) ;
+ *   - famille de guides en vent : primaire à courbes de vent, ou zone en
+ *     lecture descendante (readoutAxis 'x', guides « Face 15 kt / Vent nul /
+ *     Arrière 5 kt »).
+ * Un panneau slope-follow dont seule la famille serait « vent » ne lit pas
+ * le vent (son X est le paramètre) : il ne compte pas.
+ *
+ * Le résolveur remonte ce drapeau (`windIncluded`) pour que les règles de
+ * vent de performanceCorrections NE s'appliquent PAS une seconde fois.
+ */
+export function chainIncludesWind(chain) {
+  if (!Array.isArray(chain)) return false;
+  return chain.some((g, i) => {
+    if (!g) return false;
+    if (g.isWindRelated === true) return true;
+    if (titleToConditionDim(g.axes?.xAxis?.title) === 'wind') return true;
+    const familyIsWind = titleToConditionDim(g.familyAxisVariable) === 'wind';
+    return familyIsWind && (i === 0 || g.readoutAxis === 'x');
+  });
+}
+
+/**
  * Évalue un set d'abaques (AbacCurvesJSON) aux conditions données avec le
  * moteur de l'atelier.
  *
@@ -210,6 +239,7 @@ export function evaluateAbacWithAtelierEngine(abaqueData, conditions) {
     steps,
     finalValue: res.finalValue,
     outputUnit: res.outputUnit || fallbackUnit || undefined,
-    warnings
+    warnings,
+    windIncluded: chainIncludesWind(chain) // vent déjà lu par la chaîne (panneau vent)
   };
 }

@@ -14,6 +14,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { resolveOperation } from '../operationResolver';
+import { chainIncludesWind } from '../atelierCascadeAdapter';
 import { performCascadeCalculationWithParameters, findGraphChain } from '../../abac/curves/core/cascade';
 
 const mkCurve = (id, familyValue, pts, windDirection) => {
@@ -230,5 +231,90 @@ describe('Lecture descendante (readoutAxis: x) — zone d\'atterrissage type Pip
     const r = run(20);
     expect(r.status).toBe('ERROR');
     expect(r.value).toBeUndefined();
+  });
+});
+
+describe("windIncluded — le vent est-il DÉJÀ lu par la chaîne d'abaques ? (21/08, F-HFGI)", () => {
+  // Le résolveur pose `windIncluded` pour que PerformanceModule n'applique PAS
+  // une seconde fois les règles de vent de la fiche avion (double correction).
+  const massPanel = {
+    id: 'g2', name: 'Panneau masse', role: 'intermediate', isWindRelated: false,
+    linkedFrom: ['g1'], linkedTo: [],
+    axes: {
+      xAxis: { min: 950, max: 1150, step: 50, title: 'mass', unit: 'kg', reversed: true },
+      yAxis: { min: 0, max: 400, step: 100, title: 'takeoff_distance_50ft', unit: 'm' }
+    },
+    curves: [mkCurve('low', 1, [[950, 100], [1150, 200]]), mkCurve('high', 2, [[950, 200], [1150, 300]])]
+  };
+  const windPanel = {
+    id: 'g2', name: 'Panneau vent', role: 'intermediate', isWindRelated: true,
+    linkedFrom: ['g1'], linkedTo: [],
+    axes: {
+      xAxis: { min: 0, max: 15, step: 5, title: 'wind_component', unit: 'kt' },
+      yAxis: { min: 0, max: 400, step: 100, title: 'takeoff_distance_50ft', unit: 'm' }
+    },
+    curves: [
+      mkCurve('h1', 1, [[0, 100], [15, 60]], 'headwind'),
+      mkCurve('h2', 2, [[0, 200], [15, 130]], 'headwind'),
+      mkCurve('t1', 1, [[0, 100], [15, 140]], 'tailwind'),
+      mkCurve('t2', 2, [[0, 200], [15, 270]], 'tailwind')
+    ]
+  };
+  // Zone type F-HFGI : lecture descendante, guides « Face 15 kt / Vent nul / Arrière 5 kt ».
+  const readoutXWindZone = {
+    id: 'g2', name: 'Zone course atterrissage', role: 'intermediate',
+    readoutAxis: 'x', isWindRelated: true, familyAxisVariable: 'wind_component',
+    linkedFrom: ['g1'], linkedTo: [],
+    axes: {
+      xAxis: { min: 150, max: 450, step: 50, title: 'landing_distance_ground', unit: 'm' },
+      yAxis: { min: 0, max: 400, step: 100, title: 'custom', unit: '' }
+    },
+    curves: [
+      mkCurve('nul', 0, [[150, 0], [550, 400]], 'none'),
+      mkCurve('face15', 15, [[150, 0], [450, 400]], 'headwind'),
+      mkCurve('arriere5', 5, [[150, 0], [650, 400]], 'tailwind')
+    ]
+  };
+  const inputs = { mass: 1000, oat: 20, pressureAltitude: 2000, headwind: -5, windComponent: -5, tailwind: 5 };
+
+  it('chaîne avec panneau vent (axe X vent) → windIncluded true', () => {
+    const r = resolveOperation(mkAircraft([mkPrimary('takeoff_50ft'), windPanel]), 'takeoff_50ft', inputs);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.windIncluded).toBe(true);
+  });
+
+  it('zone en lecture descendante à guides de vent (F-HFGI) → windIncluded true', () => {
+    const r = resolveOperation(mkAircraft([mkPrimary('takeoff_50ft'), readoutXWindZone]), 'takeoff_50ft', inputs);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.windIncluded).toBe(true);
+  });
+
+  it('chaîne SANS panneau vent (primaire + masse) → windIncluded false', () => {
+    const r = resolveOperation(mkAircraft([mkPrimary('takeoff_50ft'), massPanel]), 'takeoff_50ft', inputs);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.windIncluded).toBe(false);
+  });
+
+  it('vent variable (moyenne face/arrière) conserve le drapeau', () => {
+    const r = resolveOperation(mkAircraft([mkPrimary('takeoff_50ft'), windPanel]), 'takeoff_50ft', {
+      mass: 1000, oat: 20, pressureAltitude: 2000, windVariable: true, windMagnitude: 5, windComponent: 0, headwind: 0, tailwind: 0
+    });
+    expect(r.status).toBe('COMPUTED');
+    expect(r.windAveraged).toBe(true);
+    expect(r.windIncluded).toBe(true);
+  });
+
+  it('chainIncludesWind : critères un par un', () => {
+    const primary = mkPrimary('takeoff_50ft');
+    const panel = { id: 'p', role: 'intermediate', axes: { xAxis: { title: 'mass' }, yAxis: { title: 'd' } } };
+    expect(chainIncludesWind([primary, { ...panel, isWindRelated: true }])).toBe(true);
+    expect(chainIncludesWind([primary, { ...panel, axes: { xAxis: { title: 'headwind' } } }])).toBe(true);
+    expect(chainIncludesWind([primary, { ...panel, readoutAxis: 'x', familyAxisVariable: 'wind_component' }])).toBe(true);
+    expect(chainIncludesWind([{ ...primary, familyAxisVariable: 'wind_component' }])).toBe(true);
+    // Famille « vent » sur un panneau slope-follow : c'est son X (masse) qui est lu, pas le vent.
+    expect(chainIncludesWind([primary, { ...panel, familyAxisVariable: 'wind_component' }])).toBe(false);
+    expect(chainIncludesWind([primary, panel])).toBe(false);
+    expect(chainIncludesWind([])).toBe(false);
+    expect(chainIncludesWind(null)).toBe(false);
   });
 });

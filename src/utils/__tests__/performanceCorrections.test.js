@@ -344,3 +344,75 @@ describe('garde anti-cumul — étendue aux surfaces et états de piste', () => 
     expect(r.corrected).toBeCloseTo(1150, 6);
   });
 });
+
+describe("vent déjà intégré par l'abaque (windAppliedByAbac) — 21/08, ré-audit F-HFGI", () => {
+  // Cas réel : l'abaque « Distance atterrissage — roulage » de F-HFGI a un panneau
+  // vent (596 ft vent nul → 520 ft à +8 kt → 775 ft à −5 kt). Appliquer EN PLUS
+  // « vent arrière +10 % par 2 kt » comptait le vent deux fois (775 × 1,3).
+  const headwindTable = {
+    id: 'ht', type: 'headwind', mode: 'factor_table', appliesTo: 'both',
+    brackets: [{ fromKt: 10, value: 0.85 }, { fromKt: 20, value: 0.65 }],
+  };
+
+  it('vent arrière 5 kt : règle vent SIGNALÉE (non appliquée), herbe appliquée', () => {
+    const r = applyPerformanceCorrections({
+      distance: 775, phase: 'landing', corrections: [tailwind10per2, grass15],
+      conditions: { windComponentKt: -5, surface: 'grass', windAppliedByAbac: true },
+    });
+    expect(r.corrected).toBeCloseTo(775 * 1.15, 6);      // ×1,3 vent NON appliqué
+    expect(r.totalFactor).toBeCloseTo(1.15, 6);
+    const vent = r.steps.find((s) => s.id === 't');
+    expect(vent).toBeTruthy();
+    expect(vent.factor).toBeNull();
+    expect(vent.note).toMatch(/vent déjà intégré par l'abaque/);
+    expect(vent.note).toMatch(/règle non appliquée/);
+    const herbe = r.steps.find((s) => s.id === 'g');
+    expect(herbe.factor).toBeCloseTo(1.15, 6);
+    expect(r.applied).toBe(true);
+  });
+
+  it('vent de face 15 kt, tableau de paliers : NON appliqué avec note, distance brute', () => {
+    const r = applyPerformanceCorrections({
+      distance: 520, phase: 'landing', corrections: [headwindTable],
+      conditions: { windComponentKt: 15, surface: 'paved', windAppliedByAbac: true },
+    });
+    expect(r.corrected).toBe(520);                        // ×0,85 NON appliqué
+    expect(r.applied).toBe(false);
+    expect(r.steps).toHaveLength(1);
+    expect(r.steps[0].note).toMatch(/vent déjà intégré par l'abaque/);
+  });
+
+  it('toutes les règles de vent de la phase sont signalées, même celles sans objet au vent du jour', () => {
+    const r = applyPerformanceCorrections({
+      distance: 600, phase: 'takeoff', corrections: [headwind085per10, tailwind10per2],
+      conditions: { windComponentKt: 12, surface: null, windAppliedByAbac: true },
+    });
+    expect(r.corrected).toBe(600);
+    expect(r.steps.map((s) => s.id).sort()).toEqual(['h', 't']);
+    expect(r.steps.every((s) => s.factor === null && /règle non appliquée/.test(s.note))).toBe(true);
+  });
+
+  it('windAppliedByAbac false ou absent : comportement inchangé (vent arrière 5 kt → ×1,3)', () => {
+    const conditions = { windComponentKt: -5, surface: 'grass' };
+    const absent = applyPerformanceCorrections({ distance: 775, phase: 'landing', corrections: [tailwind10per2, grass15], conditions });
+    const faux = applyPerformanceCorrections({
+      distance: 775, phase: 'landing', corrections: [tailwind10per2, grass15],
+      conditions: { ...conditions, windAppliedByAbac: false },
+    });
+    for (const r of [absent, faux]) {
+      expect(r.corrected).toBeCloseTo(775 * 1.3 * 1.15, 6);
+      expect(r.steps.find((s) => s.id === 't').factor).toBeCloseTo(1.3, 6);
+    }
+  });
+
+  it("la garde anti-cumul prime : deux règles vent ambiguës → une seule note d'ambiguïté", () => {
+    const r = applyPerformanceCorrections({
+      distance: 775, phase: 'landing',
+      corrections: [tailwind10per2, { ...tailwind10per2, id: 't2' }],
+      conditions: { windComponentKt: -5, surface: null, windAppliedByAbac: true },
+    });
+    expect(r.corrected).toBe(775);
+    expect(r.steps).toHaveLength(1);
+    expect(r.steps[0].id).toBe('ambigu-tailwind');
+  });
+});

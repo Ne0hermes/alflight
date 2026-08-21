@@ -34,8 +34,12 @@
 // CONDITIONS D'APPLICATION (paramètre `conditions` d'applyPerformanceCorrections) :
 //   { windComponentKt,          // composante signée (>0 = face)
 //     surface,                  // 'grass'|'paved'|null — pilote le type 'grass'
-//     runwayStates? }           // tableau des états DÉCLARÉS par le pilote parmi
+//     runwayStates?,            // tableau des états DÉCLARÉS par le pilote parmi
 //                               // les types de kind 'manual' (ex. ['wet_grass'])
+//     windAppliedByAbac? }      // true : la distance sort d'un abaque à PANNEAU
+//                               // VENT — les règles de kind 'wind' ne sont PAS
+//                               // appliquées (étape explicative), sinon le vent
+//                               // compterait deux fois (2026-08-21, F-HFGI)
 //   - runwayStates ABSENT (appelant non câblé) : les règles 'manual' ne sont
 //     jamais appliquées, une note « à appliquer manuellement » est émise ;
 //   - runwayStates PRÉSENT : une règle 'manual' s'applique SI ET SEULEMENT SI
@@ -166,7 +170,8 @@ export function pickBracket(paliers, composante, type) {
  * @param {'takeoff'|'landing'} p.phase
  * @param {Array}  p.corrections       aircraft.performanceCorrections
  * @param {Object} p.conditions        { windComponentKt (signé, >0 = face),
- *                                       surface ('grass'|'paved'|…|null) }
+ *                                       surface ('grass'|'paved'|…|null),
+ *                                       runwayStates?, windAppliedByAbac? }
  * @returns {{ base, corrected, totalFactor, applied, steps: Array<{
  *   id, label, detail, factor|null, before|null, after|null, note|null }> }}
  */
@@ -182,6 +187,12 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
   // États de piste DÉCLARÉS par le pilote (null = appelant non câblé → les
   // règles 'manual' restent de simples rappels, jamais appliquées).
   const runwayStates = Array.isArray(conditions?.runwayStates) ? conditions.runwayStates : null;
+  // 🛡️ VENT DÉJÀ INTÉGRÉ PAR L'ABAQUE (2026-08-21, ré-audit F-HFGI) : la distance
+  // sort d'une chaîne à panneau vent (596 ft vent nul → 520 ft à +8 kt → 775 ft
+  // à −5 kt). Appliquer EN PLUS les règles de vent comptait le vent deux fois
+  // (×1,3 sur les 775 ft). Les règles de kind 'wind' sont alors SIGNALÉES, jamais
+  // multipliées ; surface et états de piste restent corrigés normalement.
+  const windAppliedByAbac = conditions?.windAppliedByAbac === true;
   let current = base;
 
   // 🛡️ GARDE ANTI-CUMUL (2026-08-17, étendue à TOUS les types le 2026-08-21).
@@ -227,6 +238,14 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
     if (ambigus.has(c.type)) continue;
     const label = c.label?.trim() || CORRECTION_TYPES[c.type]?.label || c.type;
     const kind = CORRECTION_TYPES[c.type]?.kind;
+
+    if (kind === 'wind' && windAppliedByAbac) {
+      // Étape VISIBLE (pas un silence) : le pilote voit pourquoi sa règle de
+      // vent n'a pas joué sur cette opération.
+      result.steps.push({ id: c.id, label, detail: '', factor: null, before: null, after: null,
+        note: 'vent déjà intégré par l\'abaque (panneau vent) — règle non appliquée' });
+      continue;
+    }
 
     let factor = null;
     let detail = '';

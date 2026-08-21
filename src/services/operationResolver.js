@@ -464,6 +464,11 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     confidence: finalConfidence,
     bracketDetails: null,
     cascadeSteps: cascade.steps, // chaîne d'évaluation (contrat matrice)
+    // 🛡️ Vent DÉJÀ intégré par la chaîne (panneau vent — 2026-08-21, F-HFGI) :
+    // l'appelant n'applique alors PAS les règles de vent de la fiche avion.
+    // Absent (undefined) sur les résultats issus de TABLEAUX : le vent y reste
+    // à corriger par les règles.
+    windIncluded: cascade.windIncluded === true,
     warnings,
     debug: {
       perGraph: []

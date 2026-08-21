@@ -554,29 +554,39 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       ? { ...selectedAircraft, performanceModels: loadedPerformanceTables }
       : selectedAircraft;
 
-    // Première distance COMPUTED de la liste d'opérations, convertie en mètres.
-    const pickDistanceMeters = (state, opIds) => {
+    // Premier résultat COMPUTED (valeur finie > 0) de la liste d'opérations. On
+    // garde l'OBJET résultat : outre la valeur et l'unité, il porte `windIncluded`
+    // (vent déjà lu par la chaîne d'abaques — posé par operationResolver).
+    const pickResult = (state, opIds) => {
       for (const opId of opIds) {
         const r = state.results?.[opId];
-        if (r?.status !== ResultStatus.COMPUTED || !Number.isFinite(r.value) || r.value <= 0) continue;
-        const unit = String(r.unit || 'm').toLowerCase();
-        if (unit === 'm') return r.value;
-        if (unit === 'ft') {
-          const conv = convertValue(r.value, 'ft', 'm', 'runway');
-          if (Number.isFinite(conv)) return conv;
-        }
-        return r.value; // unité non déclarée/inconnue : valeur native (même repli que la matrice)
+        if (r?.status === ResultStatus.COMPUTED && Number.isFinite(r.value) && r.value > 0) return r;
       }
       return null;
+    };
+    // Distance du résultat retenu, convertie en mètres (null sans résultat).
+    const toMeters = (r) => {
+      if (!r) return null;
+      const unit = String(r.unit || 'm').toLowerCase();
+      if (unit === 'm') return r.value;
+      if (unit === 'ft') {
+        const conv = convertValue(r.value, 'ft', 'm', 'runway');
+        if (Number.isFinite(conv)) return conv;
+      }
+      return r.value; // unité non déclarée/inconnue : valeur native (même repli que la matrice)
     };
 
     const takeoffState = generatePerformanceState(aircraftForResolver, takeoffInputsForMatrix);
     const landingState = generatePerformanceState(aircraftForResolver, landingInputsForMatrix);
 
-    const takeoffRollBase = pickDistanceMeters(takeoffState, ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']);
-    const takeoff50Base = pickDistanceMeters(takeoffState, ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']);
-    const landingRollBase = pickDistanceMeters(landingState, ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up']);
-    const landing50Base = pickDistanceMeters(landingState, ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up']);
+    const takeoffRollRes = pickResult(takeoffState, ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']);
+    const takeoff50Res = pickResult(takeoffState, ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']);
+    const landingRollRes = pickResult(landingState, ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up']);
+    const landing50Res = pickResult(landingState, ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up']);
+    const takeoffRollBase = toMeters(takeoffRollRes);
+    const takeoff50Base = toMeters(takeoff50Res);
+    const landingRollBase = toMeters(landingRollRes);
+    const landing50Base = toMeters(landing50Res);
 
     // ✈️ FACTEURS CORRECTIFS DU MANUEL (16/08, validé César) : appliqués aux
     // distances calculées AVANT persistance — la marge réglementaire s'applique
@@ -590,17 +600,23 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     // `runwayStates` est TOUJOURS fourni (tableau, éventuellement vide) : une règle
     // d'état non déclarée est alors sans objet — le moteur ne la « rappelle » que
     // lorsque l'appelant n'est pas câblé (runwayStates absent).
-    const applyCorr = (distance, phase, windComponentKt, surface) =>
+    // 🛡️ VENT DÉJÀ INTÉGRÉ PAR L'ABAQUE (21/08, ré-audit F-HFGI) : si la distance
+    // retenue sort d'une chaîne à panneau vent (`windIncluded` du résolveur), les
+    // règles de vent de la fiche avion NE S'APPLIQUENT PAS à cette opération —
+    // sinon le vent comptait deux fois (×1,3 en plus des 775 ft lus à −5 kt). Les
+    // règles de surface/état restent appliquées ; une distance issue d'un TABLEAU
+    // ou d'un abaque sans panneau vent garde ses règles de vent.
+    const applyCorr = (distance, phase, windComponentKt, surface, windAppliedByAbac) =>
       distance !== null && manualCorrections.length > 0
         ? applyPerformanceCorrections({
             distance, phase, corrections: manualCorrections,
-            conditions: { windComponentKt, surface, runwayStates: runwayStates[phase] || [] }
+            conditions: { windComponentKt, surface, runwayStates: runwayStates[phase] || [], windAppliedByAbac }
           })
         : null;
-    const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface);
-    const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface);
-    const corrLandingRoll = applyCorr(landingRollBase, 'landing', landingWindComponent, landingSurface);
-    const corrLanding50 = applyCorr(landing50Base, 'landing', landingWindComponent, landingSurface);
+    const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface, takeoffRollRes?.windIncluded === true);
+    const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface, takeoff50Res?.windIncluded === true);
+    const corrLandingRoll = applyCorr(landingRollBase, 'landing', landingWindComponent, landingSurface, landingRollRes?.windIncluded === true);
+    const corrLanding50 = applyCorr(landing50Base, 'landing', landingWindComponent, landingSurface, landing50Res?.windIncluded === true);
     setCorrBreakdowns({
       takeoff: corrTakeoff50 || corrTakeoffRoll,
       landing: corrLanding50 || corrLandingRoll,
