@@ -1,0 +1,110 @@
+[
+ {
+  "itid": "F-GGZO-09",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "additionalFuelTanks[].optional",
+  "trouve": "« Réservoir principal » (type main) porte optional=true → affiché « Optionnel (amovible) » ; « Long Range » (type optional) porte optional=false → affiché « Fixe »",
+  "attendu": "L'inverse : principal fixe, Long Range amovible (si c'est bien un réservoir démontable)",
+  "action": "Inverser les deux cases « amovible » dans l'éditeur de réservoirs"
+ },
+ {
+  "itid": "F-GGZO-10",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations",
+  "trouve": "Les 31 booléens sont à false, y compris vfrDay, elt, extincteurs, gilets — bloc manifestement jamais renseigné",
+  "attendu": "Les régimes réellement approuvés (au minimum VFR jour) et les équipements de secours réellement à bord (un ELT est en principe obligatoire sur un avion de club immatriculé F-)",
+  "action": "Cocher dans l'étape Équipements les régimes de vol et les équipements de survie réellement présents"
+ },
+ {
+  "itid": "F-GGZO-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-GGZO-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr, speeds.vapp",
+  "trouve": "vr = \"\" et vapp = \"\" (les 11 autres vitesses sont renseignées et physiquement ordonnées : 33<44<54<65<73<85<110<127<158)",
+  "attendu": "Vr (rotation) et Vapp (approche) du manuel — champs RECOMMANDÉS (REQUIRED poids 2 chacun)",
+  "action": "Saisir Vr et Vapp du manuel dans l'étape Vitesses"
+ },
+ {
+  "itid": "F-GGZO-01",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "additionalFuelTanks[].totalCapacity / usableCapacity (vs fuelUsableCapacity)",
+  "trouve": "Les 2 réservoirs ne portent que l'ancien capacity ambigu (152 + 37 = 189 L = fuelCapacity, donc des volumes TOTAUX), mais les accesseurs le lisent comme UTILISABLE (usableCapacity ?? capacity) → l'app affiche « 152,0 L utilisables » / « 37,0 L utilisables » et compte 189 L utilisables, alors que la fiche déclare fuelUsableCapacity = 141 L",
+  "attendu": "Les deux contenances renseignées sur CHAQUE réservoir : totalCapacity (volume physique) ET usableCapacity (consommable), avec somme des utilisables = la valeur du manuel (141 L si elle est confirmée)",
+  "action": "Dans l'éditeur de réservoirs, saisir totalCapacity et usableCapacity du manuel pour le principal et le Long Range (et vérifier au passage la valeur 141)"
+ },
+ {
+  "itid": "F-GGZO-02",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "1979-05-01 — pesée datée de 47 ans (PDF « f-ggzo pesee.pdf » joint), seuil d'avertissement de l'app : 10 ans",
+  "attendu": "La date de la DERNIÈRE pesée en vigueur ; masse à vide 648 kg / bras 0,969 m issus de ce document",
+  "action": "Confirmer auprès du club/de l'atelier la dernière fiche de pesée, joindre le PDF à jour et corriger certificationDate"
+ },
+ {
+  "itid": "F-GGZO-03",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GGZO-04",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GGZO-05",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "advancedPerformance.tables[landing_50ft_flaps_landing].data[Alt 2000, T 20]",
+  "trouve": "704 m (1043 kg / 2000 ft / 20 °C)",
+  "attendu": "~407 m — voisins : 396 (10 °C) et 418 (30 °C) au même palier ; 396 (1000 ft) et 418 (3000 ft) à la même température. Inversion de chiffres 407→704 très probable (réimport Excel, p. 96)",
+  "action": "Corriger la cellule à 407 dans l'éditeur de tableaux après relecture du manuel p. 96"
+ },
+ {
+  "itid": "F-GGZO-06",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "advancedPerformance.tables[takeoff_ground_roll_flaps_to, 862 kg].data[Alt 8000, T 20]",
+  "trouve": "640 m (862 kg / 8000 ft / 20 °C)",
+  "attendu": "~340 m — voisins : 314 (10 °C) et 366 (30 °C) au même palier ; 306 à 7000 ft. Frappe 3↔6 probable (réimport Excel, p. 86)",
+  "action": "Corriger la cellule à ~340 dans l'éditeur de tableaux après relecture du manuel p. 86"
+ },
+ {
+  "itid": "F-GGZO-07",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "performanceCorrections",
+  "trouve": "Champ totalement absent de la fiche, avion 100 % tableaux (performanceModels null)",
+  "attendu": "Au moins une règle vent de face et une règle vent arrière (appliesTo décollage + atterrissage ou both), plus l'herbe, reprises du manuel — la voie tableaux ne consomme JAMAIS le vent",
+  "action": "Saisir dans l'étape Performances les facteurs du manuel C172N (vent de face, vent arrière, herbe) — une seule règle de vent par type et par phase"
+ },
+ {
+  "itid": "F-GGZO-08",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "advancedPerformance.tables — opérations volets rentrés",
+  "trouve": "4 des 8 opérations minimales absentes : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_roll_flaps_up, landing_50ft_flaps_up → NOT_IMPLEMENTED ; bypassedFields = [] (aucune clé performance.<opId>, donc rien de certifié « absent du manuel »)",
+  "attendu": "Soit les tables volets rentrés du manuel, soit la certification d'absence (pastille performance.<opId>) si le manuel ne les donne pas — probable pour un C172N dont les tables sont « Normal Procedure »",
+  "action": "Depuis la carte avion, certifier l'absence des 4 variantes volets rentrés si le manuel ne les fournit pas (2 clics par opération), sinon importer les tables"
+ }
+]

@@ -1,0 +1,146 @@
+[
+ {
+  "itid": "F-BXQT-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0..3].data",
+  "trouve": "Les 4 tables (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing, pages 68-69, _reimportedFromExcel du 18/06) n'ont qu'UNE température par palier d'altitude — exactement la ligne ISA : (0 ft, 15 °C), (2500, 10), (5000, 5), (7500, 0).",
+  "attendu": "Plusieurs températures par palier (grille complète du manuel, ou écarts ISA −20/0/+20 qui seraient alors reconnus par la détection ISA-relative — elle exige ≥ 2 écarts distincts).",
+  "action": "Ré-importer les tables des pages 68-69 avec TOUTES les colonnes de température du manuel (l'aller-retour Excel n'a conservé que la ligne ISA). Si le manuel ne donne la température qu'en note de pourcentage, le signaler : le modèle actuel ne sait pas la représenter."
+ },
+ {
+  "itid": "F-BXQT-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "frontSeats vs rearSeats",
+  "trouve": "1 / 1",
+  "attendu": "les sièges arrière ne peuvent pas être au même bras ou en avant des sièges avant",
+  "action": ""
+ },
+ {
+  "itid": "F-BXQT-03",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "arms.rearSeats + weightBalance.rearLeftSeatArm/rearRightSeatArm",
+  "trouve": "Bras sièges arrière = 1,000 m, identique au bras des sièges avant (1,000 m), sur un biplace.",
+  "attendu": "Biplace : bras arrière effacés (état valide reconnu) — un bras arrière égal au bras avant est la signature d'un siège fantôme.",
+  "action": "Effacer les bras des sièges arrière (arms.rearSeats et weightBalance.rearLeft/RightSeatArm) pour que tout chargement arrière soit refusé (fail-closed)."
+ },
+ {
+  "itid": "F-BXQT-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "Pesée certifiée du 2015-09-25, soit 10 ans révolus au 19/08/2026 (getWeighingReportAge → isOld=true, seuil WEIGHING_REPORT_WARN_YEARS=10 dépassé).",
+  "attendu": "Confirmation qu'aucun rapport de pesée plus récent n'existe (ou remplacement du PDF par la dernière pesée).",
+  "action": "Vérifier auprès du club la date de la dernière pesée ; mettre à jour le PDF et la date si besoin."
+ },
+ {
+  "itid": "F-BXQT-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-BXQT-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-BXQT-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performance.takeoff_ground_roll_flaps_to / takeoff_50ft_flaps_to / landing_ground_roll_fla…",
+  "trouve": "4 des 8 opérations du minimum attendu sont absentes et AUCUNE n'est certifiée « absente du manuel » (bypassedFields ne contient aucun performance.<opId> ; certifiedAbsentPerformanceTables = []).",
+  "attendu": "Chaque opération manquante soit couverte par une table, soit explicitement certifiée absente du manuel (toggle sur la carte avion).",
+  "action": "Vérifier le manuel : ajouter les tables si elles existent, sinon certifier chacune « absente du manuel » — elles passeront en mineur informatif."
+ },
+ {
+  "itid": "F-BXQT-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Aucune règle de vent pour la phase DÉCOLLAGE, et aucune règle de vent ARRIÈRE pour aucune phase (seul existe : vent de face atterrissage). Avion 100 % tableaux — les tableaux ne consomment pas le vent.",
+  "attendu": "Au moins une règle vent de face + une règle vent arrière par phase (ou appliesTo:'both'), conformément aux notes du manuel.",
+  "action": "Saisir les règles de vent du manuel pour le décollage (face et arrière) et le vent arrière atterrissage."
+ },
+ {
+  "itid": "F-BXQT-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections[1] (headwind, landing, percent_per_step 10 %/3 kt)",
+  "trouve": "Crédit vent de face atterrissage : −10 % par tranche de 3 kt. Démontré : à 12 kt de face → ×0,6 (−40 % de distance) ; à ≥ 21 kt le facteur passe sous 0,3 et la règle est ignorée.",
+  "attendu": "La note exacte du manuel (beaucoup de manuels Cessna donnent −10 % par ~9 kt de face, pas par 3 kt) — je ne peux pas trancher depuis la fiche seule.",
+  "action": "Vérifier la note de la page atterrissage du manuel et corriger stepKt/value si besoin."
+ },
+ {
+  "itid": "F-BXQT-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "speeds.vfeTO",
+  "trouve": "vfeTO = 42 kt, soit ÉGAL à vsTO (42) et INFÉRIEUR à vso (43) ; vfeLdg = 87.",
+  "attendu": "VFE volets décollage strictement supérieure à la vitesse de décrochage en configuration décollage (sinon la plage d'utilisation des volets T/O est nulle ou négative).",
+  "action": "Relever la vraie VFE volets décollage au manuel ; si le manuel ne donne qu'une seule VFE (souvent le cas sur C150), reporter la même valeur que vfeLdg (87)."
+ },
+ {
+  "itid": "F-BXQT-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "fuelCapacity",
+  "trouve": "fuelCapacity = 85 L (valeur UTILISABLE) alors que la fiche elle-même porte le total physique 98 L : extraction MANEX « Capacité totale carburant = 98 » acceptée, et tank principal totalCapacity = 98.",
+  "attendu": "fuelCapacity = Σ totale (98 L pour la configuration standard) — nouvelle sémantique à deux contenances ; 85 est le vestige de l'ancien écrasement par la somme (cas F-BXQT cité nommément dans les commentaires du code).",
+  "action": "Repasser fuelCapacity à 98 (correction directe en base/script : le champ est dérivé en lecture seule dans le wizard quand tous les réservoirs portent totalCapacity)."
+ },
+ {
+  "itid": "F-BXQT-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-BXQT-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[1].table_name",
+  "trouve": "table_name = « Take-off Ground Roll - Flaps UP » alors que operationId = takeoff_50ft_flaps_up et que les valeurs (422→744 m) sont bien celles du passage 15 m (le ground roll est 224→414 m dans la table 0).",
+  "attendu": "Un libellé « Take-off Distance over 50 ft - Flaps UP ».",
+  "action": "Renommer la table."
+ },
+ {
+  "itid": "F-BXQT-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[3].data[].Masse (landing_ground_roll_flaps_landing)",
+  "trouve": "Masse = 728 kg sur les 4 lignes, alors que MTOW = MLW = 726 et que les 3 autres tables sont à 726.",
+  "attendu": "726 kg, aligné sur la MLW et les autres tables.",
+  "action": "Corriger 728 → 726 dans la table."
+ },
+ {
+  "itid": "F-BXQT-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr / speeds.vx / speeds.vy / speeds.vapp / speeds.vglide",
+  "trouve": "5 vitesses recommandées vides (complétude 86 %, requiredMissing démontré). VX = 61 kt et VY = 65 kt sont pourtant DÉJÀ extraites du MANEX (page 45, confiance 95 %) mais accepted=false — jamais validées par le pilote.",
+  "attendu": "vr, vx, vy, vapp, vglide renseignées (vx/vy : deux clics d'acceptation suffisent).",
+  "action": "Accepter VX/VY depuis l'extraction (p.45) puis relever VR, VAPP et V finesse au manuel."
+ },
+ {
+  "itid": "F-BXQT-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vsTO / speeds.vso",
+  "trouve": "vsTO = 42 kt < vso = 43 kt : le décrochage volets décollage serait INFÉRIEUR au décrochage pleins volets.",
+  "attendu": "Ordre physique vso ≤ vsTO ≤ vs1 (plus de volets = décrochage plus bas) — ici inversé de 1 kt.",
+  "action": "Revalider vso et vsTO d'un coup d'œil au manuel en corrigeant vfeTO (constat vitesses ci-dessus)."
+ }
+]

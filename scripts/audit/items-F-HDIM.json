@@ -1,0 +1,182 @@
+[
+ {
+  "itid": "F-HDIM-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[1..5].outputUnit",
+  "trouve": "5 tables sur 6 déclarent outputUnit \"m\" (Takeoff 50ft masses 995/900 p.91, Takeoff Ground Roll 1089 p.90 et 995/900 p.91, Landing Ground Roll p.101, Landing 50ft p.101) alors que leurs valeurs sont en PIEDS",
+  "attendu": "outputUnit \"ft\" sur ces 5 tables (ou conversion des valeurs en mètres)",
+  "action": "Passer outputUnit à \"ft\" sur les 5 tables (les valeurs collent alors au POH : roulement décollage 795 ft < passage 50 ft 1640 ft à 1089 kg)"
+ },
+ {
+  "itid": "F-HDIM-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "utilisable vs total",
+  "trouve": "151.4164 / 151",
+  "attendu": "utilisable > capacité totale",
+  "action": ""
+ },
+ {
+  "itid": "F-HDIM-03",
+  "sev": "critique",
+  "regle": false,
+  "champ": "tables « takeoff_50ft_flaps_to »",
+  "trouve": "ft / m",
+  "attendu": "deux tables de la même opération déclarent des unités différentes",
+  "action": ""
+ },
+ {
+  "itid": "F-HDIM-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].totalCapacity / usableCapacity",
+  "trouve": "Le réservoir ne porte qu'une contenance unique capacity=151 L (lue comme UTILISABLE par le moteur)",
+  "attendu": "Les deux contenances du nouveau modèle : totalCapacity (volume physique) + usableCapacity, si le manuel donne les deux volumes",
+  "action": "Relever au POH 172P les volumes total et utilisable (les 172 déclarent classiquement ~43 gal total / 40 gal utilisables) et renseigner les deux champs du réservoir"
+ },
+ {
+  "itid": "F-HDIM-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-HDIM-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-HDIM-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0]+[1] (takeoff_50ft_flaps_to)",
+  "trouve": "Deux tables du même operationId avec unités contradictoires : p.90 (masse 1089) outputUnit \"ft\", p.91 (995/900) outputUnit \"m\"",
+  "attendu": "Unité homogène sur toutes les tables d'un même operationId",
+  "action": "Se résout avec le constat n°1 : une fois les 5 tables en \"ft\", le groupe est homogène ; vérifier ensuite qu'aucun mélange d'unités ne subsiste par opération"
+ },
+ {
+  "itid": "F-HDIM-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0].data (Masse 1089, Alt 0, Temp 0)",
+  "trouve": "1640 (Takeoff 50ft p.90)",
+  "attendu": "≈ 1460 (reconstitué par la régularité des deux axes)",
+  "action": "Vérifier la case (SL, 0°C, 2400 lbs) du POH p.90 et corriger la valeur (vraisemblablement 1460)"
+ },
+ {
+  "itid": "F-HDIM-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performance coverage (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_…",
+  "trouve": "4 des 8 opérations du minimum attendu absentes ; bypassedFields ne contient aucune clé performance.<opId> — non certifiées \"absentes du manuel\"",
+  "attendu": "Chaque opération manquante soit couverte par une table, soit certifiée absente du manuel via la pastille performance.<opId>",
+  "action": "Si le POH 172P ne publie pas de tables volets rentrés (probable : short field = volets 10°/FULL), certifier l'absence des 4 opérations depuis la carte avion ; sinon saisir les tables"
+ },
+ {
+  "itid": "F-HDIM-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Champ totalement absent de la fiche — aucune règle vent ni surface",
+  "attendu": "Au moins une règle vent de face et une règle vent arrière (appliesTo takeoff + landing ou both), tirées du POH",
+  "action": "Créer les règles vent dans l'éditeur de facteurs correctifs (Step4) depuis la section « short field » du POH (décréments par 9 kt de face, majoration vent arrière)"
+ },
+ {
+  "itid": "F-HDIM-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "fuelUsableCapacity",
+  "trouve": "151,4164 L, supérieur à la capacité déclarée du réservoir et à fuelCapacity (151 L)",
+  "attendu": "utilisable ≤ capacité du réservoir, valeurs harmonisées (écart actuel 0,42 L)",
+  "action": "Harmoniser : soit 151,4164 partout (40 gal exacts), soit 151 partout — à trancher avec le constat totalCapacity"
+ },
+ {
+  "itid": "F-HDIM-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "equipmentCom.hf",
+  "trouve": "HF coché à true",
+  "attendu": "Équipement réellement à bord (une radio HF sur un C172 d'aéroclub est très inhabituelle)",
+  "action": "Confirmer la présence d'une HF à bord, sinon décocher"
+ },
+ {
+  "itid": "F-HDIM-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "2020-06-12 (6,2 ans au 19/08/2026)",
+  "attendu": "Pesée la plus récente de l'avion (seuil d'avertissement applicatif : 10 ans — non atteint)",
+  "action": "Confirmer auprès du club qu'aucune pesée postérieure à 2020 n'existe ; sinon mettre à jour PDF + masse à vide + bras"
+ },
+ {
+  "itid": "F-HDIM-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weighingReport.pdfUrl",
+  "trouve": "URL Supabase pointant sur le dossier « H-HDIM/H-HDIM - pesee.pdf »",
+  "attendu": "Chemin cohérent avec l'immatriculation F-HDIM",
+  "action": "Optionnel : re-téléverser la pesée sous le bon chemin (ou laisser tel quel si l'URL reste stable)"
+ },
+ {
+  "itid": "F-HDIM-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "bypassedFields",
+  "trouve": "[\"registration\"] — un contournement du contrôle d'immatriculation subsiste alors que registration est renseignée (F-HDIM)",
+  "attendu": "Liste vide (aucune validation contournée) une fois le conflit d'origine résolu",
+  "action": "Vérifier qu'il n'existe pas de doublon F-HDIM dans la flotte, puis retirer la clé du tableau"
+ },
+ {
+  "itid": "F-HDIM-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0] et [2] (Masse 1089 : 7000ft/40°C, 8000ft/30°C, 8000ft/40°C)",
+  "trouve": "3 cellules absentes en haut du domaine sur chacune des deux tables décollage à 1089 kg (les grilles 995/900 sont complètes)",
+  "attendu": "Grille rectangulaire complète, ou cases réellement non publiées par le manuel (état alors acceptable)",
+  "action": "Vérifier p.90 du POH : si les cases existent, les saisir ; si le manuel ne les publie pas, ne rien faire (le refus est le comportement correct)"
+ },
+ {
+  "itid": "F-HDIM-17",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[3].data (Masse 995, Alt 4000, Temp 10)",
+  "trouve": "1002 (Takeoff Ground Roll p.91)",
+  "attendu": "≈ 1020 (transposition de chiffres probable 1020 → 1002)",
+  "action": "Vérifier la case (2200 lbs, 4000 ft, 10°C) au POH p.91"
+ },
+ {
+  "itid": "F-HDIM-18",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.voRanges[].minWeight/maxWeight",
+  "trouve": "Tranches Va bornées à 1600 / 2000 / 2400 alors que le stockage déclaré est en kg et la MTOW 1089 kg",
+  "attendu": "Bornes en kg : ≈ 726 / 907 / 1089 (les valeurs actuelles sont les livres du manuel)",
+  "action": "Convertir les 6 bornes de masse en kg (les vitesses 82/92/99 kt sont bonnes)"
+ },
+ {
+  "itid": "F-HDIM-19",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr / vx / vy / vapp",
+  "trouve": "Les 4 vitesses recommandées (poids 2 en complétude) sont vides ; initialClimb vide aussi",
+  "attendu": "Vr, Vx, Vy, Vapp du POH (les 6 vitesses obligatoires sont, elles, toutes renseignées et physiquement ordonnées : 33<44<85<111<127<158)",
+  "action": "Renseigner Vr, Vx, Vy, Vapp depuis le POH 172P"
+ },
+ {
+  "itid": "F-HDIM-20",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "windLimits.limits[]",
+  "trouve": "Aucune limite de vent : seule l'ancienne forme vide (maxCrosswind/maxTailwind/maxCrosswindWet à \"\") est présente, la forme moderne limits[] est absente",
+  "attendu": "Au moins le vent traversier maximal démontré du POH",
+  "action": "Ajouter la limite « vent traversier max démontré » dans l'étape Vitesses"
+ }
+]

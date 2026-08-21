@@ -1,0 +1,77 @@
+{
+ "registration": "F-HFGI",
+ "model": "DR401",
+ "mass": 1050,
+ "models": [
+  {
+   "index": 0,
+   "name": "Distance atterrissage — roulage, Flaps LANDING",
+   "plancheType": "descendante",
+   "graphs": [
+    {
+     "name": "Panneau d'entrée",
+     "role": "primary",
+     "op": "landing_ground_roll_flaps_landing",
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 9,
+     "linkedTo": 1
+    },
+    {
+     "name": "Zone de sortie (lue en bas)",
+     "role": "intermediate",
+     "op": null,
+     "x": "landing_distance_ground",
+     "fam": "wind_component",
+     "readout": "x",
+     "curves": 3,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 1,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Panneau d'entrée > Zone de sortie (lue en bas)",
+     "value": 595.9706854348993,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Panneau d'entrée > Zone de sortie (lue en bas)",
+     "value": 520.3285590713954,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "Panneau d'entrée > Zone de sortie (lue en bas)",
+     "value": 774.8552918997408,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Panneau d'entrée > Zone de sortie (lue en bas)",
+     "value": 668.4155786868624,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=0 sur la courbe \"0 ft\"",
+     "missing": null
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,146 @@
+[
+ {
+  "itid": "F-GBTU-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "performanceModels[0..3].data.graphs[*] (axes, familyValue, linkedTo, windDirection)",
+  "trouve": "Les 4 abaques décollage (_reimportedFromExcel: true, MàJ 18/06) n'ont que {id, name, role, operationId, curves[].points} : aucun axes.xAxis/yAxis, aucune familyValue, aucun linkedTo/cascadeOrder, aucun isWindRelated/windDirection sur le panneau vent (courbes h1..h11/t1..t15). Le fitted absent n'est PAS un défaut (régénéré par fittedRuntime R20), mais rien ne reconstruit les axes.",
+  "attendu": "Graphes complets : axes {min,max,unit,title} sur chaque panneau, titre X mappable (oat/alt/masse/vent), familyAxisVariable, familyValue par courbe, windDirection sur le panneau vent, chaîne linkedTo/cascadeOrder.",
+  "action": "Reconstruire les 4 abaques dans l'atelier (la cause racine est performanceExcelImport.js:95-155 qui ne transporte que id/name/role/operationId/points — l'aller-retour Excel détruit la structure). Au passage, corriger sur le modèle « passage 15 m Flaps UP » : courbes dupliquées « 7 »×2 et « h6 »×2, «…"
+ },
+ {
+  "itid": "F-GBTU-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "performance atterrissage : landing_ground_roll/50ft × {LANDING, UP}",
+  "trouve": "Aucune source atterrissage : performanceModels ne contient que les 4 opérations décollage, advancedPerformance=null, performanceTables=null. bypassedFields=[] → aucune certification « absente du manuel ». De plus distances.* (POH statiques) absentes.",
+  "attendu": "Les 4 opérations d'atterrissage du minimum attendu (8), ou leur certification performance.<opId> dans bypassedFields si le manuel ne les donne pas.",
+  "action": "Saisir les abaques/tableaux d'atterrissage du manuel PA-28-161 (ils y figurent), et en attendant renseigner distances.landingDistance50ft/takeoffDistance50ft comme filet."
+ },
+ {
+  "itid": "F-GBTU-03",
+  "sev": "critique",
+  "regle": false,
+  "champ": "vx vs vy",
+  "trouve": "79 / 63",
+  "attendu": "Vx (meilleure pente) est normalement INFÉRIEURE à Vy (meilleur taux)",
+  "action": ""
+ },
+ {
+  "itid": "F-GBTU-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].totalCapacity / usableCapacity",
+  "trouve": "Le réservoir principal ne porte que l'ancien capacity:189, que tankCapacity.js lit comme l'UTILISABLE (usableCapacity ?? capacity). Or la racine dit fuelUsableCapacity=182 et fuelCapacity=189 : le manuel donne donc bien les deux volumes (189 total / 182 utilisable), et la fiche se contredit (utilisable réservoir 189 ≠ utilisable racine 182).",
+  "attendu": "totalCapacity:189 + usableCapacity:182 sur le réservoir principal (nouveau modèle à deux contenances).",
+  "action": "Renseigner les deux contenances sur le réservoir principal (189/182)."
+ },
+ {
+  "itid": "F-GBTU-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GBTU-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GBTU-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "speeds.vx / speeds.vy",
+  "trouve": "vx=79 kt et vy=63 kt : Vx > Vy.",
+  "attendu": "Vx < Vy — ordre aérodynamique universel sous le plafond (la pente max se vole toujours plus lentement que le taux max). Valeurs vraisemblablement interverties (63/79).",
+  "action": "Intervertir après vérification au manuel (et contrôler vapp=63, égale à l'actuel vy, par la même occasion)."
+ },
+ {
+  "itid": "F-GBTU-08",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations",
+  "trouve": "Tous les booléens à false, y compris vfrDay — l'avion se déclare approuvé pour rien, sans ELT ni extincteur, alors que la fiche est celle d'un avion-club exploité en VFR.",
+  "attendu": "Au minimum vfrDay=true (et l'inventaire réel des équipements de survie : ELT, extincteur, trousse).",
+  "action": "Cocher les règles de vol approuvées et l'équipement de survie réel."
+ },
+ {
+  "itid": "F-GBTU-09",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "homeBase",
+  "trouve": "homeBase=LFPE (Meaux-Esbly) alors que homeAeroclub=« Aéro-club Melun-Villaroche » (terrain de Melun-Villaroche = LFPM).",
+  "attendu": "Terrain d'attache cohérent avec le club — sauf si l'avion est réellement basé à Meaux (état volontaire possible, le champ est libre).",
+  "action": "Confirmer le terrain d'attache réel ; corriger LFPE→LFPM si erreur."
+ },
+ {
+  "itid": "F-GBTU-10",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "Pesée du 2018-03-01 (8 ans et demi) — sous le seuil d'alerte de l'app (10 ans), PDF joint et cohérent (masse à vide 690 kg / bras 2,198 m dans l'enveloppe).",
+  "attendu": "Confirmation qu'aucune pesée plus récente n'existe (le seuil d'alerte sera franchi en mars 2028).",
+  "action": "Vérifier auprès du club la dernière fiche de pesée."
+ },
+ {
+  "itid": "F-GBTU-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weights.minTakeoffWeight / minTakeoffWeight (racine) / cgEnvelope.aftMinWeight",
+  "trouve": "Trois bornes basses divergentes : weights.minTakeoffWeight=0 (traité absent), racine minTakeoffWeight=690 (=masse à vide, valeur fabriquée par le chargement), enveloppe démarrant à 700 kg.",
+  "attendu": "Une seule borne basse cohérente (700 kg, début d'enveloppe du manuel) — ou champ vide partout.",
+  "action": "Renseigner weights.minTakeoffWeight=700 ou vider les trois emplacements."
+ },
+ {
+  "itid": "F-GBTU-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-GBTU-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[1].name",
+  "trouve": "« Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets » : le marqueur d'alerte subsiste alors que le doublon est résolu (takeoff_50ft_flaps_up est unique dans la fiche, vérifié sur les 4 modèles).",
+  "attendu": "Libellé propre sans marqueur « ⚠ DOUBLON ».",
+  "action": "Renommer le modèle lors de la reconstruction."
+ },
+ {
+  "itid": "F-GBTU-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Clé totalement absente, alors que GRASS ∈ compatibleRunwaySurfaces (herbe autorisée).",
+  "attendu": "Au moins une règle herbe (preset « Herbe +15 % », appliesTo both) ; règles vent seulement si les abaques réparés n'ont pas de panneau vent exploitable (le panneau h*/t* semble être le vent).",
+  "action": "Ajouter la règle herbe lors de la reconstruction des abaques."
+ },
+ {
+  "itid": "F-GBTU-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr, speeds.vglide",
+  "trouve": "vr=\"\" et vglide=\"\" (recommandées, poids 2 et 1). Les vides vfe/vle/vlo sont inertes (train fixe, legacy) — non comptés.",
+  "attendu": "Vr et vitesse de plané du manuel.",
+  "action": "Saisir depuis le manuel de vol."
+ },
+ {
+  "itid": "F-GBTU-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "cruiseSpeedKt",
+  "trouve": "126 kt, exactement égal à Vno (126) — croisière au sommet de l'arc vert.",
+  "attendu": "La vitesse de croisière réelle du manuel (typiquement sous Vno) ; la coïncidence exacte évoque une confusion de champ.",
+  "action": "Confirmer au manuel (croisière 75 %) ; corriger si besoin — baseFactor se recalcule seul."
+ }
+]

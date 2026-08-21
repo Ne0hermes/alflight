@@ -1,0 +1,327 @@
+{
+ "registration": "F-GIEA",
+ "model": "PA 28 161",
+ "mass": 1055,
+ "models": [
+  {
+   "index": 0,
+   "name": "Distance sol décollage — Flaps UP (0°)",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "primary",
+     "op": "takeoff_ground_roll_flaps_up",
+     "x": "oat",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 3",
+     "role": "intermediate",
+     "op": null,
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 20,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 1,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1091.5137658153144,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 947.2735930946369,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1365.4763445755925,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1738.6441238708799,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 745.6678953437064,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 1,
+   "name": "Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "primary",
+     "op": "takeoff_50ft_flaps_up",
+     "x": "oat",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 10,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 3",
+     "role": "intermediate",
+     "op": null,
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 28,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 1,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1936.5470167861477,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1721.8460445425362,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 2265.641675706451,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 3040.0149887654575,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=0 sur la courbe \"0ft\"",
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "name": "Distance sol décollage — Flaps TAKEOFF (ex. 25°)",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "primary",
+     "op": "takeoff_ground_roll_flaps_to",
+     "x": "oat",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 3",
+     "role": "intermediate",
+     "op": null,
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 21,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 1,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1094.2455137269696,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 951.408930863799,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1387.9725204232245,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1663.5256141462269,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=0 sur la courbe \"0ft\"",
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "name": "Distance décollage — passage 15 m, Flaps TAKEOFF (ex. 25°)",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "primary",
+     "op": "takeoff_50ft_flaps_to",
+     "x": "oat",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 9,
+     "linkedTo": 1
+    },
+    {
+     "name": "Graphique 3",
+     "role": "intermediate",
+     "op": null,
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 25,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 1,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1669.030978689293,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1486.2385138309116,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 1997.8290445770658,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 2 > Graphique 3",
+     "value": 2658.624491417512,
+     "unit": "ft",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=0 sur la courbe \"0ft\"",
+     "missing": null
+    }
+   ]
+  }
+ ]
+}

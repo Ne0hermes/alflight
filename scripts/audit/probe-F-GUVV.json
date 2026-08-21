@@ -1,0 +1,487 @@
+{
+ "registration": "F-GUVV",
+ "model": "DA40TDI",
+ "mass": 1150,
+ "models": [
+  {
+   "index": 0,
+   "name": "Distance décollage — passage 15 m (50 ft)",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "temperature",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "masse",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 1
+    },
+    {
+     "name": "vent",
+     "role": "primary",
+     "op": "takeoff_50ft_flaps_to",
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 23,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "vent > temperature > masse",
+     "value": 389.69281173606953,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "vent > temperature > masse",
+     "value": 324.6647373255547,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "vent > temperature > masse",
+     "value": 474.6856364755413,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "vent > temperature > masse",
+     "value": 344.6879246591956,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 1,
+   "name": "Distance sol décollage",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 11,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 3",
+     "role": "primary",
+     "op": "takeoff_ground_roll_flaps_to",
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 20,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 202.671080074063,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 252.0024290797092,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"tailwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 245.66119969276895,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 178.66191348482283,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 2,
+   "name": "Distance atterrissage — passage 15 m, Flaps LANDING",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 3",
+     "role": "primary",
+     "op": "landing_50ft_flaps_landing",
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 7,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 574.0737611816553,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 455.83474316223965,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 617.5506853588687,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 532.1403010902918,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 3,
+   "name": "Distance atterrissage — roulage, Flaps LANDING",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 3",
+     "role": "primary",
+     "op": "landing_ground_roll_flaps_landing",
+     "x": "headwind",
+     "fam": null,
+     "readout": "y",
+     "curves": 7,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 220.98819183434986,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 173.20528300378876,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 234.81198342729206,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 205.93613792791413,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 4,
+   "name": "Distance atterrissage — passage 15 m, Flaps UP",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "primary",
+     "op": "landing_50ft_flaps_up",
+     "x": "headwind",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 3",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 3 > Graphique 2",
+     "value": 732.606438283659,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 1 > Graphique 3 > Graphique 2",
+     "value": 581.3122108173878,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 3 > Graphique 2",
+     "value": 778.4427325662198,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 1 > Graphique 3 > Graphique 2",
+     "value": 685.673374499122,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  },
+  {
+   "index": 5,
+   "name": "Distance atterrissage — roulage, Flaps UP",
+   "plancheType": null,
+   "graphs": [
+    {
+     "name": "Graphique 1",
+     "role": "intermediate",
+     "op": null,
+     "x": "oat",
+     "fam": "pressure_altitude",
+     "readout": "y",
+     "curves": 6,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 2",
+     "role": "intermediate",
+     "op": null,
+     "x": "mass",
+     "fam": null,
+     "readout": "y",
+     "curves": 8,
+     "linkedTo": 0
+    },
+    {
+     "name": "Graphique 3",
+     "role": "primary",
+     "op": "landing_ground_roll_flaps_up",
+     "x": "wind_component",
+     "fam": null,
+     "readout": "y",
+     "curves": 9,
+     "linkedTo": 0
+    }
+   ],
+   "referenceCases": 0,
+   "runs": [
+    {
+     "cond": "15 °C / 500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 234.61632467458273,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent +8",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 188.2381732044953,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "15 °C / 500 ft / vent −5",
+     "chain": "",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\"",
+     "missing": null
+    },
+    {
+     "cond": "30 °C / 2500 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 250.56449441066647,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    },
+    {
+     "cond": "0 °C / 0 ft / vent 0",
+     "chain": "Graphique 3 > Graphique 1 > Graphique 2",
+     "value": 218.37978689730122,
+     "unit": "m",
+     "error": null,
+     "missing": null
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,173 @@
+[
+ {
+  "itid": "F-GIEA-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "vso vs vs1",
+  "trouve": "63 / 50",
+  "attendu": "VSO (volets sortis) doit être INFÉRIEURE à VS1",
+  "action": ""
+ },
+ {
+  "itid": "F-GIEA-02",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].totalCapacity",
+  "trouve": "Le réservoir principal ne porte que capacity=182 L (lu comme UTILISABLE par le nouveau modèle — cohérent avec fuelUsableCapacity=182). Or l'extraction MANEX ACCEPTÉE donne fuelCapacity=189 L ET fuelUsableCapacity=182 L : le manuel fournit les deux volumes",
+  "attendu": "totalCapacity=189 et usableCapacity=182 sur le réservoir principal (nouveau schéma à deux contenances)",
+  "action": "Renseigner totalCapacity=189 L / usableCapacity=182 L sur le réservoir principal"
+ },
+ {
+  "itid": "F-GIEA-03",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GIEA-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GIEA-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceModels[*] — courbes « 0ft »/« 1000ft » des 4 primaires (axe OAT)",
+  "trouve": "Courbe 0ft tracée à partir de +5,6 °C (50ft UP), +10,5 °C (roulement TO), +7,1 °C (50ft TO) ; à PA 0–500 ft le moteur renvoie ERROR (« Impossible de calculer Y pour X=… ») sous OAT +3 °C (50ft UP), +8 °C (roulement TO), +4 °C (50ft TO) ; seul le roulement UP tient jusqu'à −10 °C",
+  "attendu": "Courbes basses altitudes tracées vers les OAT hivernales (l'axe déclaré et le papier vont à −40 °C ; les courbes 3000–7000 ft y descendent déjà)",
+  "action": "Reprendre l'atelier et prolonger le tracé des courbes 0ft/1000ft/2000ft vers la gauche (côté froid) sur les 4 abaques décollage"
+ },
+ {
+  "itid": "F-GIEA-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Champ totalement absent de la fiche, alors que compatibleRunwaySurfaces contient GRASS",
+  "attendu": "Au moins une règle type 'grass' (préréglage « Herbe +15 % », appliesTo 'both' ou 'takeoff') conformément au supplément du manuel",
+  "action": "Ajouter la règle herbe (et autres états de piste utiles du manuel) dans l'éditeur de facteurs correctifs"
+ },
+ {
+  "itid": "F-GIEA-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "speeds.vso / speeds.vs1",
+  "trouve": "vso=63 kt > vs1=50 kt (vso issue de l'extraction MANEX acceptée ; 63 = aussi la valeur de vx et d'initialClimb)",
+  "attendu": "VSO (décrochage volets sortis) strictement inférieure à VS1 (lisse) — par définition physique",
+  "action": "Vérifier la section vitesses du MANEX et corriger vso (l'extraction a vraisemblablement capté une autre vitesse, p.ex. la vitesse de passage 15 m 63 kt)"
+ },
+ {
+  "itid": "F-GIEA-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "windLimits.limits[0] (maxTailwind=17)",
+  "trouve": "Seule limite saisie : maxTailwind=17 kt. L'extraction MANEX proposait maxCrosswind=17 ET maxTailwind=17 ; le pilote a accepté le tailwind et ignoré le crosswind",
+  "attendu": "17 kt correspond typiquement au vent traversier démontré ; une limite de vent ARRIÈRE de 17 kt est invraisemblable (usuellement ≤ 10 kt)",
+  "action": "Vérifier le MANEX : selon toute vraisemblance saisir maxCrosswind=17 et supprimer/corriger maxTailwind"
+ },
+ {
+  "itid": "F-GIEA-09",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations + equipmentSurv.transponderModes",
+  "trouve": "Les 31 booléens d'approvedOperations sont à false — y compris vfrDay — et transponderModes est absent (seul l'orphelin d'init transponderMode:'C' existe) ; equipmentCom/Nav sont eux correctement renseignés (VHF×2, VOR, DME, ILS, GNSS)",
+  "attendu": "Au minimum vfrDay=true pour un avion exploité, équipements de survie (ELT…) et modes transpondeur déclarés",
+  "action": "Passer l'étape Équipements/Opérations du wizard une fois"
+ },
+ {
+  "itid": "F-GIEA-10",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "minTakeoffWeight (racine) vs weights.minTakeoffWeight",
+  "trouve": "racine=600 (empreinte de fabrication connue) vs weights.minTakeoffWeight=550 (saisie pilote, cohérente avec aftMinWeight=550 de l'enveloppe)",
+  "attendu": "Une seule valeur, 550, aux deux emplacements (le moteur ne lit que la racine)",
+  "action": "Aligner la racine sur 550 (ou laisser l'app la re-dériver)"
+ },
+ {
+  "itid": "F-GIEA-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-GIEA-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[model_1781595584584].name",
+  "trouve": "Nom : « Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets » alors que l'opération est correctement re-taggée takeoff_50ft_flaps_up et unique (aucun AMBIGUOUS, vérifié)",
+  "attendu": "Nom propre sans marqueur d'alerte périmé",
+  "action": "Renommer le modèle"
+ },
+ {
+  "itid": "F-GIEA-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performance.landing_* (4 opérations atterrissage)",
+  "trouve": "NOT_IMPLEMENTED aux 4 opérations landing (vérifié par exécution) — mais les 4 clés performance.landing_ground_roll_flaps_landing / landing_50ft_flaps_landing / landing_ground_roll_flaps_up / landing_50ft_flaps_up sont dans bypassedFields : état CERTIFIÉ « absent du manuel » par le pilote",
+  "attendu": "Constat informatif : certification acquise ; couverture décollage 4/4 par ailleurs",
+  "action": "Rien d'obligatoire ; si une section atterrissage existe malgré tout dans le MANEX (ou un supplément), lever la certification et numériser"
+ },
+ {
+  "itid": "F-GIEA-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[model_1781595584584] — courbes vent h11, t2, t14",
+  "trouve": "3 courbes du panneau vent de « Distance décollage — passage 15 m, Flaps UP » sans windDirection (les 25 autres l'ont) → silencieusement exclues du filtrage directionnel (cascade.ts:283)",
+  "attendu": "windDirection='headwind' sur h11, 'tailwind' sur t2 et t14",
+  "action": "Renseigner la direction des 3 courbes dans le gestionnaire de courbes"
+ },
+ {
+  "itid": "F-GIEA-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[model_1781595584584] — courbes « 7 » (panneau masse) et « h6 » (panneau …",
+  "trouve": "Deux courbes nommées « 7 » dans le panneau masse et deux « h6 » dans le panneau vent du même modèle ; le moteur interpole « Entre h6 et h6 (ratio 0.57) » (relevé d'exécution)",
+  "attendu": "Une seule courbe par guide numérisé",
+  "action": "Supprimer le tracé en double de chaque paire (comparer les deux avant suppression)"
+ },
+ {
+  "itid": "F-GIEA-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[*] — étendue des guides masse/vent",
+  "trouve": "À MTOW 1055 kg, chaque calcul sort « ⚠ guide(s) prolongé(s) hors tracé » (guides masse tracés jusqu'à ~1050 kg, axe déclaré [750,1050] < MTOW 1055) ; idem sur certains guides vent dès le vent calme ; confiance dégradée à 85 %",
+  "attendu": "Guides tracés couvrant MTOW et la plage d'entrée courante",
+  "action": "Prolonger le tracé des guides masse jusqu'à 1055+ kg et compléter les guides vent courts ; ajuster l'axe masse"
+ },
+ {
+  "itid": "F-GIEA-17",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[*].data.graphs — outputUnit et titres Y",
+  "trouve": "Les 4 primaires déclarent outputUnit='m' alors que yAxis.unit='ft' (valeurs manifestement en ft : 0–2400/500–4000) ; titre Y « altitude » sur 3 modèles pour une distance ; en exécution le résolveur rend bien unit='ft' (l'axe Y du dernier graphe prime, atelierCascadeAdapter.js:188)",
+  "attendu": "outputUnit='ft' aligné sur l'axe Y, titres Y de type distance",
+  "action": "Corriger outputUnit en 'ft' sur les 4 primaires et renommer les titres Y"
+ },
+ {
+  "itid": "F-GIEA-18",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr",
+  "trouve": "\"\" (vide) ; voRanges également vide (optionnel)",
+  "attendu": "Vitesse de rotation du manuel (champ RECOMMANDÉ, poids 2)",
+  "action": "Saisir VR du MANEX"
+ },
+ {
+  "itid": "F-GIEA-19",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.initialClimb",
+  "trouve": "63 — même valeur que vx ; champ à l'unité ambiguë dans l'app (mapper MANEX en ft/min, affichage wizard en unité de vitesse)",
+  "attendu": "Confirmer l'intention : 63 kt (vitesse de montée initiale) et non 63 ft/min",
+  "action": "Confirmer/annoter la valeur ; suivre la correction d'unité côté app"
+ }
+]

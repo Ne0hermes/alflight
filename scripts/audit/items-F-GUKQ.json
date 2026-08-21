@@ -1,0 +1,146 @@
+[
+ {
+  "itid": "F-GUKQ-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations.vfrDay",
+  "trouve": "vfrDay=false (toutes les règles de vol à false) alors que training=true",
+  "attendu": "vfrDay=true pour un avion-école exploité de jour",
+  "action": "cocher VFR jour si applicable"
+ },
+ {
+  "itid": "F-GUKQ-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[takeoff_50ft_flaps_to].table_name",
+  "trouve": "table nommée « Distance d'atterrissage passage 15m/50ft - Masse 900 kg » mais taguée takeoff_50ft_flaps_to",
+  "attendu": "« Distance de décollage passage 15 m » — les données sont bien du décollage (480–1125 m, cohérentes avec le roulement décollage ; l'atterrissage 15 m a sa propre table à 435–590 m)",
+  "action": "renommer la table"
+ },
+ {
+  "itid": "F-GUKQ-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "bypassedFields",
+  "trouve": "[\"weighingReport\", \"fuelTankArms\"] alors que le rapport de pesée est joint (hasData=true + date) et que les deux réservoirs ont leurs bras (1,1616 et 1,44613 m)",
+  "attendu": "liste vide — les contournements ne correspondent plus à des données manquantes",
+  "action": "vider bypassedFields"
+ },
+ {
+  "itid": "F-GUKQ-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[cruise_speed]",
+  "trouve": "5 lignes avec colonnes Masse/Regime/Altitude/Pourcentage/value mais AUCUNE colonne Temperature ; lignes mêlant 75 % et 65 % de puissance ; Regime/Pourcentage non consommés",
+  "attendu": "une table par régime avec les colonnes Masse/Altitude/Temperature/value, ou pas de table du tout",
+  "action": "restructurer (ajouter l'axe température, un régime par table) ou retirer la table ; noter que cruiseSpeedKt=108 est cohérent avec ses valeurs (104–112 kt à 75 %)"
+ },
+ {
+  "itid": "F-GUKQ-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.initialClimb",
+  "trouve": "initialClimb = \"65\"",
+  "attendu": "grandeur clarifiée : 65 kt (vitesse de montée initiale) est plausible, 65 ft/min serait aberrant — or le schéma d'extraction déclare ce champ en ft/min alors que le wizard l'affiche en unité de vitesse",
+  "action": "confirmer que 65 désigne des kt"
+ },
+ {
+  "itid": "F-GUKQ-01",
+  "sev": "critique",
+  "regle": true,
+  "champ": "arms.empty / weightBalance.emptyWeightArm / moments.empty",
+  "trouve": "bras à vide = 2,18 m (moments.empty = 1251,32 kg·m = 574 × 2,18, dérivé). 2,18 est l'une des valeurs-empreintes d'injection connues (2.00/2.90/3.50/3.70/2.18).",
+  "attendu": "bras à vide compris entre les limites de l'enveloppe à 574 kg (≈ 0,21–0,57 m), lu sur le rapport de pesée PDF joint",
+  "action": "relire le bras (ou le moment) à vide sur le rapport de pesée joint (weighingReport.pdfUrl) et corriger arms.empty — le trio masse×bras=moment se recalculera"
+ },
+ {
+  "itid": "F-GUKQ-02",
+  "sev": "critique",
+  "regle": true,
+  "champ": "performanceCorrections (3 règles headwind takeoff + 3 règles headwind landing)",
+  "trouve": "décollage : 3 règles headwind factor_per_step (×0,85/10 kt, ×0,65/20 kt, ×0,55/30 kt) ; atterrissage : 3 règles headwind (×0,78/10, ×0,63/20, ×0,52/30)",
+  "attendu": "UNE règle mode factor_table par phase avec ses paliers : takeoff brackets [{10→0,85},{20→0,65},{30→0,55}] ; landing brackets [{10→0,78},{20→0,63},{30→0,52}]",
+  "action": "supprimer les 3 règles headwind de chaque phase et les remplacer par une seule règle factor_table avec les paliers du manuel (les règles tailwind et grass, uniques, sont correctes)"
+ },
+ {
+  "itid": "F-GUKQ-03",
+  "sev": "critique",
+  "regle": true,
+  "champ": "arms.empty",
+  "trouve": "2.18",
+  "attendu": "enveloppe de l'avion : 0.204 à 0.571 m — un avion vide doit y être",
+  "action": ""
+ },
+ {
+  "itid": "F-GUKQ-04",
+  "sev": "critique",
+  "regle": true,
+  "champ": "wb.emptyWeightArm",
+  "trouve": "2.18",
+  "attendu": "enveloppe de l'avion : 0.204 à 0.571 m — un avion vide doit y être",
+  "action": ""
+ },
+ {
+  "itid": "F-GUKQ-05",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "additionalFuelTanks[].capacity / fuelUsableCapacity",
+  "trouve": "réservoirs mono-champ : principal capacity=109 L, convoyeur 50 L (capacity seul est lu comme l'UTILISABLE par les moteurs) → Σ utilisable dérivée 159 L ; mais fuelUsableCapacity racine = 105 L (et fuelCapacity = 159)",
+  "attendu": "les deux contenances par réservoir : principal totalCapacity≈109–110 L (le manuel donne 78,5 kg ≈ 109 L en volume physique, cf. extraction p.24) et usableCapacity=105 L ; utilisable du convoyeur précisé ; fuelUsableCapacity racine = Σ utilisable",
+  "action": "porter totalCapacity/usableCapacity sur le réservoir principal (109–110 / 105 selon le manuel) et sur le convoyeur ; le champ racine sera resynchronisé au save"
+ },
+ {
+  "itid": "F-GUKQ-06",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "pesée certifiée du 1992-09-01 — 34 ans (seuil d'avertissement de l'app : 10 ans)",
+  "attendu": "date de la DERNIÈRE pesée réelle, à vérifier sur le PDF joint ; si l'avion a été repesé depuis, mettre à jour date + masse/bras à vide",
+  "action": "ouvrir weighingReport.pdfUrl, confirmer ou corriger la date, et en profiter pour relire masse/bras à vide"
+ },
+ {
+  "itid": "F-GUKQ-07",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GUKQ-08",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GUKQ-09",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "advancedPerformance.tables — opérations volets rentrés (couverture 8 opérations)",
+  "trouve": "4 des 8 opérations du minimum attendu absentes : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_roll_flaps_up, landing_50ft_flaps_up — et aucune clé performance.<opId> dans bypassedFields",
+  "attendu": "chaque opération manquante soit couverte par une table, soit certifiée « absente du manuel » (bypass performance.<opId> depuis la carte avion)",
+  "action": "si le manuel ne donne pas ces variantes : les certifier absentes (toggle sur la carte avion) ; sinon saisir les tables"
+ },
+ {
+  "itid": "F-GUKQ-10",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "advancedPerformance.tables[takeoff_ground_roll_flaps_to] — cellule (900 kg, 0 ft, ISA)",
+  "trouve": "225 / 235 / 285 m à ISA−20 / ISA / ISA+20 (progression +10 puis +50)",
+  "attendu": "progression régulière comme partout ailleurs dans les 4 tables (+15/+20, +40/+45, +50/+60…) — le motif suggère ≈255 m à ISA",
+  "action": "revérifier cette cellule au manuel (page distances décollage 900 kg, niveau mer, ISA)"
+ },
+ {
+  "itid": "F-GUKQ-11",
+  "sev": "majeur",
+  "regle": true,
+  "champ": "speeds.vfeTO",
+  "trouve": "vfeTO = 45 kt",
+  "attendu": "VFE volets décollage supérieure aux vitesses de décrochage (vsTO 48, vso 46) et normalement ≥ vfeLdg (92 kt)",
+  "action": "relire la VFE volets décollage au manuel (page limitations) et corriger"
+ }
+]

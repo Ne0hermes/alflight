@@ -1,0 +1,182 @@
+[
+ {
+  "itid": "F-GOFP-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[takeoff_50ft_flaps_to].data[Altitude=4000, Temperature=30].valu…",
+  "trouve": "66 m",
+  "attendu": "≈ 686 m (encadrement par les cellules voisines : 634 m à 20 °C, 744 m à 40 °C ; 616 m à 3000 ft)",
+  "action": "Rouvrir la table « Take-off Distance over 50 ft - Short Field » (p.70 du manuel) et corriger la cellule 4000 ft / 30 °C (valeur attendue ~686 m, à confirmer au manuel). Probable troncature de saisie Excel (66 au lieu de 68x)."
+ },
+ {
+  "itid": "F-GOFP-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "arms.empty",
+  "trouve": "0.765",
+  "attendu": "enveloppe de l'avion : 0.790 à 0.930 m — un avion vide doit y être",
+  "action": ""
+ },
+ {
+  "itid": "F-GOFP-03",
+  "sev": "critique",
+  "regle": false,
+  "champ": "wb.emptyWeightArm",
+  "trouve": "0.765",
+  "attendu": "enveloppe de l'avion : 0.790 à 0.930 m — un avion vide doit y être",
+  "action": ""
+ },
+ {
+  "itid": "F-GOFP-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks (« Réservoir optionnel » 142 L) + fuelCapacity",
+  "trouve": "2 réservoirs cumulés : principal 93 L (bras 1,08) + « optionnel » 142 L (bras 0,70) → fuelCapacity dérivé 235 L ; fuelUsableCapacity 93 L",
+  "attendu": "UNE seule configuration installée : réservoirs standard (98 L total / 93 L utilisable — valeurs de l'extraction MANEX acceptée, p.28/68) OU grande capacité (142 L). Ce sont deux CONFIGURATIONS alternatives du C152, pas deux réservoirs cumulables.",
+  "action": "Déterminer la configuration réellement installée sur F-GOFP et supprimer l'autre réservoir. Si l'avion a les réservoirs standard : garder le principal seul (93 utilisable / 98 total). Vérifier aussi le bras 0,70 de l'« optionnel » s'il est conservé : des réservoirs d'aile de remplacement devraient p…"
+ },
+ {
+  "itid": "F-GOFP-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[main].totalCapacity / usableCapacity",
+  "trouve": "Le réservoir principal ne porte que capacity: 93 (lu comme volume UTILISABLE — correct)",
+  "attendu": "totalCapacity: 98 + usableCapacity: 93 — le manuel fournit les deux volumes (extraction acceptée : 98 L total p.28, 93 L utilisable p.68)",
+  "action": "Renseigner totalCapacity = 98 L sur le réservoir principal (et cocher la pastille « principal » si elle a sauté)."
+ },
+ {
+  "itid": "F-GOFP-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "baggageCompartments[0].arm",
+  "trouve": "0,67 m (compartiment DEVANT les sièges 0,9416 et devant toute l'enveloppe 0,79–0,93 ; momentMax 36 = 54×0,67, saisie cohérente donc erreur à la source si erreur)",
+  "attendu": "Bras de soute AFT au manuel (zone bagages C152 ≈ 1,63 m au même datum — à confirmer)",
+  "action": "Vérifier le bras du compartiment au manuel (§ chargement) et corriger arm + momentMax (54 × bras)."
+ },
+ {
+  "itid": "F-GOFP-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "1977-05-01 — pesée datée de 49 ans (seuil d'avertissement de l'app : 10 ans)",
+  "attendu": "Date de la DERNIÈRE pesée réelle (lisible sur le PDF « Fiche de pesée FP.pdf » joint)",
+  "action": "Ouvrir le PDF joint, relever la vraie date de pesée et corriger le champ ; si la pesée est réellement ancienne, faire repeser l'avion ou récupérer la dernière fiche de pesée du club."
+ },
+ {
+  "itid": "F-GOFP-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GOFP-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GOFP-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[takeoff_50ft_flaps_to].data[Altitude=0, Temperature=10].value",
+  "trouve": "939 m",
+  "attendu": "≈ 394 m (encadrement : 363 m à 0 °C, 424 m à 20 °C)",
+  "action": "Corriger la cellule 0 ft / 10 °C au manuel (~394 m)."
+ },
+ {
+  "itid": "F-GOFP-11",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables — couverture (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_…",
+  "trouve": "4 des 8 opérations minimales absentes (seules les variantes flaps TAKEOFF et flaps LANDING sont couvertes) ; bypassedFields = [\"speeds.vfeTO\"] : aucune clé performance.* → aucune certification « absente du manuel »",
+  "attendu": "Chaque opération manquante soit couverte par une table, soit certifiée absente via le toggle de la carte avion (clé performance.<opId>)",
+  "action": "Si le manuel F152 ne publie pas de tables volets rentrés (cas probable : procédures normales = volets 10°/LANDING), certifier les 4 opérations absentes du manuel ; sinon saisir les tables."
+ },
+ {
+  "itid": "F-GOFP-12",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Clé absente de la fiche — aucune règle de correction (vent, herbe)",
+  "attendu": "Au moins une règle vent décollage et une règle vent atterrissage (ou 'both'), selon le manuel (le manuel Cessna donne classiquement −10 %/9 kt de face, +10 %/2 kt arrière)",
+  "action": "Ajouter dans l'étape Performances les règles vent du manuel (presets disponibles), appliesTo décollage ET atterrissage. Aucun risque de doublon actuellement (zéro règle)."
+ },
+ {
+  "itid": "F-GOFP-13",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "arms.rearSeats",
+  "trouve": "0",
+  "attendu": "zéro traité comme absent",
+  "action": ""
+ },
+ {
+  "itid": "F-GOFP-14",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "soute[0] « Compartiment 1 »",
+  "trouve": "0.67",
+  "attendu": "soute en AVANT des sièges avant (0.9416 m) : charger des bagages avancerait le centrage",
+  "action": ""
+ },
+ {
+  "itid": "F-GOFP-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "arms.frontSeats / weightBalance.frontLeftSeatArm",
+  "trouve": "0,9416 m (37,1 in)",
+  "attendu": "Valeur de la fiche de pesée / manuel (position standard siège C152 : 0,99 m / 39 in ; plage 33–41 in)",
+  "action": "Confirmer 0,9416 sur la fiche de pesée jointe (peut être un choix assumé de position siège) ; ne corriger que sur preuve."
+ },
+ {
+  "itid": "F-GOFP-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weightBalance.cgLimits + cgLimits (racine)",
+  "trouve": "weightBalance.cgLimits = {forward: 0, aft: null, forwardVariable: [point fantôme cg \"0.0\" @ 612 kg, moment 0]} ; cgLimits racine = {forward: 0, aft: 0.93}",
+  "attendu": "Miroirs cohérents avec l'enveloppe réelle (avant 0,79→0,8349 ; arrière 0,93) ou purge des restes",
+  "action": "Rouvrir/re-sauver l'étape M&C du wizard pour reconstruire weightBalance.cgLimits et cgLimits depuis l'enveloppe."
+ },
+ {
+  "itid": "F-GOFP-17",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "minTakeoffWeight (racine)",
+  "trouve": "515 = exactement la masse à vide (fabrication d'un ancien chargement persistée) ; weights.minTakeoffWeight = '' (vide)",
+  "attendu": "Vide partout si le manuel ne donne pas de masse mini, sinon la vraie valeur saisie dans weights.minTakeoffWeight",
+  "action": "Vider le champ racine (ou renseigner la valeur manuel si elle existe) via une re-sauvegarde de l'étape M&C."
+ },
+ {
+  "itid": "F-GOFP-18",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-GOFP-19",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vne",
+  "trouve": "149 kt stocké — mais l'item d'extraction MANEX « VNE » ACCEPTÉ vaut 171 (171 mph = 148,6 kt)",
+  "attendu": "VNE = 149 kt CAS confirmé au manuel (la valeur stockée est vraisemblablement la bonne ; l'extraction portait une unité mal étiquetée)",
+  "action": "Vérifier la page limitations du manuel : si VNE y est en mph, la fiche est bonne telle quelle."
+ },
+ {
+  "itid": "F-GOFP-20",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr / vx / vy / vapp / vglide",
+  "trouve": "Les 5 vitesses recommandées vides ('') ; initialClimb vide alors que l'extraction avait trouvé 715 ft/min (non accepté)",
+  "attendu": "VR, VX, VY, VAPP, V finesse du manuel (recommandées, non bloquantes)",
+  "action": "Compléter depuis la section vitesses du manuel (VX~55, VY~67, finesse~60 kt à confirmer au manuel)."
+ }
+]

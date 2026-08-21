@@ -1,0 +1,146 @@
+[
+ {
+  "itid": "F-BXNG-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0..3].data",
+  "trouve": "Les 4 tables (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing) n'ont que 4 lignes chacune : UNE seule température par palier d'altitude, exactement la température ISA (15 °C/0 ft, 10 °C/2500, 5 °C/5000, 0 °C/7500). Le garde-fou detectIsaRelativeTemperatures (performanceTableGrouping.js:182-192, qui cite nommément « cas de F-BXNG… après leur aller-reto…",
+  "attendu": "Au moins 2 écarts ISA par palier (ex. ISA et ISA+20 depuis la note du POH « +10 % par 25 °F au-dessus de la température standard »), ou une grille absolue rectangulaire complète.",
+  "action": "Ressaisir/ré-importer les grilles avec au moins deux colonnes de température par palier (ISA / ISA+20, ou les valeurs absolues du POH), pour les 4 tables."
+ },
+ {
+  "itid": "F-BXNG-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "frontSeats vs rearSeats",
+  "trouve": "1 / 1",
+  "attendu": "les sièges arrière ne peuvent pas être au même bras ou en avant des sièges avant",
+  "action": ""
+ },
+ {
+  "itid": "F-BXNG-03",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].capacity / totalCapacity / usableCapacity",
+  "trouve": "Le réservoir principal ne porte que capacity:98 ; or tankUsableLtr = usableCapacity ?? capacity (packages/calc-engine/src/fuel/tankCapacity.js:31-32) → les moteurs (computeMaxFuel, fuelArm) comptent 98 L UTILISABLES, alors que la fiche déclare elle-même fuelUsableCapacity=85 (champ jamais lu par les moteurs). L'en-tête du module cite exactement ce cas : « F150M : 98 L totaux / 85 L utilisables ».",
+  "attendu": "totalCapacity:98 + usableCapacity:85 sur le réservoir (le manuel donne les deux volumes : 26/22,5 US gal).",
+  "action": "Saisir les deux contenances sur le réservoir principal : totale 98 L, utilisable 85 L."
+ },
+ {
+  "itid": "F-BXNG-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "arms.rearSeats / weightBalance.rearLeftSeatArm / rearRightSeatArm",
+  "trouve": "Bras des sièges arrière = 1,000 m, strictement ÉGAL au bras des sièges avant (arms.frontSeats=1) — sur un BIPLACE (C150). Poste de chargement fantôme : exécution réelle, 40 kg chargés sur rearLeft sont acceptés, pesés au bras 1,00 m et le verdict rend « dans les limites » (675,9 kg, cg 0,889) sans le moindre avertissement.",
+  "attendu": "Bras arrière EFFACÉS : les sièges arrière absents (bras vides) sont l'état valide pour un biplace.",
+  "action": "Effacer arms.rearSeats et les rearLeft/RightSeatArm de weightBalance."
+ },
+ {
+  "itid": "F-BXNG-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-BXNG-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-BXNG-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performances — opérations takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_50f…",
+  "trouve": "4 des 8 opérations du minimum attendu sont absentes (aucune table ne les porte) et AUCUNE n'est certifiée « absente du manuel » : bypassedFields = [] (aucune clé performance.<opId>).",
+  "attendu": "Chaque opération soit couverte par une table, soit certifiée absente via la pastille (clé performance.<opId> dans bypassedFields) — le POH C150M ne donne vraisemblablement que décollage volets rentrés et atterrissage volets sortis.",
+  "action": "Vérifier le POH puis certifier les 4 opérations absentes via la pastille de bypass (ou saisir les tables si elles existent)."
+ },
+ {
+  "itid": "F-BXNG-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Champ totalement ABSENT de la fiche, alors que l'avion est 100 % TABLEAUX (performanceModels=null) : la voie tableau ne consomme jamais le vent, et GRASS figure dans compatibleRunwaySurfaces sans aucune règle d'herbe.",
+  "attendu": "Au moins une règle vent de face + une règle vent arrière (appliesTo décollage et atterrissage, ou both) et une règle herbe, tirées des notes du POH (Cessna : ~-10 %/9 kt de face, +10 %/2 kt arrière, majoration herbe).",
+  "action": "Créer les règles de correction vent (décollage + atterrissage) et herbe dans l'éditeur de facteurs correctifs."
+ },
+ {
+  "itid": "F-BXNG-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "speeds.vfeTO",
+  "trouve": "Vide (\"\"), alors que c'est un champ OBLIGATOIRE du wizard (bloque le « Suivant ») et qu'il n'est PAS bypassé (bypassedFields=[]). vfeLdg est renseignée (87 kt).",
+  "attendu": "VFE en configuration décollage — pour un C150 à plage volets unique, vraisemblablement 87 kt comme vfeLdg (à confirmer au manuel).",
+  "action": "Saisir vfeTO depuis le manuel."
+ },
+ {
+  "itid": "F-BXNG-10",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations (dont elt, vfrDay)",
+  "trouve": "TOUT le bloc approvedOperations est à false — y compris vfrDay et l'ELT — alors que specialCapabilities est vide aussi. Seuls VHF1/2, VOR/DME/ILS/GNSS et transpondeur mode C sont cochés.",
+  "attendu": "Au minimum vfrDay=true et l'ELT coché (équipement obligatoire à bord), plus les autres équipements de survie réellement embarqués.",
+  "action": "Cocher les opérations approuvées et les équipements de survie réels (ELT en tête)."
+ },
+ {
+  "itid": "F-BXNG-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "cgEnvelope.aftMinCG / aftMaxCG (0,951 m)",
+  "trouve": "Limite arrière constante 0,951 m de 500 à 726 kg — identique à celle de F-BXQT (même manuel), déjà VALIDÉE au centrogramme par le pilote.",
+  "attendu": "0,951 m si le centrogramme du F150M s'applique tel quel à F-BXNG.",
+  "action": "Confirmer d'un coup d'œil que le centrogramme F-BXNG porte bien la même limite arrière que F-BXQT."
+ },
+ {
+  "itid": "F-BXNG-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-BXNG-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "Pesée du 22/03/2021 — 5 ans et 5 mois au 19/08/2026. PDF présent (Supabase), hasData=true.",
+  "attendu": "Sous le seuil d'alerte applicatif (10 ans) — rien à corriger dans l'app ; à rapprocher du cycle du programme d'entretien (souvent 5 ans en club).",
+  "action": "Vérifier si une pesée plus récente existe et, le cas échéant, remplacer le PDF et la date."
+ },
+ {
+  "itid": "F-BXNG-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[3].data[].Masse",
+  "trouve": "La table landing_ground_roll_flaps_landing est à Masse=728 kg alors que les 3 autres tables sont à 726 et que la MTOW/MLW = 726.",
+  "attendu": "726 kg (masse maxi du manuel), homogène avec les autres tables.",
+  "action": "Corriger 728 → 726 dans les 4 lignes de la table."
+ },
+ {
+  "itid": "F-BXNG-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vx / speeds.vy",
+  "trouve": "Vx = Vy = 68 kt exactement.",
+  "attendu": "Vx strictement < Vy au niveau de la mer (elles ne convergent qu'au plafond). 68 ressemble à la valeur mph de Vy du POH (68 mph ≈ 59 kt) ou à une recopie de Vy dans Vx.",
+  "action": "Vérifier Vx et Vy au POH (et leur unité kt vs mph) et corriger."
+ },
+ {
+  "itid": "F-BXNG-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr / vapp / vglide",
+  "trouve": "Les trois vitesses RECOMMANDÉES sont vides (\"\"), ainsi qu'initialClimb (optionnel).",
+  "attendu": "Vr, Vapp et vitesse de plané du POH.",
+  "action": "Saisir Vr, Vapp, Vglide depuis le POH."
+ }
+]

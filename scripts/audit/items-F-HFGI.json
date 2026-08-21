@@ -1,0 +1,83 @@
+[
+ {
+  "itid": "F-HFGI-01",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-HFGI-02",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-HFGI-03",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables (opérations volets rentrés)",
+  "trouve": "4 des 8 opérations du minimum attendu absentes : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_roll_flaps_up, landing_50ft_flaps_up — et bypassedFields=[] : aucune n'est certifiée « absente du manuel »",
+  "attendu": "tables importées si le manuel les donne, sinon clé performance.<opId> dans bypassedFields (certification depuis la carte avion)",
+  "action": "vérifier le manuel : importer les tables volets rentrés si elles existent, sinon certifier chacune des 4 opérations"
+ },
+ {
+  "itid": "F-HFGI-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0-3].table_name",
+  "trouve": "les 4 tables de décollage (p. 56) s'intitulent « … - Landing Configuration - 850/1050kg » alors que leur operationId/classification est takeoff_ground_roll_flaps_to / takeoff_50ft_flaps_to (configuration DÉCOLLAGE)",
+  "attendu": "nom et classification désignant la même configuration de volets",
+  "action": "trancher au manuel p. 56 : corriger le table_name (cas probable) ou re-classifier les 4 tables"
+ },
+ {
+  "itid": "F-HFGI-05",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "fuelUsableCapacity / fuelCapacity (racine)",
+  "trouve": "fuelUsableCapacity=239 vs Σ utilisable des réservoirs=240 ; fuelCapacity=240 vs Σ totale=241 — valeurs d'avant le modèle deux-contenances : le litre inutilisable, désormais porté par le réservoir optionnel (51 total / 50 utilisable), est décompté une seconde fois à la racine",
+  "attendu": "fuelUsableCapacity=240 et fuelCapacity=241 (les champs racine sont en remplir-si-vide : ils ne se corrigeront pas seuls tant qu'ils portent une valeur)",
+  "action": "mettre à jour les deux champs racine (240 / 241) ou les vider pour laisser les sommes les renseigner"
+ },
+ {
+  "itid": "F-HFGI-06",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weightBalance.cgLimits.forwardVariable[2]",
+  "trouve": "cg 0,4276 / moment 449 à 1050 kg, alors que cgEnvelope.forwardPoints[2] — même id de point, source de vérité — dit 0,45 / 472,5 : copie non resynchronisée après édition de l'enveloppe",
+  "attendu": "copie identique à cgEnvelope",
+  "action": "rouvrir et revalider l'étape Masse & centrage du wizard pour resynchroniser la copie"
+ },
+ {
+  "itid": "F-HFGI-07",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-HFGI-08",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[4] (cruise_speed, p. 59)",
+  "trouve": "table croisière au schéma Regime/Vitesse_Propre_kt/Distance_Nm… sans colonnes Masse/Temperature/value ; en prime deux lignes 65 %–10 500 ft en doublon à valeurs différentes (127 vs 130 kt) et Autonomie_h_min en chaînes à virgule (« 4,5 »)",
+  "attendu": "schéma consommable {Masse, Altitude, Temperature, value} — ou retirer la table (opération optionnelle, hors des 8 minimum)",
+  "action": "retirer la table croisière ou la reformater si un support croisière arrive"
+ },
+ {
+  "itid": "F-HFGI-09",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vx",
+  "trouve": "vide — seule vitesse recommandée manquante (vy=86 est renseignée ; toutes les obligatoires sont là et physiquement ordonnées : vso 50 < vsTO 52 < vr 54 < vs1 55 < vfe 92 < vno 140 < vne 166)",
+  "attendu": "Vx (pente max, configuration décollage) du manuel",
+  "action": "saisir Vx dans l'étape Vitesses"
+ }
+]

@@ -1,0 +1,252 @@
+[
+ {
+  "itid": "F-GUVV-01",
+  "sev": "critique",
+  "champ": "performanceModels[0..5].data.graphs[].role/operationId (désignation du panneau primaire)",
+  "trouve": "Les 6 modèles désignent le panneau VENT (dernier cadre du chart) comme graphe primaire porteur de l'operationId ; le panneau OAT (famille d'altitudes 0–10000 ft) est marqué 'intermediate'. La chaîne s'évalue vent→OAT→masse et la famille d'altitudes n'est jamais interrogée.",
+  "attendu": "Convention atelier (cf. F-GNAM, F-GIEA) : primaire = premier panneau (OAT, familyAxisVariable pressure_altitude), panneau vent en intermédiaire.",
+  "envol": "L'altitude-pression n'a AUCUN effet : takeoff 15 m = 389,7 m de 0 à 8000 ft, idem les 5 autres opérations. Distances en altitude sous-estimées, rendues COMPUTED confiance 85 % sans aucune alerte pilote (seuls des warnings d'extrapolation anodins apparaissent).",
+  "action": "Dans l'atelier abaques, re-désigner le panneau OAT comme primaire (famille pressure_altitude) et retirer role primaire/operationId du panneau vent, pour les 6 modèles. Contrôle après correction : la distance doit croître avec la PA (F-GNAM : 354→647 m de 0 à 4000 ft).",
+  "preuve": "exécution du moteur (resolveOperation, balayage PA 0/2000/4000/6000/8000 ft : valeurs strictement identiques sur les 6 opérations ; contre-témoin F-GNAM sensible à la PA)"
+ },
+ {
+  "itid": "F-GUVV-02",
+  "sev": "critique",
+  "champ": "performanceModels (panneau vent en entrée de chaîne) — vent arrière",
+  "trouve": "headwind = -5 kt → ERROR « Impossible de calculer Y pour X=-5 » sur les 6 opérations : le vent SIGNÉ entre par le panneau vent primaire (domaine X [0;20]) sans sélection headwind/tailwind — même sur les 2 modèles décollage qui ONT des courbes tailwind digitalisées.",
+  "attendu": "Vent arrière calculable : le panneau vent en intermédiaire est géré par cascade.ts en magnitude + windDirection (vérifié sur F-GNAM : vent -5 → 440,9 m).",
+  "envol": "Aucune distance dès qu'il y a une composante arrière (fail-closed, badge Erreur — pas de fausse valeur). Aggravant : la fiche n'a pas de distances.* POH statiques de secours, donc dans ce cas la compatibilité de piste n'a plus AUCUN contrôle de longueur.",
+  "action": "Résolu par le même re-tag que le constat n°1 (panneau vent en intermédiaire).",
+  "preuve": "exécution du moteur (resolveOperation avec headwind:-5 sur les 8 opérations : 6× ERROR)"
+ },
+ {
+  "itid": "F-GUVV-03",
+  "sev": "critique",
+  "champ": "performanceModels[1] « Distance sol décollage » — ordre des courbes du panneau vent",
+  "trouve": "Le moteur s'ancre en silence sur la PREMIÈRE courbe de la liste ; dans ce modèle les courbes tailwind sont listées avant les headwind → l'entrée se fait sur « tailwind 1 » : avec 10 kt de vent de FACE, 202,7 m → 264,4 m (la distance AUGMENTE, l'inverse du chart).",
+  "attendu": "Le vent de face doit réduire la distance (takeoff_50ft_flaps_to, courbes headwind en tête : 389,7 → 309,7 m avec le même vent).",
+  "envol": "Roulage au décollage faux dès qu'il y a du vent, rendu COMPUTED 85 % ; le repli « première courbe » n'est signalé qu'en console (traceWarn), invisible du pilote. Surestimation ~+30 % à 10 kt de face aujourd'hui, mais mécanisme non conservateur par nature.",
+  "action": "Résolu par le re-tag du constat n°1 (le panneau vent intermédiaire filtre par windDirection) ; sinon au minimum réordonner les courbes headwind en tête comme dans les 5 autres modèles.",
+  "preuve": "exécution du moteur (entryY du panneau suivant = tailwind1(0)=152,7 en calme puis tailwind1(10)=214,4 avec vent de face : lecture démontrée sur la courbe vent arrière)"
+ },
+ {
+  "itid": "F-GUVV-04",
+  "sev": "majeur",
+  "champ": "cgLimits (racine)",
+  "trouve": "{forward: 2,05 ; aft: 2,31} — ne correspond à rien d'autre dans la fiche.",
+  "attendu": "Aligné sur cgEnvelope (source de vérité) : avant 2,40 m (940–980 kg) → 2,46 m (1150 kg), arrière 2,59 m — ou champ vidé.",
+  "envol": "La préparation de vol copie cgLimits racine tel quel dans weightBalance.cgLimits (Step1GeneralInfo.jsx:148-156, Step6WeightBalance.jsx:252-266). Le verdict reste juste (cgEnvelope écrase, computeWeightBalance.js:94-113 — vérifié : limites 2,40-2,46/2,59 appliquées) mais tout affichage de ces limites montre 2,05/2,31, et c'est la valeur qui ferait foi si cgEnvelope disparaissait.",
+  "action": "Réaligner cgLimits sur 2,40/2,59, ou le vider pour déclencher le fallback cgEnvelope.",
+  "preuve": "contradiction interne (2,05/2,31 vs forwardPoints 2,40–2,46 et aftCG 2,59) + exécution du moteur (cgLimits retournés = ceux de l'enveloppe)"
+ },
+ {
+  "itid": "F-GUVV-05",
+  "sev": "majeur",
+  "champ": "weighingReport.certificationDate",
+  "trouve": "2012-06-20 — pesée de 14,2 ans (PDF joint, fiche de pesée GUVV).",
+  "attendu": "Pesée de moins de 10 ans (seuil d'avertissement WEIGHING_REPORT_WARN_YEARS de l'app, Step3WeightBalance.jsx:2594).",
+  "envol": "Masse à vide 796,5 kg et bras 2,515 m potentiellement périmés — tout le centrage en dépend.",
+  "action": "Confirmer qu'aucune pesée plus récente n'existe ; sinon joindre la dernière fiche de pesée et mettre à jour masse/bras/date.",
+  "preuve": "présomption (âge démontré par la date ; l'existence d'une pesée plus récente est à confirmer)"
+ },
+ {
+  "itid": "F-GUVV-06",
+  "sev": "majeur",
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "envol": "Le code qui injectait cette valeur est retiré : elle ne reviendra plus. Mais celle déjà enregistrée reste, et rien ne la distingue en base d'une valeur relevée au manuel.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger.",
+  "preuve": ""
+ },
+ {
+  "itid": "F-GUVV-07",
+  "sev": "majeur",
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "envol": "Le code qui injectait cette valeur est retiré : elle ne reviendra plus. Mais celle déjà enregistrée reste, et rien ne la distingue en base d'une valeur relevée au manuel.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas.",
+  "preuve": ""
+ },
+ {
+  "itid": "F-GUVV-08",
+  "sev": "majeur",
+  "champ": "aircraft_data.weightBalance.baggageArm",
+  "trouve": "3,50 m",
+  "attendu": "Bras de repli historique, jamais relevé sur un avion.",
+  "envol": "Le code qui injectait cette valeur est retiré : elle ne reviendra plus. Mais celle déjà enregistrée reste, et rien ne la distingue en base d'une valeur relevée au manuel.",
+  "action": "Relever le bras de soute au manuel.",
+  "preuve": ""
+ },
+ {
+  "itid": "F-GUVV-09",
+  "sev": "majeur",
+  "champ": "aircraft_data.weightBalance.auxiliaryArm",
+  "trouve": "3,70 m",
+  "attendu": "Bras de repli historique, jamais relevé sur un avion.",
+  "envol": "Le code qui injectait cette valeur est retiré : elle ne reviendra plus. Mais celle déjà enregistrée reste, et rien ne la distingue en base d'une valeur relevée au manuel.",
+  "action": "Relever le bras du compartiment auxiliaire au manuel.",
+  "preuve": ""
+ },
+ {
+  "itid": "F-GUVV-10",
+  "sev": "majeur",
+  "champ": "performanceModels[2..5] (4 modèles atterrissage) — courbes vent arrière",
+  "trouve": "Panneaux vent des 4 modèles atterrissage : uniquement des courbes headwind (0–20 kt). Les 2 modèles décollage ont headwind ET tailwind (0–10 kt).",
+  "attendu": "Grille tailwind atterrissage si le MANEX la fournit (l'asymétrie interne décollage/atterrissage est sinon inexpliquée).",
+  "envol": "Même après la correction du constat n°1, l'atterrissage par vent arrière — le cas qui allonge le plus — restera incalculable, alors que la fiche autorise par ailleurs maxTailwind 10 kt.",
+  "action": "Vérifier le chart atterrissage du MANEX ; digitaliser les courbes tailwind si présentes, sinon envisager une règle performanceCorrections vent arrière atterrissage (percent_per_step).",
+  "preuve": "présomption (asymétrie interne constatée dans les données ; manuel non consulté)"
+ },
+ {
+  "itid": "F-GUVV-11",
+  "sev": "mineur",
+  "champ": "additionalFuelTanks[0].momentAtFull / moments.fuelMain",
+  "trouve": "310,62 kg·m = 147,631 L × 0,80 × 2,63 — calculé avec une densité 0,80.",
+  "attendu": "326,15 kg·m avec la densité JET-A1 de l'app (0,84), ou documentation de la densité 0,80 du manuel.",
+  "envol": "Aucun sur le verdict : le moteur recalcule litres × 0,84 × bras (vérifié : 100 L → 84 kg pesés). Incohérence documentaire entre valeurs dérivées stockées et calcul réel.",
+  "action": "Recalculer momentAtFull via le trio cap↔bras↔moment du wizard, ou tracer l'écart de densité manuel/app.",
+  "preuve": "contradiction interne (arithmétique : 310,62/(147,631×2,63)=0,800) + exécution du moteur (densité 0,84 appliquée)"
+ },
+ {
+  "itid": "F-GUVV-12",
+  "sev": "mineur",
+  "champ": "additionalFuelTanks[0].totalCapacity / usableCapacity",
+  "trouve": "Seul le champ legacy capacity = 147,631 L (39,0 USG exactement), lu comme volume UTILISABLE ; total et utilisable non distingués (fuelCapacity = fuelUsableCapacity = 147,631).",
+  "attendu": "totalCapacity + usableCapacity renseignés si le manuel distingue les deux volumes.",
+  "envol": "FOB max et bilan carburant fondés sur 147,6 L utilisables ; enrichissement à faire si le MANEX donne un volume total différent.",
+  "action": "Lire le chapitre limitations carburant du MANEX et renseigner les deux contenances du réservoir principal.",
+  "preuve": "présomption (structure legacy constatée ; manuel non consulté)"
+ },
+ {
+  "itid": "F-GUVV-13",
+  "sev": "mineur",
+  "champ": "equipmentCom.elt vs approvedOperations.elt",
+  "trouve": "equipmentCom.elt = true mais approvedOperations.elt = false (c'est ce dernier qui est consommé par l'export/mapper).",
+  "attendu": "Un seul état ELT cohérent des deux côtés.",
+  "envol": "Le document exporté annonce « pas d'ELT » alors que l'équipement com dit l'inverse.",
+  "action": "Cocher l'ELT dans les équipements de survie (approvedOperations) ou corriger equipmentCom.",
+  "preuve": "contradiction interne"
+ },
+ {
+  "itid": "F-GUVV-14",
+  "sev": "mineur",
+  "champ": "equipmentSurv",
+  "trouve": "Forme legacy : transponderMode:'C' (champ orphelin), tcas:'None' (string), gpws/egpws/flarm/ras hors schéma actuel ; transponderModes (le champ lu par l'UI, Step5Equipment.jsx:644) absent.",
+  "attendu": "Schéma Step5Equipment actuel : transponderModes + booléens adsb/adsc/tcas/acas/taws/cvr/fdr/weather/adsbOut.",
+  "envol": "Le mode transpondeur ne s'affiche pas dans l'UI actuelle (elle lit transponderModes).",
+  "action": "Repasser l'étape Équipements du wizard (une sauvegarde réécrit la forme moderne).",
+  "preuve": "contradiction interne (schéma fiche vs schéma UI du référentiel)"
+ },
+ {
+  "itid": "F-GUVV-15",
+  "sev": "mineur",
+  "champ": "manufacturer",
+  "trouve": "« Diamand Aircraft » (fiche et colonne racine).",
+  "attendu": "« Diamond Aircraft »",
+  "envol": "Coquille d'affichage/recherche uniquement.",
+  "action": "Corriger l'orthographe dans la fiche et la colonne.",
+  "preuve": "contradiction interne (marque du DA40 : Diamond)"
+ },
+ {
+  "itid": "F-GUVV-16",
+  "sev": "mineur",
+  "champ": "arms.baggageFwd / arms.baggageAft (+ weightBalance.baggageArm/auxiliaryArm)",
+  "trouve": "3,50 / 3,70 m = exactement les défauts injectés par AircraftModule.jsx:4017-4024, et divergents du compartiment réel (3,65 m).",
+  "attendu": "Bras legacy alignés sur le compartiment saisi (3,65 m) ou purgés.",
+  "envol": "Aucun sur le verdict (baggageCompartments fait foi — vérifié : 10 kg comptés à 3,65 m) ; le chemin scenarios/centrogramme lit encore wb.baggageArm=3,50 → léger écart d'affichage possible entre centrogramme et verdict.",
+  "action": "Confirmer les bras bagage au manuel puis aligner ou vider les champs legacy.",
+  "preuve": "présomption (empreinte exacte des valeurs fabriquées 3,50/3,70) + exécution du moteur (compartiment 3,65 utilisé)"
+ },
+ {
+  "itid": "F-GUVV-17",
+  "sev": "mineur",
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "envol": "Le code qui injectait cette valeur est retiré : elle ne reviendra plus. Mais celle déjà enregistrée reste, et rien ne la distingue en base d'une valeur relevée au manuel.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées.",
+  "preuve": ""
+ },
+ {
+  "itid": "F-GUVV-18",
+  "sev": "mineur",
+  "champ": "performanceModels — nommage des courbes",
+  "trouve": "landing_50ft_flaps_landing : deux courbes « headwind 7 » (et pas de « headwind 6 ») ; landing_ground_roll_flaps_up : les courbes du panneau MASSE sont nommées « headwind 1..8 » ; une courbe « 10000 » sans suffixe ft.",
+  "attendu": "Noms uniques et cohérents par panneau.",
+  "envol": "Aucun sur le calcul (vent filtré par windDirection, masse en slope-follow) ; gêne la relecture et la maintenance des abaques.",
+  "action": "Renommer dans l'atelier à l'occasion du re-tag (constat n°1).",
+  "preuve": "contradiction interne (doublon et incohérences constatés dans les données)"
+ },
+ {
+  "itid": "F-GUVV-19",
+  "sev": "mineur",
+  "champ": "remarks",
+  "trouve": "« test testsetsetset » — texte de test resté dans la fiche.",
+  "attendu": "Remarques opérationnelles réelles, ou champ vide.",
+  "envol": "Aucun (affichage seulement).",
+  "action": "Effacer ou remplacer par les vraies remarques.",
+  "preuve": "contradiction interne (contenu de test manifeste)"
+ },
+ {
+  "itid": "F-GUVV-20",
+  "sev": "mineur",
+  "champ": "bypassedFields — performance.takeoff_ground_roll_flaps_up / performance.takeoff_50ft_flaps…",
+  "trouve": "Les 2 opérations décollage volets rentrés sont NOT_IMPLEMENTED et certifiées « absentes du manuel » par le pilote (clés performance.* correctement alignées).",
+  "attendu": "État assumé : 6/8 opérations du minimum couvertes + 2 certifiées absentes.",
+  "envol": "Informatif uniquement : aucune distance décollage volets UP ; la matrice les masque comme certifiées.",
+  "action": "Rien à faire (re-vérifier à l'occasion que le MANEX ne les fournit vraiment pas).",
+  "preuve": "exécution du moteur (NOT_IMPLEMENTED) + clés performance.<opId> présentes dans bypassedFields"
+ },
+ {
+  "itid": "F-GUVV-21",
+  "sev": "mineur",
+  "champ": "performanceModels[5] courbe « 0ft ».familyValue",
+  "trouve": "familyValue = -1 sur la courbe nommée « 0ft » (panneau température du modèle landing_ground_roll_flaps_up).",
+  "attendu": "familyValue = 0.",
+  "envol": "Nul aujourd'hui (la famille d'altitudes est ignorée, cf. constat n°1) et négligeable après correction (~0,05 % d'interpolation) — à corriger lors de la reconstruction.",
+  "action": "Rétablir familyValue=0 dans l'atelier.",
+  "preuve": "contradiction interne (nom « 0ft » vs familyValue -1)"
+ },
+ {
+  "itid": "F-GUVV-22",
+  "sev": "mineur",
+  "champ": "performanceModels[*].data.metadata.referenceCases",
+  "trouve": "0 cas de référence sur les 6 modèles.",
+  "attendu": "≥ 1 cas MANEX rejoué par modèle (banc ±5 %).",
+  "envol": "Aucun filet anti-régression — indispensable pour valider la reconstruction des constats n°1-3 (les valeurs actuelles n'ont jamais été confrontées au manuel).",
+  "action": "Saisir 1-2 cas chiffrés du MANEX par opération dans l'atelier après le re-tag.",
+  "preuve": "structure de la fiche (referenceCases absents des 6 modèles)"
+ },
+ {
+  "itid": "F-GUVV-23",
+  "sev": "mineur",
+  "champ": "windLimits",
+  "trouve": "Forme legacy seule : maxCrosswind 25 / maxTailwind 10 / maxCrosswindWet 15 kt ; windLimits.limits[] (forme éditée par Step2Speeds) absent.",
+  "attendu": "windLimits.limits[] renseigné avec les 3 valeurs.",
+  "envol": "Valeurs visibles sur la carte legacy mais invisibles dans l'éditeur moderne ; purement informatif (aucun consommateur en préparation de vol — grep : AircraftModule/wizard seulement).",
+  "action": "Reporter 25/10/15 dans windLimits.limits[] via l'étape Vitesses.",
+  "preuve": "contradiction interne (structure fiche vs formulaire actuel) + grep des consommateurs"
+ },
+ {
+  "itid": "F-GUVV-24",
+  "sev": "mineur",
+  "champ": "speeds.vapp / speeds.vr",
+  "trouve": "VAPP et VR vides.",
+  "attendu": "Renseignées (RECOMMANDÉ ; consommées par le résumé du vol Step7Summary).",
+  "envol": "Cases vides dans la synthèse du plan de vol.",
+  "action": "Saisir VR et VAPP du MANEX à l'étape Vitesses.",
+  "preuve": "contradiction interne (champs vides + consommateur Step7Summary identifié par grep)"
+ },
+ {
+  "itid": "F-GUVV-25",
+  "sev": "mineur",
+  "champ": "speeds.voRanges[1].maxWeight",
+  "trouve": "Tranche VO 1080–1180 kg (VO 108 kt) : borne haute au-delà de la MTOW 1150 kg.",
+  "attendu": "Borne ≤ MTOW 1150, sauf si le manuel l'écrit tel quel.",
+  "envol": "Affichage/revue uniquement (aucun consommateur de calcul).",
+  "action": "Vérifier la tranche VO au MANEX d'un coup d'œil.",
+  "preuve": "présomption (incohérence interne 1180 > 1150 ; possible copie fidèle du manuel)"
+ }
+]

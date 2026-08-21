@@ -1,0 +1,110 @@
+[
+ {
+  "itid": "F-GOVE-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[4].operationId et tables[6].operationId (« Landing Ground Roll …",
+  "trouve": "Les 4 tables atterrissage portent toutes operationId landing_50ft_flaps_landing, alors que 2 d'entre elles sont des tables de ROULEMENT (table_name « Landing Ground Roll ») → 18 coordonnées masse/altitude/température en double avec valeurs contradictoires (ex. 900 kg/0 ft/15 °C : 200 vs 460).",
+  "attendu": "Les 2 tables de roulement ré-étiquetées landing_ground_roll_flaps_landing ; un seul jeu de valeurs par operationId.",
+  "action": "Ré-étiqueter les tables index 4 et 6 (« Landing Ground Roll ») en landing_ground_roll_flaps_landing dans l'atelier tables."
+ },
+ {
+  "itid": "F-GOVE-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[0..3].data — palier Altitude 0 des 4 tables décollage (p.33)",
+  "trouve": "Températures du palier 0 ft = -4/5/35 °C → écarts ISA [-19, -10, +20] alors que les paliers 4000 et 8000 ft donnent [-20, 0, +20]. La détection ISA-relative (detectIsaRelativeTemperatures) échoue → la grille est traitée en températures ABSOLUES : cube 18 cases remplies / 36 trous sur 54. Preuve interne supplémentaire que les colonnes 0 ft sont mélangées : l'ordre des valeurs entre -4 °C et 5 °C s'inverse d'une table …",
+  "attendu": "Écarts ISA identiques à chaque palier — vraisemblablement -5/15/35 °C au niveau de la mer (ISA-20/ISA/ISA+20), valeurs à réassocier aux bonnes colonnes en relisant la p.33 du manuel.",
+  "action": "Relire p.33 : corriger les températures du palier 0 ft (et vérifier l'appariement température↔valeur) dans les 4 tables décollage. Après correction, la grille redevient ISA-relative et complète."
+ },
+ {
+  "itid": "F-GOVE-03",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[4..7].data — palier Altitude 0 des 4 tables atterrissage (p.40)",
+  "trouve": "Températures du palier 0 ft = 5/15/35 °C → écarts ISA [-10, 0, +20] alors que 4000 et 8000 ft donnent [-20, 0, +20] → même bascule en grille absolue à 36 trous que le décollage.",
+  "attendu": "Vraisemblablement -5 °C au lieu de 5 °C (ISA-20 au niveau de la mer) — à vérifier p.40. Les valeurs, elles, sont monotones et cohérentes.",
+  "action": "Corriger Temperature 5 → -5 au palier 0 ft dans les 4 tables atterrissage (vérifier p.40)."
+ },
+ {
+  "itid": "F-GOVE-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[].totalCapacity / usableCapacity",
+  "trouve": "Les réservoirs ne portent que capacity (110 + 50 = 160 L), lue comme UTILISABLE par les moteurs, alors que fuelUsableCapacity = 159 L : le litre inutilisable connu de la fiche n'est porté par aucun réservoir.",
+  "attendu": "Double contenance par réservoir (totalCapacity = volume physique, usableCapacity = utilisable) répartissant le litre inutilisable — le manuel distingue manifestement les deux volumes (159 vs 160).",
+  "action": "Renseigner totalCapacity/usableCapacity sur chaque réservoir d'après le manuel (identifier lequel porte le litre inutilisable)."
+ },
+ {
+  "itid": "F-GOVE-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].momentAtFull (et son miroir moments.fuelMain)",
+  "trouve": "792, alors que capacité × densité × bras = 110 × 0,72 × 1,1027 = 87,33 kg·m (écart ×9). Résidu antérieur au fix du bras du 2026-06-10 (0,254 → 1,1027, tracé dans _metadata.fixFgoveFuelArm) jamais recalculé — 792 ne correspond d'ailleurs pas non plus à l'ancien bras.",
+  "attendu": "momentAtFull ≈ 87,3 kg·m (et moments.fuelMain idem), ou champ vidé.",
+  "action": "Rouvrir le réservoir principal dans l'assistant et re-valider (le trio recalcule), ou corriger à 87,3."
+ },
+ {
+  "itid": "F-GOVE-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "1992-09-01 — pesée vieille de 34 ans (le PDF joint est bien celui-là), très au-delà du seuil d'avertissement de l'application (10 ans).",
+  "attendu": "Confirmation qu'aucune pesée plus récente n'existe, ou remplacement par la dernière fiche de pesée.",
+  "action": "Vérifier auprès du club la dernière pesée de F-GOVE et mettre à jour le PDF + la date + les valeurs si besoin."
+ },
+ {
+  "itid": "F-GOVE-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GOVE-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GOVE-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Absent de la fiche, alors que l'avion est 100 % tableaux (performanceModels: null) et que windLimits autorise 10 kt de vent arrière.",
+  "attendu": "Au moins une règle de vent décollage et une règle de vent atterrissage (ou 'both'), ex. presets « vent de face ×0,85/10 kt », « vent arrière +10 %/2 kt », plus une règle herbe (GRASS est déclarée compatible).",
+  "action": "Saisir les règles de vent (et herbe) du manuel dans l'étape Performances. Aucune règle en double du même type par phase (la garde neutraliserait tout)."
+ },
+ {
+  "itid": "F-GOVE-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "cruiseSpeedKt (et baseFactor dérivé)",
+  "trouve": "75 kt — l'item manexExtraction « Vitesse de croisière (75% puissance) » porte originalUnit '%' et originalValue 75 : c'est le POURCENTAGE DE PUISSANCE qui a été recopié en nœuds. Incohérence interne : croisière 75 kt < Vy 78 kt < Vapp 81 kt (on ne croise pas plus lentement qu'on ne monte). baseFactor 0,800 min/NM en découle.",
+  "attendu": "La TAS de croisière réelle du manuel p.23 (nécessairement > Vy).",
+  "action": "Lire la vitesse de croisière réelle p.23 et corriger cruiseSpeedKt ; baseFactor se recalcule au save."
+ },
+ {
+  "itid": "F-GOVE-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "bypassedFields — performance.takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_…",
+  "trouve": "Les 4 opérations volets rentrés (UP) sont certifiées absentes du manuel via bypassedFields (clés performance.<opId> correctement alignées).",
+  "attendu": "— (état documenté et volontaire)",
+  "action": "Rien à faire — mention pour mémoire sur la check-list."
+ },
+ {
+  "itid": "F-GOVE-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vs1",
+  "trouve": "51 kt stocké, alors que l'item manexExtraction correspondant porte originalValue 67 KIAS (p.29, confiance 95, accepted:true) — la valeur retenue diverge de la valeur extraite sans conversion d'unité qui l'explique.",
+  "attendu": "Confirmation au manuel p.29 de la vraie Vs1 (51 kt est cohérent avec Vso 45 < Vs1 51 ; 51 kt ≈ 94 km/h, une correction manuelle du pilote est plausible).",
+  "action": "Relire p.29 et confirmer/corriger Vs1."
+ }
+]

@@ -1,0 +1,247 @@
+[
+ {
+  "itid": "F-GUVV-01",
+  "status": "note",
+  "note": "Vérifié par exécution du moteur le 21/08 : les 6 modèles s'évaluent encore vent → OAT → masse (panneau vent désigné primaire). Correction proposée PAR SCRIPT (re-désignation du panneau OAT en primaire, vent en intermédiaire, chaîne OAT→masse→vent) — en attente du feu vert pilote. C'est la cause racine du -02 et du -10."
+ },
+ {
+  "itid": "F-GUVV-02",
+  "status": "note",
+  "note": "Confirmé le 21/08 : vent −5 kt → ÉCHEC sur les 6 opérations (« Impossible de calculer Y pour X=-5 »). Résolu par le même script que le -01."
+ },
+ {
+  "itid": "F-GUVV-03",
+  "status": "note",
+  "note": "Sans objet dès que le panneau vent redevient intermédiaire (filtrage par sens du vent) — couvert par le script du -01."
+ },
+ {
+  "itid": "F-GUVV-04",
+  "status": "note",
+  "note": "Rapport pilote 21/08 : « ces valeurs n'apparaissent nulle part » — exact : le cgLimits racine n'est exposé par aucun écran, et le moteur lit cgEnvelope en priorité (vérifié dans computeWeightBalance). Valeur inerte, à réaligner par script sur 2,40 / 2,59 avec le lot du -01."
+ },
+ {
+  "itid": "F-GUVV-05",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : coché fait — la pesée de 2012 est assumée comme la fiche en vigueur."
+ },
+ {
+  "itid": "F-GUVV-06",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : coché fait — limite de 50 kg confirmée (valeur maintenue en base)."
+ },
+ {
+  "itid": "F-GUVV-07",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : coché fait — limite de 20 kg confirmée (valeur maintenue en base)."
+ },
+ {
+  "itid": "F-GUVV-08",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : coché fait — bras de soute 3,50 m confirmé au manuel (valeur maintenue en base)."
+ },
+ {
+  "itid": "F-GUVV-09",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : coché fait — bras auxiliaire 3,70 m confirmé au manuel (valeur maintenue en base)."
+ },
+ {
+  "itid": "F-GUVV-10",
+  "status": "note",
+  "note": "Rapport pilote 21/08 : « elles sont déjà mises ». Base ré-extraite le 21/08 : les 4 modèles atterrissage n'ont QUE des courbes headwind (1–7/8/9) ; seuls les 2 modèles décollage ont headwind ET tailwind. Et même avec des courbes tailwind, le vent arrière échouerait tant que le -01 n'est pas corrigé. Pas besoin de recréer les modèles : re-tag par script, puis ajout des guides arrière sur le panneau vent (Modifier → cadres → capsule « Vent arrière ») si le chart du MANEX les donne, sinon règle vent arrière atterrissage."
+ },
+ {
+  "itid": "F-GIEA-02",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p44 et p51 : carburant UTILISABLE 48 US gal = 182 l CONFIRMÉ (bras 95,0 in = 2,413 m). La capacité TOTALE (189 l / 50 US gal) n'apparaît nulle part dans ce document → à confirmer sur le POH d'origine avant de l'inscrire."
+ },
+ {
+  "itid": "F-GIEA-03",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p51-52 : CONTREDIT — « Bagages (50 lb – 23 kg maximum) », bras 142,8 in = 3,627 m. Le 50 de la fiche est l'injection par défaut ou une confusion lb/kg. → maxBaggageWeight = 23 ; et arms.baggageAft / weightBalance.baggageArm valent 0 → 3,627 m."
+ },
+ {
+  "itid": "F-GIEA-04",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p51-52 : une seule station bagages, AUCUN compartiment auxiliaire (p52 : catégorie utilitaire = bagages et passagers arrière interdits). → vider maxAuxiliaryWeight."
+ },
+ {
+  "itid": "F-GIEA-05",
+  "status": "valide",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 (lecture graphique ±3 °C) : l'axe OAT va bien de −40 à +40 °C mais les lignes d'altitude sont TRONQUÉES côté froid sur le papier (dessin Piper) — début de la ligne niveau mer ≈ −5 / +3 / +10 / +7 °C selon l'abaque. Les courbes de la fiche reproduisent fidèlement le papier : ne PAS les prolonger vers −40 °C (ce serait inventer). Le moteur refuse hors tracé."
+ },
+ {
+  "itid": "F-GIEA-06",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p34 (décollage) : herbe sèche courte (≤ 20 cm) ×1,20 ; herbe humide courte ×1,30 ; sol mou / contaminé ×1,25 ; pente montante 2 % → +10 % — facteurs à multiplier entre eux. p49 (atterrissage) : piste en dur mouillée ×1,15 ; herbe sèche ×1,15 ; herbe humide ×1,35 ; sol mou ×1,25 ; pente 2 % → +10 %. → règles DISTINCTES par phase (le preset « herbe +15 % both » ne correspond PAS au manuel). Les types herbe mouillée / sol mou / dur mouillé deviennent applicables avec le sélecteur d'état de piste (chantier du 21/08)."
+ },
+ {
+  "itid": "F-GIEA-07",
+  "status": "note",
+  "note": "Même constat que F-GIEA-01 : vso = 44 kt volets 40°, vs1 = 50 kt (p31-32)."
+ },
+ {
+  "itid": "F-GIEA-09",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025) : aucune liste d'opérations approuvées. Équipements attestés par les check-lists : balise de détresse (p16, p58, p70) → elt = true justifié ; transpondeur, GPS, Garmin G5, détecteur CO. vfrDay etc. : à déclarer par le pilote."
+ },
+ {
+  "itid": "F-GIEA-10",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p53 : le domaine de centrage commence à 1200 lb = 550 kg ; aucune masse mini explicite, 600 n'apparaît nulle part. → racine minTakeoffWeight = 550 (cohérent avec l'enveloppe)."
+ },
+ {
+  "itid": "F-GIEA-11",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p20 : « Transpondeur ALT » sans lettre de mode. Correction structurelle (champ singulier orphelin → vider), indépendante du manuel."
+ },
+ {
+  "itid": "F-GIEA-12",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : titres du papier — « Course au décollage avec 0° de volets », « Performances de décollage avec 0° de volets — franchissement 50 ft (15 m) », idem 25°. → renommer sans marqueur « ⚠ DOUBLON »."
+ },
+ {
+  "itid": "F-GIEA-13",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p50 : abaque DISTANCE D'ATTERRISSAGE volets 40° uniquement (1055 kg, piste dure sèche, freinage max, Vi 63 kt, vent debout 15 kt / arrière 5 kt, deux sorties course / 50 ft). Aucun abaque volets rentrés → landing_*_flaps_up : certification « absent du manuel » légitime ; landing_*_flaps_landing : numérisables depuis p50 (lecture descendante)."
+ },
+ {
+  "itid": "F-GIEA-14",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : les abaques portent des lignes « VENT DEBOUT » (0-15 kt) et « VENT ARRIÈRE » (0-5 kt) → tags windDirection headwind sur h11, tailwind sur t2 et t14 légitimes (structure)."
+ },
+ {
+  "itid": "F-GIEA-15",
+  "status": "note",
+  "note": "Structure (fiche) : les deux « 7 » et les deux « h6 » ont des plages Y distinctes → deux guides différents mal numérotés, pas des doublons. → RENUMÉROTER (7→7/8, 8→9… ; h6→h6/h7…), ne pas supprimer."
+ },
+ {
+  "itid": "F-GIEA-16",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : panneau masse de 1600 lb (726 kg) à la ligne de référence 2325 lb (1055 kg), graduations 750/850/950/1050 kg ; panneau vent : référence vent nul à 0 kt. → axe masse [726 ; 1055], guides jusqu'à la ligne de référence, guides vent démarrant à 0."
+ },
+ {
+  "itid": "F-GIEA-17",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : double échelle (ft à droite, m à gauche) — les valeurs de la fiche suivent l'échelle ft. → outputUnit = 'ft', titres Y « Course au décollage » / « Distance de décollage avec franchissement 50 ft (15 m) »."
+ },
+ {
+  "itid": "F-GIEA-18",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p21-22 : rotation « selon la masse 45 à 55 kt » (normal volets 0°), 40 à 50 kt (terrain court) ; abaques : Vi d'envol 50 kt à 2325 lb, 40 kt à 1600 lb. Pas de valeur unique → proposition vr = 55 kt (borne haute, masse max, procédure normale) — à valider par le pilote."
+ },
+ {
+  "itid": "F-GIEA-19",
+  "status": "note",
+  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p21 : « Vitesse de montée initiale 63 kt » (décollage normal volets 0°) ; p23 : pente max 63, vario max 79, en route 86 kt. → initialClimb = 63 kt (unité vitesse, pas ft/min)."
+ },
+ {
+  "itid": "F-HSTR-01",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[17] (6000 ft, 10 °C) = 740 m (était 40)."
+ },
+ {
+  "itid": "F-HSTR-02",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[17] (9000 ft, 40 °C) = 1100 m (était 110)."
+ },
+ {
+  "itid": "F-HSTR-03",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[24] (8000 ft, 40 °C) = 1440 m (était 144)."
+ },
+ {
+  "itid": "F-HSTR-04",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : réservoir : totalCapacity 155 / usableCapacity 147 (racine 155,2 / 147,5)."
+ },
+ {
+  "itid": "F-HSTR-05",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : maxBaggageTotalMass = 35 kg (30 + 5)."
+ },
+ {
+  "itid": "F-HSTR-06",
+  "status": "note",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : cgLimits racine et miroir toujours à 2,59 alors que l'enveloppe dit 2,53 — champs NON exposés en UI et INERTES (le moteur lit cgEnvelope). À réaligner par script dans le lot F-GUVV."
+ },
+ {
+  "itid": "F-HSTR-07",
+  "status": "note",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : maxBaggageWeight toujours 50 kg alors que les compartiments déclarés font 30 + 5 kg (total 35 saisi). Champ legacy : le moteur applique les plafonds par compartiment + le total — à vider pour lever la contradiction."
+ },
+ {
+  "itid": "F-HSTR-08",
+  "status": "note",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : maxAuxiliaryWeight toujours 20 kg — le DA40 NG n'a pas de compartiment auxiliaire hors les 2 déclarés : à vider."
+ },
+ {
+  "itid": "F-HSTR-09",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[28] (6000 ft, 10 °C) = 830 m et (5000 ft, 10 °C) = 785 m."
+ },
+ {
+  "itid": "F-HSTR-10",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[12] (10000 ft, 20 °C) = 660 m."
+ },
+ {
+  "itid": "F-HSTR-11",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[13] (8000 ft, 40 °C) = 570 m."
+ },
+ {
+  "itid": "F-HSTR-12",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[25] (9000 ft, 20 °C) = 1400 m."
+ },
+ {
+  "itid": "F-HSTR-13",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[27] (8000 ft, 20 °C) = 1170 m."
+ },
+ {
+  "itid": "F-HSTR-14",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[6] (12000 ft, 0 °C) = 565 ft/min."
+ },
+ {
+  "itid": "F-HSTR-15",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[7] (12000 ft, 30 °C) = 535 ft/min."
+ },
+ {
+  "itid": "F-HSTR-16",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[33] (8000 ft, 40 °C) = 525 ft/min."
+ },
+ {
+  "itid": "F-HSTR-17",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : table[35] (12000 ft, −20 °C) = 770 ft/min."
+ },
+ {
+  "itid": "F-HSTR-18",
+  "status": "valide",
+  "note": "Rapport pilote 21/08 : « ne les donnent pas » — le manuel ne publie pas les colonnes manquantes au palier 6000 ft. Conforme : le moteur refuse hors grille, rien n'est inventé."
+ },
+ {
+  "itid": "F-HSTR-19",
+  "status": "note",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : bypassedFields encore vide. Déclaration « absente » notée : certifiez les 2 opérations décollage volets UP via la pastille « Non fournie par le manuel (certifié) » de l'étape Performance, puis enregistrez."
+ },
+ {
+  "itid": "F-HSTR-20",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : 11 règles saisies (vent face/arrière par tranche de 10 %, herbe, herbe haute, herbe mouillée, sol mou, dur mouillé) — les états de piste deviennent applicables avec le sélecteur livré le 21/08."
+ },
+ {
+  "itid": "F-GIEA-08",
+  "status": "fait",
+  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : windLimits.limits = maxCrosswind 17 kt (le faux maxTailwind a disparu)."
+ },
+ {
+  "itid": "F-GIEA-01",
+  "status": "note",
+  "note": "Manuel p31-32 : Vs 50 kt sans volet, 44 kt volets 40°. Extraction réelle du 21/08 15h52 : vs1 = 50 ✓, mais vso = 63 ENCORE, et vsTO = 44 (le 44 est la valeur volets 40° = VSO, pas une valeur volets décollage). → vso = 44 ; vsTO : le manuel ne donne pas de valeur intermédiaire, laisser vide."
+ }
+]

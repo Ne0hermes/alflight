@@ -1,0 +1,182 @@
+[
+ {
+  "itid": "F-GNAM-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "vx vs vy",
+  "trouve": "76 / 64",
+  "attendu": "Vx (meilleure pente) est normalement INFÉRIEURE à Vy (meilleur taux)",
+  "action": ""
+ },
+ {
+  "itid": "F-GNAM-02",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[].type",
+  "trouve": "Deux réservoirs type:'wing', aucun ne porte la pastille « principal » (type:'main') ; arms.fuelMain=0, moments.fuelMain absent, weightBalance.fuelArm=0",
+  "attendu": "Exactement un réservoir avec le rôle 'main' (le modèle actuel l'exige ; un réservoir d'aile peut être LE principal — Step3WeightBalance.jsx:1232)",
+  "action": "Poser la pastille « Principal » sur l'un des deux réservoirs d'aile dans l'étape Masse & centrage"
+ },
+ {
+  "itid": "F-GNAM-03",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[].totalCapacity / usableCapacity",
+  "trouve": "Chaque réservoir ne porte que capacity:91 (lu comme UTILISABLE par les moteurs) ; fuelCapacity=182=fuelUsableCapacity. Or l'extraction MANEX acceptée donne « Capacité totale carburant » = 189 L ET « Volume utilisable total » = 182 L",
+  "attendu": "totalCapacity=94,5 L et usableCapacity=91 L par réservoir (2×94,5=189 ; 2×91=182), conformément aux deux volumes publiés par le manuel",
+  "action": "Saisir les deux contenances sur chaque réservoir dans l'étape Masse & centrage (nouveaux champs totalCapacity/usableCapacity)"
+ },
+ {
+  "itid": "F-GNAM-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-GNAM-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-GNAM-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceModels (landing_50ft_flaps_up, landing_ground_roll_flaps_up)",
+  "trouve": "6 abaques couvrant 6 des 8 opérations minimales ; les 2 opérations atterrissage volets UP → NOT_IMPLEMENTED, et bypassedFields ne contient aucune clé performance.* (non certifiées absentes)",
+  "attendu": "8/8 opérations couvertes, OU certification « absente du manuel » via la pastille (clés performance.landing_50ft_flaps_up et performance.landing_ground_roll_flaps_up dans bypassedFields)",
+  "action": "Numériser les abaques atterrissage volets UP du manuel, ou si le manuel ne les publie pas, poser la certification « absente du manuel » depuis la carte avion"
+ },
+ {
+  "itid": "F-GNAM-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceModels[*].graphs[0] (axe OAT des 6 primaires)",
+  "trouve": "Courbes numérisées de −40 à +30 °C environ, mais chaque courbe d'altitude ne couvre qu'un segment : la courbe 0 ft du roulement décollage UP démarre à +3 °C (TO : +11 °C). Fenêtres calculables démontrées à 0 ft/1100 kg : roulement UP [+7;+32], roulement TO [+10;+31], 15 m UP [+1;+31], 15 m TO [−16;+32], atterrissage [−1/−24;+33] °C. ERROR sur les 6 opérations à 35 °C/1000 ft et à 39 °C/0 ft ; ERROR sur 3 opérations d…",
+  "attendu": "Courbes basse altitude prolongées sur toute l'étendue du tracé papier, couvrant au moins [−5 ; +38] °C au niveau de la mer (avion basé LFPM ~300 ft : matinées d'hiver 0-7 °C et après-midis d'été 34-40 °C sont des conditions normales)",
+  "action": "Reprendre la numérisation : prolonger les courbes 0/1000/2000 ft vers les OAT froides et chaudes jusqu'aux limites du tracé du manuel"
+ },
+ {
+  "itid": "F-GNAM-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "arms.fuelMain",
+  "trouve": "0",
+  "attendu": "zéro traité comme absent",
+  "action": ""
+ },
+ {
+  "itid": "F-GNAM-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "wb.fuelArm",
+  "trouve": "0",
+  "attendu": "zéro traité comme absent",
+  "action": ""
+ },
+ {
+  "itid": "F-GNAM-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "speeds.vx / speeds.vy",
+  "trouve": "vx=76 kt > vy=64 kt (idem dans l'extraction MANEX acceptée, conf=0)",
+  "attendu": "Vx < Vy toujours (la vitesse de pente max est physiquement inférieure à la vitesse de taux max sous le plafond) — vraisemblablement Vx=64 / Vy=76, à confirmer au manuel",
+  "action": "Intervertir vx et vy après vérification au manuel"
+ },
+ {
+  "itid": "F-GNAM-11",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "approvedOperations",
+  "trouve": "Les 31 booléens à false, y compris vfrDay, training, elt, extincteur",
+  "attendu": "Au minimum vfrDay=true pour un avion-école exploité, plus les équipements de survie réellement à bord (ELT…)",
+  "action": "Cocher les opérations approuvées et équipements réels dans l'étape Équipements"
+ },
+ {
+  "itid": "F-GNAM-12",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "horsepower",
+  "trouve": "182 CV (item d'extraction « Puissance moteur (CV) » à confiance 0, accepté)",
+  "attendu": "Valeur plaque moteur du manuel — 182 est inhabituel pour ce type et coïncide exactement avec la capacité utilisable 182 L (possible glissement de saisie)",
+  "action": "Vérifier au manuel (Lycoming O-360 : 180 CV attendu) et corriger si besoin"
+ },
+ {
+  "itid": "F-GNAM-13",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« C »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-GNAM-14",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[0,3,4,5].graphs[].outputUnit",
+  "trouve": "outputUnit:'m' déclaré sur 4 modèles dont TOUS les axes Y sont en 'ft' (t/o 15 m UP, roulement t/o TO, atterrissage 15 m et roulement)",
+  "attendu": "outputUnit aligné sur l'unité réelle des axes Y ('ft' pour ces 4 modèles ; le modèle t/o 15 m TO est correctement en 'm')",
+  "action": "Corriger outputUnit en 'ft' sur les 4 modèles dans l'atelier"
+ },
+ {
+  "itid": "F-GNAM-15",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[3].graphs[].axes.yAxis.title",
+  "trouve": "Le modèle « Distance sol décollage — Flaps TAKEOFF » (takeoff_ground_roll_flaps_to) a « landing_distance_ground » comme titre d'axe Y sur ses 3 panneaux",
+  "attendu": "takeoff_distance_ground (étiquette copiée d'un modèle d'atterrissage)",
+  "action": "Renommer l'axe Y dans l'atelier"
+ },
+ {
+  "itid": "F-GNAM-16",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[0,1].data.metadata.referenceCases",
+  "trouve": "Aucun cas de référence sur les 2 modèles « passage 15 m décollage » (UP et TO) ; les 4 autres modèles en ont 1 chacun",
+  "attendu": "Au moins 1 cas MANEX rejoué (±5 %) par abaque, comme sur les 4 autres",
+  "action": "Ajouter un cas de référence du manuel à chacun des 2 modèles dans l'atelier"
+ },
+ {
+  "itid": "F-GNAM-17",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "performanceModels[*].graphs[1] (panneaux masse)",
+  "trouve": "Les guides des panneaux masse s'arrêtent entre 1145 et 1156 kg selon les courbes, sous la MTOW 1157",
+  "attendu": "Guides tracés jusqu'à 1157 kg (2550 lbs, borne du tracé papier)",
+  "action": "Prolonger les derniers points des guides masse jusqu'à 1157 kg"
+ },
+ {
+  "itid": "F-GNAM-18",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.initialClimb",
+  "trouve": "initialClimb=76, étiqueté « Taux montée initial » en ft/min dans l'extraction acceptée",
+  "attendu": "Un taux initial cohérent avec les propres abaques de l'avion (~500+ ft/min impliqués par le passage 15 m) — 76 est identique à la valeur VX=76 kt : c'est très probablement la VITESSE de montée initiale, pas le taux",
+  "action": "Remplacer par le vrai taux initial du manuel (ou vider le champ)"
+ },
+ {
+  "itid": "F-GNAM-19",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vfeTO",
+  "trouve": "vfeTO vide, contourné explicitement (bypassedFields=[\"speeds.vfeTO\"]) ; vfeLdg=102 ; l'extraction MANEX n'a trouvé qu'une seule VFE (« VFE LDG » 102 kt)",
+  "attendu": "102 kt si l'avion n'a qu'un seul arc blanc/une seule VFE, sinon la valeur volets décollage du manuel",
+  "action": "Saisir 102 (ou la valeur manuel) et retirer le bypass"
+ },
+ {
+  "itid": "F-GNAM-20",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.vr / speeds.vglide",
+  "trouve": "vr=\"\" et vglide=\"\" (les deux seuls REQUIRED manquants : poids 2 et 1)",
+  "attendu": "VR et vitesse de plané du manuel (avion école : les deux servent au briefing)",
+  "action": "Saisir les deux valeurs du manuel"
+ }
+]

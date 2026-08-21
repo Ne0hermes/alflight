@@ -1,0 +1,299 @@
+[
+ {
+  "itid": "F-HSTR-01",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[17].data — landing_50ft_flaps_landing 1280 kg, cellule (6000 ft…",
+  "trouve": "40 m",
+  "attendu": "≈ 740 m (série au palier 6000 ft : 700/[40]/780/830/870 ; palier 5000 ft : 710 à 10 °C ; palier 7000 ft : 780)",
+  "action": "Corriger la cellule à la valeur du manuel p.193 (vraisemblablement 740)."
+ },
+ {
+  "itid": "F-HSTR-02",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[17].data — landing_50ft_flaps_landing 1280 kg, cellule (9000 ft…",
+  "trouve": "110 m",
+  "attendu": "≈ 1100 m (série 9000 ft : 880/930/990/1040/[110] ; 8000 ft à 40 °C : 1010)",
+  "action": "Corriger la cellule au manuel p.193 (vraisemblablement 1100)."
+ },
+ {
+  "itid": "F-HSTR-03",
+  "sev": "critique",
+  "regle": false,
+  "champ": "advancedPerformance.tables[24].data — landing_50ft_flaps_up 1310 kg, cellule (8000 ft, 40 …",
+  "trouve": "144 m",
+  "attendu": "≈ 1440 m (série 8000 ft : 1150/1220/1290/1370/[144] ; 7000 ft à 40 °C : 1310 ; 9000 ft : 1590)",
+  "action": "Corriger la cellule au manuel p.196 (vraisemblablement 1440)."
+ },
+ {
+  "itid": "F-HSTR-04",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].totalCapacity / usableCapacity",
+  "trouve": "Le réservoir ne porte que capacity = 155,2 L ; or fuelUsableCapacity = 147,5 L. Le moteur lit capacity seul comme l'UTILISABLE (tankUsableLtr = usableCapacity ?? capacity) → 155,2 L utilisables",
+  "attendu": "totalCapacity = 155,2 et usableCapacity = 147,5 sur le réservoir (la fiche porte déjà les deux volumes du manuel)",
+  "action": "Renseigner les deux contenances du réservoir (155,2 / 147,5) via la nouvelle UI double-contenance."
+ },
+ {
+  "itid": "F-HSTR-05",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "maxBaggageTotalMass",
+  "trouve": "Champ absent alors que la fiche a 2 compartiments bagages (soute standard 30 kg + tube 5 kg)",
+  "attendu": "La limite TOTALE de soute du manuel DA40NG, si elle existe (désormais consommée par computeWeightBalance)",
+  "action": "Vérifier au manuel (section 6) si une limite totale existe et la saisir dans Step3."
+ },
+ {
+  "itid": "F-HSTR-06",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "cgLimits.aft (et weightBalance.cgLimits.aft)",
+  "trouve": "cgLimits.aft = 2,59 m (idem weightBalance.cgLimits.aft) alors que cgEnvelope donne une limite arrière constante 2,53 m (aftMinCG = aftMaxCG = aftCG = 2,53)",
+  "attendu": "Les deux emplacements alignés sur la valeur du manuel (2,53 si l'enveloppe est juste)",
+  "action": "Confirmer la limite arrière au manuel puis aligner cgLimits.aft sur cgEnvelope (2,53) — ou corriger l'enveloppe si c'est 2,59."
+ },
+ {
+  "itid": "F-HSTR-07",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxBaggageWeight",
+  "trouve": "50 kg",
+  "attendu": "50 kg était la valeur injectée d'office par l'application dès que le champ était vide. Elle peut aussi être la vraie limite : rien ne les distingue en base.",
+  "action": "Relever la charge maxi en soute sur le manuel de vol et confirmer ou corriger."
+ },
+ {
+  "itid": "F-HSTR-08",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "aircraft_data.maxAuxiliaryWeight",
+  "trouve": "20 kg",
+  "attendu": "20 kg était la valeur injectée d'office par l'application dès que le champ était vide.",
+  "action": "Confirmer la charge maxi du compartiment auxiliaire au manuel, ou vider le champ si ce compartiment n'existe pas."
+ },
+ {
+  "itid": "F-HSTR-09",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[28].data — takeoff_50ft_flaps_to 1310 kg, cellules (6000 ft, 10…",
+  "trouve": "(6000,10) = 8830 m ; (5000,10) = 700 m",
+  "attendu": "(6000,10) ≈ 830 m (série 770/[8830]/900/980) ; (5000,10) ≈ 785 m (série 730/[700]/840 ; 720 à 4000 ft)",
+  "action": "Corriger les deux cellules au manuel p.177 (vraisemblablement 830 et ~780)."
+ },
+ {
+  "itid": "F-HSTR-10",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[12].data — landing_ground_roll_flaps_landing 1310 kg, cellule (…",
+  "trouve": "566 m",
+  "attendu": "≈ 660 m (série 10000 ft : 580/620/[566]/695 ; 1280 kg au même point : 650)",
+  "action": "Corriger au manuel p.192."
+ },
+ {
+  "itid": "F-HSTR-11",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[13].data — landing_ground_roll_flaps_landing 1280 kg, cellule (…",
+  "trouve": "750 m",
+  "attendu": "≈ 570 m (série 8000 ft : 450/480/510/540/[750] ; 1310 kg au même point : 585)",
+  "action": "Corriger au manuel p.193."
+ },
+ {
+  "itid": "F-HSTR-12",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[25].data — landing_50ft_flaps_up 1280 kg, cellule (9000 ft, 20 …",
+  "trouve": "4000 m",
+  "attendu": "≈ 1400 m (série 9000 ft : 1250/1320/[4000]/1480/1550)",
+  "action": "Corriger au manuel p.197."
+ },
+ {
+  "itid": "F-HSTR-13",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[27].data — landing_50ft_flaps_up 1100 kg, cellule (8000 ft, 20 …",
+  "trouve": "1070 m",
+  "attendu": "≈ 1170 m (série 8000 ft : 1040/1100/[1070]/1240/1300)",
+  "action": "Corriger au manuel p.199."
+ },
+ {
+  "itid": "F-HSTR-14",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[6].data — climb_takeoff 1200 kg, cellule (12000 ft, 0 °C)",
+  "trouve": "656 ft/min",
+  "attendu": "≈ 565 ft/min (série 12000 ft : 595/580/[656]/550 ; 1100 kg au même point : 650)",
+  "action": "Corriger au manuel p.183."
+ },
+ {
+  "itid": "F-HSTR-15",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[7].data — climb_takeoff 1100 kg, cellule (12000 ft, 30 °C)",
+  "trouve": "835 ft/min",
+  "attendu": "≈ 535 ft/min (série 12000 ft : ...585/[835] ; 10000 ft à 30 °C : 580 ; 14000 ft : 495)",
+  "action": "Corriger au manuel p.183."
+ },
+ {
+  "itid": "F-HSTR-16",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[33].data — climb_cruise 1280 kg, cellule (8000 ft, 40 °C)",
+  "trouve": "252 ft/min",
+  "attendu": "≈ 525 ft/min (1310 kg au même point : 505 ; série 8000 ft : ...570/[252])",
+  "action": "Corriger au manuel p.186."
+ },
+ {
+  "itid": "F-HSTR-17",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[35].data — climb_cruise 1100 kg, cellule (12000 ft, -20 °C)",
+  "trouve": "700 ft/min",
+  "attendu": "≈ 770 ft/min (10000 ft : 785 ; 14000 ft : 750 ; série 12000 ft : [700]/760/745)",
+  "action": "Corriger au manuel p.186."
+ },
+ {
+  "itid": "F-HSTR-18",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[8-11] — go_around_climb, palier 6000 ft",
+  "trouve": "Palier 6000 ft limité à -20/-10/0 °C (et -20/-10 seulement pour 1100 kg), alors que les paliers 0/2000/4000 ft vont de -20 à +50 °C",
+  "attendu": "Colonnes de température complètes au palier 6000 ft si le manuel les donne (p.201-202)",
+  "action": "Vérifier le manuel p.201-202 : si les colonnes existent, compléter le palier 6000 ft des 4 tables ; sinon, l'état est fidèle au manuel (rien à faire)."
+ },
+ {
+  "itid": "F-HSTR-19",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performance.takeoff_ground_roll_flaps_up / performance.takeoff_50ft_flaps_up (couverture 8…",
+  "trouve": "6 des 8 opérations minimales couvertes ; les 2 variantes décollage volets UP absentes, et bypassedFields = [] (non certifiées « absentes du manuel »)",
+  "attendu": "8/8 couvertes, ou opérations manquantes certifiées absentes via la pastille performance.<opId>",
+  "action": "Si le manuel DA40NG ne publie pas de décollage volets UP (probable), certifier les 2 opérations absentes via la pastille ; sinon importer les tables."
+ },
+ {
+  "itid": "F-HSTR-20",
+  "sev": "majeur",
+  "regle": false,
+  "champ": "performanceCorrections",
+  "trouve": "Champ totalement absent de la fiche (aucune règle vent ni herbe), avion 100 % tableaux (performanceModels = [])",
+  "attendu": "Au moins une règle vent de face et une règle vent arrière (takeoff + landing ou both) tirées du manuel",
+  "action": "Saisir les facteurs correctifs du manuel DA40NG (chapitre 5) dans l'éditeur de l'étape Performances."
+ },
+ {
+  "itid": "F-HSTR-21",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "additionalFuelTanks[0].type",
+  "trouve": "type = 'wing' ; aucun réservoir ne porte la pastille « principal » (type:'main')",
+  "attendu": "L'unique réservoir marqué type:'main' (un seul requis dans la refonte)",
+  "action": "Cocher la pastille « principal » sur « Réservoir aile 1 » dans Step3."
+ },
+ {
+  "itid": "F-HSTR-22",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "specialCapabilities.rvsm / specialCapabilities.catIIIa",
+  "trouve": "rvsm = true et catIIIa = true (avec catII = false) sur un SEP de 170 CV",
+  "attendu": "Vraisemblablement false pour les deux (cases cochées par erreur ?)",
+  "action": "Décocher si erreur de saisie."
+ },
+ {
+  "itid": "F-HSTR-23",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "equipmentNav.lpv vs equipmentNav.rnpTypes",
+  "trouve": "lpv = false alors que rnpTypes = \"APCH (LPV), 1.0\"",
+  "attendu": "lpv = true si l'avion est approuvé RNP APCH minima LPV, sinon retirer LPV de rnpTypes",
+  "action": "Trancher et aligner les deux champs."
+ },
+ {
+  "itid": "F-HSTR-24",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weightBalance.cgLimits.forwardVariable[2]",
+  "trouve": "3e point : 1300 kg / cg 2,469 / moment 3209,7 — alors que cgEnvelope.forwardPoints[2] = 1310 kg / 2,469 / 3234,39",
+  "attendu": "Miroir aligné sur cgEnvelope (1310 kg)",
+  "action": "Laisser le prochain save régénérer weightBalance.cgLimits, ou corriger 1300 → 1310."
+ },
+ {
+  "itid": "F-HSTR-25",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "minTakeoffWeight (racine)",
+  "trouve": "650 kg à la racine, contre weights.minTakeoffWeight = 940 et cgEnvelope.aftMinWeight = 940",
+  "attendu": "940 partout (borne cohérente avec l'enveloppe qui démarre à 940 kg)",
+  "action": "Aligner la racine sur 940 (valeur validée par la saisie et l'enveloppe)."
+ },
+ {
+  "itid": "F-HSTR-26",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "weighingReport.certificationDate",
+  "trouve": "Pesée du 2019-03-25 (7,4 ans au 19/08/2026), PDF joint",
+  "attendu": "Confirmation qu'aucune pesée plus récente n'existe",
+  "action": "Vérifier auprès du club si une pesée plus récente existe ; sinon rien à faire avant 2029."
+ },
+ {
+  "itid": "F-HSTR-27",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "aircraft_data.equipmentSurv.transponderMode",
+  "trouve": "« S »",
+  "attendu": "Champ au SINGULIER posé en dur à l'initialisation ; l'écran Équipements écrit, lui, « transponderModes » au pluriel. C'est ce champ orphelin qui faisait déclarer une balise de détresse au plan de vol.",
+  "action": "Champ à vider. Le mode réel se saisit dans l'étape Équipements ; la balise se déclare dans les opérations approuvées."
+ },
+ {
+  "itid": "F-HSTR-28",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[5,6,33,34].table_name (+ tables[11,21,25] sans masse dans le no…",
+  "trouve": "Noms décalés d'une masse : table 5 « 1200 kg » contient 1280 kg, table 6 « 1100 kg » contient 1200 kg (climb_takeoff) ; idem tables 33/34 (climb_cruise). Tables 11/21/25 sans masse dans le nom",
+  "attendu": "table_name reflétant la masse réellement contenue dans data.Masse",
+  "action": "Renommer les 4 tables décalées (et compléter les 3 noms sans masse)."
+ },
+ {
+  "itid": "F-HSTR-29",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[8-11].data — lignes Temperature = \"ISA\"",
+  "trouve": "12 lignes (3 par table go_around_climb) portent Temperature = \"ISA\" (chaîne) avec des valeurs réelles du manuel (ex. 388 ft/min à 0 ft/1310 kg)",
+  "attendu": "Températures numériques (la colonne ISA du manuel = 15/11/7 °C à 0/2000/4000 ft)",
+  "action": "Convertir ces 12 lignes en températures numériques ou les supprimer."
+ },
+ {
+  "itid": "F-HSTR-30",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "advancedPerformance.tables[4/5] (4000 ft, 30 °C) et tables[24/25] (4000 ft, 10 °C)",
+  "trouve": "Micro-inversions de masse : climb_takeoff 1310 kg = 580 ft/min > 1280 kg = 575 ; landing_50ft_flaps_up 1310 kg = 910 m < 1280 kg = 920 m",
+  "attendu": "Valeurs monotones en masse (ou telles quelles si le manuel les publie ainsi, arrondis compris)",
+  "action": "Contrôler ces 4 cellules au manuel en même temps que les corrections majeures."
+ },
+ {
+  "itid": "F-HSTR-31",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "windLimits",
+  "trouve": "Uniquement l'ancien format : maxCrosswind 20 / maxCrosswindWet 12 / maxTailwind 10 kt ; windLimits.limits[] absent",
+  "attendu": "Les 3 limites re-saisies dans le nouveau format windLimits.limits[]",
+  "action": "Re-saisir les 3 limites dans la liste de l'étape Vitesses."
+ },
+ {
+  "itid": "F-HSTR-32",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.voRanges",
+  "trouve": "Vo défini pour 940-1080 kg (101 kt) et 1080-1180 kg (108 kt) — rien entre 1180 et la MTOW 1310 kg",
+  "attendu": "La ou les tranches manquantes jusqu'à 1310 kg si le manuel les donne (une Va/Vo à la masse max est normalement publiée)",
+  "action": "Compléter la tranche 1180-1310 kg depuis le manuel (section 2)."
+ },
+ {
+  "itid": "F-HSTR-33",
+  "sev": "mineur",
+  "regle": false,
+  "champ": "speeds.initialClimb",
+  "trouve": "72 — identique à vy (72 kt), alors que le schéma d'extraction déclare ce champ en ft/min",
+  "attendu": "Une vitesse de montée initiale en kt OU un taux en ft/min, selon l'intention",
+  "action": "Confirmer l'intention (probablement Vy 72 kt) et laisser tel quel ou vider le champ."
+ }
+]
