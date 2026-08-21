@@ -16,7 +16,7 @@ import dataBackupManager from '../../utils/dataBackupManager';
 import { resolveWindComponent } from '../../utils/windComponent';
 import { getWaypointIcao } from '../../shared/utils/getWaypointIcao';
 import { SAFETY_FACTOR_PRESETS, DEFAULT_SAFETY_FACTOR } from '../../utils/performanceSafetyFactor';
-import { applyPerformanceCorrections } from '../../utils/performanceCorrections';
+import { applyPerformanceCorrections, CORRECTION_TYPES } from '../../utils/performanceCorrections';
 import { normalizeSurface } from '../../utils/runwaySurface';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
@@ -26,6 +26,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const { selectedAircraft } = useAircraft();
   // ✈️ Détail des facteurs correctifs du manuel appliqués (affichage pilote)
   const [corrBreakdowns, setCorrBreakdowns] = useState({ takeoff: null, landing: null, takeoffSurface: null, landingSurface: null });
+  // 🛬 États de piste DÉCLARÉS par le pilote, par phase (clés CORRECTION_TYPES de
+  // kind 'manual' : wet_grass, high_grass, soft_ground, wet_paved…). Défaut : rien
+  // de coché — conservateur, c'est le pilote qui déclare ; jamais hérité d'un vol
+  // précédent (état local du module, remis à zéro à chaque ouverture).
+  const [runwayStates, setRunwayStates] = useState({ takeoff: [], landing: [] });
   const { calculations } = useWeightBalance();
   const { waypoints } = useNavigation();
   const { getWeatherByIcao } = useWeather();
@@ -582,9 +587,15 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const famToKind = (fam) => (fam === 'GRASS' ? 'grass' : fam === 'PAVED' ? 'paved' : null);
     const takeoffSurface = famToKind(normalizeSurface(departureRunwayWind.bestRunway?.surface));
     const landingSurface = famToKind(normalizeSurface(arrivalRunwayWind.bestRunway?.surface));
+    // `runwayStates` est TOUJOURS fourni (tableau, éventuellement vide) : une règle
+    // d'état non déclarée est alors sans objet — le moteur ne la « rappelle » que
+    // lorsque l'appelant n'est pas câblé (runwayStates absent).
     const applyCorr = (distance, phase, windComponentKt, surface) =>
       distance !== null && manualCorrections.length > 0
-        ? applyPerformanceCorrections({ distance, phase, corrections: manualCorrections, conditions: { windComponentKt, surface } })
+        ? applyPerformanceCorrections({
+            distance, phase, corrections: manualCorrections,
+            conditions: { windComponentKt, surface, runwayStates: runwayStates[phase] || [] }
+          })
         : null;
     const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface);
     const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface);
@@ -626,7 +637,7 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     wizardMode, flightPlan, selectedAircraft, loadedPerformanceTables,
     takeoffMass, landingMass, takeoffTemp, landingTemp, takeoffPa, landingPa,
     takeoffWindComponent, landingWindComponent, takeoffWindVariable, landingWindVariable,
-    takeoffWindSpeed, landingWindSpeed, safetyFactor.id
+    takeoffWindSpeed, landingWindSpeed, safetyFactor.id, runwayStates
   ]);
 
   // Helpers par phase : on les rend séparément pour les regrouper dans chaque section.
@@ -705,8 +716,9 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     </div>
   );
 
-  // Note d'avertissement : corrections piste/terrain non encore appliquées par
-  // le résolveur. Le pilote doit en tenir compte manuellement le cas échéant.
+  // Note d'avertissement : les corrections piste/terrain ne sont appliquées que
+  // via les facteurs correctifs de la fiche avion (herbe détectée ; états de
+  // piste DÉCLARÉS par le pilote). Sans règle, le pilote en tient compte lui-même.
   const renderRunwayCorrectionsNotice = () => (
     <div style={{
       marginBottom: 12,
@@ -719,11 +731,13 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       gap: 10
     }}>
       <div style={{ fontSize: 12, color: 'var(--accent-primary)', lineHeight: 1.5 }}>
-        <strong>Note — Corrections piste/terrain non encore implémentées.</strong>
-        {' '}Les distances affichées <strong>ne tiennent pas compte</strong> des facteurs
-        multiplicatifs liés à <strong>l'état du sol</strong> (sèche, humide, contaminée,
-        enneigée) ni au <strong>type de revêtement</strong> (asphalte, herbe, gravier).
-        À ajouter manuellement selon ton manuel de vol et la réglementation applicable.
+        <strong>Note — Corrections piste/terrain.</strong>
+        {' '}Seuls les <strong>facteurs correctifs saisis sur la fiche avion</strong> sont appliqués :
+        <strong> herbe</strong> détectée depuis la piste ; <strong>herbe mouillée / haute, terrain meuble,
+        piste dure mouillée</strong> uniquement si tu les <strong>déclares</strong> dans la carte
+        « Facteurs correctifs du manuel ». Sans règle correspondante, les distances affichées
+        <strong> ne tiennent pas compte</strong> de l'état du sol (humide, contaminé, enneigé…) ni du
+        revêtement — à ajouter manuellement selon ton manuel de vol et la réglementation applicable.
       </div>
     </div>
   );
@@ -737,6 +751,26 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     const bd = corrBreakdowns[phase];
     const surfaceKind = phase === 'takeoff' ? corrBreakdowns.takeoffSurface : corrBreakdowns.landingSurface;
     const title = phase === 'takeoff' ? 'Décollage' : 'Atterrissage';
+    // 🛬 Sélecteur « État de piste » (demande César 21/08) : uniquement les états
+    // (kind 'manual') pour lesquels l'avion a une règle sur CETTE phase — cocher un
+    // état sans règle ne changerait rien. Défaut : rien de coché, le pilote déclare.
+    const declarableStates = [];
+    for (const c of rules) {
+      if (!c || (c.appliesTo !== 'both' && c.appliesTo !== phase)) continue;
+      if (CORRECTION_TYPES[c.type]?.kind !== 'manual') continue;
+      if (declarableStates.some((s) => s.type === c.type)) continue;
+      declarableStates.push({
+        type: c.type,
+        label: c.type === 'other' && c.label?.trim() ? c.label.trim() : CORRECTION_TYPES[c.type].label
+      });
+    }
+    const declared = runwayStates[phase] || [];
+    const toggleState = (type) => setRunwayStates((prev) => {
+      const current = prev[phase] || [];
+      const next = current.includes(type) ? current.filter((t) => t !== type) : [...current, type];
+      return { ...prev, [phase]: next };
+    });
+    const declaredLabels = declarableStates.filter((s) => declared.includes(s.type)).map((s) => s.label);
     return (
       <div style={{
         marginBottom: 12, padding: 10,
@@ -751,6 +785,29 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
             </span>
           )}
         </div>
+        {declarableStates.length > 0 && (
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--border-subtle)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              État de piste à déclarer — un état non coché n'est pas corrigé :
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
+              {declarableStates.map((s) => (
+                <label key={s.type} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={declared.includes(s.type)}
+                    onChange={() => toggleState(s.type)}
+                    style={{ accentColor: 'var(--accent-primary)', margin: 0 }}
+                  />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+              État déclaré : <strong>{declaredLabels.length ? declaredLabels.join(', ') : 'aucun'}</strong>
+            </div>
+          </div>
+        )}
         {!bd ? (
           <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
             Distance de base indisponible (matrice non calculée) — facteurs non appliqués.

@@ -13,6 +13,13 @@
 // deux phases reste possible via le formulaire détaillé, et apparaît alors dans
 // les deux colonnes avec une pastille « 2 phases ».
 //
+// 🌱 SURFACES ET ÉTATS DE PISTE (demande César 21/08) : herbe (auto-détectée),
+// herbe mouillée, herbe haute, terrain meuble, piste dure mouillée se saisissent
+// au choix en « ± % fixe » ou « × facteur fixe » — comme le vent, mais sans
+// tranche ni palier. Les états non détectables sont DÉCLARÉS par le pilote en
+// préparation de vol (cases à cocher par phase) ; non déclarés, ils ne
+// s'appliquent pas. Aucune valeur de manuel n'est pré-remplie ici.
+//
 // Stocké dans aircraft.performanceCorrections, appliqué (avec détail visuel)
 // dans le module Performance. Voir utils/performanceCorrections.
 // ============================================================================
@@ -32,7 +39,11 @@ import { CORRECTION_TYPES, describeCorrection } from '@utils/performanceCorrecti
 
 const TYPE_OPTIONS = Object.entries(CORRECTION_TYPES).map(([value, t]) => ({ value, label: t.label }));
 
-const MODE_OPTIONS = [
+// Formes de règle PAR FAMILLE de condition (demande César 21/08) : le vent se
+// décline en tranches ou en paliers ; une surface ou un état de piste (herbe,
+// herbe mouillée/haute, terrain meuble, piste dure mouillée…) n'a que deux
+// formes dans les manuels : un pourcentage (+15 %) ou un facteur (×1,15).
+const WIND_MODE_OPTIONS = [
   { value: 'percent_fixed', label: '± % fixe' },
   { value: 'percent_per_step', label: '± % par tranche de vent' },
   { value: 'factor_per_step', label: '× facteur par tranche de vent' },
@@ -42,6 +53,15 @@ const MODE_OPTIONS = [
   { value: 'factor_table', label: '× tableau de paliers du manuel' },
   { value: 'percent_table', label: '± % tableau de paliers du manuel' },
 ];
+const SURFACE_MODE_OPTIONS = [
+  { value: 'percent_fixed', label: '± % fixe' },
+  { value: 'factor_fixed', label: '× facteur fixe' },
+];
+const isWind = (type) => CORRECTION_TYPES[type]?.kind === 'wind';
+const modeOptionsFor = (type) => (isWind(type) ? WIND_MODE_OPTIONS : SURFACE_MODE_OPTIONS);
+const DEFAULT_MODE = { wind: 'factor_per_step', surface: 'percent_fixed' };
+const defaultModeFor = (type) => (isWind(type) ? DEFAULT_MODE.wind : DEFAULT_MODE.surface);
+const isModeValidFor = (type, mode) => modeOptionsFor(type).some((o) => o.value === mode);
 
 const APPLIES_OPTIONS = [
   { value: 'takeoff', label: 'Décollage' },
@@ -67,9 +87,16 @@ const EMPTY_DRAFT = { type: 'headwind', mode: 'factor_per_step', value: '', step
 const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
   const [draft, setDraft] = useState(EMPTY_DRAFT);
 
-  const isWindType = draft.type === 'headwind' || draft.type === 'tailwind';
+  const isWindType = isWind(draft.type);
+  const modeOptions = modeOptionsFor(draft.type);
   const isTableMode = isWindType && (draft.mode === 'factor_table' || draft.mode === 'percent_table');
   const needsStep = isWindType && draft.mode !== 'percent_fixed' && !isTableMode;
+  const isFactorMode = draft.mode === 'factor_fixed' || (isWindType && draft.mode === 'factor_per_step');
+  // Quand la condition change de famille (vent ↔ surface), la forme courante
+  // peut ne plus exister : on remet la forme par défaut de la nouvelle famille.
+  const setType = (type) => setDraft((d) => ({
+    ...d, type, mode: isModeValidFor(type, d.mode) ? d.mode : defaultModeFor(type)
+  }));
 
   const paliersValides = (draft.brackets || []).filter(
     (b) => b.fromKt !== '' && b.value !== '' && Number.isFinite(Number(b.fromKt)) && Number.isFinite(Number(b.value))
@@ -92,12 +119,12 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
   // Retour pilote 20/08 : le message doit dire QUELLE règle bloque et pour
   // QUELLE phase — le formulaire compare à la phase sélectionnée ci-dessus
   // (défaut « Décollage »), pas à la colonne qu'on regarde.
-  const collisions = isWindType
-    ? (corrections || []).filter(
-        (c) => c.type === draft.type
-          && (c.appliesTo === draft.appliesTo || c.appliesTo === 'both' || draft.appliesTo === 'both')
-      )
-    : [];
+  // Depuis le 21/08 la garde vaut pour TOUS les types : le moteur refuse aussi
+  // deux règles « Herbe » ou « Herbe mouillée » pour la même phase.
+  const collisions = (corrections || []).filter(
+    (c) => c.type === draft.type
+      && (c.appliesTo === draft.appliesTo || c.appliesTo === 'both' || draft.appliesTo === 'both')
+  );
   const dejaPresent = collisions.length > 0;
   const phaseLabel = (p) => APPLIES_OPTIONS.find((o) => o.value === p)?.label || p;
 
@@ -123,7 +150,7 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
     } else {
       addRule({
         type: draft.type,
-        mode: isWindType ? draft.mode : 'percent_fixed',
+        mode: isModeValidFor(draft.type, draft.mode) ? draft.mode : defaultModeFor(draft.type),
         value: Number(draft.value),
         stepKt: needsStep ? Number(draft.stepKt) : null,
         appliesTo: draft.appliesTo,
@@ -150,7 +177,9 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
         séparément — ils diffèrent presque toujours. Appliqués aux distances calculées
         en préparation de vol, avec le détail du calcul affiché au pilote.
         Arrondis conservateurs : vent arrière dès la tranche entamée, vent de face
-        par tranche complète uniquement.
+        par tranche complète uniquement. Les états de piste non détectables (herbe
+        mouillée ou haute, terrain meuble, piste dure mouillée) ne s'appliquent que
+        si le pilote les <strong>déclare</strong> en préparation de vol.
       </Typography>
 
       {/* Deux colonnes indépendantes : décollage / atterrissage */}
@@ -221,20 +250,18 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
           {APPLIES_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
         </TextField>
         <TextField select size="small" label="Condition" value={draft.type}
-          onChange={(e) => setDraft((d) => ({ ...d, type: e.target.value }))}
+          onChange={(e) => setType(e.target.value)}
           sx={{ minWidth: 170 }}>
           {TYPE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
         </TextField>
-        {isWindType && (
-          <TextField select size="small" label="Forme" value={draft.mode}
-            onChange={(e) => setDraft((d) => ({ ...d, mode: e.target.value }))}
-            sx={{ minWidth: 200 }}>
-            {MODE_OPTIONS.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
-          </TextField>
-        )}
+        <TextField select size="small" label="Forme" value={draft.mode}
+          onChange={(e) => setDraft((d) => ({ ...d, mode: e.target.value }))}
+          sx={{ minWidth: 200 }}>
+          {modeOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+        </TextField>
         {!isTableMode && (
           <TextField size="small" type="number"
-            label={draft.mode === 'factor_per_step' && isWindType ? 'Facteur (ex. 0,85)' : 'Pourcentage (ex. 15)'}
+            label={isFactorMode ? (isWindType ? 'Facteur (ex. 0,85)' : 'Facteur (ex. 1,15)') : 'Pourcentage (ex. 15)'}
             value={draft.value}
             onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
             sx={{ width: 160 }} inputProps={{ step: 'any' }} />
@@ -288,7 +315,7 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
           {' '}{collisions.map((c) => `${describeCorrection(c)} (${phaseLabel(c.appliesTo)})`).join(' ; ')}.
           Deux règles du même type se multiplieraient au lieu de se lire — le moteur refuserait
           de les appliquer. Pour l'autre phase, changez « Phase » ci-dessus ; sinon supprimez
-          l'existante ou complétez-la avec des paliers.
+          l'existante{isWindType ? ' ou complétez-la avec des paliers' : ''}.
         </Typography>
       )}
     </Paper>

@@ -205,3 +205,142 @@ describe('garde anti-cumul — plusieurs règles du même type', () => {
     expect(r.applied).toBe(true);
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// SURFACES ET ÉTATS DE PISTE (21/08/2026, demande César)
+//
+// « Pour les terrains meubles, les pistes dures mouillées, les herbes mouillées,
+//   les herbes hautes et les pistes en herbe, il faut que je puisse ajouter un
+//   facteur — pourcentage ou facteur multiplicatif, comme pour le vent. »
+//
+// Les états non détectables (kind 'manual') sont DÉCLARÉS par le pilote via
+// conditions.runwayStates ; absents de la déclaration, ils sont sans objet ;
+// runwayStates absent (appelant non câblé) → simple rappel, jamais appliqué.
+// ════════════════════════════════════════════════════════════════════════════
+
+const wetGrassFactor = { id: 'wg-f', type: 'wet_grass', mode: 'factor_fixed', value: 1.15, appliesTo: 'both' };
+const wetGrassPercent = { id: 'wg-p', type: 'wet_grass', mode: 'percent_fixed', value: 20, appliesTo: 'landing' };
+
+describe('états de piste déclarés — facteur fixe / pourcentage fixe', () => {
+  const run = (corrections, conditions) =>
+    applyPerformanceCorrections({ distance: 1000, phase: 'landing', corrections, conditions });
+
+  it('factor_fixed ×1,15 sur herbe mouillée DÉCLARÉE : appliqué, détail « déclaré »', () => {
+    const r = run([wetGrassFactor], { windComponentKt: 0, surface: 'grass', runwayStates: ['wet_grass'] });
+    expect(r.corrected).toBeCloseTo(1150, 6);
+    expect(r.applied).toBe(true);
+    expect(r.steps[0].factor).toBeCloseTo(1.15, 6);
+    expect(r.steps[0].detail).toMatch(/herbe mouillée/);
+    expect(r.steps[0].detail).toMatch(/déclaré/);
+    expect(r.steps[0].note).toBeNull();
+  });
+
+  it('percent_fixed +20 % sur herbe mouillée déclarée : ×1,20', () => {
+    const r = run([wetGrassPercent], { windComponentKt: 0, surface: 'grass', runwayStates: ['wet_grass'] });
+    expect(r.corrected).toBeCloseTo(1200, 6);
+  });
+
+  it('état NON déclaré (runwayStates présent mais vide) : règle sans objet, aucune étape', () => {
+    const r = run([wetGrassFactor], { windComponentKt: 0, surface: 'grass', runwayStates: [] });
+    expect(r.corrected).toBe(1000);
+    expect(r.applied).toBe(false);
+    expect(r.steps).toHaveLength(0);
+  });
+
+  it('autre état déclaré (herbe haute) : la règle herbe mouillée reste sans objet', () => {
+    const r = run([wetGrassFactor], { windComponentKt: 0, surface: 'grass', runwayStates: ['high_grass'] });
+    expect(r.corrected).toBe(1000);
+    expect(r.steps).toHaveLength(0);
+  });
+
+  it('runwayStates ABSENT (appelant non câblé) : jamais appliqué, rappel « à appliquer manuellement »', () => {
+    const r = run([wetGrassFactor], { windComponentKt: 0, surface: 'grass' });
+    expect(r.corrected).toBe(1000);
+    expect(r.applied).toBe(false);
+    expect(r.steps[0].note).toMatch(/à appliquer manuellement/);
+  });
+
+  it("plusieurs états déclarés : chacun s'applique une fois, ils se multiplient", () => {
+    const highGrass = { id: 'hg', type: 'high_grass', mode: 'percent_fixed', value: 25, appliesTo: 'both' };
+    const r = run([wetGrassFactor, highGrass], { windComponentKt: 0, surface: 'grass', runwayStates: ['wet_grass', 'high_grass'] });
+    expect(r.corrected).toBeCloseTo(1000 * 1.15 * 1.25, 6);
+    expect(r.steps).toHaveLength(2);
+  });
+
+  it('la piste en herbe (auto) reste pilotée par `surface`, pas par la déclaration', () => {
+    const r = run([grass15], { windComponentKt: 0, surface: 'grass', runwayStates: [] });
+    expect(r.corrected).toBeCloseTo(1150, 6);
+    const dur = run([grass15], { windComponentKt: 0, surface: 'paved', runwayStates: ['grass'] });
+    expect(dur.corrected).toBe(1000);
+  });
+
+  it('factor_fixed sur la piste en herbe (auto) : ×1,2', () => {
+    const grassFactor = { id: 'gf', type: 'grass', mode: 'factor_fixed', value: 1.2, appliesTo: 'both' };
+    const r = run([grassFactor], { windComponentKt: 0, surface: 'grass' });
+    expect(r.corrected).toBeCloseTo(1200, 6);
+  });
+
+  it('facteur fixe hors bornes (×12) : refusé avec note', () => {
+    const crazy = { id: 'cr', type: 'soft_ground', mode: 'factor_fixed', value: 12, appliesTo: 'both' };
+    const r = run([crazy], { windComponentKt: 0, surface: 'grass', runwayStates: ['soft_ground'] });
+    expect(r.corrected).toBe(1000);
+    expect(r.steps[0].note).toMatch(/hors bornes/);
+  });
+
+  it('COMPAT : règle de surface héritée en factor_per_step = facteur brut fixe (jamais une puissance)', () => {
+    const legacy = { id: 'lg', type: 'grass', mode: 'factor_per_step', value: 1.15, stepKt: null, appliesTo: 'both' };
+    const r = run([legacy], { windComponentKt: 0, surface: 'grass' });
+    expect(r.corrected).toBeCloseTo(1150, 6);
+    expect(describeCorrection(legacy)).toContain('×1,15 fixe');
+  });
+
+  it('describeCorrection : « ×1,15 fixe » pour factor_fixed', () => {
+    expect(describeCorrection(wetGrassFactor)).toContain('Herbe mouillée');
+    expect(describeCorrection(wetGrassFactor)).toContain('×1,15 fixe');
+    expect(describeCorrection(wetGrassPercent)).toContain('+20 %');
+  });
+});
+
+describe('garde anti-cumul — étendue aux surfaces et états de piste', () => {
+  it('deux règles « Herbe » pour la même phase : AUCUNE appliquée + note', () => {
+    const deux = [
+      { id: 'g1', type: 'grass', mode: 'percent_fixed', value: 15, appliesTo: 'takeoff' },
+      { id: 'g2', type: 'grass', mode: 'factor_fixed', value: 1.2, appliesTo: 'both' },
+    ];
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'takeoff', corrections: deux, conditions: { windComponentKt: 0, surface: 'grass' },
+    });
+    // Sans la garde : 1,15 × 1,2 = ×1,38 — une double pénalité que le manuel ne donne pas.
+    expect(r.corrected).toBe(1000);
+    expect(r.applied).toBe(false);
+    expect(r.steps).toHaveLength(1);
+    expect(r.steps[0].note).toMatch(/AUCUNE appliquée/);
+    expect(r.steps[0].note).toMatch(/une seule règle/);
+  });
+
+  it('deux règles « Herbe mouillée » déclarée : AUCUNE appliquée, les autres types passent', () => {
+    const regles = [
+      { id: 'w1', type: 'wet_grass', mode: 'percent_fixed', value: 15, appliesTo: 'landing' },
+      { id: 'w2', type: 'wet_grass', mode: 'factor_fixed', value: 1.3, appliesTo: 'landing' },
+      grass15,
+    ];
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'landing', corrections: regles,
+      conditions: { windComponentKt: 0, surface: 'grass', runwayStates: ['wet_grass'] },
+    });
+    expect(r.corrected).toBeCloseTo(1150, 6);   // herbe appliquée, herbe mouillée neutralisée
+    expect(r.steps.find((s) => s.id === 'ambigu-wet_grass')).toBeTruthy();
+  });
+
+  it("la même règle sur l'autre phase ne compte pas comme doublon", () => {
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'takeoff',
+      corrections: [
+        { id: 'g1', type: 'grass', mode: 'percent_fixed', value: 15, appliesTo: 'takeoff' },
+        { id: 'g2', type: 'grass', mode: 'percent_fixed', value: 30, appliesTo: 'landing' },
+      ],
+      conditions: { windComponentKt: 0, surface: 'grass' },
+    });
+    expect(r.corrected).toBeCloseTo(1150, 6);
+  });
+});

@@ -12,14 +12,35 @@
 //           'soft_ground'|'high_grass'|'other',
 //     label?,                    // libellé libre (sinon libellé auto)
 //     appliesTo: 'takeoff'|'landing'|'both',
-//     mode: 'factor_per_step'    // × facteur par tranche de stepKt
-//         | 'percent_per_step'   // ± X % par tranche de stepKt (linéaire)
-//         | 'percent_fixed'      // ± X % fixe
-//         | 'factor_table'       // TABLEAU DE TRANCHES : un facteur par palier
-//         | 'percent_table',     // TABLEAU DE TRANCHES : un pourcentage par palier
-//     value: number,             // facteur (0.85) ou pourcentage (10, 15)
+//     mode: 'factor_per_step'    // × facteur par tranche de stepKt      (vent)
+//         | 'percent_per_step'   // ± X % par tranche de stepKt (linéaire, vent)
+//         | 'percent_fixed'      // ± X % fixe                           (tous)
+//         | 'factor_fixed'       // × facteur fixe                       (surface/état)
+//         | 'factor_table'       // TABLEAU DE TRANCHES : un facteur par palier (vent)
+//         | 'percent_table',     // TABLEAU DE TRANCHES : un pourcentage par palier (vent)
+//     value: number,             // facteur (0.85, 1.15) ou pourcentage (10, 15)
 //     stepKt?: number,           // tranche de vent (modes *_per_step)
 //     brackets?: Array<{ fromKt: number, value: number }> }  // modes *_table
+//
+// MODES PAR FAMILLE (kind) DE CONDITION (2026-08-21, demande César) :
+//   - kind 'wind'    (headwind, tailwind) : les 5 modes ci-dessus sauf factor_fixed ;
+//   - kind 'surface' (grass — détectée automatiquement depuis la piste) et
+//     kind 'manual'  (high_grass, wet_grass, wet_paved, soft_ground, other —
+//     DÉCLARÉS par le pilote) : 'percent_fixed' (+15 %) ou 'factor_fixed' (×1,15).
+//   COMPAT : une règle de surface/état héritée en 'factor_per_step' (ancien
+//   contournement de l'éditeur) reste lue comme un FACTEUR BRUT fixe — elle
+//   n'est jamais élevée à une puissance, stepKt y est ignoré.
+//
+// CONDITIONS D'APPLICATION (paramètre `conditions` d'applyPerformanceCorrections) :
+//   { windComponentKt,          // composante signée (>0 = face)
+//     surface,                  // 'grass'|'paved'|null — pilote le type 'grass'
+//     runwayStates? }           // tableau des états DÉCLARÉS par le pilote parmi
+//                               // les types de kind 'manual' (ex. ['wet_grass'])
+//   - runwayStates ABSENT (appelant non câblé) : les règles 'manual' ne sont
+//     jamais appliquées, une note « à appliquer manuellement » est émise ;
+//   - runwayStates PRÉSENT : une règle 'manual' s'applique SI ET SEULEMENT SI
+//     son type y est déclaré ; non déclarée, elle est sans objet (ignorée
+//     silencieusement, comme une règle herbe sur une piste revêtue).
 //
 // POURQUOI LES TABLEAUX DE TRANCHES (2026-08-17) :
 //   Beaucoup de manuels ne donnent PAS un facteur récurrent mais une table :
@@ -62,12 +83,17 @@ const fmtFactor = (f) => `×${(Math.round(f * 1000) / 1000).toLocaleString('fr-F
 export function describeCorrection(c) {
   if (!c) return '';
   const typeLabel = c.label?.trim() || CORRECTION_TYPES[c.type]?.label || c.type;
+  const kind = CORRECTION_TYPES[c.type]?.kind;
   let effect = '';
   if (isTable(c)) {
     const paliers = normalizeBrackets(c.brackets, c.mode);
     effect = paliers.length
       ? paliers.map((p) => `${p.fromKt} kt → ${fmtFactor(p.factor)}`).join(' · ')
       : 'tableau vide';
+  } else if (c.mode === 'factor_fixed' || (c.mode === 'factor_per_step' && kind !== 'wind')) {
+    // Facteur fixe (surface/état) — inclut la compat des règles héritées en
+    // factor_per_step hors vent, que le moteur lit comme un facteur brut.
+    effect = `${fmtFactor(Number(c.value))} fixe`;
   } else if (c.mode === 'factor_per_step') {
     effect = `${fmtFactor(Number(c.value))} par ${c.stepKt} kt`;
   } else if (c.mode === 'percent_per_step') {
@@ -153,32 +179,48 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
 
   const wind = Number(conditions?.windComponentKt);
   const surface = conditions?.surface || null;
+  // États de piste DÉCLARÉS par le pilote (null = appelant non câblé → les
+  // règles 'manual' restent de simples rappels, jamais appliquées).
+  const runwayStates = Array.isArray(conditions?.runwayStates) ? conditions.runwayStates : null;
   let current = base;
 
-  // 🛡️ GARDE ANTI-CUMUL (2026-08-17). Deux règles de vent du même type pour la
-  // même phase sont AMBIGUËS : le moteur les multipliait, ce qui a produit sur
-  // F-HFGI une distance de 220 m là où le manuel en donne 550. Le cas type est
-  // la recopie d'un tableau du manuel en trois règles séparées.
+  // 🛡️ GARDE ANTI-CUMUL (2026-08-17, étendue à TOUS les types le 2026-08-21).
+  // Deux règles du même type pour la même phase sont AMBIGUËS : le moteur les
+  // multipliait, ce qui a produit sur F-HFGI une distance de 220 m là où le
+  // manuel en donne 550. Le cas type est la recopie d'un tableau du manuel en
+  // trois règles séparées ; pour une surface, c'est une double saisie
+  // (« Herbe +15 % » et « Herbe ×1,2 ») qui donnerait ×1,38 au lieu de l'une.
   // On ne devine pas laquelle retenir : on n'applique AUCUNE des règles du type
   // concerné et on le dit. Mieux vaut une distance non corrigée — donc la
   // distance brute, plus longue — qu'une distance fausse et trop courte.
   const applicables = corrections.filter((c) => c && (c.appliesTo === 'both' || c.appliesTo === phase));
   const ambigus = new Set();
-  for (const type of ['headwind', 'tailwind']) {
+  for (const type of Object.keys(CORRECTION_TYPES)) {
     const memeType = applicables.filter((c) => c.type === type);
     if (memeType.length > 1) {
       ambigus.add(type);
+      const conseil = CORRECTION_TYPES[type].kind === 'wind'
+        ? `Si le manuel donne un tableau (10 kt → ×0,85, 20 kt → ×0,65…), saisissez UNE règle avec ses paliers.`
+        : `Gardez une seule règle de ce type par phase sur la fiche avion.`;
       result.steps.push({
         id: `ambigu-${type}`,
         label: CORRECTION_TYPES[type].label,
         detail: '',
         factor: null, before: null, after: null,
         note: `${memeType.length} règles de ce type pour la même phase — AUCUNE appliquée. `
-            + `Elles se multiplieraient au lieu de se lire. Si le manuel donne un tableau `
-            + `(10 kt → ×0,85, 20 kt → ×0,65…), saisissez UNE règle avec ses paliers.`,
+            + `Elles se multiplieraient au lieu de se lire. ${conseil}`,
       });
     }
   }
+
+  // Facteur FIXE d'une règle de surface/état : 'factor_fixed' (×1,15) ou
+  // 'percent_fixed' (+15 % → ×1,15). COMPAT : une règle héritée en
+  // 'factor_per_step' (ancien contournement) est lue comme un facteur brut.
+  const fixedFactor = (c) => (c.mode === 'factor_fixed' || c.mode === 'factor_per_step')
+    ? Number(c.value)
+    : 1 + (Number(c.value) / 100);
+  // « Herbe mouillée » → « herbe mouillée » pour le détail lisible.
+  const minuscule = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
 
   for (const c of corrections) {
     if (!c || (c.appliesTo !== 'both' && c.appliesTo !== phase)) continue;
@@ -247,14 +289,22 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
       } else if (!CORRECTION_TYPES[c.type].surfaces.includes(surface)) {
         continue; // surface différente (ex. dur) : facteur sans objet
       } else {
-        factor = c.mode === 'factor_per_step' ? Number(c.value) : 1 + (Number(c.value) / 100);
+        factor = fixedFactor(c);
         detail = `surface « ${surface === 'grass' ? 'herbe' : surface} » → ${fmtFactor(factor)}`;
       }
-    } else {
-      // Conditions non détectables automatiquement (herbe haute, piste
-      // mouillée, terrain meuble…) : jamais appliqué en silence — signalé
-      // au pilote pour application manuelle.
+    } else if (runwayStates === null) {
+      // Appelant non câblé : conditions non détectables automatiquement (herbe
+      // haute, piste mouillée, terrain meuble…) jamais appliquées en silence —
+      // signalées au pilote pour application manuelle.
       note = 'condition non détectable automatiquement — à appliquer manuellement si concerné';
+    } else if (!runwayStates.includes(c.type)) {
+      continue; // état non déclaré par le pilote : règle sans objet
+    } else {
+      // État DÉCLARÉ par le pilote (2026-08-21) : la règle s'applique comme un
+      // facteur fixe ; le détail rappelle que c'est une déclaration, pas une
+      // détection, pour que le pilote la vérifie.
+      factor = fixedFactor(c);
+      detail = `état « ${minuscule(CORRECTION_TYPES[c.type]?.label || c.type)} » déclaré → ${fmtFactor(factor)}`;
     }
 
     if (factor !== null) {
