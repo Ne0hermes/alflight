@@ -2,22 +2,22 @@
  {
   "itid": "F-GUVV-01",
   "status": "note",
-  "note": "Vérifié par exécution du moteur le 21/08 : les 6 modèles s'évaluent encore vent → OAT → masse (panneau vent désigné primaire). Correction proposée PAR SCRIPT (re-désignation du panneau OAT en primaire, vent en intermédiaire, chaîne OAT→masse→vent) — en attente du feu vert pilote. C'est la cause racine du -02 et du -10."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.performanceModels[0..5].data.graphs : le panneau porteur de operationId est toujours le panneau vent (graphs[2] des modèles 0,1,2,3,5 ; graphs[0] du modèle 4), sans clé role ; le panneau OAT (interpolationMode 'family', familyAxisVariable 'pressure_altitude', cascadeOrder 1) reste role 'intermediate' partout. Sonde 21/08 : chaîne « vent > temperature > masse » (modèle 0), « Graphique 3 > Graphique 1 > Graphique 2 » (modèles 1,2,3,5), « Graphique 1 > Graphique 3 > Graphique 2 » (modèle 4). performanceModels[*].updatedAt ≤ 2026-05-18 : aucun modèle retouché depuis l'audit."
  },
  {
   "itid": "F-GUVV-02",
   "status": "note",
-  "note": "Confirmé le 21/08 : vent −5 kt → ÉCHEC sur les 6 opérations (« Impossible de calculer Y pour X=-5 »). Résolu par le même script que le -01."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Sonde 21/08, condition « 15 °C / 500 ft / vent −5 » : erreur « Impossible de calculer Y pour X=-5 sur la courbe \"headwind 1\" » (modèles 0,2,3,4,5) et « ... \"tailwind 1\" » (modèle 1), chaîne vide, valeur null sur les 6 opérations. Domaine X des panneaux vent : axes.xAxis min 0 / max 20 (6 modèles)."
  },
  {
   "itid": "F-GUVV-03",
   "status": "note",
-  "note": "Sans objet dès que le panneau vent redevient intermédiaire (filtrage par sens du vent) — couvert par le script du -01."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[1].data.graphs[2].curves : indices 0-9 = tailwind 1..10, indices 10-19 = headwind 1..10 (tailwind toujours en tête). Sonde : 15 °C / 500 ft : vent 0 → 202,67 m ; vent +8 (face) → 252,00 m — la distance augmente encore avec le vent de face. Les 5 autres modèles ont headwind en tête (modèle 0 : headwind 1..12 puis tailwind)."
  },
  {
   "itid": "F-GUVV-04",
   "status": "note",
-  "note": "Rapport pilote 21/08 : « ces valeurs n'apparaissent nulle part » — exact : le cgLimits racine n'est exposé par aucun écran, et le moteur lit cgEnvelope en priorité (vérifié dans computeWeightBalance). Valeur inerte, à réaligner par script sur 2,40 / 2,59 avec le lot du -01."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.cgLimits = {forward: 2.05, aft: 2.31} inchangé. cgEnvelope : forwardPoints 2,40@940 / 2,40@980 / 2,46@1150, aftPoints 2,59@940-1150 ; weightBalance.cgLimits = {forward 2.4, aft 2.59, forwardVariable identique} (miroir cohérent). Le moteur lit cgEnvelope : valeur inerte en vol, à réaligner par script."
  },
  {
   "itid": "F-GUVV-05",
@@ -47,22 +47,22 @@
  {
   "itid": "F-GUVV-10",
   "status": "note",
-  "note": "Rapport pilote 21/08 : « elles sont déjà mises ». Base ré-extraite le 21/08 : les 4 modèles atterrissage n'ont QUE des courbes headwind (1–7/8/9) ; seuls les 2 modèles décollage ont headwind ET tailwind. Et même avec des courbes tailwind, le vent arrière échouerait tant que le -01 n'est pas corrigé. Pas besoin de recréer les modèles : re-tag par script, puis ajout des guides arrière sur le panneau vent (Modifier → cadres → capsule « Vent arrière ») si le chart du MANEX les donne, sinon règle vent arrière atterrissage."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Panneaux vent des 4 modèles atterrissage : modèle 2 → 7 courbes, modèle 3 → 7, modèle 4 → 8, modèle 5 → 9, toutes windDirection 'headwind' (x 0-20 kt), zéro courbe 'tailwind'. Modèles décollage : 12 headwind + 11 tailwind (0) et 10 + 10 (1). Le « déjà mises » du rapport pilote ne se retrouve pas en base (modèles non modifiés depuis le 17-18/05). La présence de guides vent arrière sur le chart MANEX reste à vérifier, mais l'état de la fiche est strictement inchangé."
  },
  {
   "itid": "F-GIEA-02",
-  "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p44 et p51 : carburant UTILISABLE 48 US gal = 182 l CONFIRMÉ (bras 95,0 in = 2,413 m). La capacité TOTALE (189 l / 50 US gal) n'apparaît nulle part dans ce document → à confirmer sur le POH d'origine avant de l'inscrire."
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0] = {type main, capacity 182, totalCapacity 189, arm 2.413, momentAtFull 316.2 = 182×0.72×2.413}. Utilisable lu par le moteur = usableCapacity ?? capacity = 182 = fuelUsableCapacity racine ; total 189 ≥ utilisable 182, cohérent. Réserve maintenue (retours) : le 189 n'est pas dans le manuel club, à confirmer au POH. Voir aussi le nouveau constat : fuelCapacity racine resté à 182."
  },
  {
   "itid": "F-GIEA-03",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p51-52 : CONTREDIT — « Bagages (50 lb – 23 kg maximum) », bras 142,8 in = 3,627 m. Le 50 de la fiche est l'injection par défaut ou une confusion lb/kg. → maxBaggageWeight = 23 ; et arms.baggageAft / weightBalance.baggageArm valent 0 → 3,627 m."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight=50 inchangé. Désormais contradiction interne démontrable : baggageCompartments[0] = {maxWeight 23, arm 3.627, momentMax 83.42 = 23×3.627} et maxBaggageTotalMass=23. Les champs legacy arms.baggageAft=0 et weightBalance.baggageArm=0 sont toujours à 0 (compartiment à 3.627 m)."
  },
  {
   "itid": "F-GIEA-04",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p51-52 : une seule station bagages, AUCUN compartiment auxiliaire (p52 : catégorie utilitaire = bagages et passagers arrière interdits). → vider maxAuxiliaryWeight."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxAuxiliaryWeight=20 inchangé ; baggageCompartments ne contient qu'un seul compartiment (« Compartiment 1 ») et weightBalance.auxiliaryArm=0 → plafond sans station associée."
  },
  {
   "itid": "F-GIEA-05",
@@ -72,67 +72,67 @@
  {
   "itid": "F-GIEA-06",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p34 (décollage) : herbe sèche courte (≤ 20 cm) ×1,20 ; herbe humide courte ×1,30 ; sol mou / contaminé ×1,25 ; pente montante 2 % → +10 % — facteurs à multiplier entre eux. p49 (atterrissage) : piste en dur mouillée ×1,15 ; herbe sèche ×1,15 ; herbe humide ×1,35 ; sol mou ×1,25 ; pente 2 % → +10 %. → règles DISTINCTES par phase (le preset « herbe +15 % both » ne correspond PAS au manuel). Les types herbe mouillée / sol mou / dur mouillé deviennent applicables avec le sélecteur d'état de piste (chantier du 21/08)."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Clé performanceCorrections absente des 57 clés d'aircraft_data ; compatibleRunwaySurfaces=[ASPH, CONC, GRASS] inchangé. Facteurs manuel p34/p49 (retours) non saisis."
  },
  {
   "itid": "F-GIEA-07",
   "status": "note",
-  "note": "Même constat que F-GIEA-01 : vso = 44 kt volets 40°, vs1 = 50 kt (p31-32)."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Même lecture que F-GIEA-01 : speeds.vso=63 > speeds.vs1=50 (aucune modification depuis le 19/08)."
  },
  {
   "itid": "F-GIEA-09",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025) : aucune liste d'opérations approuvées. Équipements attestés par les check-lists : balise de détresse (p16, p58, p70) → elt = true justifié ; transpondeur, GPS, Garmin G5, détecteur CO. vfrDay etc. : à déclarer par le pilote."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — approvedOperations : 31 booléens tous false (vfrDay=false, elt=false malgré la balise attestée p16/p58/p70 selon retours) ; equipmentSurv sans clé transponderModes (seul l'orphelin transponderMode:'C')."
  },
  {
   "itid": "F-GIEA-10",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p53 : le domaine de centrage commence à 1200 lb = 550 kg ; aucune masse mini explicite, 600 n'apparaît nulle part. → racine minTakeoffWeight = 550 (cohérent avec l'enveloppe)."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — minTakeoffWeight racine=600 vs weights.minTakeoffWeight=550, cgEnvelope.aftMinWeight=550 et cgEnvelope.forwardPoints[0].weight=550. Contradiction interne inchangée."
  },
  {
   "itid": "F-GIEA-11",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p20 : « Transpondeur ALT » sans lettre de mode. Correction structurelle (champ singulier orphelin → vider), indépendante du manuel."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.equipmentSurv.transponderMode=\"C\" toujours présent (champ singulier orphelin non vidé)."
  },
  {
   "itid": "F-GIEA-12",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : titres du papier — « Course au décollage avec 0° de volets », « Performances de décollage avec 0° de volets — franchissement 50 ft (15 m) », idem 25°. → renommer sans marqueur « ⚠ DOUBLON »."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[1].name = « Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets » ; classification sans marqueur, operationId takeoff_50ft_flaps_up unique parmi les 4 modèles. Nom non corrigé."
  },
  {
   "itid": "F-GIEA-13",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p50 : abaque DISTANCE D'ATTERRISSAGE volets 40° uniquement (1055 kg, piste dure sèche, freinage max, Vi 63 kt, vent debout 15 kt / arrière 5 kt, deux sorties course / 50 ft). Aucun abaque volets rentrés → landing_*_flaps_up : certification « absent du manuel » légitime ; landing_*_flaps_landing : numérisables depuis p50 (lecture descendante)."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — bypassedFields = les 4 clés performance.landing_* inchangées ; performanceModels ne contient que 4 modèles, tous décollage. Constat informatif : retours indique que l'abaque p50 (volets 40°) est numérisable pour landing_*_flaps_landing ; la certification « absent » reste légitime pour flaps_up."
  },
  {
   "itid": "F-GIEA-14",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : les abaques portent des lignes « VENT DEBOUT » (0-15 kt) et « VENT ARRIÈRE » (0-5 kt) → tags windDirection headwind sur h11, tailwind sur t2 et t14 légitimes (structure)."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[1].data.graphs[2] (panneau vent, 28 courbes) : h11, t2 et t14 toujours sans windDirection ; les 25 autres sont taguées headwind/tailwind."
  },
  {
   "itid": "F-GIEA-15",
   "status": "note",
-  "note": "Structure (fiche) : les deux « 7 » et les deux « h6 » ont des plages Y distinctes → deux guides différents mal numérotés, pas des doublons. → RENUMÉROTER (7→7/8, 8→9… ; h6→h6/h7…), ne pas supprimer."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[1] : Graphique 2 porte deux courbes nommées « 7 » (y 1366–3201 et 1482–3478 ft), Graphique 3 deux « h6 » (y 1517–1921 et 1749–2139 ft). Plages distinctes → guides différents mal numérotés (renuméroter, pas supprimer — retours)."
  },
  {
   "itid": "F-GIEA-16",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : panneau masse de 1600 lb (726 kg) à la ligne de référence 2325 lb (1055 kg), graduations 750/850/950/1050 kg ; panneau vent : référence vent nul à 0 kt. → axe masse [726 ; 1055], guides jusqu'à la ligne de référence, guides vent démarrant à 0."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — xAxis masse = [750 ; 1050] sur les 4 Graphique 2, guides tracés ≤ 1050 kg. Exécution moteur du 21/08 à 1055 kg / 15 °C / 500 ft / vent 0 : « guide(s) prolongé(s) hors tracé » sur Graphique 2 des 4 modèles, et sur Graphique 3 (guides vent H4/H5, h4/h5) des modèles 0 et 2. Les 4 cas de référence pilote sont pourtant reproduits à −0,5 % / +0,3 % / −1,0 % / −0,7 % : le prolongement est fidèle, seul l'avertissement subsiste."
  },
  {
   "itid": "F-GIEA-17",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p35-38 : double échelle (ft à droite, m à gauche) — les valeurs de la fiche suivent l'échelle ft. → outputUnit = 'ft', titres Y « Course au décollage » / « Distance de décollage avec franchissement 50 ft (15 m) »."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — outputUnit='m' sur les 4 graphes primaires alors que yAxis.unit='ft' ; yAxis.title='altitude' sur les modèles 1, 2, 3 ('takeoff_distance_ground' sur le modèle 0). En exécution (sonde + cas de référence) le moteur rend bien unit='ft' : défaut d'étiquetage seulement."
  },
  {
   "itid": "F-GIEA-18",
   "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p21-22 : rotation « selon la masse 45 à 55 kt » (normal volets 0°), 40 à 50 kt (terrain court) ; abaques : Vi d'envol 50 kt à 2325 lb, 40 kt à 1600 lb. Pas de valeur unique → proposition vr = 55 kt (borne haute, masse max, procédure normale) — à valider par le pilote."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr=\"\" (champ REQUIRED poids 2 dans aircraftCompleteness.js) ; la proposition 55 kt (manuel p21-22, retours) n'est pas saisie."
  },
  {
   "itid": "F-GIEA-19",
-  "status": "note",
-  "note": "Manuel pilote F-GIEA (Aéroclub de Sens, éd. 1 2025), p21 : « Vitesse de montée initiale 63 kt » (décollage normal volets 0°) ; p23 : pente max 63, vario max 79, en route 86 kt. → initialClimb = 63 kt (unité vitesse, pas ft/min)."
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — speeds.initialClimb=63 inchangé, mais l'intention est tranchée : manuel p21 « vitesse de montée initiale 63 kt » (retours) et le wizard (Step2Speeds.jsx:318) définit initialClimb comme une vitesse. Rien à changer sur la fiche ; seul le libellé 'ft/min' du mapper MANEX (manexExtractionMapper.js:211) subsiste côté code, hors fiche."
  },
  {
   "itid": "F-HSTR-01",
@@ -162,17 +162,17 @@
  {
   "itid": "F-HSTR-06",
   "status": "note",
-  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : cgLimits racine et miroir toujours à 2,59 alors que l'enveloppe dit 2,53 — champs NON exposés en UI et INERTES (le moteur lit cgEnvelope). À réaligner par script dans le lot F-GUVV."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.cgLimits.aft = 2.59 et weightBalance.cgLimits.aft = 2.59, alors que cgEnvelope.aftCG = aftMinCG = aftMaxCG = 2.53 (aftPoints [940→2.53, 1310→2.53], aftMaxMoment 3314.3 = 1310×2.53). Contradiction interne persistante ; inerte en vol (le moteur lit cgEnvelope) et non exposée en UI — à réaligner par script (lot F-GUVV)."
  },
  {
   "itid": "F-HSTR-07",
   "status": "note",
-  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : maxBaggageWeight toujours 50 kg alors que les compartiments déclarés font 30 + 5 kg (total 35 saisi). Champ legacy : le moteur applique les plafonds par compartiment + le total — à vider pour lever la contradiction."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.maxBaggageWeight = 50, alors que maxBaggageTotalMass = 35 et baggageCompartments = [30 kg (bras 3.65), 5 kg (bras 4.32)] → 50 > 35 : contradiction interne désormais démontrable. Le moteur (computeWeightBalance.js l.180-210) applique les plafonds par compartiment + le total 35 ; le 50 n'est lu que par l'ancien module M&C. Champ legacy à vider."
  },
  {
   "itid": "F-HSTR-08",
   "status": "note",
-  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : maxAuxiliaryWeight toujours 20 kg — le DA40 NG n'a pas de compartiment auxiliaire hors les 2 déclarés : à vider."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.maxAuxiliaryWeight = 20 avec weightBalance.auxiliaryArm = 0 (bras nul pour une masse maxi > 0). Aucun compartiment « auxiliaire » dans baggageCompartments (2 compartiments déclarés : standard 30 kg + tube 5 kg). Inerte tant que baggageCompartments est non vide (chemin compartiments du moteur) ; WeightBalanceModule.jsx l.257 l'affiche encore. À vider."
  },
  {
   "itid": "F-HSTR-09",
@@ -227,7 +227,7 @@
  {
   "itid": "F-HSTR-19",
   "status": "note",
-  "note": "Vérifié sur l'extraction RÉELLE du 21/08 15h52 (mes contrôles précédents lisaient une copie périmée — erreur de ma part, corrigée) : bypassedFields encore vide. Déclaration « absente » notée : certifiez les 2 opérations décollage volets UP via la pastille « Non fournie par le manuel (certifié) » de l'étape Performance, puis enregistrez."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.bypassedFields = [] ; operationId présents : takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, climb_takeoff, climb_cruise, go_around_climb, landing_ground_roll_flaps_landing, landing_50ft_flaps_landing, landing_ground_roll_flaps_up, landing_50ft_flaps_up → takeoff_ground_roll_flaps_up et takeoff_50ft_flaps_up ABSENTS (6/8). Clés attendues : performance.takeoff_ground_roll_flaps_up / performance.takeoff_50ft_flaps_up (PERF_BYPASS_PREFIX, performanceCoverage.js). Le groupe Performances de la complétude reste non rempli."
  },
  {
   "itid": "F-HSTR-20",
@@ -242,6 +242,941 @@
  {
   "itid": "F-GIEA-01",
   "status": "note",
-  "note": "Manuel p31-32 : Vs 50 kt sans volet, 44 kt volets 40°. Extraction réelle du 21/08 15h52 : vs1 = 50 ✓, mais vso = 63 ENCORE, et vsTO = 44 (le 44 est la valeur volets 40° = VSO, pas une valeur volets décollage). → vso = 44 ; vsTO : le manuel ne donne pas de valeur intermédiaire, laisser vide."
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.speeds : vso=63, vs1=50, vsTO=44 — inchangés malgré la sauvegarde du 21/08 13:27 (updated_at). Toujours vso > vs1. Manuel p31-32 (retours) : vso=44, vsTO à vider."
+ },
+ {
+  "itid": "F-BXNG-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[0..3].data : toujours 4 lignes chacune, une seule température par palier = ISA (0 ft/15 °C, 2500/10, 5000/5, 7500/0) ; extractionMetadata.lastModified 2026-06-18 inchangé. Exécution réelle du 21/08 (resolveOperationFromTables, masse 726) : detectIsaRelativeTemperatures = false pour les 4 tables (src/services/performanceTableGrouping.js:159, garde-fou « au moins deux écarts ») → axe températures absolu {0,5,10,15} avec une grille remplie en diagonale seulement. Résultats identiques pour les 4 opérations : 0 ft/15 °C → 224 m (roulage décollage) ; 0 ft/30 °C → 224 m (écrêtage sur 15 °C, simple avertissement : valeur ISA rendue par temps chaud) ; 0 ft/0 °C → ERROR ; 2500 ft/25 °C → ERROR ; 1000 ft/20 °C → ERROR (« aucune valeur n'a pu être estimée »). En vol : aucune distance calculable hors du niveau de la mer, et distance optimiste par temps chaud."
+ },
+ {
+  "itid": "F-BXNG-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.frontSeats = 1 et arms.rearSeats = 1 (toujours identiques) ; weightBalance.frontLeftSeatArm = frontRightSeatArm = rearLeftSeatArm = rearRightSeatArm = 1. Doublon du -04."
+ },
+ {
+  "itid": "F-BXNG-03",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0] « Réservoir d'aile Standard » : capacity 98, totalCapacity 98, usableCapacity 85 → tankUsableLtr = 85 (usableCapacity ?? capacity) ; momentAtFull 65,48 = 85 × 0,72 × 1,07 (cohérent avec l'utilisable) ; racine fuelCapacity 98 / fuelUsableCapacity 85. Ajouté le 21/08 13:28 UTC (id 1787318931632) : 2e réservoir « Réservoir d'aile Long Range » totalCapacity 144 / usableCapacity 132,5, bras 1,07, momentAtFull 102,08 = 132,5 × 0,72 × 1,07 ; tankVariants « Variante 98L » (isDefault) et « Variante 144L », chacune référençant un seul réservoir (sélections, pas de cumul)."
+ },
+ {
+  "itid": "F-BXNG-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.rearSeats = 1 ; weightBalance.rearLeftSeatArm = rearRightSeatArm = 1 (= bras des sièges avant). Exécution computeWeightBalance du 21/08 sur la fiche actuelle : 80 kg avant gauche + 40 kg siège ARRIÈRE gauche + 85 L → 708,3 kg, CG 0,897, isWithinLimits true, warnings []. Le poste fantôme est toujours accepté sans avertissement (Step6WeightBalance mappe rearLeft/rearRight sur ces bras)."
+ },
+ {
+  "itid": "F-BXNG-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight = 50 inchangé. Contradiction interne désormais démontrable : maxBaggageTotalMass = 54 et baggageCompartments = [C1 maxWeight 54 à 1,63 m, C2 maxWeight 18 à 2,13 m] (ids du 18/06). Le moteur lit maxBaggageTotalMass + plafonds par compartiment (exécution : 54 + 18 kg → « Bagages : 72,0 kg > maximum total 54,0 kg du manuel ») ; maxBaggageWeight n'est lu par aucun calcul du calc-engine (seulement borne de curseur du module M&C autonome et affichage Step5Review). Champ legacy en désaccord avec le total saisi (54) : à vider, comme F-HSTR-07."
+ },
+ {
+  "itid": "F-BXNG-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — aircraft_data.maxAuxiliaryWeight = 20 inchangé ; aucun poste auxiliaire dans la fiche (weightBalance.auxiliaryArm = 0, pas d'arms.auxiliary). Exécution : en mode compartiments, une charge « auxiliary » de 20 kg n'entre pas dans le bilan (668,3 kg = 527,1 + 80 + 61,2, sans les 20 kg) ; maxAuxiliaryWeight n'est lu par aucun calcul → valeur inerte. Seul le manuel tranche si C2 (18 kg à 2,13 m) est le compartiment auxiliaire ou s'il faut vider le champ."
+ },
+ {
+  "itid": "F-BXNG-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — bypassedFields = [\"speeds.vfeTO\"] uniquement : aucune clé performance.<opId>. Tables présentes : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing. Absentes et non certifiées (MINIMUM_EXPECTED_OPERATION_IDS, operationCatalog.ts:349) : takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_ground_roll_flaps_up, landing_50ft_flaps_up."
+ },
+ {
+  "itid": "F-BXNG-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceCorrections créé le 21/08 13:32 UTC, 3 règles : herbe +7 % décollage ; vent de face −10 % par 4 kt atterrissage (percent_per_step) ; herbe +20 % atterrissage. Progrès réel (herbe couverte aux deux phases) mais il manque toute règle vent ARRIÈRE (décollage et atterrissage) et le vent de face au DÉCOLLAGE. Exécution applyPerformanceCorrections : décollage vent de face 10 kt → ×1,000 (aucune règle) ; vent arrière −5 kt → ×1,000 aux deux phases ; atterrissage 12 kt de face → ×0,70 ; 20 kt → ×0,50 (linéaire, non plafonné). Le pas de 4 kt diffère des 9 kt cités dans l'attendu de l'item : à confirmer au POH, non tranché ici."
+ },
+ {
+  "itid": "F-BXNG-09",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — speeds.vfeTO toujours \"\" mais bypassedFields = [\"speeds.vfeTO\"] (certifié absent par le pilote) ; et depuis le 21/08 VFE T/O n'est plus requise par le wizard (AircraftCreationWizard validateStep case 3) ni critique pour la complétude (aircraftCompleteness : severity OPTIONAL). speeds.vfeLdg = 87 conservée."
+ },
+ {
+  "itid": "F-BXNG-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — approvedOperations : 32 clés toutes false (elt false, vfrDay false, training false…) ; specialCapabilities tout false. Step7Summary ne déclare l'ELT que si approvedOperations.elt est true → aucun équipement SAR au plan de vol."
+ },
+ {
+  "itid": "F-BXNG-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — cgEnvelope.aftMinCG = aftMaxCG = aftCG = 0,951 de aftMinWeight 500 à aftMaxWeight 726 (moments 475,5 et 690,43 = 500 × 0,951 et 726 × 0,951, cohérents) ; miroirs cgLimits.aft et weightBalance.cgLimits.aft = 0,951 identiques. Seul le centrogramme du manuel tranche."
+ },
+ {
+  "itid": "F-BXNG-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = \"C\" toujours présent, aucun transponderModes (pluriel). L'effet nocif est levé côté code (Step7Summary.jsx:584 ne lit plus ce champ pour la balise depuis le 17/08), mais Step5Review.jsx:1691 affiche encore une puce « Mode C » issue de ce champ jamais saisi, et AircraftModule.jsx le réinjecte à 'C' par défaut. Champ à vider."
+ },
+ {
+  "itid": "F-BXNG-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — weighingReport.certificationDate = 2021-03-22 inchangée ; PDF « Fiche de pesée NG.pdf » (75 895 o, uploadé 2026-06-23), hasData true ; 5 ans 5 mois au 21/08/2026, sous le seuil applicatif de 10 ans. Seule l'existence d'une pesée plus récente tranche."
+ },
+ {
+  "itid": "F-BXNG-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[3] (landing_ground_roll_flaps_landing) : Masse = 728 sur les 4 lignes, contre 726 sur les 3 autres tables et weights.mtow = mlw = 726. Exécution : toute préparation à 726 kg sort « Masse 726 kg hors plage du tableau (min 728 kg) — extrapolation impossible : tableau le plus proche » sur le roulage atterrissage."
+ },
+ {
+  "itid": "F-BXNG-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vx = 68 et speeds.vy = 68 inchangés. manexExtraction.items VX/VY portent aussi 68/68 (« kts », page 51, confiance 95) : l'égalité vient de l'extraction elle-même → relire la page 51 du manuel (valeur et unité)."
+ },
+ {
+  "itid": "F-BXNG-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = \"\", vapp = \"\", vglide = \"\", initialClimb = \"\" inchangés. Piste dans la fiche : manexExtraction VAPP found page 52, originalValue « 52 à 61 » kts, non acceptée (accepted false)."
+ },
+ {
+  "itid": "F-BXQT-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[0..3].data : toujours 4 lignes par table = la seule ligne ISA (0 ft/15 °C, 2500/10, 5000/5, 7500/0), _reimportedFromExcel=true, extractionMetadata.lastModified 2026-06-18. Exécution du moteur tableaux (performanceTableGrouping.buildLookupForOperation + trilinearInterpolate) sur la fiche actuelle, pour les 4 operationId : detectIsaRelativeTemperatures=false (garde-fou ≥ 2 écarts), grille 1 masse × 4 altitudes × 4 températures absolues [0,5,10,15] avec 12 cases vides sur 16. À 726 kg : (0 ft, 15 °C) → 224 m ; (0 ft, 10 °C) → null ; (1000 ft, 15 °C) → null ; (500 ft, 20 °C) → null ; (0 ft, 25 °C) → 224 m = valeur 15 °C par écrêtage de température (simple avertissement). Le calcul n'aboutit donc qu'à une altitude-pression exactement égale à un palier de la grille et à une OAT ≥ la valeur ISA du palier — et alors avec la distance ISA."
+ },
+ {
+  "itid": "F-BXQT-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.frontSeats = 1 ; arms.rearSeats = 1 (inchangé). computeWeightBalance exige rearLeftSeatArm défini (null = biplace reconnu, 0/valeur = sièges présents) : avec 1,0 le Step6 du vol affiche toujours deux postes de charge « siège arrière » au même bras que les sièges avant."
+ },
+ {
+  "itid": "F-BXQT-03",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.rearSeats = 1 ; weightBalance.rearLeftSeatArm = 1 ; weightBalance.rearRightSeatArm = 1 ; weightBalance.frontLeftSeatArm = frontRightSeatArm = 1 (inchangé). Le garde-fou biplace de Step6WeightBalance (arms.rearLeft !== null) ne se déclenche pas."
+ },
+ {
+  "itid": "F-BXQT-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weighingReport.certificationDate = 2015-09-25 (inchangé), fileName « Fiche de pesée QT.pdf », uploadDate 2026-06-18. Au 21/08/2026 : 10,9 ans ≥ WEIGHING_REPORT_WARN_YEARS = 10 (src/utils/weighingReportAge.js) → isOld=true. Seule une confirmation du club (comme F-GUVV-05) peut clore l'item."
+ },
+ {
+  "itid": "F-BXQT-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight = 50 (inchangé). Contradiction interne désormais visible : maxBaggageTotalMass = 54 (extraction MANEX acceptée) et baggageCompartments[0].maxWeight = 54 / [1].maxWeight = 18 — aucune donnée de la fiche ne porte 50, qui est l'injection par défaut (AircraftModule l.4242 toValidNumber(…, 50)). Champ inerte en vol : computeWeightBalance, Step6 et WeightBalanceModule branchent sur baggageCompartments dès qu'il est non vide."
+ },
+ {
+  "itid": "F-BXQT-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxAuxiliaryWeight = 20 (inchangé ; AircraftModule l.4243 « maxAuxiliaryWeight: 20, // Valeur par défaut »). Aucun compartiment auxiliaire n'est déclaré hors les 2 compartiments (54 kg à 1,63 m ; 18 kg à 2,13 m) et weightBalance.auxiliaryArm = 0. Inerte en vol (branche compartiments), à vider."
+ },
+ {
+  "itid": "F-BXQT-07",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — bypassedFields = ['speeds.vfeTO','performance.landing_50ft_flaps_up','performance.landing_ground_roll_flaps_up','performance.takeoff_50ft_flaps_to','performance.takeoff_ground_roll_flaps_to'] : les 4 opérations du minimum attendu (catalogue 8 ops, packages/calc-engine/src/perf/abac/operationCatalog.ts) non couvertes par une table sont certifiées absentes du manuel ; les 4 autres sont couvertes par advancedPerformance.tables[0..3] (operationId takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing) → computeMissingPerformanceTables = [] (couverture complète, poids du groupe acquis)."
+ },
+ {
+  "itid": "F-BXQT-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceCorrections = 3 règles : [0] grass percent_fixed +7 % takeoff ; [1] headwind percent_per_step 10 %/3 kt landing ; [2] grass percent_fixed +20 % landing. Toujours aucune règle de vent (face ou arrière) pour le décollage ni de vent arrière pour l'atterrissage ; 100 % tableaux (performanceModels = null, sonde models = [])."
+ },
+ {
+  "itid": "F-BXQT-09",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — performanceCorrections[1] inchangée : type headwind, mode percent_per_step, value 10, stepKt 3, appliesTo landing. Moteur (packages/calc-engine/src/perf/performanceCorrections.js) : tranches complètes floor(vent/3), facteur borné [0,3 ; 10] (FACTOR_MIN = 0.3) → 12 kt de face : ×0,6 ; 21 kt : ×0,3 (encore appliqué) ; ≥ 24 kt : règle non appliquée. Seule la note de la page atterrissage du manuel peut trancher stepKt/value."
+ },
+ {
+  "itid": "F-BXQT-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vfeTO = 42 (inchangé) = speeds.vsTO 42 < speeds.vso 43 ; speeds.vfeLdg = 87. Changement de contexte : VFE T/O n'est plus requise par le wizard depuis le 21/08 (OPTIONAL, poids 1) et 'speeds.vfeTO' figure dans bypassedFields alors que la valeur 42 est toujours en base (voir nouveau constat). La valeur n'est lue que par l'affichage des arcs de vitesses."
+ },
+ {
+  "itid": "F-BXQT-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — fuelCapacity = 85 ; fuelUsableCapacity = 85 (inchangés). additionalFuelTanks[0] « Réservoir d'aile Standard » (type main, variante par défaut « Variante Réservoir 98L ») : totalCapacity 98 / usableCapacity 85 ; manexExtraction.items[9] « Capacité totale carburant » = 98 accepted=true. fuelCapacity devrait valoir 98 (Σ totalCapacity de la configuration par défaut)."
+ },
+ {
+  "itid": "F-BXQT-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = \"C\" toujours présent ; equipmentSurv.transponderModes = [\"c\"] existe désormais (écran Équipements). Le plan de vol (Step7Summary l.584) ne lit plus le singulier depuis le 17/08 — impact résiduel limité au chip « Mode C » de Step5Review ; champ orphelin à vider."
+ },
+ {
+  "itid": "F-BXQT-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[1].table_name = « Take-off Ground Roll - Flaps UP » (identique à tables[0]) pour operationId/classification takeoff_50ft_flaps_up, valeurs 422→744 m (tables[0] ground roll : 224→414 m), pageNumber 68."
+ },
+ {
+  "itid": "F-BXQT-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[3].data[0..3].Masse = 728 sur les 4 lignes (landing_ground_roll_flaps_landing) ; maxTakeoffWeight = maxLandingWeight = 726 ; tables[0..2] à 726. Exécution : la grille de cette opération a masses=[728] → toute masse réelle ≤ 726 est écrêtée à 728 (« tableau le plus proche »), incohérent avec les 3 autres grilles à 726."
+ },
+ {
+  "itid": "F-BXQT-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = \"\", speeds.vx = \"\", speeds.vy = \"\", speeds.vapp = \"\", speeds.vglide = \"\" (inchangés) ; manexExtraction.items[30] VX = 61 kt et [31] VY = 65 kt (p.45, confiance 95) toujours accepted=false. Au sens de FIELD_DEFINITIONS (21/08) : vr/vapp/vglide REQUIRED, vx/vy OPTIONAL — ce sont les seuls champs de complétude encore vides de la fiche."
+ },
+ {
+  "itid": "F-BXQT-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vsTO = 42 < speeds.vso = 43 (inchangé) ; speeds.vs1 = 49. Ordre physique vso ≤ vsTO ≤ vs1 toujours inversé de 1 kt entre vsTO et vso."
+ },
+ {
+  "itid": "F-GBTU-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.performanceModels[0..3] : updatedAt = 2026-06-18T09:36:35 (inchangé depuis l'audit), _reimportedFromExcel = true, data.graphs[*] n'ont que {id, name, role, curves, operationId} — aucun axes, familyValue, linkedTo/cascadeOrder, isWindRelated/windDirection. Sonde moteur du 21/08 : 20/20 exécutions (4 modèles × 5 conditions) échouent avant le premier panneau, chaîne vide, erreur « Entrée(s) de panneau manquante(s) : paramètre de « Graphique 2 », paramètre de « Graphique 3 » ». Le premier panneau est bien l'OAT (x ∈ [−39 ; 40] °C, courbes 0ft…7000ft) : le défaut n'est pas l'ordre des panneaux mais l'absence totale de structure. Les doublons de noms subsistent : performanceModels[1].data.graphs[1] « 7 » ×2 (y ∈ [1366 ; 3201] et [1482 ; 3478]) et graphs[2] « h6 » ×2 (y ∈ [1518 ; 1921] et [1749 ; 2139]) ; t12 absent (t11 → t13)."
+ },
+ {
+  "itid": "F-GBTU-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels = 4 opérations décollage seulement (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to) ; advancedPerformance = null ; performanceTables = null ; bypassedFields = [] ; performance.landing.fiftyFeet = \"\" et performance.landing.groundRoll = \"\" (performance.takeoff.* également vides). Aucune source ni certification « absente du manuel » pour les 4 opérations d'atterrissage."
+ },
+ {
+  "itid": "F-GBTU-03",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vx = 79, speeds.vy = 63 (inchangé) : Vx > Vy, contradiction interne toujours présente."
+ },
+ {
+  "itid": "F-GBTU-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Progression partielle : additionalFuelTanks[0] porte désormais totalCapacity = 189, usableCapacity = 188 (capacity = 189 conservé), momentAtFull = 326,62 = 188 × 0,72 × 2,413. Mais la racine dit toujours fuelUsableCapacity = 182 / fuelCapacity = 189 → l'utilisable réservoir (188) contredit l'utilisable racine (182). Le moteur lit usableCapacity ?? capacity (Step3WeightBalance.jsx:938) : le plein utilisable sera compté à 188 l. Faute de frappe probable 188/182 — valeur attendue 182."
+ },
+ {
+  "itid": "F-GBTU-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxBaggageWeight = 50 inchangé. Depuis le 19/08, le pilote a déclaré baggageCompartments[0] = { name « Compartiment 1 », arm 3,627, maxWeight 91, momentMax 330,06 (= 91 × 3,627) } et maxBaggageTotalMass = 91. Le 50 legacy contredit donc la déclaration (91). En préparation de vol, Step6WeightBalance.jsx:1223-1246 lit uniquement baggageCompartments → le 50 est inerte ; champ à vider pour lever la contradiction (même traitement que F-HSTR-07). Le 91 n'est pas jugé (hors méthode stricte)."
+ },
+ {
+  "itid": "F-GBTU-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxAuxiliaryWeight = 20 inchangé, avec weightBalance.auxiliaryArm = 0 (bras nul pour une masse maxi > 0) et aucun compartiment auxiliaire dans baggageCompartments (1 seul compartiment déclaré). Inerte en vol (Step6 lit les compartiments), mais incohérent : à vider."
+ },
+ {
+  "itid": "F-GBTU-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vx = 79 / speeds.vy = 63 inchangés (doublon du -03) ; speeds.vapp = 63 = vy actuel, à contrôler en même temps comme prévu par l'action."
+ },
+ {
+  "itid": "F-GBTU-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — approvedOperations : les 32 booléens sont tous false (vfrDay = false, vfrNight = false, elt = false, fireExtinguisher* = false, firstAidKit = false…). Inchangé."
+ },
+ {
+  "itid": "F-GBTU-09",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — homeBase = « LFPE », homeAeroclub = « Aéro-club Melun-Villaroche » — inchangés. Décision pilote, non tranchable sur données (le champ est libre)."
+ },
+ {
+  "itid": "F-GBTU-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — weighingReport.certificationDate = « 2018-03-01 », fileName « Fiche de pesée TU.pdf », hasData = true, uploadDate 2026-06-18 — inchangé ; emptyWeight 690 / arms.empty 2,198 / moments.empty 1516,62 cohérents (690 × 2,198). Dépend du club."
+ },
+ {
+  "itid": "F-GBTU-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weights.minTakeoffWeight = 0 ; racine minTakeoffWeight = 690 (= emptyWeight) ; cgEnvelope.aftMinWeight = 700 et cgEnvelope.forwardPoints[0].weight = 700. Les trois bornes divergent toujours."
+ },
+ {
+  "itid": "F-GBTU-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = « C » toujours présent (champ singulier orphelin) ; aucun transponderModes pluriel dans la fiche."
+ },
+ {
+  "itid": "F-GBTU-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[1].name = « Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets » (la classification, elle, est propre : « Distance décollage — passage 15 m, Flaps UP (0°) »). takeoff_50ft_flaps_up reste unique parmi les 4 operationId."
+ },
+ {
+  "itid": "F-GBTU-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceCorrections absent des 58 clés d'aircraft_data, alors que compatibleRunwaySurfaces = [ASPH, CONC, GRASS]. Avec le sélecteur d'état de piste, la règle herbe reste nécessaire pour que GRASS ait un effet."
+ },
+ {
+  "itid": "F-GBTU-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = \"\" et speeds.vglide = \"\" inchangés (vfe/vle/vlo vides inertes ; initialClimb = \"\" est un champ facultatif — Step2Speeds.jsx:318 optionalSpeeds — non compté)."
+ },
+ {
+  "itid": "F-GBTU-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — cruiseSpeedKt = 126 = speeds.vno = 126 inchangé ; baseFactor = « 0.476 » = 60/126, cohérent avec la valeur saisie. Seul le manuel (croisière 75 %) peut trancher."
+ },
+ {
+  "itid": "F-GGZO-09",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.additionalFuelTanks[0] « Reservoir d'aile Standard » (type main) : optional = false (était true) → affiché « Fixe ». additionalFuelTanks[1] « Reservoir d'aile Long Range » (type optional) : optional = false inchangé, mais ce réservoir est désormais porté par tankVariants « Variante 204L » (exclusive de « Variante 163L », isDefault = true) : c'est une voilure alternative sélectionnée par variante, pas un réservoir démontable → « Fixe » cohérent avec la structure actuelle."
+ },
+ {
+  "itid": "F-GGZO-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.approvedOperations : les 31 booléens sont toujours à false (vfrDay = false, elt = false, lifeVests = false, fireExtinguisher* = false…). Aucune modification depuis le 19/08 (updated_at 2026-08-19T14:51:31)."
+ },
+ {
+  "itid": "F-GGZO-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.equipmentSurv.transponderMode = \"C\" toujours présent (champ singulier orphelin) ; aucune clé transponderModes (pluriel) dans equipmentSurv."
+ },
+ {
+  "itid": "F-GGZO-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.speeds.vr = \"\" et speeds.vapp = \"\" inchangés (REQUIRED poids 2 chacun dans aircraftCompleteness.js). Les autres vitesses restent ordonnées : vso 33 < vs1 44 < vx 54 < vglide 65 < vy 73 < vfeLdg 85 < vfeTO 110 < vno 127 < vne 158."
+ },
+ {
+  "itid": "F-GGZO-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Partiellement traité, regle=true prématuré. additionalFuelTanks[0] (Standard) : capacity 152, totalCapacity 163, usableCapacity ABSENT → l'accesseur (usableCapacity ?? capacity) lit 152 L utilisables ; additionalFuelTanks[1] (Long Range) : capacity 37, totalCapacity 204, usableCapacity 189. Racine fuelUsableCapacity = 141 toujours. Avec la variante par défaut « Variante 163L », l'app compte 152 L utilisables ≠ 141 déclaré à la racine (et à l'import MANEX : « Volume utilisable total » = 141, « Capacité totale » = 152). Les momentAtFull sont cohérents avec les utilisables lus (152 × 1,222 × 0,72 = 133,74 ; 189 × 1,222 × 0,72 = 166,29). Il manque usableCapacity sur le réservoir principal et l'alignement de la racine."
+ },
+ {
+  "itid": "F-GGZO-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.weighingReport.certificationDate = \"1979-05-01\" inchangé (fileName « f-ggzo pesee.pdf », uploadDate 2026-06-17, masse à vide 648 kg / bras 0,969 m, moment 627,912 cohérent). Non tranchable par les données : seul le club peut dire si cette pesée est la dernière en vigueur (à valider par le pilote comme F-GUVV-05, ou corriger)."
+ },
+ {
+  "itid": "F-GGZO-03",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight = 50 inchangé, et désormais CONTREDIT par baggageCompartments[0] « Compartiment Principale » maxWeight 54 kg (bras 2,415 m, momentMax 130,41 = 54 × 2,415) et maxBaggageTotalMass = 54. Le moteur M&C lit les compartiments quand ils existent (computeWeightBalance.js l.180-185), le champ legacy est inerte en calcul mais reste affiché/exporté → à vider pour lever la contradiction (même traitement que F-HSTR-07)."
+ },
+ {
+  "itid": "F-GGZO-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxAuxiliaryWeight = 20 inchangé ; baggageCompartments[1] « Compartiment Secondaire » déclare 23 kg (bras 3,12 m, momentMax 71,76). 20 ≠ 23 : le legacy ne correspond à aucun compartiment déclaré → à vider (même traitement que F-HSTR-08)."
+ },
+ {
+  "itid": "F-GGZO-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.advancedPerformance.tables[7] (landing_50ft_flaps_landing, 1043 kg, p.96) : cellule Altitude 2000 / Temperature 20 = 704 toujours. Violation de monotonie démontrée sur la grille actuelle : même palier 396 (10 °C) → 704 → 418 (30 °C) ; même température 396 (1000 ft) → 704 → 418 (3000 ft). C'est la SEULE rupture de monotonie des 8 tables (45 points chacune, sans doublon de clé). regle=true prématuré : extractionMetadata.lastModified 2026-08-19T14:44:36 et rien sauvegardé depuis."
+ },
+ {
+  "itid": "F-GGZO-06",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.advancedPerformance.tables[2] (takeoff_ground_roll_flaps_to, 862 kg, p.86) : cellule Altitude 8000 / Temperature 20 = 340 (était 640). Monotone avec ses voisins : 314 (10 °C) < 340 < 366 (30 °C) et 306 (7000 ft) < 340."
+ },
+ {
+  "itid": "F-GGZO-07",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.performanceCorrections existe désormais : 6 règles (ids corr-1787150757421… créés le 19/08) — vent de face −10 % par 9 kt (décollage) et (atterrissage), vent arrière décollage (mode factor_per_step, value 10, step 2 kt), vent arrière atterrissage +10 % par 2 kt, herbe +15 % décollage, herbe +45 % atterrissage. Le champ est renseigné pour les deux phases et les trois types demandés ; MAIS la règle vent arrière décollage est mal paramétrée (×10 par tranche) → constat NOUVEAU critique ci-dessous."
+ },
+ {
+  "itid": "F-GGZO-08",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.bypassedFields = [performance.takeoff_ground_roll_flaps_up, performance.takeoff_50ft_flaps_up, performance.landing_ground_roll_flaps_up, performance.landing_50ft_flaps_up] : les 4 variantes volets rentrés sont certifiées absentes ; les 4 autres opérations minimales sont couvertes par les 8 tables (takeoff_ground_roll_flaps_to ×3 masses, takeoff_50ft_flaps_to ×3 masses, landing_ground_roll_flaps_landing, landing_50ft_flaps_landing). Les tables multi-masses d'un même operationId sont regroupées par masse par tableInterpolationAdapter.js (l.57-60, lookup 3D) : pas un doublon."
+ },
+ {
+  "itid": "F-GNAM-01",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.speeds.vx = 64, speeds.vy = 76 (était 76/64) : Vx < Vy désormais. (manexExtraction.items conserve VX=76/VY=64 acceptés : simple historique de saisie, non lu en vol.)"
+ },
+ {
+  "itid": "F-GNAM-02",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks = 1 réservoir {name:'Réservoir Principale', type:'main', arm:2.413, momentAtFull:316.2} ; la pastille « principal » est posée ; arms.fuelMain = 2.413 et moments.fuelMain = 316.2 sont renseignés (316.2 = 182 L × 0,72 × 2,413)."
+ },
+ {
+  "itid": "F-GNAM-03",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0].totalCapacity = 189 et usableCapacity = 182 ; fuelUsableCapacity racine = 182. Le pilote a choisi UN réservoir agrégé (189/182) au lieu de 2×(94,5/91) : cohérent avec les deux volumes du manuel (extraction « Capacité totale » 189 / « Volume utilisable » 182). Reste un champ legacy capacity = 91 sur ce réservoir → voir NOUVEAU n°1."
+ },
+ {
+  "itid": "F-GNAM-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight = 50 inchangé, et désormais CONTREDIT en interne : baggageCompartments[0] = {name:'soute', arm:3.627, maxWeight:91, momentMax:330.06} et maxBaggageTotalMass = 91 (extraction « Masse max bagages » = 91). Le moteur lit les compartiments + maxBaggageTotalMass (computeWeightBalance.js:180-220) : le 50 est inerte en vol mais c'est l'injection par défaut (AircraftModule.jsx:4242 toValidNumber(…, 50)) → à vider. Idem weightBalance.baggageArm = 0 / arms.baggageAft = 0 (zéro au lieu d'absent) alors que le compartiment porte 3,627 m."
+ },
+ {
+  "itid": "F-GNAM-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxAuxiliaryWeight = 20 inchangé ; aucun compartiment auxiliaire déclaré (baggageCompartments ne contient que 'soute') et weightBalance.auxiliaryArm = 0 → limite 20 kg pour un compartiment sans bras ni existence (injection par défaut AircraftModule.jsx:4243 « Valeur par défaut »). Inerte pour le moteur (mode compartiments) → à vider."
+ },
+ {
+  "itid": "F-GNAM-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels = 6 modèles (operationIds : takeoff_50ft_flaps_up, takeoff_50ft_flaps_to, takeoff_ground_roll_flaps_up, takeoff_ground_roll_flaps_to, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing) ; bypassedFields = ['speeds.vfeTO'] sans aucune clé performance.* → landing_50ft_flaps_up et landing_ground_roll_flaps_up ni numérisés ni certifiés absents du manuel."
+ },
+ {
+  "itid": "F-GNAM-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — Condition INCHANGÉE et reproduite par la sonde : courbe '0ft' du graphe OAT démarre à +2,7 °C (modèle 0, t/o 15 m UP), +8,4 °C (modèle 2, roulement UP), +11,3 °C (modèle 3, roulement TO) → run « 0 °C / 0 ft / vent 0 » = ERROR « Impossible de calculer Y pour X=0 sur la courbe \"0ft\" » sur ces 3 opérations ; les 3 autres passent (modèle 1 : '0ft' dès −12,8 °C ; modèle 4 : −19,9 °C ; modèle 5 : +1,6 °C). Classé a-confirmer car le prolongement n'est légitime que si le tracé papier va plus loin : précédent F-GIEA-05 (même famille de planches Piper) = lignes d'altitude TRONQUÉES côté froid, refus du moteur conforme. À trancher sur le manuel AM (pages décollage) avant toute reprise de numérisation."
+ },
+ {
+  "itid": "F-GNAM-08",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.arms.fuelMain = 2.413 (était 0)."
+ },
+ {
+  "itid": "F-GNAM-09",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — aircraft_data.weightBalance.fuelArm = 2.413 (était 0), égal au bras du réservoir 'main' (additionalFuelTanks[0].arm = 2.413)."
+ },
+ {
+  "itid": "F-GNAM-10",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — speeds.vx = 64 < speeds.vy = 76 : interversion faite."
+ },
+ {
+  "itid": "F-GNAM-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.approvedOperations : 32 booléens, tous false (vfrDay, training, elt, extincteurs… = false) — aucun changement."
+ },
+ {
+  "itid": "F-GNAM-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — aircraft_data.horsepower = 182 inchangé (manexExtraction « Puissance moteur (CV) » = 182, conf 0, accepté). Aucune contradiction interne démontrable (la coïncidence avec fuelUsableCapacity = 182 n'en est pas une) → seule la plaque moteur / le manuel tranche."
+ },
+ {
+  "itid": "F-GNAM-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.equipmentSurv.transponderMode = 'C' toujours présent ; aucun champ transponderModes (pluriel) dans equipmentSurv (clés : cvr, fdr, acas, adsb, adsc, taws, tcas, weather, transponderMode)."
+ },
+ {
+  "itid": "F-GNAM-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[0,3,4,5].data.graphs[0].outputUnit = 'm' alors que axes.yAxis.unit = 'ft' sur ces 4 modèles (modèle 1 : 'm'/'m' et modèle 2 : 'ft'/'ft' corrects). NON bloquant en vol : operationResolver.js:423 lit d'abord cascade.outputUnit = unité de l'axe de sortie du DERNIER graphe (atelierCascadeAdapter.js:204-212) → la sonde rend bien unit:'ft' sur les 4 modèles ; le 'm' déclaré est inerte mais reste une incohérence à corriger dans l'atelier."
+ },
+ {
+  "itid": "F-GNAM-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[3] (takeoff_ground_roll_flaps_to) : axes.yAxis.title = 'landing_distance_ground' sur les 3 panneaux (et metadata.workshop.sharedY.title idem) — inchangé."
+ },
+ {
+  "itid": "F-GNAM-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[0] et [1] : data.metadata ne contient pas de clé referenceCases (sonde : referenceCases = 0) ; modèles 2-5 : 1 cas chacun (ex1 1100 ft, ex1 950 ft, '1' 1290 ft, '1' 825 ft)."
+ },
+ {
+  "itid": "F-GNAM-17",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Dernier x des guides du panneau masse : modèle 0 ≤ 1147,4 kg ; 1 ≤ 1145,9 ; 2 ≤ 1149,1 ; 3 ≤ 1155,8 ; 4 ≤ 1151,9 ; 5 ≤ 1149,8 — tous < MTOW 1157, inchangé. NON bloquant : la sonde tourne à 1157 kg et aboutit sur les 6 modèles (prolongement toléré par le moteur)."
+ },
+ {
+  "itid": "F-GNAM-18",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — speeds.initialClimb = 76 inchangé. Mais le champ est défini comme une VITESSE dans l'app (Step2Speeds.jsx:318 « V Montée initiale - Vitesse de montée initiale », kt) et 76 = vy → cohérent comme vitesse de montée initiale ; seul le libellé du mapper d'extraction (manexExtractionMapper.js:211 « Taux montée initial », ft/min) est en décalage — défaut de code, pas de fiche. Reste à confirmer au manuel la vitesse recommandée (précédent F-GIEA-19 : valeur kt)."
+ },
+ {
+  "itid": "F-GNAM-19",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — speeds.vfeTO = 102 (= vfeLdg 102, VFE unique). bypassedFields contient encore 'speeds.vfeTO' : entrée périmée mais inerte (aircraftCompleteness.js:228-237 ne consulte le bypass que si la valeur manque) — à nettoyer à l'occasion."
+ },
+ {
+  "itid": "F-GNAM-20",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = '' et speeds.vglide = '' — toujours les 2 seuls REQUIRED vides (aircraftCompleteness.js:167 VR poids 2, :171 V plané poids 1)."
+ },
+ {
+  "itid": "F-GOFP-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — advancedPerformance.tables[1] (takeoff_50ft_flaps_to, p.70) cellule Altitude=4000/Temperature=30 : value = 660 (était 66). Désormais encadrée (ligne 541/585/634/660/744 ; colonne 616 → 660 → 770) et monotone, donc le blocage absurde est levé. MAIS sur les 180 cellules des 4 grilles, c'est la SEULE hors lissage : interpolation voisins ligne 689 m, colonne 693 m, écart 4,8 % (toutes les autres cellules < 2,5 %) ; et 660 = « 66 » suivi d'un 0 — ressemble à un zéro ajouté plutôt qu'à une relecture de la page 70. Seul le manuel tranche (attendu de l'item ≈ 686)."
+ },
+ {
+  "itid": "F-GOFP-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — arms.empty = 0.765 inchangé ; moments.empty = 393.975 = 515 × 0.765 (cohérent). cgEnvelope.forwardPoints[0] = 0.79 @ 500 kg : le CG à vide est bien en avant de l'enveloppe, mais un avion VIDE hors enveloppe de vol n'est pas une contradiction en soi (l'enveloppe s'applique aux états chargés ; avec 77 kg à 0,9416 et 93 L à 1,08 le CG passe à ≈ 0,818). Seule la fiche de pesée jointe (weighingReport.pdfUrl …/F-GOFP%20-%20pesee.pdf) tranche."
+ },
+ {
+  "itid": "F-GOFP-03",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — weightBalance.emptyWeightArm = 0.765 inchangé, égal à arms.empty (miroir cohérent). Même verdict que -02 : à confirmer sur la fiche de pesée PDF."
+ },
+ {
+  "itid": "F-GOFP-04",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — tankVariants = [{name 'Variante 98L', isDefault true, tankIds ['1781100235411.9043']}, {name 'Variante 142L', isDefault false, tankIds ['1781100235411.088']}] — ids vérifiés présents dans additionalFuelTanks. Les deux réservoirs sont devenus deux CONFIGURATIONS exclusives : applyTankVariant (calc-engine/wb/tankVariants.js:37-68) filtre additionalFuelTanks à la variante et recalcule fuelCapacity/fuelUsableCapacity (défaut 98 L total / 93 L utilisable). Le bras du 142L est passé de 0,70 à 1,08 (momentAtFull 110.42 = 142 × 0,72 × 1,08 exact). Résidu : fuelCapacity racine = 235 (somme brute des deux variantes exclusives, 93 + 142) — valeur écrasée par la variante en prépa vol, mais toujours affichée telle quelle là où l'avion brut est lu (Step7Summary:686, ScenarioCards:26)."
+ },
+ {
+  "itid": "F-GOFP-05",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0] = {type 'main', capacity 93, totalCapacity 98, arm 1.08}. Accesseurs calc-engine/fuel/tankCapacity.js : tankUsableLtr = usableCapacity ?? capacity = 93 ; tankTotalLtr = totalCapacity = 98 — exactement le couple 98/93 attendu (le champ s'appelle `capacity`, lu comme l'utilisable par convention). Pastille main conservée."
+ },
+ {
+  "itid": "F-GOFP-06",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — baggageCompartments[0] = {name 'Compartiment 1', arm 1.636, maxWeight 54, momentMax 88.34 = 54 × 1,636}. Bras désormais en arrière des sièges (0,9416). Un Compartiment 2 a été ajouté : arm 2.16, maxWeight 18, momentMax 38.88 = 18 × 2,16 (cohérent)."
+ },
+ {
+  "itid": "F-GOFP-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weighingReport.certificationDate = '1977-05-01' inchangé (uploadDate 2026-06-10T14:43:30Z, même PDF). Toujours 49 ans > seuil d'avertissement 10 ans."
+ },
+ {
+  "itid": "F-GOFP-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxBaggageWeight = 50 inchangé. Contradiction désormais DÉMONTRABLE : baggageCompartments[0].maxWeight = 54, maxBaggageTotalMass = 54, et l'item d'extraction MANEX accepté « Masse max bagages (cumulée) » = 54 kg (p.27). Le 50 est le défaut injecté par l'app — champ legacy à vider (même traitement que F-HSTR-07)."
+ },
+ {
+  "itid": "F-GOFP-09",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxAuxiliaryWeight = 20 inchangé. Le second compartiment déclaré (baggageCompartments[1]) fait 18 kg à 2,16 m : le 20 legacy ne correspond à aucun compartiment déclaré (54 / 18) — à vider."
+ },
+ {
+  "itid": "F-GOFP-10",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — advancedPerformance.tables[1] cellule Altitude=0/Temperature=10 : value = 393 (était 939) ; encadrée 363 (0 °C) / 424 (20 °C), lissage conforme (< 2,5 %)."
+ },
+ {
+  "itid": "F-GOFP-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Tables présentes (operationId) : takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_ground_roll_flaps_landing (×2, p.77+p.78), landing_50ft_flaps_landing (×2). bypassedFields = ['speeds.vfeTO'] inchangé : aucune clé performance.*. Les 4 opérations flaps_up restent ni couvertes ni certifiées absentes (performanceCoverage.computeMissingPerformanceTables). Note : le doublon d'operationId des tables scindées est SAIN — buildLookupForOperation fusionne (union des altitudes 0→8000, 45 cellules, 0 trou vérifié)."
+ },
+ {
+  "itid": "F-GOFP-12",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — performanceCorrections = 6 règles (ids uniques) : headwind percent_per_step 10 %/9 kt (takeoff, landing), tailwind percent_per_step 10 %/2 kt (takeoff, landing), grass percent_fixed 15 % (takeoff, landing). Moteur vérifié (calc-engine/perf/performanceCorrections.js:264-285) : headwind → 1 − 0,10·n tranches complètes, tailwind → 1 + 0,10·n tranche entamée. Une règle par type et par phase → la garde anti-cumul ne se déclenche pas."
+ },
+ {
+  "itid": "F-GOFP-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.rearSeats = 0 inchangé (weightBalance.rearLeftSeatArm / rearRightSeatArm = 0 aussi, additionalSeats = []). Non conforme à la convention « absent ≠ 0 », mais enjeu nul en vol pour un biplace sans siège arrière déclaré."
+ },
+ {
+  "itid": "F-GOFP-14",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — baggageCompartments[0].arm = 1.636 > sièges avant 0,9416 : la soute est désormais en arrière des sièges (doublon de -06)."
+ },
+ {
+  "itid": "F-GOFP-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — arms.frontSeats = 0.9416 inchangé ; weightBalance.frontLeftSeatArm = frontRightSeatArm = 0.9416 (miroirs cohérents). Aucune contradiction interne ; seule la fiche de pesée tranche."
+ },
+ {
+  "itid": "F-GOFP-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weightBalance.cgLimits = {forward 0, aft null, forwardVariable [{cg '0.0', weight '612', moment 0}]} et cgLimits racine = {forward 0, aft 0.93} inchangés. cgEnvelope lui est cohérent (moments recalculés exacts : 395 / 483.48 / 632.85 ; aftMaxMoment 704.94 = 758 × 0,93 ; aftMinMoment 465 = 500 × 0,93). Inerte (le moteur lit cgEnvelope) — à réaligner sur 0,79 / 0,93 par le script du lot F-GUVV."
+ },
+ {
+  "itid": "F-GOFP-17",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — minTakeoffWeight racine = 515 (= emptyWeight, fabrication du repli core/contexts/index.jsx:222-236) ; weights.minTakeoffWeight = '' inchangé. Incohérent aussi avec l'enveloppe qui démarre à 500 kg (cgEnvelope.aftMinWeight / forwardPoints[0].weight). Step6WeightBalance:459 lit weights.* (vide → aucune alerte) ; seul WeightBalanceChart:194 trace « Masse min : 515 » depuis la racine (cosmétique)."
+ },
+ {
+  "itid": "F-GOFP-18",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = 'C' inchangé ; transponderModes (pluriel) absent ; approvedOperations.elt = false. Step7Summary.jsx:583-592 ne lit plus le singulier (l'ELT fantôme n'est plus déclaré), mais le champ est RÉ-INJECTÉ à 'C' à chaque édition (AircraftModule.jsx:3643, AircraftCreationWizard.jsx:402) : le vider en base ne tiendra pas sans correction du code."
+ },
+ {
+  "itid": "F-GOFP-19",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — speeds.vne = 149 inchangé ; manexExtraction.items[28] « VNE » accepté = 171 sans unité d'origine. 171 mph = 148,6 kt → cohérent si la page limitations est en mph. À vérifier au manuel."
+ },
+ {
+  "itid": "F-GOFP-20",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr / vx / vy / vapp / vglide = '' et initialClimb = '' inchangés (extraction items[33] 715 ft/min toujours non acceptée). vr, vapp, vglide sont REQUIRED dans aircraftCompleteness.FIELD_DEFINITIONS (lignes 167-171), vx/vy OPTIONAL."
+ },
+ {
+  "itid": "F-GOVE-01",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — advancedPerformance.tables[4] « Landing Distance over 50 ft - 900 kg » et [5] « … 700 kg » portent operationId landing_50ft_flaps_landing ; tables[6] « Landing Ground Roll - 900 kg » et [7] « … 700 kg » portent landing_ground_roll_flaps_landing (ré-import Excel, extractionMetadata.lastModified 2026-08-21T12:00:04). Plus aucune coordonnée en double : exécution réelle de resolveOperationFromTables sur la fiche fraîche → 900 kg/0 ft/15 °C : roulement 200 m, 50 ft 460 m, chacun sous son opId."
+ },
+ {
+  "itid": "F-GOVE-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — tables[0..3].data, palier Altitude 0 : Temperature 5/15/35 °C (était -4/5/35 — modifié mais non corrigé) → écarts ISA [-10, 0, +20] contre [-20, 0, +20] aux paliers 4000 ft (-13/7/27) et 8000 ft (-21/-1/19). Exécution du résolveur (21/08) : detectIsaRelativeTemperatures = false → grille ABSOLUE, axe [-21,-13,-1,5,7,15,19,27,35], cube 18/54 ; takeoff_ground_roll_flaps_to et takeoff_50ft_flaps_to : 900 kg/0 ft/15 °C → 235 m / 535 m (sur grille) mais 900/0 ft/25 °C, 850/1000 ft/20 °C, 800/2000 ft/10 °C, 900/0 ft/0 °C → ERROR « Calcul impossible » (interpolateIfPossible refuse les cases vides). Les valeurs sont maintenant monotones (225/235/285 ; 130/145/165 ; 480/535/590 ; 285/315/345). Très probablement Temperature 5 → -5 au palier 0 ft, comme fait à l'atterrissage — à confirmer p.33. Sans trancher : le pas 225→235 (+10) au palier 0 ft contraste avec +40/+50 aux autres paliers, à re-vérifier en même temps."
+ },
+ {
+  "itid": "F-GOVE-03",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — tables[4..7].data, palier 0 ft : Temperature -5/15/35 → écarts ISA [-20, 0, +20] identiques aux paliers 4000 et 8000 ft. Exécution du résolveur : isaRelative = true, échelle isaDeviation, cube 18/18 ; 5 conditions sur 5 COMPUTED (landing_50ft 460/473/460/441/441 m ; landing_ground_roll 200/205/199/188/189 m)."
+ },
+ {
+  "itid": "F-GOVE-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — La double contenance est en place : additionalFuelTanks[0] totalCapacity 110 / usableCapacity 109, [1] totalCapacity 50 / usableCapacity 49. Σ total 160 = fuelCapacity 160 ✓, mais Σ utilisable 158 ≠ fuelUsableCapacity 159 (racine non resynchronisée : règle remplir-si-vide, AircraftCreationWizard.jsx:1077 et Step3WeightBalance.jsx:411). En vol : Step6 avec config réservoirs engagée compte 158 L (tankUsableLtr), alors que useAircraftCalculations.js:31 et useAlternateSelection.js:432 (autonomie, dégagements) lisent 159 L. Trancher au manuel (1 L inutilisable sur quel réservoir, ou 2 L ?) puis aligner la racine sur la somme."
+ },
+ {
+  "itid": "F-GOVE-05",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0].momentAtFull = 86,54 = 109 L × 0,72 × 1,1027 (calculé sur l'utilisable, conforme à la convention « utilisable seul ») ; miroir moments.fuelMain = 86,54 ; réservoir optionnel momentAtFull 62,22 = 49 × 0,72 × 1,7637. L'ancien 792 a disparu."
+ },
+ {
+  "itid": "F-GOVE-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — weighingReport.certificationDate inchangée : 1992-09-01 (PDF « F-GOVE - pesée.pdf », 221 ko, déposé 2026-06-02). Aucun retour pilote dans retours.json ; les données ne peuvent pas dire si une pesée plus récente existe — seul le club le peut (cf. F-GUVV-05 où la pesée ancienne a été assumée comme en vigueur)."
+ },
+ {
+  "itid": "F-GOVE-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxBaggageWeight = 50 inchangé, et désormais contredit en interne : baggageCompartments[0] « Compartiment 1 » maxWeight 40 (bras 1,2651 m, momentMax 50,604) et maxBaggageTotalMass = 40. Le vol (Step6WeightBalance) applique le plafond du compartiment (40) ; le 50 n'est lu que par le module Masse/Centrage legacy, masqué du menu (MobileApp HIDDEN_FROM_MENU) → inerte en pratique mais contradictoire. Même remède que F-HSTR-07 : vider le champ legacy (isAircraftDataComplete, qui l'exige, n'a aucun appelant)."
+ },
+ {
+  "itid": "F-GOVE-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxAuxiliaryWeight = 20 inchangé, avec weightBalance.auxiliaryArm = 0 et aucun compartiment auxiliaire dans baggageCompartments (un seul compartiment déclaré) → masse maxi > 0 sans bras : contradiction interne. Inerte en vol (Step6 ignore ce champ) ; à vider."
+ },
+ {
+  "itid": "F-GOVE-09",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — performanceCorrections = 6 règles créées le 21/08 (ids corr-1787313654652…) : décollage — tailwind +10 %/2 kt, grass +15 %, headwind paliers 10 kt ×0,85 / 20 kt ×0,65 / 30 kt ×0,55 ; atterrissage — tailwind +10 %/2 kt, grass +15 %, headwind paliers 10 kt ×0,78 / 20 kt ×0,63 / 30 kt ×0,52. Un seul type par phase → la garde anti-cumul d'applyPerformanceCorrections ne neutralise rien ; paliers valides pour normalizeBrackets (fromKt ≥ 0, facteurs finis). Cohérent avec windLimits maxTailwind 10 et GRASS dans compatibleRunwaySurfaces."
+ },
+ {
+  "itid": "F-GOVE-10",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — cruiseSpeedKt = 110 (était 75) ; baseFactor « 0.545 » = 60/110 ✓ ; ordre cohérent 110 > Vy 78 > Vx 70. L'item manexExtraction[8] garde la trace « 75 % » — simple historique d'extraction, sans effet."
+ },
+ {
+  "itid": "F-GOVE-11",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — Mémo sans défaut : bypassedFields inchangé = performance.takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_up, landing_ground_roll_flaps_up ; les 4 opérations restantes sont couvertes par tables (2 décollage volets TO, 2 atterrissage volets LDG)."
+ },
+ {
+  "itid": "F-GOVE-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — speeds.vs1 = 51 inchangé ; manexExtraction[19] porte toujours originalValue 67 KIAS (p.29). Ordre interne cohérent : vso 45 < vs1 51 < vr 54 < vx 70 < vy 78 < vapp 81 < vfeLdg 92 < vfeTO 97 < vno 140 < vne 166. Seule la p.29 du manuel tranche."
+ },
+ {
+  "itid": "F-GUKQ-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.approvedOperations : vfrDay=false, vfrNight=false, ifrDay=false, ifrNight=false, svfr=false alors que training=true (inchangé). L'extraction MANEX (manexExtraction.items) avait trouvé vfrDay=true (p62, confiance 100) et vfrNight=true (p60, confiance 95) mais accepted=false — jamais reportés sur la fiche."
+ },
+ {
+  "itid": "F-GUKQ-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[4].table_name = « Distance d'atterrissage passage 15m/50ft - Masse 900 kg » inchangé, operationId/classification = takeoff_50ft_flaps_to, pageNumber 54, valeurs 480–1125 m (décollage). extractionMetadata.lastModified = 2026-08-19T15:01:49 : les tables ont été retouchées le 19/08 mais pas ce titre."
+ },
+ {
+  "itid": "F-GUKQ-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — bypassedFields = [\"weighingReport\", \"fuelTankArms\", \"performance.takeoff_ground_roll_flaps_up\", \"performance.takeoff_50ft_flaps_up\", \"performance.landing_ground_roll_flaps_up\", \"performance.landing_50ft_flaps_up\"] : les 4 clés performance ont été ajoutées (cf. -09) mais les 2 contournements legacy subsistent alors que additionalFuelTanks[0].arm = 1,1616 et [1].arm = 1,44613 et weighingReport.hasData = true. Nuance : le contournement « weighingReport » se trouve justifié a posteriori — le PDF joint n'est pas une pesée (voir nouveau constat) ; seul « fuelTankArms » est à retirer sans condition."
+ },
+ {
+  "itid": "F-GUKQ-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables[2] (operationId cruise_speed, « Performances en Palier - Vitesse Vraie (Vi) », p53) inchangée : 5 lignes, colonnes Masse/value/Regime/Altitude/Pourcentage, AUCUNE colonne Temperature ; 4 lignes à 75 % (0/3000/5000/7500 ft → 104/109/112/118 kt) + 1 ligne à 65 % (10000 ft → 105 kt). cruiseSpeedKt racine = 108 (cohérent avec 104–112 kt à 75 %)."
+ },
+ {
+  "itid": "F-GUKQ-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — speeds.initialClimb = 65 (désormais nombre, plus la chaîne \"65\"). Côté app : le wizard avion (Step2Speeds.jsx, clé initialClimb) définit le champ comme « V Montée initiale - Vitesse de montée initiale » (unité vitesse, kt) alors que manexExtractionMapper.js l.211 le déclare « Taux montée initial » en ft/min ; l'item d'extraction accepté pour ce chemin (570 ft/min, originalValue 1200 « tr/min ») n'a pas été retenu. 65 est donc saisi en kt par construction du wizard ; la valeur elle-même (65 kt) reste à confirmer au manuel, non tranchable ici."
+ },
+ {
+  "itid": "F-GUKQ-01",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — arms.empty = 0,3798 ; weightBalance.emptyWeightArm = 0,3798 ; moments.empty = 218 ; 574 × 0,3798 = 218,0 (trio cohérent). Limites cgEnvelope interpolées à 574 kg ≈ 0,2074 (avant) / 0,5704 (arrière) → 0,3798 dedans. Réserve : 218 m.kg / 574 kg sont exactement les valeurs étoilées de l'exemple de la page 6.02 du manuel jointe comme « rapport de pesée » (voir nouveau constat critique)."
+ },
+ {
+  "itid": "F-GUKQ-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Structure corrigée : plus que 6 règles, une seule headwind par phase, mode factor_table (ids corr-1787151219089 et corr-1787151241935, créées le 19/08 à 14:53–14:54 UTC). Décollage conforme : brackets [{10→0,85},{20→0,65},{30→0,55}]. Atterrissage NON conforme : brackets [{10→0,85},{20→0,65},{30→0,55}] = copie du décollage, au lieu de [{10→0,78},{20→0,63},{30→0,52}] (valeurs relevées le 19/08 dans les 3 anciennes règles atterrissage). Vérifié par exécution de applyPerformanceCorrections (calc-engine) : atterrissage, vent de face 15 kt → ×0,85 (attendu ×0,78) ; 25 kt → ×0,65 ; 35 kt → ×0,55 + note hors domaine. Aucune règle ambiguë (anti-cumul non déclenché) ; tailwind +10 %/2 kt et herbe +15 % uniques et appliqués. Effet en vol : distance d'atterrissage surestimée de ~9 % entre 10 et 19 kt de face (côté sûr, mais faux au manuel)."
+ },
+ {
+  "itid": "F-GUKQ-03",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — arms.empty = 0,3798 (était 2,18), compris entre 0,2078 (avant à 550 kg) et 0,5709 (arrière à 550 kg) de cgEnvelope."
+ },
+ {
+  "itid": "F-GUKQ-04",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — weightBalance.emptyWeightArm = 0,3798 (était 2,18), identique à arms.empty ; cohérent avec moments.empty 218 / 574 kg."
+ },
+ {
+  "itid": "F-GUKQ-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé malgré regle=true : additionalFuelTanks[0] = {type main, name « Réservoir principal », capacity 109, arm 1,1616} et [1] = {type optional, capacity 50, arm 1,44613} — aucun totalCapacity/usableCapacity sur aucun réservoir ; fuelCapacity racine = 159 ; fuelUsableCapacity racine = 105. Convention moteur usableCapacity ?? capacity → Σ utilisable dérivée = 159 L ≠ 105 L racine (contradiction interne persistante, +4 L sur le principal). La page 6.02 du manuel jointe confirme les volumes PHYSIQUES : principal 109 L (78,5 kg), OPT 50 L (36 kg) ; l'utilisable 105 n'y figure pas."
+ },
+ {
+  "itid": "F-GUKQ-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weighingReport.certificationDate = \"1992-09-01\" inchangée. PDF joint (weighingReport.pdfUrl, 195 917 o, 1 page image) lu : en-tête « MANUEL DE VOL DR 400/120 », page 6.02, pied de page « Edition 10 - Septembre 1992 » → la date saisie est la date d'ÉDITION du manuel, pas une date de pesée ; le document ne porte ni immatriculation, ni date de pesée, ni signature. L'attendu (date de la dernière pesée réelle) n'est pas satisfait."
+ },
+ {
+  "itid": "F-GUKQ-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxBaggageWeight = 50 inchangé, désormais CONTREDIT par trois sources internes : baggageCompartments[0].maxWeight = 40 (« Compartiment », bras 1,21092), maxBaggageTotalMass = 40, extraction MANEX p24 « Masse max bagages » = 40 kg ; et par la page 6.02 jointe dont l'échelle BAGAGES est graduée jusqu'à 40 kg (98 lb). En vol le champ est inerte (WeightBalanceModule ne l'utilise qu'en repli sans compartiments ; computeWeightBalance applique les plafonds par compartiment + maxBaggageTotalMass) → champ legacy à vider plutôt qu'à confirmer."
+ },
+ {
+  "itid": "F-GUKQ-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxAuxiliaryWeight = 20 inchangé, avec weightBalance.auxiliaryArm = 0 (bras nul pour une masse maxi > 0), aucun compartiment auxiliaire dans baggageCompartments (1 seul compartiment, 40 kg), aucun item d'extraction, et la page 6.02 jointe ne comporte aucune station auxiliaire (stations : BAGAGES, ESSENCE OPT, ESSENCE PRINCIPAL, PASSAGERS ARRIÈRE, PILOTE ET PASSAGER AVANT). Inerte en vol (repli sans compartiments uniquement) → à vider."
+ },
+ {
+  "itid": "F-GUKQ-09",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — bypassedFields contient performance.takeoff_ground_roll_flaps_up, performance.takeoff_50ft_flaps_up, performance.landing_ground_roll_flaps_up, performance.landing_50ft_flaps_up (clés conformes à PERF_BYPASS_PREFIX + ids du operationCatalog). Les 4 autres opérations ont leur table (operationIds uniques : takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_ground_roll_flaps_landing, landing_50ft_flaps_landing) → couverture 8/8."
+ },
+ {
+  "itid": "F-GUKQ-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — advancedPerformance.tables[3] (takeoff_ground_roll_flaps_to, p54), ligne 900 kg / 0 ft : 225 / 235 / 255 m à −5 / 15 / 35 °C (était 225 / 235 / 285). C'est la cellule ISA+20 qui a été modifiée (285 → 255), la cellule ISA (235) visée par l'item est inchangée. La régularité apparente (+10/+20) est rétablie mais deux contrôles internes restent incohérents : ratio 900/700 kg à 0 ft = 1,73 / 1,62 / 1,55 contre 1,74–1,81 pour les 6 autres couples (alt, T°) ; ratio passage 50 ft / roulement à 900 kg 0 ft = 2,13 / 2,28 / 2,31 contre 2,05–2,19 pour les 15 autres cellules. Les deux ratios se normaliseraient avec ≈255 (ISA) et ≈285 (ISA+20) — soit la valeur d'origine de la cellule modifiée. Non tranchable sans le manuel : relire les DEUX cellules p54."
+ },
+ {
+  "itid": "F-GUKQ-11",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — speeds.vfeTO = 116 (était 45) : > vsTO 48, > vso 46, ≥ vfeLdg 92, < vno 140 — toutes les contraintes internes de l'attendu sont satisfaites. Pour mémoire, l'extraction MANEX p36 proposait 75 kt (accepted=false)."
+ },
+ {
+  "itid": "F-GUVV-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — additionalFuelTanks[0].momentAtFull = 310.62 = moments.fuelMain ; 147,63099 L × 0,80 × 2,63 m = 310,62 kg·m (avec 0,84 : 326,15). fuelType = 'JET-A1'. Valeur inchangée ; la densité retenue par le manuel n'est pas tranchable depuis la fiche."
+ },
+ {
+  "itid": "F-GUVV-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — additionalFuelTanks[0] = {name 'Réservoir principal 1', type 'main', capacity 147.63099, arm 2.63, momentAtFull 310.62} — ni totalCapacity ni usableCapacity ; fuelCapacity = fuelUsableCapacity = 147.63099. Les deux contenances restent à lire au MANEX."
+ },
+ {
+  "itid": "F-GUVV-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentCom.elt = true ; approvedOperations.elt = false (inchangé)."
+ },
+ {
+  "itid": "F-GUVV-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv = {cvr false, fdr false, ras false, adsb false, gpws false, taws false, tcas 'None', egpws false, flarm false, adsbIn false, transponderMode 'C'} ; transponderModes absent. Forme legacy intacte."
+ },
+ {
+  "itid": "F-GUVV-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.manufacturer = « Diamand Aircraft » ; colonne racine manufacturer = « Diamand Aircraft » ; search_vector contient 'diamand'."
+ },
+ {
+  "itid": "F-GUVV-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — arms.baggageFwd 3.5 / arms.baggageAft 3.7 ; weightBalance.baggageArm 3.5 / auxiliaryArm 3.7 ; baggageCompartments[0] = {name 'cockpit baggage compartment', arm 3.65, maxWeight 30, momentMax 109.5}. Divergence 3,50/3,70 vs 3,65 intacte — et d'autant plus à trancher que -08/-09 viennent d'être validés « au manuel » (voir nouveau constat sur les soutes)."
+ },
+ {
+  "itid": "F-GUVV-17",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = 'C' toujours présent."
+ },
+ {
+  "itid": "F-GUVV-18",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[2].graphs[2].curves[5] et [6] nommées « headwind 7 » (plages Y 612-1044 m et 708-1174 m : deux guides distincts), aucune « headwind 6 » ; performanceModels[5].graphs[1] (panneau MASSE, x 850-1150 kg) : 8 courbes nommées « headwind 1..8 » ; performanceModels[4].graphs[2].curves[5] nommée « 10000 » (familyValue 10000) sans suffixe ft."
+ },
+ {
+  "itid": "F-GUVV-19",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.remarks = « test testsetsetset »."
+ },
+ {
+  "itid": "F-GUVV-20",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — bypassedFields = ['performance.takeoff_50ft_flaps_up', 'performance.takeoff_ground_roll_flaps_up'] inchangé et cohérent : les 6 operationId de performanceModels sont distincts et couvrent les 6 autres opérations (takeoff_50ft_flaps_to, takeoff_ground_roll_flaps_to, landing_50ft/ground_roll × flaps_landing/flaps_up). Seule question résiduelle, non tranchable depuis la fiche : le MANEX ne fournit réellement pas ces deux charts."
+ },
+ {
+  "itid": "F-GUVV-21",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[5].data.graphs[0].curves[0] : name '0ft', familyValue -1 (les autres : 2000/4000/6000/8000/10000 cohérents avec leurs noms)."
+ },
+ {
+  "itid": "F-GUVV-22",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — performanceModels[*].data.metadata (6 modèles) : clés createdAt/updatedAt/modelName/systemName/systemType/description/aircraftModel uniquement, aucune clé referenceCases ; sonde : referenceCases = 0 sur les 6."
+ },
+ {
+  "itid": "F-GUVV-23",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — windLimits = {maxTailwind 10, maxCrosswind 25, maxCrosswindWet 15} ; windLimits.limits absent."
+ },
+ {
+  "itid": "F-GUVV-24",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = '' ; speeds.vapp = '' (vx 72, vy 72, vno 129, vne 178, vs1 52, vso 49, vfeTO 108, vfeLdg 91, vglide 88, initialClimb 75 renseignés)."
+ },
+ {
+  "itid": "F-GUVV-25",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.voRanges[1] = {minWeight 1080, maxWeight 1180, speed 108} ; maxTakeoffWeight 1150 / weights.mtow '1150' / cgEnvelope.aftMaxWeight '1150'. Borne haute toujours 30 kg au-dessus de la MTOW de la fiche."
+ },
+ {
+  "itid": "F-HDIM-01",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — advancedPerformance.tables[0..5].outputUnit = \"ft\" sur les 6 tables (extractionMetadata.lastModified 2026-08-21T12:28, reimportedFromExcel). Valeurs cohérentes entre elles : roulement 1089 kg SL/0°C = 795 ft < passage 50 ft 1460 ft ; aucune violation 50ft > roulement sur 354 cellules."
+ },
+ {
+  "itid": "F-HDIM-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Racine inchangée : fuelUsableCapacity = 151.4164 > fuelCapacity = 151. Le réservoir par défaut (additionalFuelTanks[0]) est lui cohérent : capacity 151 (lu utilisable) < totalCapacity 162 ; c'est donc 151 qui sert au moteur (sumUsableLtr), la racine 151,4164 reste un miroir périmé affiché par la complétude (chemin 'fuelUsableCapacity | fuelCapacity')."
+ },
+ {
+  "itid": "F-HDIM-03",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — tables[0] (p.90, 1089 kg) et tables[1] (p.91, 995/900 kg) — operationId takeoff_50ft_flaps_to — déclarent toutes deux outputUnit \"ft\"."
+ },
+ {
+  "itid": "F-HDIM-04",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — additionalFuelTanks[0] = {name 'Réservoir Standard 162L', type main, capacity 151, totalCapacity 162, arm 1.22, momentAtFull 132.64 = 151×0,72×1,22}. Les deux contenances sont là (162 total / 151 utilisable via le repli usableCapacity ?? capacity). Résidu de forme : la clé s'appelle encore 'capacity' (les 2 autres réservoirs 204/189 et 257/234 utilisent usableCapacity) — sans effet moteur."
+ },
+ {
+  "itid": "F-HDIM-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxBaggageWeight = 50 inchangé, et désormais CONTREDIT par la fiche elle-même : baggageCompartments[0] = {name 'Compartiment 1', arm 2.41, maxWeight 54, momentMax 130.14} et maxBaggageTotalMass = 54. Le moteur lit les compartiments quand ils existent (WeightBalanceModule.jsx l.163/231, Step6WeightBalance.jsx l.1223) : le 50 est inerte mais incohérent → vider le champ legacy (même traitement que F-HSTR-07)."
+ },
+ {
+  "itid": "F-HDIM-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — maxAuxiliaryWeight = 20 inchangé, alors que weightBalance.auxiliaryArm = 0 et que baggageCompartments ne déclare qu'un seul compartiment (aucun auxiliaire). Masse maxi > 0 avec bras 0 et compartiment inexistant → vider le champ."
+ },
+ {
+  "itid": "F-HDIM-07",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — Unités homogènes par operationId : takeoff_50ft_flaps_to → tables[0],[1] = ft ; takeoff_ground_roll_flaps_to → tables[2],[3] = ft ; landing_ground_roll_flaps_landing → tables[4] = ft ; landing_50ft_flaps_landing → tables[5] = ft. Aucun mélange ne subsiste."
+ },
+ {
+  "itid": "F-HDIM-08",
+  "status": "fait",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : résolu en base — tables[0].data (Masse 1089, Altitude 0, Temperature 0).value = 1460 (était 1640). Régulier avec ses voisines : 1570 à 10 °C, 1605 à 1000 ft ; la table est monotone croissante sur les deux axes."
+ },
+ {
+  "itid": "F-HDIM-09",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Opérations couvertes par les tables : takeoff_50ft_flaps_to, takeoff_ground_roll_flaps_to, landing_ground_roll_flaps_landing, landing_50ft_flaps_landing. bypassedFields = [\"registration\"] — aucune clé performance.<opId>. Les 4 opérations volets rentrés du minimum (operationCatalog.ts MINIMUM_EXPECTED_OPERATION_IDS : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_roll_flaps_up, landing_50ft_flaps_up) restent ni couvertes ni certifiées absentes."
+ },
+ {
+  "itid": "F-HDIM-10",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Progrès partiel : performanceCorrections = 2 règles {type headwind, mode percent_per_step, value 10, stepKt 9, appliesTo takeoff} et {idem, appliesTo landing}. Aucune règle type 'tailwind'. Le moteur (calc-engine performanceCorrections.js l.225) n'itère que sur les règles présentes : par vent arrière la distance n'est PAS majorée et aucun avertissement n'est émis — la règle vent arrière attendue manque toujours."
+ },
+ {
+  "itid": "F-HDIM-11",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — fuelUsableCapacity = 151.4164 ; fuelCapacity = 151 ; additionalFuelTanks[0].capacity = 151 — écart de 0,42 L inchangé (même constat que -02, à harmoniser ensemble : 151 partout puisque le réservoir fait 162 total / 151 utilisable)."
+ },
+ {
+  "itid": "F-HDIM-12",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — equipmentCom.hf = true inchangé. Aucune contradiction interne ne permet de trancher : seul le pilote peut confirmer la présence d'une HF à bord."
+ },
+ {
+  "itid": "F-HDIM-13",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — weighingReport.certificationDate = 2020-06-12 inchangée (uploadDate 2026-05-21, fileName 'Fiche de pesée IM.pdf', hasData true). Dépend des archives du club, non tranchable depuis la fiche."
+ },
+ {
+  "itid": "F-HDIM-14",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weighingReport.pdfUrl pointe toujours sur …/weighing-reports/H-HDIM/H-HDIM%20-%20pesee.pdf (dossier 'H-HDIM' pour une immatriculation F-HDIM). Cosmétique, optionnel."
+ },
+ {
+  "itid": "F-HDIM-15",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — bypassedFields = [\"registration\"] inchangé alors que registration = 'F-HDIM' (racine et aircraft_data identiques)."
+ },
+ {
+  "itid": "F-HDIM-16",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — tables[0] et tables[2] (1089 kg) : 42 cellules chacune, les 3 mêmes absentes (7000 ft/40 °C, 8000 ft/30 °C, 8000 ft/40 °C) ; grilles 995/900 complètes (45/45). Inchangé. Ce n'est une anomalie que si le POH p.90 publie ces cases ; si le manuel y met des tirets, le refus du moteur hors grille est le comportement correct."
+ },
+ {
+  "itid": "F-HDIM-17",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — tables[3].data (995, 4000, 10).value = 1002 inchangé. Pas de contradiction interne stricte (encadrée par 945 à 0 °C / 1100 à 20 °C et 925 à 3000 ft / 1125 à 5000 ft, monotone), mais c'est la SEULE valeur non multiple de 5 sur les 354 cellules des 6 tables — indice fort de transposition 1020→1002, à vérifier p.91."
+ },
+ {
+  "itid": "F-HDIM-18",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.voRanges inchangé : [0–1600 → 82 kt], [1600–2000 → 92 kt], [2000–2400 → 99 kt] alors que _metadata.units.weight = 'kg' et MTOW = 1089 kg : la borne 2400 dépasse la MTOW de 2,2 fois, contradiction interne. Impact limité à l'affichage (voRanges n'est consommé par aucun écran de préparation de vol, seulement Step2Speeds/Step5Review)."
+ },
+ {
+  "itid": "F-HDIM-19",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vr = '', vx = '', vy = '', vapp = '', initialClimb = '' — tous vides. Depuis le 21/08 la complétude classe vr et vapp REQUIRED, vx/vy OPTIONAL (aircraftCompleteness.js l.167-170)."
+ },
+ {
+  "itid": "F-HDIM-20",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — windLimits = {maxTailwind:'', maxCrosswind:'', maxCrosswindWet:''} — forme legacy vide, pas de windLimits.limits[] (forme moderne toujours attendue par Step2Speeds.jsx l.135). Aucune limite de vent traversier."
+ },
+ {
+  "itid": "F-HFGI-01",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxBaggageWeight = 50 (inchangé). Contradiction interne désormais visible : baggageCompartments[0].maxWeight = 40 et maxBaggageTotalMass = 40. Le module Masse & centrage lit les compartiments dès qu'un est déclaré (WeightBalanceModule.jsx l.231) : le 50 est un champ legacy inerte — à vider pour lever la contradiction (même schéma que F-HSTR-07)."
+ },
+ {
+  "itid": "F-HFGI-02",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — aircraft_data.maxAuxiliaryWeight = 20 (inchangé) alors que weightBalance.auxiliaryArm = 0 et qu'aucun compartiment auxiliaire n'existe dans baggageCompartments (1 seul compartiment, « Compartiment Bagages », 40 kg, bras 1,4652). Masse maxi > 0 avec bras 0 et sans compartiment : inerte en M&C (compartiments présents), à vider."
+ },
+ {
+  "itid": "F-HFGI-03",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — advancedPerformance.tables (9) portent takeoff_ground_roll_flaps_to ×2, takeoff_50ft_flaps_to ×2, cruise_speed, landing_ground_roll_flaps_landing ×2, landing_50ft_flaps_landing ×2 ; performanceModels[0] porte landing_ground_roll_flaps_landing. Toujours aucune source pour takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_ground_roll_flaps_up, landing_50ft_flaps_up, et bypassedFields = [] (aucune certification « absente du manuel »). extractionMetadata.lastModified = 2026-08-17, antérieur à l'audit."
+ },
+ {
+  "itid": "F-HFGI-04",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — tables[0..3].table_name = « Takeoff Ground Roll Distance - Landing Configuration - 850kg / 1050kg » et « Takeoff Distance over 50ft (15m) - Landing Configuration - 850kg / 1050kg » (pageNumber 56) avec operationId/classification takeoff_ground_roll_flaps_to / takeoff_50ft_flaps_to. Inchangé."
+ },
+ {
+  "itid": "F-HFGI-05",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — fuelUsableCapacity = 239, fuelCapacity = 240 (racine) ; additionalFuelTanks : principal 110/110, aile 80/80, optionnel capacity 50 / totalCapacity 51 → Σ utilisable 240, Σ totale 241. Inchangé."
+ },
+ {
+  "itid": "F-HFGI-06",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — weightBalance.cgLimits.forwardVariable[2] = {cg 0.4276, moment \"449\", weight \"1050\", id 1779264246929.7803} vs cgEnvelope.forwardPoints[2] (même id) = {cg 0.45, moment 472.5, weight \"1050\"} ; les points [0] et [1] sont identiques des deux côtés. Inchangé ; inerte en vol (le moteur lit cgEnvelope, dont les 3 points sont arithmétiquement cohérents : 650×0,2031 = 132, 800×0,19 = 152, 1050×0,45 = 472,5)."
+ },
+ {
+  "itid": "F-HFGI-07",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — equipmentSurv.transponderMode = \"C\" (inchangé, champ singulier orphelin). À noter : approvedOperations.elt = true, vfrDay = true, vfrNight = true sont posés explicitement — la balise sera donc déclarée par ce champ-là aussi ; à confirmer par le pilote que c'est voulu."
+ },
+ {
+  "itid": "F-HFGI-08",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — tables[4] (cruise_speed, p.59) : 11 lignes au schéma Regime / Altitude / Distance_Nm / Distance_km / Autonomie_h_min / Consommation_* / Vitesse_Propre_* sans Masse / Temperature / value ; lignes 9 et 10 toutes deux Regime 65 / 10500 ft avec 127 vs 130 kt (autonomie \"4,55\" vs \"5,4\") ; Autonomie_h_min en chaînes à virgule. Inchangé."
+ },
+ {
+  "itid": "F-HFGI-09",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — speeds.vx = \"\" ; speeds.vy = 86. Inchangé (autres vitesses inchangées et toujours ordonnées : vso 50 < vsTO 52 < vr 54 < vs1 55 < vfeTO/vfeLdg 92 < vno 140 < vne 166)."
+ },
+ {
+  "itid": "F-HSTR-21",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : additionalFuelTanks[0].type = 'wing' (nom « Réservoir aile 1 »), aucun réservoir type:'main'. Le « Bras réservoir principal » de la complétude est encore satisfait par le repli legacy arms.fuelMain = 2.63 (= weightBalance.fuelArm = tank.arm), donc aucun manque affiché, mais la pastille « principal » n'est toujours pas posée."
+ },
+ {
+  "itid": "F-HSTR-22",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : specialCapabilities = {rvsm: true, catIIIa: true, catII: false, catIII: false, pbn: false, mnps: false, etops: false}. Seul consommateur : export PDF de la fiche (AircraftModule.jsx l.1254 « Approbations spéciales : RVSM »). Décision pilote, pas tranchable par la fiche seule."
+ },
+ {
+  "itid": "F-HSTR-23",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : equipmentNav.lpv = false alors que equipmentNav.rnpTypes = \"APCH (LPV), 1.0\" (rnp = true, gnss = true). Aucun consommateur en vol (éditeurs Step5/AircraftModule et mapper seulement) : incohérence d'affichage à trancher."
+ },
+ {
+  "itid": "F-HSTR-24",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé malgré la sauvegarde du 21/08 : weightBalance.cgLimits.forwardVariable[2] = {weight \"1300\", cg \"2.469\", moment 3209.7} vs cgEnvelope.forwardPoints[2] = {weight \"1310\", cg 2.469, moment 3234.39} (même id 1761751405175.8425). Le save ne régénère pas le miroir. Inerte (moteur lit cgEnvelope)."
+ },
+ {
+  "itid": "F-HSTR-25",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.minTakeoffWeight (racine) = 650, contre weights.minTakeoffWeight = \"940\", cgEnvelope.aftMinWeight = \"940\" et forwardPoints[0].weight = \"940\". Contradiction interne persistante."
+ },
+ {
+  "itid": "F-HSTR-26",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — Inchangé : weighingReport.certificationDate = 2019-03-25, fichier « fiche de pesee fhstr.pdf » (561 625 o, déposé 2026-05-21, hasData true). Existence d'une pesée plus récente : dépend du club, non tranchable par la fiche."
+ },
+ {
+  "itid": "F-HSTR-27",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : equipmentSurv.transponderMode = \"S\" (singulier) toujours présent, à côté du pluriel equipmentSurv.transponderModes = [\"s\"] désormais écrit par l'étape Équipements. Le plan de vol ne lit plus le singulier (Step7Summary.jsx l.584-593 : balise = approvedOperations.elt), donc effet nul en vol ; champ orphelin à vider (AircraftModule.jsx l.3643 le réinjecte encore à 'C' par défaut)."
+ },
+ {
+  "itid": "F-HSTR-28",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : advancedPerformance.tables[5].table_name « Take-off Climb - Flaps T/O - 1200 kg / 2645 lb » contient Masse 1280 ; tables[6] « …1100 kg / 2425 lb » contient 1200 (tables[7] « 1100 kg » = 1100, ok) ; tables[33] « Cruise Climb - Flaps UP - 1200 kg » contient 1280 ; tables[34] « …1100 kg » contient 1200. Tables 11 (« Go-Around Climb Performance - Rate of Climb » = 1100 kg), 21 et 25 (« …Flaps UP » = 1280 kg) toujours sans masse dans le nom. Même nature, non listé à l'époque : tables 0-3 et 28-31 portent 4 fois le même nom « …Normal Procedure » (1310/1280/1200/1100). Sans effet moteur (la masse vient de data.Masse)."
+ },
+ {
+  "itid": "F-HSTR-29",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : 12 lignes Temperature = \"ISA\" (chaîne) toujours présentes, 3 par table go_around_climb : tables[8] (1310 kg) 0 ft/388, 2000/376, 4000/364 ; [9] (1280) 400/387/375 ; [10] (1200) 488/475/462 ; [11] (1100) 607/596/582. Toutes les autres lignes des 36 tables sont numériques (Masse, Altitude, Temperature, value)."
+ },
+ {
+  "itid": "F-HSTR-30",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — Cellules inchangées : tables[4] (1310 kg, 4000 ft, 30 °C) = 580 ft/min > tables[5] (1280 kg) = 575 ; tables[24] (1310 kg, 4000 ft, 10 °C) = 910 m < tables[25] (1280 kg) = 920 m. Mon scan complet inter-masses des 36 tables ne trouve QUE ces 2 inversions, et 0 inversion intra-table (altitude/température) : le reste des grilles est monotone. Peut être fidèle aux arrondis du manuel (p.182-183 et p.196-197) — non tranchable sans lui."
+ },
+ {
+  "itid": "F-HSTR-31",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : aircraft_data.windLimits = {maxCrosswind: 20, maxTailwind: 10, maxCrosswindWet: 12}, windLimits.limits[] absent. Step2Speeds.jsx l.135 ne lit que windLimits.limits → l'étape Vitesses affiche 0 limite. Aucun consommateur en vol d'aucun des deux formats (grep : seul aircraftValidation.js l.179 normalise) : effet UI seulement."
+ },
+ {
+  "itid": "F-HSTR-32",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : toujours ouvert — Inchangé : speeds.voRanges = [{940-1080 kg : 101 kt}, {1080-1180 kg : 108 kt}] ; aucune tranche entre 1180 et la MTOW 1310 (maxTakeoffWeight = 1310, weights.mtow = \"1310\") : lacune interne démontrable. voRanges n'a aucun consommateur en vol (Step2/Step5Review seulement) → informatif. La valeur de la tranche manquante dépend du manuel (section 2)."
+ },
+ {
+  "itid": "F-HSTR-33",
+  "status": "note",
+  "note": "Ré-audit 21/08 (ré-audit sur extraction réelle 15h52) : à confirmer au manuel — Inchangé : speeds.initialClimb = 72 = vy = vx = vr = 72. Deux définitions contradictoires dans l'application : Step2Speeds.jsx l.318 (« V Montée initiale - Vitesse », kt) vs manexExtractionMapper.js l.211 (targetUnit 'ft/min', « Taux montée initial »). L'intention « Vy 72 kt » est plausible mais non tranchable ; aucun consommateur en vol."
+ },
+ {
+  "itid": "F-HFGI-10",
+  "status": "code",
+  "note": "Correctif code livré le 21/08 : quand un abaque intègre le vent (panneau vent), les règles vent de face / arrière ne s appliquent plus à cette opération (note affichée dans la carte des facteurs). Rien à changer sur la fiche."
+ },
+ {
+  "itid": "F-BXQT-19",
+  "status": "code",
+  "note": "Correctif code livré le 21/08 : au-delà du plafond de température (ou d altitude) de la grille, le calcul est refusé avec motif ; l écrêtage côté froid reste (conservateur). Rien à changer sur la fiche."
  }
 ]

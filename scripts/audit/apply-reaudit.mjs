@@ -24,7 +24,7 @@ for (const res of results) {
     byId.set(it.itid, entry);
   }
   // nouveaux constats → itids suivants
-  const existing = [...html.matchAll(new RegExp(`data-itid="${reg}-(\d+)"`, 'g'))].map(m => +m[1]);
+  const existing = [...html.matchAll(new RegExp("data-itid=\"" + reg + "-([0-9]+)\"", "g"))].map(m => +m[1]);
   let next = (existing.length ? Math.max(...existing) : 0) + 1;
   const blocks = [];
   for (const n of res.nouveaux || []) {
