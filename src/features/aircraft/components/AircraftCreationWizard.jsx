@@ -38,6 +38,7 @@ import {
 import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
+import { initialWindLimits } from '../utils/windLimits';
 import { sanitizeTankVariants } from '@utils/tankVariants';
 import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
@@ -369,11 +370,11 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     },
     
     // Limitations de vent
-    windLimits: {
-      maxCrosswind: existingAircraft?.windLimits?.maxCrosswind || '',
-      maxTailwind: existingAircraft?.windLimits?.maxTailwind || '',
-      maxCrosswindWet: existingAircraft?.windLimits?.maxCrosswindWet || ''
-    },
+    // 🛡️ 23/08/2026 — PERTE DE DONNÉES CORRIGÉE : la liste `limits[]` (format
+    // actuel, saisie à l'étape Vitesses) était absente de l'état initial, donc
+    // écrasée à l'enregistrement — constaté en base : F-BXNG, F-GNAM et F-HDIM
+    // ont perdu leurs limites le 21/08 sans qu'elles aient été touchées.
+    windLimits: initialWindLimits(existingAircraft),
     
     // Équipements
     equipmentCom: existingAircraft?.equipmentCom || {

@@ -1,5 +1,6 @@
 // src/features/aircraft/AircraftModule.jsx
 import React, { memo, useState, useEffect, useMemo } from 'react';
+import { initialWindLimits, mergeWindLimitsForSave } from './utils/windLimits';
 // 🔐 Phase 1 RBAC : rôle pour conditionner création (admin) vs demande par
 // e-mail (utilisateur) — décision César 2026-08-16.
 import { useAuth } from '../../core/contexts/AuthContext';
@@ -3556,11 +3557,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       climbGradient: aircraft?.climb?.climbGradient || ''  // Gradient de montée (%)
     },
     // Section Limitations de vent
-    windLimits: {
-      maxCrosswind: aircraft?.windLimits?.maxCrosswind || aircraft?.manex?.limitations?.maxCrosswind || '',
-      maxTailwind: aircraft?.windLimits?.maxTailwind || aircraft?.manex?.limitations?.maxTailwind || '',
-      maxCrosswindWet: aircraft?.windLimits?.maxCrosswindWet || ''
-    },
+    windLimits: initialWindLimits(aircraft),
     masses: {
       emptyMass: aircraft?.masses?.emptyMass || '',
       minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
@@ -3740,11 +3737,7 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
           serviceCeiling: aircraft?.climb?.serviceCeiling || '',
           climbGradient: aircraft?.climb?.climbGradient || ''
         },
-        windLimits: {
-          maxCrosswind: aircraft?.windLimits?.maxCrosswind || aircraft?.manex?.limitations?.maxCrosswind || '',
-          maxTailwind: aircraft?.windLimits?.maxTailwind || aircraft?.manex?.limitations?.maxTailwind || '',
-          maxCrosswindWet: aircraft?.windLimits?.maxCrosswindWet || ''
-        },
+        windLimits: initialWindLimits(aircraft),
         masses: {
           emptyMass: aircraft?.masses?.emptyMass || '',
           minTakeoffMass: aircraft?.masses?.minTakeoffMass || '',
@@ -4153,13 +4146,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
             climbGradient: toValidNumber(formData.climb.climbGradient, 0)
           }
         : undefined,
-      windLimits: Object.values(formData.windLimits).some(v => v)
-        ? {
-            maxCrosswind: toValidNumber(formData.windLimits.maxCrosswind, 0),
-            maxTailwind: toValidNumber(formData.windLimits.maxTailwind, 0),
-            maxCrosswindWet: toValidNumber(formData.windLimits.maxCrosswindWet, 0)
-          }
-        : undefined,
+      // 🛡️ 23/08/2026 — les limitations de vent du format ACTUEL vivent dans
+      // `limits[]` (étape Vitesses du wizard). Ce formulaire legacy n'édite que
+      // les trois champs historiques : il les met à jour SANS jamais supprimer
+      // la liste, et ne renvoie undefined que si l'avion n'a réellement rien.
+      windLimits: mergeWindLimitsForSave(aircraft?.windLimits, formData.windLimits, toValidNumber),
       masses: Object.values(formData.masses).some(v => v)
         ? {
             emptyMass: toValidNumber(formData.masses.emptyMass, 0),
