@@ -22,6 +22,17 @@
 // ║     - AU-DELÀ du max (altitude plus haute, OAT plus chaude) : REFUS  ║
 // ║       (status ERROR + motif) — l'écrêtage y serait OPTIMISTE ;       ║
 // ║     - SOUS le min : clamp à la borne + warning (conservateur).       ║
+// ║                                                                      ║
+// ║   EXCEPTION « CONDITIONS STANDARD SEULEMENT » (2026-08-23) : quand   ║
+// ║   le manuel ne publie qu'UNE température par palier, celle de l'ISA  ║
+// ║   (F-BXNG, F-BXQT — Cessna 150), la grille ne dit RIEN de l'effet    ║
+// ║   de la température. Refuser toute OAT hors ISA rendait ces avions   ║
+// ║   incalculables. On rend alors la valeur de la LIGNE STANDARD        ║
+// ║   (interpolation sur la seule altitude × masse) avec un warning, et  ║
+// ║   `temperatureIncluded: false` — la note de correction du manuel     ║
+// ║   (règle `isa_deviation`) prend le relais en aval. Le refus au-delà  ║
+// ║   du plafond de TEMPÉRATURE reste en vigueur pour toutes les autres  ║
+// ║   grilles ; le refus d'ALTITUDE hors plage reste en vigueur PARTOUT. ║
 // ╚══════════════════════════════════════════════════════════════════════╝
 
 import { getOperation, isValidOperationId } from '../abac/curves/core/operationCatalog';
@@ -150,6 +161,10 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   const warnings = [];
   const { altitudes, temperatures, masses, values, temperatureScale } = lookup;
   const enEcartISA = temperatureScale === 'isaDeviation';
+  // Grille donnée aux SEULES conditions standard : un unique nœud de température
+  // (la ligne ISA). L'interpolation ne porte plus que sur altitude × masse.
+  const conditionsStandardSeules = lookup.standardConditionsOnly === true;
+  const temperatureIncluded = lookup.temperatureIncluded === true;
 
   // Sanity checks
   if (masses.length === 0 || altitudes.length === 0 || temperatures.length === 0) {
@@ -205,7 +220,11 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   if (targetAlt > maxAlt + TOLERANCE_BORNE) {
     refus.push(`Altitude-pression ${targetAlt} ft au-delà de la grille du manuel (max ${maxAlt} ft)`);
   }
-  if (tempGrille > maxTemp + TOLERANCE_BORNE) {
+  // 🌡️ Le refus de TEMPÉRATURE ne s'applique pas à une grille standard-seule :
+  // son unique nœud est l'ISA, toute OAT y serait « hors plage » et l'avion
+  // n'aurait plus aucune distance calculable. La valeur rendue est celle de la
+  // ligne standard, explicitement signalée comme restant à corriger.
+  if (!conditionsStandardSeules && tempGrille > maxTemp + TOLERANCE_BORNE) {
     refus.push(
       enEcartISA
         ? `OAT ${targetTemp} °C à ${targetAlt} ft, soit ISA${ecart(tempGrille)}, au-delà de la grille du manuel (max ISA${ecart(maxTemp)})`
@@ -225,7 +244,8 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
         masses,
         altitudeRange: [minAlt, maxAlt],
         temperatureRange: [minTemp, maxTemp],
-        temperatureScale
+        temperatureScale,
+        standardConditionsOnly: conditionsStandardSeules
       },
       inputs: {
         temperature: conditions.temperature,
@@ -240,24 +260,35 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
   if (targetAlt < minAlt) {
     warnings.push(`⚠ Altitude ${targetAlt} ft sous la plage (min ${minAlt} ft) — clamp aux bornes (conservateur : distance ≥ réelle)`);
   }
-  if (tempGrille < minTemp) {
+  if (!conditionsStandardSeules && tempGrille < minTemp) {
     warnings.push(
       enEcartISA
         ? `⚠ ${targetTemp}°C à ${targetAlt} ft, soit ISA${ecart(tempGrille)} — sous la plage du manuel (ISA${ecart(minTemp)}) — clamp aux bornes (conservateur : distance ≥ réelle)`
         : `⚠ Température ${targetTemp}°C sous la plage (min ${minTemp}°C) — clamp aux bornes (conservateur : distance ≥ réelle)`
     );
   }
+  if (conditionsStandardSeules) {
+    warnings.push(
+      `⚠ tableau donné aux conditions standard — correction de température à appliquer ` +
+      `(OAT ${targetTemp} °C à ${targetAlt} ft, soit ISA${ecart(tempGrille)})`
+    );
+  }
+
+  // Température interrogée dans la grille : le nœud STANDARD unique quand le
+  // manuel n'a publié que la ligne ISA (l'interpolation ne porte alors plus que
+  // sur l'altitude et la masse), l'écart/la température réelle sinon.
+  const tempLookup = conditionsStandardSeules ? temperatures[0] : tempGrille;
 
   // 4. Interpolation
   let value;
   let method;
   let usedNearest = false;
   if (massInRange) {
-    value = trilinearInterpolate(masses, altitudes, temperatures, values, targetMass, targetAlt, tempGrille);
+    value = trilinearInterpolate(masses, altitudes, temperatures, values, targetMass, targetAlt, tempLookup);
     method = 'Trilinéaire (masse × alt × temp)';
   } else {
     // Hors plage masse : on tente d'abord une extrapolation linéaire (≥ 2 masses).
-    value = extrapolateForMass(lookup, targetMass, targetAlt, tempGrille);
+    value = extrapolateForMass(lookup, targetMass, targetAlt, tempLookup);
     method = 'Trilinéaire + extrapolation masse';
     // Repli « TABLEAU LE PLUS PROCHE » (décision pilote 2026-06-23) : si
     // l'extrapolation est IMPOSSIBLE (ex. tableau fourni à UNE seule masse, la
@@ -267,7 +298,7 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
     // L'alerte hors-couverture est CONSERVÉE (cf. warning ci-dessous).
     if (value === null || !Number.isFinite(value)) {
       const clampedMass = targetMass < minMass ? minMass : maxMass;
-      value = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, tempGrille);
+      value = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, tempLookup);
       method = `Tableau le plus proche (masse ${clampedMass} kg)`;
       usedNearest = true;
     }
@@ -358,8 +389,15 @@ export function resolveOperationFromTables(aircraft, operationId, conditions) {
       // Masses disponibles pour info
       masses,
       altitudeRange: [minAlt, maxAlt],
-      temperatureRange: [minTemp, maxTemp]
+      temperatureRange: [minTemp, maxTemp],
+      temperatureScale,
+      standardConditionsOnly: conditionsStandardSeules
     },
+    // 🌡️ La SOURCE tient-elle compte de la température ? (2026-08-23, même patron
+    // que windIncluded.) Faux pour une grille « conditions standard seulement » :
+    // la note de correction du manuel reste entièrement à appliquer en aval.
+    temperatureIncluded,
+    standardConditionsOnly: conditionsStandardSeules,
     inputs: {
       temperature: conditions.temperature,
       pressure_altitude: conditions.pressure_altitude,

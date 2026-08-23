@@ -73,6 +73,37 @@ export function chainIncludesWind(chain) {
 }
 
 /**
+ * La chaîne de lecture INTÈGRE-t-elle la TEMPÉRATURE ? (2026-08-23, écart ISA.)
+ *
+ * Jumeau de `chainIncludesWind`, mêmes branches, appliquées à la dimension
+ * `temperature` : un panneau dont l'axe X est l'OAT la consomme (c'est le cas
+ * du primaire de la quasi-totalité des abaques de décollage/atterrissage), et
+ * une FAMILLE de guides en OAT n'est lue que sur le primaire (courbes par
+ * température) ou sur une zone en lecture descendante — ailleurs le paramètre
+ * du panneau est son axe X, pas sa famille.
+ *
+ * Le résolveur remonte ce drapeau (`temperatureIncluded`) : vrai, la règle
+ * `isa_deviation` de la fiche avion N'est PAS appliquée (la température compterait
+ * deux fois) ; faux, c'est elle — et elle seule — qui corrige la température.
+ */
+export function chainIncludesTemperature(chain) {
+  if (!Array.isArray(chain)) return false;
+  return chain.some((g, i) => {
+    if (!g) return false;
+    const xDim = titleToConditionDim(g.axes?.xAxis?.title);
+    if (xDim === 'temperature') return true;
+    // ⚠️ Cohérence avec `entryDim` ci-dessous : quand le titre de l'axe X du
+    // PRIMAIRE n'est pas reconnu, l'entrée de la chaîne retombe sur
+    // `conditions.temperature`. La chaîne lit donc bien la température, même si
+    // le titre ne le dit pas — sans cette branche, un modèle mal titré verrait
+    // sa distance écartée à tort faute de règle d'écart ISA.
+    if (i === 0 && xDim === null) return true;
+    const familyIsTemp = titleToConditionDim(g.familyAxisVariable) === 'temperature';
+    return familyIsTemp && (i === 0 || g.readoutAxis === 'x');
+  });
+}
+
+/**
  * Évalue un set d'abaques (AbacCurvesJSON) aux conditions données avec le
  * moteur de l'atelier.
  *
@@ -82,6 +113,8 @@ export function chainIncludesWind(chain) {
  *   steps: Array<object>,        // contrat d'affichage matrice (xDim/queryX/entryY/output/used…)
  *   finalValue: number|null,
  *   outputUnit?: string,         // unité Y du DERNIER graphe de la chaîne
+ *   windIncluded?: boolean,      // le vent est déjà lu par la chaîne
+ *   temperatureIncluded?: boolean, // l'OAT est déjà lue par la chaîne
  *   warnings?: string[],
  *   missing?: string[],          // entrées manquantes (→ MISSING_INPUT côté résolveur)
  *   error?: string
@@ -240,6 +273,7 @@ export function evaluateAbacWithAtelierEngine(abaqueData, conditions) {
     finalValue: res.finalValue,
     outputUnit: res.outputUnit || fallbackUnit || undefined,
     warnings,
-    windIncluded: chainIncludesWind(chain) // vent déjà lu par la chaîne (panneau vent)
+    windIncluded: chainIncludesWind(chain), // vent déjà lu par la chaîne (panneau vent)
+    temperatureIncluded: chainIncludesTemperature(chain) // OAT déjà lue (axe X ou famille)
   };
 }

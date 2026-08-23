@@ -126,6 +126,17 @@ describe('Hors plage altitude / température — refus côté optimiste, clamp c
 // 7500 ft). L'axe absolu vaut [0, 5, 10, 15] °C et seule la diagonale est
 // renseignée. Reproduit par exécution le 21/08 : (726 kg, 0 ft, 25 °C) → 224 m,
 // la distance des 15 °C, avec un simple avertissement « clamp aux bornes ».
+//
+// 🔁 23/08 — CE REFUS ÉTAIT TROP LARGE. Le manuel ne publie ses distances qu'aux
+// CONDITIONS STANDARD et donne à côté une note de correction en température : ces
+// 224 m sont une valeur juste, qui vaut à l'ISA et demande à être corrigée. Refuser
+// de la calculer privait l'avion de TOUTE distance dès qu'on s'écartait de l'ISA.
+// La grille standard-seule est donc désormais reconnue (`standardConditionsOnly`),
+// la valeur de la ligne standard est rendue avec un warning explicite et
+// `temperatureIncluded: false` — c'est la règle `isa_deviation` de la fiche avion
+// qui applique la note du manuel, et son absence qui écarte la distance en aval.
+// Le refus reste intact sur toutes les grilles à plusieurs températures (cf. le
+// bloc précédent, qui refuse toujours 50 °C sur une grille 0…40 °C).
 describe('Cas F-BXQT — grille réduite à la seule ligne ISA', () => {
   const OP_F150 = 'takeoff_ground_roll_flaps_up';
   const f150 = {
@@ -145,10 +156,41 @@ describe('Cas F-BXQT — grille réduite à la seule ligne ISA', () => {
     expect(res.value).toBe(224);
   });
 
-  it('(726 kg, 0 ft, 25 °C) → ERROR : plus jamais les 224 m des 15 °C', () => {
+  it('la grille est reconnue « conditions standard seulement », température NON intégrée', () => {
+    const res = resolveOperationFromTables(f150, OP_F150, { mass: 726, pressure_altitude: 0, temperature: 15 });
+    expect(res.standardConditionsOnly).toBe(true);
+    expect(res.temperatureIncluded).toBe(false);
+    expect(res.source.standardConditionsOnly).toBe(true);
+  });
+
+  it('(726 kg, 0 ft, 25 °C) → la valeur de la ligne STANDARD, signalée « à corriger »', () => {
     const res = resolveOperationFromTables(f150, OP_F150, { mass: 726, pressure_altitude: 0, temperature: 25 });
+    expect(res.status).toBe('COMPUTED');
+    expect(res.value).toBe(224);                    // la distance ISA, assumée comme telle
+    expect(res.temperatureIncluded).toBe(false);    // ⇒ règle d'écart ISA obligatoire en aval
+    expect(res.warnings.some(w => /tableau donné aux conditions standard/.test(w))).toBe(true);
+    expect(res.warnings.some(w => /correction de température à appliquer/.test(w))).toBe(true);
+    expect(res.warnings.some(w => /ISA\+10/.test(w))).toBe(true);
+  });
+
+  it("interpole toujours sur l'ALTITUDE : (726 kg, 1250 ft, 25 °C) → entre 224 et 277", () => {
+    const res = resolveOperationFromTables(f150, OP_F150, { mass: 726, pressure_altitude: 1250, temperature: 25 });
+    expect(res.status).toBe('COMPUTED');
+    expect(res.value).toBeCloseTo((224 + 277) / 2, 6);
+  });
+
+  it("le refus d'ALTITUDE hors plage reste EN VIGUEUR (10 000 ft > 7500 ft)", () => {
+    const res = resolveOperationFromTables(f150, OP_F150, { mass: 726, pressure_altitude: 10000, temperature: 15 });
     expect(res.status).toBe('ERROR');
     expect(res.value).toBeUndefined();
-    expect(res.reason).toBe('OAT 25 °C au-delà de la grille du manuel (max 15 °C) — distance non calculable, vérifiez le manuel de vol');
+    expect(res.reason).toMatch(/^Altitude-pression 10000 ft au-delà de la grille du manuel \(max 7500 ft\)/);
+  });
+
+  it('bout en bout via resolveOperation : COMPUTED + drapeaux remontés', () => {
+    const res = resolveOperation(f150, OP_F150, { mass: 726, oat: 35, pressureAltitude: 0, headwind: 0 });
+    expect(res.status).toBe(ResultStatus.COMPUTED);
+    expect(res.value).toBe(224);
+    expect(res.temperatureIncluded).toBe(false);
+    expect(res.standardConditionsOnly).toBe(true);
   });
 });

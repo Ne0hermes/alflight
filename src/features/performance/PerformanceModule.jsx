@@ -486,6 +486,19 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   const takeoffPa = Number.isFinite(departureAirport?.elevation) ? departureAirport.elevation : null;
   const landingPa = Number.isFinite(arrivalAirport?.elevation) ? arrivalAirport.elevation : takeoffPa;
 
+  // 🌡️ ÉCART À L'ISA (2026-08-23) — écart de l'OAT du jour à l'atmosphère
+  // standard, PAR PHASE, à partir des MÊMES sources que les conditions envoyées
+  // au résolveur (température METAR fiable + altitude-pression du terrain).
+  // Positif = plus chaud que la standard, donc distances plus longues.
+  // Il pilote la règle « Température au-dessus de la standard » de la fiche avion
+  // pour les manuels qui ne publient leurs distances qu'aux conditions standard.
+  // null si l'une des deux données manque : le moteur émettra « écart ISA
+  // indisponible » plutôt que de corriger sur une valeur inventée.
+  const ecartISA = (temp, pa) =>
+    (Number.isFinite(temp) && Number.isFinite(pa)) ? temp - calculateISATemperature(pa) : null;
+  const takeoffIsaDeviation = ecartISA(takeoffTemp, takeoffPa);
+  const landingIsaDeviation = ecartISA(landingTemp, landingPa);
+
   // ─── COMPOSANTE VENT SIGNÉE SUR LA PISTE ACTIVE ───
   // On charge les pistes de l'aérodrome et on calcule le vent projeté sur la
   // piste la plus favorable (la "meilleure" face au vent METAR).
@@ -606,17 +619,30 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
     // sinon le vent comptait deux fois (×1,3 en plus des 775 ft lus à −5 kt). Les
     // règles de surface/état restent appliquées ; une distance issue d'un TABLEAU
     // ou d'un abaque sans panneau vent garde ses règles de vent.
-    const applyCorr = (distance, phase, windComponentKt, surface, windAppliedByAbac) =>
-      distance !== null && manualCorrections.length > 0
+    // 🌡️ TEMPÉRATURE (23/08) : `temperatureAppliedBySource` dit si la SOURCE de la
+    // distance tient déjà compte de l'OAT (grille à plusieurs températures, abaque
+    // à panneau OAT). Faux ⇒ la distance vaut aux conditions standard et c'est la
+    // règle d'écart ISA du manuel qui doit la corriger ; sans règle, le moteur
+    // lève `unresolvedTemperature` et la distance est ÉCARTÉE (voir plus bas).
+    // ⚠️ Le moteur est appelé MÊME sans règle sur la fiche avion : c'est
+    // exactement le cas des Cessna 150 « conditions standard seulement », pour
+    // lequel l'absence de règle est justement ce qu'il faut signaler.
+    const applyCorr = (distance, phase, windComponentKt, surface, res, isaDeviationC) =>
+      distance !== null
         ? applyPerformanceCorrections({
             distance, phase, corrections: manualCorrections,
-            conditions: { windComponentKt, surface, runwayStates: runwayStates[phase] || [], windAppliedByAbac }
+            conditions: {
+              windComponentKt, surface, runwayStates: runwayStates[phase] || [],
+              windAppliedByAbac: res?.windIncluded === true,
+              isaDeviationC,
+              temperatureAppliedBySource: res?.temperatureIncluded === true
+            }
           })
         : null;
-    const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface, takeoffRollRes?.windIncluded === true);
-    const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface, takeoff50Res?.windIncluded === true);
-    const corrLandingRoll = applyCorr(landingRollBase, 'landing', landingWindComponent, landingSurface, landingRollRes?.windIncluded === true);
-    const corrLanding50 = applyCorr(landing50Base, 'landing', landingWindComponent, landingSurface, landing50Res?.windIncluded === true);
+    const corrTakeoffRoll = applyCorr(takeoffRollBase, 'takeoff', takeoffWindComponent, takeoffSurface, takeoffRollRes, takeoffIsaDeviation);
+    const corrTakeoff50 = applyCorr(takeoff50Base, 'takeoff', takeoffWindComponent, takeoffSurface, takeoff50Res, takeoffIsaDeviation);
+    const corrLandingRoll = applyCorr(landingRollBase, 'landing', landingWindComponent, landingSurface, landingRollRes, landingIsaDeviation);
+    const corrLanding50 = applyCorr(landing50Base, 'landing', landingWindComponent, landingSurface, landing50Res, landingIsaDeviation);
     setCorrBreakdowns({
       takeoff: corrTakeoff50 || corrTakeoffRoll,
       landing: corrLanding50 || corrLandingRoll,
@@ -624,10 +650,19 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       landingSurface
     });
 
-    const takeoffRoll = corrTakeoffRoll ? Math.round(corrTakeoffRoll.corrected) : takeoffRollBase;
-    const takeoff50 = corrTakeoff50 ? Math.round(corrTakeoff50.corrected) : takeoff50Base;
-    const landingRoll = corrLandingRoll ? Math.round(corrLandingRoll.corrected) : landingRollBase;
-    const landing50 = corrLanding50 ? Math.round(corrLanding50.corrected) : landing50Base;
+    // 🛡️ POINT DE SÉCURITÉ (23/08) — DISTANCE STANDARD NON CORRIGÉE.
+    // `unresolvedTemperature` : la source ne tient pas compte de la température,
+    // il fait plus chaud que la standard, et aucune règle du manuel n'a corrigé.
+    // La distance vaut pour l'ISA et pour elle seule — la présenter telle quelle
+    // un jour à 35 °C serait afficher une valeur trop courte comme utilisable.
+    // On l'ÉCARTE, exactement comme un résultat non-COMPUTED (cf. pickResult) :
+    // rien n'est persisté, et la carte des facteurs affiche « — » + le motif.
+    const retenue = (corr, base) =>
+      corr?.unresolvedTemperature ? null : (corr ? Math.round(corr.corrected) : base);
+    const takeoffRoll = retenue(corrTakeoffRoll, takeoffRollBase);
+    const takeoff50 = retenue(corrTakeoff50, takeoff50Base);
+    const landingRoll = retenue(corrLandingRoll, landingRollBase);
+    const landing50 = retenue(corrLanding50, landing50Base);
 
     // Garde anti-boucle : handleTakeoffResults/handleLandingResults appellent onUpdate
     // (re-render du wizard) — ne re-sauvegarder que si les valeurs utiles ont changé.
@@ -763,8 +798,11 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // potentielle en comparant avec son manuel de vol (demande César 16/08).
   const renderCorrectionCard = (phase) => {
     const rules = selectedAircraft?.performanceCorrections || [];
-    if (rules.length === 0) return null;
     const bd = corrBreakdowns[phase];
+    // Sans aucune règle sur la fiche avion la carte reste masquée — SAUF si la
+    // distance a dû être écartée faute de correction de température : c'est
+    // précisément là que le pilote doit lire pourquoi il n'a pas de chiffre.
+    if (rules.length === 0 && !bd?.unresolvedTemperature) return null;
     const surfaceKind = phase === 'takeoff' ? corrBreakdowns.takeoffSurface : corrBreakdowns.landingSurface;
     const title = phase === 'takeoff' ? 'Décollage' : 'Atterrissage';
     // 🛬 Sélecteur « État de piste » (demande César 21/08) : uniquement les états
@@ -832,20 +870,37 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
           <>
             <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
               Distance de base : <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.round(bd.base)} m</strong>
+              {bd.unresolvedTemperature && ' (aux conditions standard)'}
             </div>
+            {/* 🛡️ Distance NON utilisable : la valeur du manuel vaut aux conditions
+                standard et rien ne l'a corrigée de l'écart ISA du jour. On affiche
+                « — » et le motif, jamais un chiffre trop court. */}
+            {bd.unresolvedTemperature && (
+              <div style={{
+                fontSize: 12, lineHeight: 1.5, marginBottom: 6, padding: 8, borderRadius: 6,
+                color: 'var(--color-red-error, #b91c1c)',
+                border: '1px solid var(--color-red-error, #b91c1c)'
+              }}>
+                <strong>Distance retenue : —</strong> (non utilisable)
+                {' — '}
+                {bd.steps.find((s) => s.id === 'isa-non-corrige')?.note
+                  || "distance donnée aux conditions standard, non corrigée de l'écart ISA du jour"}.
+              </div>
+            )}
             {bd.steps.length === 0 && (
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                 Aucun facteur applicable aux conditions du jour.
               </div>
             )}
-            {bd.steps.map((s, i) => (
+            {/* La note d'écart ISA non corrigé est déjà rendue en clair ci-dessus. */}
+            {bd.steps.filter((s) => s.id !== 'isa-non-corrige').map((s, i) => (
               <div key={i} style={{ fontSize: 12, lineHeight: 1.6, color: s.note ? 'var(--color-orange-warning, #b45309)' : 'var(--text-primary)' }}>
                 {s.note
                   ? <>⚠ <strong>{s.label}</strong> — {s.note}</>
                   : <>• <strong>{s.label}</strong> : {s.detail} — {s.before} m → <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{s.after} m</strong></>}
               </div>
             ))}
-            {bd.applied && (
+            {bd.applied && !bd.unresolvedTemperature && (
               <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6, borderTop: '1px solid var(--border-subtle)', paddingTop: 6 }}>
                 Total facteurs : ×{(Math.round(bd.totalFactor * 1000) / 1000).toLocaleString('fr-FR')} →{' '}
                 <strong style={{ fontVariantNumeric: 'tabular-nums' }}>{Math.round(bd.corrected)} m</strong>

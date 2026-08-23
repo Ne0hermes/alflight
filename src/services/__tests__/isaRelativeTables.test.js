@@ -14,6 +14,7 @@ import { describe, it, expect } from 'vitest';
 import {
   isaTempAt,
   detectIsaRelativeTemperatures,
+  detectStandardConditionsOnly,
   buildLookupForOperation,
 } from '../performanceTableGrouping';
 import { resolveOperationFromTables } from '../tableInterpolationAdapter';
@@ -88,6 +89,65 @@ describe('detectIsaRelativeTemperatures — reconnaissance stricte', () => {
       pt(4000, 7, 225), pt(4000, 27, 240),
     ];
     expect(detectIsaRelativeTemperatures(deuxEcarts)).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 23/08/2026 — GRILLE « CONDITIONS STANDARD SEULEMENT ».
+// Le manuel ne publie qu'UNE température par palier, celle de l'ISA. La grille
+// ne dit rien de l'effet de la température ; le manuel le dit ailleurs, dans une
+// note de correction. On reconnaît le cas pour rendre la valeur standard (au lieu
+// de refuser tout calcul) et pour exiger la règle d'écart ISA en aval.
+describe('detectStandardConditionsOnly — la seule ligne ISA', () => {
+  // Cas réel F-BXNG / F-BXQT (Cessna 150) : 15/10/5/0 °C à 0/2500/5000/7500 ft.
+  const TABLE_F150 = [
+    pt(0, 15, 224, 726), pt(2500, 10, 277, 726), pt(5000, 5, 340, 726), pt(7500, 0, 414, 726),
+  ];
+
+  it('reconnaît la grille standard-seule de F-BXNG', () => {
+    expect(detectStandardConditionsOnly(TABLE_F150)).toBe(true);
+  });
+
+  it('tolère l\'arrondi du manuel (±1 °C autour de la ligne ISA)', () => {
+    expect(detectStandardConditionsOnly([pt(0, 15, 224), pt(2500, 11, 277)])).toBe(true);
+    // 2 °C d'écart à 2500 ft : ce n'est plus la ligne standard.
+    expect(detectStandardConditionsOnly([pt(0, 15, 224), pt(2500, 13, 277)])).toBe(false);
+  });
+
+  it('REFUSE une grille normale à plusieurs températures (Robin ISA±20)', () => {
+    expect(detectStandardConditionsOnly(TABLE_ROBIN)).toBe(false);
+  });
+
+  it('REFUSE une grille à températures absolues classiques', () => {
+    expect(detectStandardConditionsOnly(TABLE_ABSOLUE)).toBe(false);
+  });
+
+  it('REFUSE une grille mono-température qui n\'est PAS la standard (tout à 20 °C)', () => {
+    // Le refus au-delà du plafond doit y rester actif : rien ne dit que ces
+    // valeurs sont celles de l'ISA, on n'a aucune ligne de référence à rendre.
+    expect(detectStandardConditionsOnly([pt(0, 20, 224), pt(2500, 20, 277)])).toBe(false);
+  });
+
+  it('REFUSE une grille vide ou sans température exploitable', () => {
+    expect(detectStandardConditionsOnly([])).toBe(false);
+    expect(detectStandardConditionsOnly([{ Altitude: 0, value: 1 }])).toBe(false);
+  });
+
+  it('lookup : axe des températures réduit à UN nœud, valeurs denses, drapeaux posés', () => {
+    const l = buildLookupForOperation(groupe(TABLE_F150));
+    expect(l.standardConditionsOnly).toBe(true);
+    expect(l.temperatureIncluded).toBe(false);
+    expect(l.temperatures).toHaveLength(1);            // plus de diagonale trouée
+    expect(l.altitudes).toEqual([0, 2500, 5000, 7500]);
+    expect(l.values[0].flat()).toEqual([224, 277, 340, 414]);
+  });
+
+  it('lookup d\'une grille normale : temperatureIncluded vrai, standardConditionsOnly faux', () => {
+    for (const t of [TABLE_ROBIN, TABLE_ABSOLUE]) {
+      const l = buildLookupForOperation(groupe(t));
+      expect(l.standardConditionsOnly).toBe(false);
+      expect(l.temperatureIncluded).toBe(true);
+    }
   });
 });
 

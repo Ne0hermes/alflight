@@ -20,6 +20,14 @@
 // préparation de vol (cases à cocher par phase) ; non déclarés, ils ne
 // s'appliquent pas. Aucune valeur de manuel n'est pré-remplie ici.
 //
+// 🌡️ ÉCART À L'ISA (demande pilote 23/08) : certains manuels (Cessna 150 —
+// F-BXNG, F-BXQT) ne publient les distances QU'AUX CONDITIONS STANDARD, et
+// donnent en compensation une note de correction en température (« décollage
+// +10 % tous les +20 °C ; atterrissage +10 % tous les +35 °C »). La condition
+// « Température au-dessus de la standard (écart ISA) » la saisit, en % ou en
+// facteur, PAR TRANCHE DE DEGRÉS. Sans elle, ces avions n'ont aucune distance
+// utilisable dès qu'on s'écarte de l'ISA.
+//
 // Stocké dans aircraft.performanceCorrections, appliqué (avec détail visuel)
 // dans le module Performance. Voir utils/performanceCorrections.
 // ============================================================================
@@ -57,10 +65,25 @@ const SURFACE_MODE_OPTIONS = [
   { value: 'percent_fixed', label: '± % fixe' },
   { value: 'factor_fixed', label: '× facteur fixe' },
 ];
-const isWind = (type) => CORRECTION_TYPES[type]?.kind === 'wind';
-const modeOptionsFor = (type) => (isWind(type) ? WIND_MODE_OPTIONS : SURFACE_MODE_OPTIONS);
-const DEFAULT_MODE = { wind: 'factor_per_step', surface: 'percent_fixed' };
-const defaultModeFor = (type) => (isWind(type) ? DEFAULT_MODE.wind : DEFAULT_MODE.surface);
+// 🌡️ ÉCART À L'ISA (23/08) : les manuels qui ne publient leurs distances qu'aux
+// conditions standard donnent en compensation une note du type « +10 % tous les
+// +20 °C au-dessus de la standard ». Deux formes seulement, toutes deux « par
+// tranche », et la tranche est en DEGRÉS — jamais en nœuds. Aucun préréglage
+// chiffré : la valeur vient du manuel de CHAQUE avion.
+const TEMPERATURE_MODE_OPTIONS = [
+  { value: 'percent_per_step', label: '± % par tranche de température' },
+  { value: 'factor_per_step', label: '× facteur par tranche de température' },
+];
+const kindOf = (type) => CORRECTION_TYPES[type]?.kind;
+const isWind = (type) => kindOf(type) === 'wind';
+const isTemperature = (type) => kindOf(type) === 'temperature';
+const modeOptionsFor = (type) => (
+  isWind(type) ? WIND_MODE_OPTIONS
+    : isTemperature(type) ? TEMPERATURE_MODE_OPTIONS
+      : SURFACE_MODE_OPTIONS
+);
+const DEFAULT_MODE = { wind: 'factor_per_step', temperature: 'percent_per_step', surface: 'percent_fixed' };
+const defaultModeFor = (type) => DEFAULT_MODE[kindOf(type)] || DEFAULT_MODE.surface;
 const isModeValidFor = (type, mode) => modeOptionsFor(type).some((o) => o.value === mode);
 
 const APPLIES_OPTIONS = [
@@ -82,16 +105,18 @@ const PHASES = [
 ];
 
 const EMPTY_BRACKETS = [{ fromKt: '', value: '' }, { fromKt: '', value: '' }, { fromKt: '', value: '' }];
-const EMPTY_DRAFT = { type: 'headwind', mode: 'factor_per_step', value: '', stepKt: '', appliesTo: 'takeoff', label: '', brackets: EMPTY_BRACKETS };
+const EMPTY_DRAFT = { type: 'headwind', mode: 'factor_per_step', value: '', stepKt: '', stepC: '', appliesTo: 'takeoff', label: '', brackets: EMPTY_BRACKETS };
 
 const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
   const [draft, setDraft] = useState(EMPTY_DRAFT);
 
   const isWindType = isWind(draft.type);
+  const isTempType = isTemperature(draft.type);
   const modeOptions = modeOptionsFor(draft.type);
   const isTableMode = isWindType && (draft.mode === 'factor_table' || draft.mode === 'percent_table');
-  const needsStep = isWindType && draft.mode !== 'percent_fixed' && !isTableMode;
-  const isFactorMode = draft.mode === 'factor_fixed' || (isWindType && draft.mode === 'factor_per_step');
+  const needsStep = isWindType && draft.mode !== 'percent_fixed' && !isTableMode; // tranche en kt
+  const needsStepC = isTempType;                                                  // tranche en °C
+  const isFactorMode = draft.mode === 'factor_fixed' || ((isWindType || isTempType) && draft.mode === 'factor_per_step');
   // Quand la condition change de famille (vent ↔ surface), la forme courante
   // peut ne plus exister : on remet la forme par défaut de la nouvelle famille.
   const setType = (type) => setDraft((d) => ({
@@ -131,7 +156,8 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
   const canAddDraft = !dejaPresent && (isTableMode
     ? paliersValides.length >= 1
     : draft.value !== '' && Number.isFinite(Number(draft.value))
-      && (!needsStep || (draft.stepKt !== '' && Number(draft.stepKt) > 0)));
+      && (!needsStep || (draft.stepKt !== '' && Number(draft.stepKt) > 0))
+      && (!needsStepC || (draft.stepC !== '' && Number(draft.stepC) > 0)));
 
   const handleAddDraft = () => {
     if (!canAddDraft) return;
@@ -153,6 +179,7 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
         mode: isModeValidFor(draft.type, draft.mode) ? draft.mode : defaultModeFor(draft.type),
         value: Number(draft.value),
         stepKt: needsStep ? Number(draft.stepKt) : null,
+        stepC: needsStepC ? Number(draft.stepC) : null,
         appliesTo: draft.appliesTo,
         label: draft.label.trim(),
       });
@@ -269,6 +296,11 @@ const PerformanceCorrectionsEditor = ({ corrections = [], onChange }) => {
         {needsStep && (
           <TextField size="small" type="number" label="Tranche (kt)" value={draft.stepKt}
             onChange={(e) => setDraft((d) => ({ ...d, stepKt: e.target.value }))}
+            sx={{ width: 120 }} inputProps={{ min: 1, step: 'any' }} />
+        )}
+        {needsStepC && (
+          <TextField size="small" type="number" label="Tranche (°C)" value={draft.stepC}
+            onChange={(e) => setDraft((d) => ({ ...d, stepC: e.target.value }))}
             sx={{ width: 120 }} inputProps={{ min: 1, step: 'any' }} />
         )}
         <TextField size="small" label="Libellé (optionnel)" value={draft.label}

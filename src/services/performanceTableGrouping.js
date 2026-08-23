@@ -192,14 +192,53 @@ export function detectIsaRelativeTemperatures(points) {
   return seulEcart.split('|').length >= 2;
 }
 
+/**
+ * La grille est-elle donnée AUX SEULES CONDITIONS STANDARD ?
+ *
+ * Cas réel de F-BXNG et F-BXQT (Cessna 150) : le manuel ne publie qu'UNE
+ * température par palier d'altitude, et cette température est exactement celle
+ * de l'atmosphère standard — 15 °C à 0 ft, 10 à 2500, 5 à 5000, 0 à 7500. La
+ * grille ne dit donc RIEN de l'effet de la température ; le manuel le dit
+ * ailleurs, dans une note de correction (« +10 % tous les +20 °C »).
+ *
+ * Reconnaissance : pour CHAQUE altitude, un seul nœud de température, et ce nœud
+ * tombe sur la ligne ISA à ±1 °C près (les manuels arrondissent : 10 au lieu de
+ * 10,05 à 2500 ft). Une grille qui porte réellement plusieurs températures — ou
+ * une seule température qui n'est pas la standard — n'est PAS reconnue : elle
+ * garde le refus au-delà du plafond, seul comportement sûr.
+ */
+export function detectStandardConditionsOnly(points) {
+  const parAltitude = new Map();
+  for (const p of points || []) {
+    const alt = parseFloat(p?.Altitude);
+    const temp = parseFloat(p?.Temperature);
+    if (!Number.isFinite(alt) || !Number.isFinite(temp)) continue;
+    if (!parAltitude.has(alt)) parAltitude.set(alt, new Set());
+    parAltitude.get(alt).add(temp);
+  }
+  if (parAltitude.size === 0) return false;
+  for (const [alt, temps] of parAltitude) {
+    if (temps.size !== 1) return false;                 // plusieurs températures : vraie grille
+    const [seule] = temps;
+    if (Math.abs(seule - isaTempAt(alt)) > 1) return false; // hors de la ligne ISA
+  }
+  return true;
+}
+
 export function buildLookupForOperation(group) {
   if (!group?.tables?.length) return null;
 
   const tousLesPoints = group.tables.flatMap(t => t.data || []);
-  const isaRelative = detectIsaRelativeTemperatures(tousLesPoints);
-  // Valeur portée par l'axe des températures : l'écart à l'ISA quand le manuel
-  // raisonne ainsi, la température absolue sinon.
+  // Grille « conditions standard seulement » : l'axe des températures se réduit
+  // à UN nœud (l'ISA). Le ranger en températures absolues fabriquerait une
+  // diagonale trouée (15/10/5/0 × 4 altitudes = 16 cases pour 4 valeurs).
+  const standardConditionsOnly = detectStandardConditionsOnly(tousLesPoints);
+  const isaRelative = !standardConditionsOnly && detectIsaRelativeTemperatures(tousLesPoints);
+  // Valeur portée par l'axe des températures : 0 (la ligne ISA, nœud unique)
+  // pour une grille standard-seule, l'écart à l'ISA quand le manuel raisonne
+  // ainsi, la température absolue sinon.
   const axeTemp = (point) => {
+    if (standardConditionsOnly) return 0;
     const temp = parseFloat(point.Temperature);
     if (!isaRelative) return temp;
     const alt = parseFloat(point.Altitude);
@@ -250,7 +289,16 @@ export function buildLookupForOperation(group) {
     values,
     // 'absolute' = températures du manuel telles quelles ; 'isaDeviation' = écarts
     // à l'ISA. L'appelant DOIT convertir sa température cible dans le second cas.
-    temperatureScale: isaRelative ? 'isaDeviation' : 'absolute',
+    // Une grille standard-seule est ISA-relative par construction : son unique
+    // nœud est l'écart 0.
+    temperatureScale: (isaRelative || standardConditionsOnly) ? 'isaDeviation' : 'absolute',
+    // Grille donnée aux SEULES conditions standard (une ligne ISA) : l'adaptateur
+    // n'y refuse plus une OAT hors plage, il rend la valeur standard + warning.
+    standardConditionsOnly,
+    // La SOURCE tient-elle compte de la température ? Vrai seulement si la grille
+    // porte au moins deux nœuds de température RÉELS. Faux pour une grille
+    // standard-seule : la correction de température reste entièrement à faire.
+    temperatureIncluded: !standardConditionsOnly && temperatures.length >= 2,
     tableCount: group.tables.length
   };
 }
@@ -365,6 +413,7 @@ export default {
   // Nouvelle API
   groupTablesByOperationId,
   buildLookupForOperation,
+  detectStandardConditionsOnly,
   // Ancienne API (rétrocompat)
   groupTablesByBaseName,
   filterGroupsByType,

@@ -416,3 +416,220 @@ describe("vent déjà intégré par l'abaque (windAppliedByAbac) — 21/08, ré-
     expect(r.steps[0].id).toBe('ambigu-tailwind');
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// ÉCART À L'ISA (23/08/2026, demande pilote — F-BXNG et F-BXQT, Cessna 150)
+//
+// Ces manuels ne publient les distances QU'AUX CONDITIONS STANDARD : une seule
+// température par palier d'altitude, exactement sur la ligne ISA. Ils donnent en
+// compensation une note de correction en température, ici celle du pilote :
+//   « décollage +10 % tous les +20 °C ; atterrissage +10 % tous les +35 °C ».
+//
+// Depuis le refus des OAT hors grille (21/08), ces avions n'avaient plus AUCUNE
+// distance calculable hors ISA. La règle `isa_deviation` rend la note saisissable.
+// Arrondi CONSERVATEUR comme le vent arrière : toute tranche ENTAMÉE est due.
+// ════════════════════════════════════════════════════════════════════════════
+
+const isaTakeoff10per20 = { id: 'isa-to', type: 'isa_deviation', mode: 'percent_per_step', value: 10, stepC: 20, appliesTo: 'takeoff' };
+const isaLanding10per35 = { id: 'isa-ld', type: 'isa_deviation', mode: 'percent_per_step', value: 10, stepC: 35, appliesTo: 'landing' };
+
+describe("écart ISA — note de correction en température du manuel", () => {
+  const run = (corrections, conditions, phase = 'takeoff') =>
+    applyPerformanceCorrections({ distance: 1000, phase, corrections, conditions });
+  // La source ne corrige RIEN : c'est le cas nominal de la règle.
+  const std = (isaDeviationC) => ({ windComponentKt: 0, surface: null, runwayStates: [], isaDeviationC, temperatureAppliedBySource: false });
+
+  it('ISA+21 avec un pas de 20 °C → 2 tranches (entamée = due) → ×1,20', () => {
+    const r = run([isaTakeoff10per20], std(21));
+    expect(r.corrected).toBeCloseTo(1200, 6);
+    expect(r.applied).toBe(true);
+    expect(r.steps).toHaveLength(1);
+    expect(r.steps[0].factor).toBeCloseTo(1.2, 6);
+    expect(r.unresolvedTemperature).toBeUndefined();
+  });
+
+  it('ISA+27 : détail lisible « 2 tranches de 20 °C (entamée = due) »', () => {
+    const r = run([isaTakeoff10per20], std(27));
+    expect(r.corrected).toBeCloseTo(1200, 6);
+    expect(r.steps[0].detail).toBe('ISA+27 °C → 2 tranches de 20 °C (entamée = due) → ×1,2');
+  });
+
+  it('pile sur la tranche (ISA+20) : une seule tranche, pas deux', () => {
+    expect(run([isaTakeoff10per20], std(20)).corrected).toBeCloseTo(1100, 6);
+    expect(run([isaTakeoff10per20], std(20.1)).corrected).toBeCloseTo(1200, 6);
+  });
+
+  it('à l\'ISA ou en dessous : règle SANS OBJET — aucun crédit, aucune étape', () => {
+    for (const d of [0, -0.5, -12]) {
+      const r = run([isaTakeoff10per20], std(d));
+      expect(r.corrected).toBe(1000);
+      expect(r.applied).toBe(false);
+      expect(r.steps).toHaveLength(0);
+      expect(r.unresolvedTemperature).toBeUndefined();
+    }
+  });
+
+  it('écart ISA absent ou non fini : NON appliqué, avec note (jamais silencieux)', () => {
+    for (const d of [undefined, null, NaN, 'chaud']) {
+      const r = run([isaTakeoff10per20], { ...std(0), isaDeviationC: d });
+      expect(r.corrected).toBe(1000);
+      expect(r.steps[0].note).toMatch(/écart ISA indisponible/);
+    }
+  });
+
+  it('factor_per_step : le facteur est élevé à la puissance du nombre de tranches', () => {
+    const regle = { id: 'f', type: 'isa_deviation', mode: 'factor_per_step', value: 1.1, stepC: 20, appliesTo: 'takeoff' };
+    const r = run([regle], std(25));
+    expect(r.corrected).toBeCloseTo(1000 * 1.1 * 1.1, 6);
+  });
+
+  it('la note du pilote diffère par phase : +10 %/20 °C au décollage, /35 °C à l\'atterrissage', () => {
+    const regles = [isaTakeoff10per20, isaLanding10per35];
+    expect(run(regles, std(30), 'takeoff').corrected).toBeCloseTo(1200, 6);   // 30/20 → 2 tranches
+    expect(run(regles, std(30), 'landing').corrected).toBeCloseTo(1100, 6);   // 30/35 → 1 tranche
+  });
+
+  it('stepC manquant ou nul : règle mal saisie, ignorée (stepKt n\'est JAMAIS lu)', () => {
+    const sansPas = { ...isaTakeoff10per20, stepC: null };
+    const enNoeuds = { ...isaTakeoff10per20, stepC: undefined, stepKt: 20 };
+    for (const c of [sansPas, enNoeuds]) {
+      const r = run([c], std(21));
+      expect(r.corrected).toBe(1000);
+      expect(r.applied).toBe(false);
+    }
+  });
+
+  it('mode non autorisé pour la température (percent_fixed, table) : ignoré', () => {
+    const fixe = { id: 'x', type: 'isa_deviation', mode: 'percent_fixed', value: 10, appliesTo: 'takeoff' };
+    const r = run([fixe], std(21));
+    expect(r.corrected).toBe(1000);
+    expect(r.applied).toBe(false);
+  });
+
+  it('facteur hors bornes (×3 par tranche sur ISA+40) : refusé avec note', () => {
+    const fou = { id: 'z', type: 'isa_deviation', mode: 'factor_per_step', value: 3, stepC: 10, appliesTo: 'takeoff' };
+    const r = run([fou], std(40));
+    expect(r.corrected).toBe(1000);
+    expect(r.steps[0].note).toMatch(/hors bornes/);
+  });
+
+  it('se cumule normalement avec le vent et la surface, chacun une fois', () => {
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'takeoff', corrections: [isaTakeoff10per20, tailwind10per2, grass15],
+      conditions: { windComponentKt: -4, surface: 'grass', runwayStates: [], isaDeviationC: 21, temperatureAppliedBySource: false },
+    });
+    expect(r.corrected).toBeCloseTo(1000 * 1.2 * 1.2 * 1.15, 6);
+    expect(r.steps).toHaveLength(3);
+  });
+
+  it('describeCorrection : « +10 % par 20 °C au-dessus de la standard »', () => {
+    expect(describeCorrection(isaTakeoff10per20))
+      .toBe('Température au-dessus de la standard (écart ISA) : +10 % par 20 °C au-dessus de la standard (décollage)');
+    const facteur = { ...isaTakeoff10per20, mode: 'factor_per_step', value: 1.1 };
+    expect(describeCorrection(facteur)).toContain('×1,1 par 20 °C au-dessus de la standard');
+  });
+
+  it('garde anti-cumul : deux règles d\'écart ISA sur la même phase → AUCUNE appliquée', () => {
+    const deux = [isaTakeoff10per20, { ...isaTakeoff10per20, id: 'isa-2', value: 15, stepC: 10 }];
+    const r = run(deux, std(21));
+    // Sans la garde : 1,20 × 1,45 = ×1,74 — une pénalité que le manuel ne donne pas.
+    expect(r.corrected).toBe(1000);
+    expect(r.steps.find((s) => s.id === 'ambigu-isa_deviation')).toBeTruthy();
+    // …et la distance reste NON corrigée : elle doit être écartée.
+    expect(r.unresolvedTemperature).toBe(true);
+  });
+});
+
+describe('température déjà intégrée par la source (temperatureAppliedBySource)', () => {
+  // Grille à plusieurs températures, ou abaque à panneau OAT : la température est
+  // déjà dans la distance lue. Appliquer la note du manuel la compterait deux fois.
+  it('règle SIGNALÉE (non appliquée), les autres facteurs jouent normalement', () => {
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'takeoff', corrections: [isaTakeoff10per20, grass15],
+      conditions: { windComponentKt: 0, surface: 'grass', runwayStates: [], isaDeviationC: 27, temperatureAppliedBySource: true },
+    });
+    expect(r.corrected).toBeCloseTo(1150, 6);            // ×1,2 de la température NON appliqué
+    const temp = r.steps.find((s) => s.id === 'isa-to');
+    expect(temp.factor).toBeNull();
+    expect(temp.note).toMatch(/température déjà intégrée par le tableau\/l'abaque/);
+    expect(temp.note).toMatch(/règle non appliquée/);
+    expect(r.unresolvedTemperature).toBeUndefined();     // la source corrige : rien à signaler
+  });
+
+  it('source qui intègre la température SANS règle saisie : rien à signaler', () => {
+    const r = applyPerformanceCorrections({
+      distance: 1000, phase: 'takeoff', corrections: [grass15],
+      conditions: { windComponentKt: 0, surface: 'grass', isaDeviationC: 27, temperatureAppliedBySource: true },
+    });
+    expect(r.unresolvedTemperature).toBeUndefined();
+    expect(r.corrected).toBeCloseTo(1150, 6);
+  });
+});
+
+describe('🛡️ unresolvedTemperature — distance standard non corrigée', () => {
+  // LE point de sécurité du lot : ne JAMAIS présenter comme utilisable, par 35 °C,
+  // une distance que le manuel ne donne qu'aux conditions standard.
+  const sansRegleISA = (corrections, isaDeviationC) => applyPerformanceCorrections({
+    distance: 224, phase: 'takeoff', corrections,
+    conditions: { windComponentKt: 0, surface: 'grass', runwayStates: [], isaDeviationC, temperatureAppliedBySource: false },
+  });
+
+  it('aucune règle du tout sur la fiche avion : drapeau levé + motif actionnable', () => {
+    const r = sansRegleISA([], 20);
+    expect(r.unresolvedTemperature).toBe(true);
+    const note = r.steps.find((s) => s.id === 'isa-non-corrige').note;
+    expect(note).toMatch(/distance donnée aux conditions standard/);
+    expect(note).toMatch(/non corrigée d'un écart ISA de \+20 °C/);
+    expect(note).toMatch(/Performances → Facteurs correctifs/);
+  });
+
+  it('des règles existent (vent, herbe) mais aucune pour la température : drapeau levé', () => {
+    const r = sansRegleISA([headwind085per10, grass15], 25);
+    expect(r.unresolvedTemperature).toBe(true);
+    expect(r.steps.some((s) => s.id === 'isa-non-corrige')).toBe(true);
+  });
+
+  it('règle d\'écart ISA présente et appliquée : PAS de drapeau', () => {
+    const r = sansRegleISA([isaTakeoff10per20], 25);
+    expect(r.unresolvedTemperature).toBeUndefined();
+    expect(r.corrected).toBeCloseTo(224 * 1.2, 6);
+  });
+
+  it('règle présente mais sur l\'AUTRE phase : drapeau levé (elle ne corrige rien ici)', () => {
+    const r = sansRegleISA([isaLanding10per35], 25);
+    expect(r.unresolvedTemperature).toBe(true);
+  });
+
+  it('à l\'ISA ou plus froid : aucun drapeau, la distance standard est valable', () => {
+    for (const d of [0, -3]) expect(sansRegleISA([], d).unresolvedTemperature).toBeUndefined();
+  });
+
+  it('temperatureAppliedBySource ABSENT (appelant non câblé) : aucun drapeau, comportement inchangé', () => {
+    const r = applyPerformanceCorrections({
+      distance: 224, phase: 'takeoff', corrections: [grass15],
+      conditions: { windComponentKt: 0, surface: 'grass', isaDeviationC: 25 },
+    });
+    expect(r.unresolvedTemperature).toBeUndefined();
+    expect(r.corrected).toBeCloseTo(224 * 1.15, 6);
+  });
+
+  it('liste de règles VIDE : le moteur ne sort plus par anticipation, le drapeau passe', () => {
+    // C'est exactement F-BXNG : aucune règle saisie, grille standard-seule, 35 °C.
+    const r = applyPerformanceCorrections({
+      distance: 224, phase: 'takeoff', corrections: [],
+      conditions: { isaDeviationC: 20, temperatureAppliedBySource: false },
+    });
+    expect(r.unresolvedTemperature).toBe(true);
+    expect(r.corrected).toBe(224);                 // la valeur reste lisible…
+    expect(r.applied).toBe(false);                 // …mais rien ne l'a corrigée
+  });
+
+  it('distance invalide : sortie anticipée, aucun drapeau (rien à corriger)', () => {
+    const r = applyPerformanceCorrections({
+      distance: 0, phase: 'takeoff', corrections: [],
+      conditions: { isaDeviationC: 20, temperatureAppliedBySource: false },
+    });
+    expect(r.unresolvedTemperature).toBeUndefined();
+    expect(r.steps).toHaveLength(0);
+  });
+});

@@ -12,34 +12,57 @@
 //           'soft_ground'|'high_grass'|'other',
 //     label?,                    // libellé libre (sinon libellé auto)
 //     appliesTo: 'takeoff'|'landing'|'both',
-//     mode: 'factor_per_step'    // × facteur par tranche de stepKt      (vent)
-//         | 'percent_per_step'   // ± X % par tranche de stepKt (linéaire, vent)
+//     mode: 'factor_per_step'    // × facteur par tranche de stepKt/stepC (vent, temp)
+//         | 'percent_per_step'   // ± X % par tranche de stepKt/stepC     (vent, temp)
 //         | 'percent_fixed'      // ± X % fixe                           (tous)
 //         | 'factor_fixed'       // × facteur fixe                       (surface/état)
 //         | 'factor_table'       // TABLEAU DE TRANCHES : un facteur par palier (vent)
 //         | 'percent_table',     // TABLEAU DE TRANCHES : un pourcentage par palier (vent)
 //     value: number,             // facteur (0.85, 1.15) ou pourcentage (10, 15)
-//     stepKt?: number,           // tranche de vent (modes *_per_step)
+//     stepKt?: number,           // tranche de VENT en kt        (modes *_per_step, kind 'wind')
+//     stepC?: number,            // tranche de TEMPÉRATURE en °C (modes *_per_step, kind 'temperature')
 //     brackets?: Array<{ fromKt: number, value: number }> }  // modes *_table
 //
 // MODES PAR FAMILLE (kind) DE CONDITION (2026-08-21, demande César) :
 //   - kind 'wind'    (headwind, tailwind) : les 5 modes ci-dessus sauf factor_fixed ;
 //   - kind 'surface' (grass — détectée automatiquement depuis la piste) et
 //     kind 'manual'  (high_grass, wet_grass, wet_paved, soft_ground, other —
-//     DÉCLARÉS par le pilote) : 'percent_fixed' (+15 %) ou 'factor_fixed' (×1,15).
+//     DÉCLARÉS par le pilote) : 'percent_fixed' (+15 %) ou 'factor_fixed' (×1,15) ;
+//   - kind 'temperature' (isa_deviation, 2026-08-23) : 'percent_per_step' ou
+//     'factor_per_step' avec un pas en DEGRÉS (`stepC`, jamais stepKt).
 //   COMPAT : une règle de surface/état héritée en 'factor_per_step' (ancien
 //   contournement de l'éditeur) reste lue comme un FACTEUR BRUT fixe — elle
 //   n'est jamais élevée à une puissance, stepKt y est ignoré.
+//
+// ÉCART À L'ISA — POURQUOI (2026-08-23, demande pilote sur F-BXNG / F-BXQT) :
+//   Certains manuels (Cessna 150) ne publient les distances QU'AUX CONDITIONS
+//   STANDARD : une seule température par palier d'altitude, exactement sur la
+//   ligne ISA (15 °C à 0 ft, 10 à 2500, 5 à 5000, 0 à 7500). En compensation ils
+//   donnent une NOTE DE CORRECTION EN TEMPÉRATURE — ici : « décollage +10 % tous
+//   les +20 °C ; atterrissage +10 % tous les +35 °C au-dessus de la standard ».
+//   Depuis le refus des OAT hors grille (21/08), ces avions n'avaient plus AUCUNE
+//   distance calculable dès qu'on s'écartait de l'ISA. La règle `isa_deviation`
+//   rend cette note du manuel saisissable, avion par avion et phase par phase —
+//   exactement comme le vent et l'état de piste.
 //
 // CONDITIONS D'APPLICATION (paramètre `conditions` d'applyPerformanceCorrections) :
 //   { windComponentKt,          // composante signée (>0 = face)
 //     surface,                  // 'grass'|'paved'|null — pilote le type 'grass'
 //     runwayStates?,            // tableau des états DÉCLARÉS par le pilote parmi
 //                               // les types de kind 'manual' (ex. ['wet_grass'])
-//     windAppliedByAbac? }      // true : la distance sort d'un abaque à PANNEAU
+//     windAppliedByAbac?,       // true : la distance sort d'un abaque à PANNEAU
 //                               // VENT — les règles de kind 'wind' ne sont PAS
 //                               // appliquées (étape explicative), sinon le vent
 //                               // compterait deux fois (2026-08-21, F-HFGI)
+//     isaDeviationC?,           // écart à l'ISA en °C (>0 = plus chaud que la
+//                               // standard) — pilote le type 'isa_deviation'
+//     temperatureAppliedBySource? } // true : la SOURCE de la distance tient déjà
+//                               // compte de la température (grille à plusieurs
+//                               // températures, abaque à panneau OAT) — la règle
+//                               // d'écart ISA n'est PAS appliquée (même patron
+//                               // que windAppliedByAbac). false : la source ne
+//                               // corrige RIEN — sans règle saisie, la sortie
+//                               // porte `unresolvedTemperature`.
 //   - runwayStates ABSENT (appelant non câblé) : les règles 'manual' ne sont
 //     jamais appliquées, une note « à appliquer manuellement » est émise ;
 //   - runwayStates PRÉSENT : une règle 'manual' s'applique SI ET SEULEMENT SI
@@ -60,6 +83,9 @@
 //     (floor) — on ne crédite jamais une tranche entamée ;
 //   - vent ARRIÈRE (augmente la distance) : toute tranche ENTAMÉE compte
 //     (ceil) ;
+//   - ÉCART À L'ISA côté chaud (augmente la distance) : toute tranche ENTAMÉE
+//     compte (ceil), comme le vent arrière ; à l'ISA ou en dessous la règle est
+//     sans objet — on ne crédite JAMAIS un raccourcissement par temps froid ;
 //   - facteur borné à [0.3, 10] — hors bornes : NON appliqué + note ;
 //   - surface inconnue : le facteur de surface n'est PAS appliqué et une
 //     note explicite le dit (jamais de correction silencieusement omise).
@@ -77,7 +103,13 @@ export const CORRECTION_TYPES = Object.freeze({
   wet_paved:   { label: 'Piste dure mouillée', kind: 'manual' },
   soft_ground: { label: 'Terrain meuble',      kind: 'manual' },
   other:       { label: 'Autre',               kind: 'manual' },
+  // 2026-08-23 — note de correction en température des manuels « conditions
+  // standard seulement » (cf. en-tête). Pas en DEGRÉS (`stepC`), jamais en kt.
+  isa_deviation: { label: 'Température au-dessus de la standard (écart ISA)', kind: 'temperature' },
 });
+
+/** Modes autorisés pour une règle de kind 'temperature' (pas en °C). */
+const TEMPERATURE_MODES = Object.freeze(['percent_per_step', 'factor_per_step']);
 
 const PHASE_LABELS = { takeoff: 'décollage', landing: 'atterrissage', both: 'décollage et atterrissage' };
 
@@ -94,6 +126,13 @@ export function describeCorrection(c) {
     effect = paliers.length
       ? paliers.map((p) => `${p.fromKt} kt → ${fmtFactor(p.factor)}`).join(' · ')
       : 'tableau vide';
+  } else if (kind === 'temperature') {
+    // « +10 % par 20 °C au-dessus de la standard » / « ×1,1 par 20 °C … »
+    const v = Number(c.value);
+    const par = `par ${c.stepC} °C au-dessus de la standard`;
+    effect = c.mode === 'factor_per_step'
+      ? `${fmtFactor(v)} ${par}`
+      : `${v >= 0 ? '+' : ''}${v} % ${par}`;
   } else if (c.mode === 'factor_fixed' || (c.mode === 'factor_per_step' && kind !== 'wind')) {
     // Facteur fixe (surface/état) — inclut la compat des règles héritées en
     // factor_per_step hors vent, que le moteur lit comme un facteur brut.
@@ -171,16 +210,20 @@ export function pickBracket(paliers, composante, type) {
  * @param {Array}  p.corrections       aircraft.performanceCorrections
  * @param {Object} p.conditions        { windComponentKt (signé, >0 = face),
  *                                       surface ('grass'|'paved'|…|null),
- *                                       runwayStates?, windAppliedByAbac? }
- * @returns {{ base, corrected, totalFactor, applied, steps: Array<{
+ *                                       runwayStates?, windAppliedByAbac?,
+ *                                       isaDeviationC?, temperatureAppliedBySource? }
+ * @returns {{ base, corrected, totalFactor, applied, unresolvedTemperature?, steps: Array<{
  *   id, label, detail, factor|null, before|null, after|null, note|null }> }}
  */
 export function applyPerformanceCorrections({ distance, phase, corrections, conditions }) {
   const base = Number(distance);
   const result = { base, corrected: base, totalFactor: 1, applied: false, steps: [] };
-  if (!Number.isFinite(base) || base <= 0 || !Array.isArray(corrections) || corrections.length === 0) {
-    return result;
-  }
+  // ⚠️ Une distance invalide n'a rien à corriger. En revanche une LISTE VIDE de
+  // règles n'est PAS une sortie anticipée : c'est précisément le cas des avions
+  // à grille « conditions standard seulement » sans règle saisie, pour lesquels
+  // le drapeau `unresolvedTemperature` doit être levé (cf. fin de fonction).
+  if (!Number.isFinite(base) || base <= 0) return result;
+  const regles = Array.isArray(corrections) ? corrections : [];
 
   const wind = Number(conditions?.windComponentKt);
   const surface = conditions?.surface || null;
@@ -193,7 +236,21 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
   // (×1,3 sur les 775 ft). Les règles de kind 'wind' sont alors SIGNALÉES, jamais
   // multipliées ; surface et états de piste restent corrigés normalement.
   const windAppliedByAbac = conditions?.windAppliedByAbac === true;
+  // 🛡️ TEMPÉRATURE DÉJÀ INTÉGRÉE PAR LA SOURCE (2026-08-23) : grille à plusieurs
+  // températures réelles, ou abaque à panneau OAT. La règle d'écart ISA ferait
+  // alors compter la température DEUX fois — même patron que windAppliedByAbac.
+  const temperatureAppliedBySource = conditions?.temperatureAppliedBySource === true;
+  // Écart à l'ISA en °C, positif = plus chaud que la standard. `null` signifie
+  // INDISPONIBLE (température ou altitude-pression manquante côté appelant) et
+  // ne doit surtout pas devenir le 0 de `Number(null)` — qui ferait passer une
+  // journée inconnue pour une journée standard.
+  const isaBrut = conditions?.isaDeviationC;
+  const isaDeviationC = (isaBrut === null || isaBrut === undefined || isaBrut === '')
+    ? NaN
+    : Number(isaBrut);
   let current = base;
+  // La température a-t-elle été RÉELLEMENT corrigée par une règle appliquée ?
+  let temperatureCorrigee = false;
 
   // 🛡️ GARDE ANTI-CUMUL (2026-08-17, étendue à TOUS les types le 2026-08-21).
   // Deux règles du même type pour la même phase sont AMBIGUËS : le moteur les
@@ -204,7 +261,7 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
   // On ne devine pas laquelle retenir : on n'applique AUCUNE des règles du type
   // concerné et on le dit. Mieux vaut une distance non corrigée — donc la
   // distance brute, plus longue — qu'une distance fausse et trop courte.
-  const applicables = corrections.filter((c) => c && (c.appliesTo === 'both' || c.appliesTo === phase));
+  const applicables = regles.filter((c) => c && (c.appliesTo === 'both' || c.appliesTo === phase));
   const ambigus = new Set();
   for (const type of Object.keys(CORRECTION_TYPES)) {
     const memeType = applicables.filter((c) => c.type === type);
@@ -233,7 +290,7 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
   // « Herbe mouillée » → « herbe mouillée » pour le détail lisible.
   const minuscule = (s) => (s ? s.charAt(0).toLowerCase() + s.slice(1) : s);
 
-  for (const c of corrections) {
+  for (const c of regles) {
     if (!c || (c.appliesTo !== 'both' && c.appliesTo !== phase)) continue;
     if (ambigus.has(c.type)) continue;
     const label = c.label?.trim() || CORRECTION_TYPES[c.type]?.label || c.type;
@@ -244,6 +301,15 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
       // vent n'a pas joué sur cette opération.
       result.steps.push({ id: c.id, label, detail: '', factor: null, before: null, after: null,
         note: 'vent déjà intégré par l\'abaque (panneau vent) — règle non appliquée' });
+      continue;
+    }
+
+    if (kind === 'temperature' && temperatureAppliedBySource) {
+      // La grille (plusieurs températures) ou l'abaque (panneau OAT) a DÉJÀ tenu
+      // compte de la température : appliquer la note du manuel par-dessus la
+      // compterait deux fois. Étape VISIBLE, jamais un silence.
+      result.steps.push({ id: c.id, label, detail: '', factor: null, before: null, after: null,
+        note: 'température déjà intégrée par le tableau/l\'abaque — règle non appliquée' });
       continue;
     }
 
@@ -302,6 +368,27 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
           : 1 + (Number(c.value) / 100) * n;
         detail = `vent arrière ${Math.round(tail)} kt → ${n} tranche${n > 1 ? 's' : ''} de ${stepKt} kt (entamée = due) → ${fmtFactor(factor)}`;
       }
+    } else if (kind === 'temperature') {
+      // ── ÉCART À L'ISA : note de correction en température du manuel ────────
+      // Pas en DEGRÉS (`stepC`) — stepKt reste réservé au vent. Un tableau de
+      // paliers n'est pas prévu pour l'instant : seuls les deux modes « par
+      // tranche » sont acceptés, tout autre mode est une règle mal saisie.
+      const stepC = Number(c.stepC);
+      if (!TEMPERATURE_MODES.includes(c.mode)) continue;      // mode non autorisé : ignorée
+      if (!Number.isFinite(stepC) || stepC <= 0) continue;    // règle mal saisie : ignorée
+      if (!Number.isFinite(isaDeviationC)) {
+        note = 'écart ISA indisponible — non appliqué';
+      } else if (isaDeviationC <= 0) {
+        continue; // à l'ISA ou plus froid : règle sans objet, aucun crédit
+      } else {
+        // 🛡️ Conservateur : toute tranche ENTAMÉE compte (comme le vent arrière).
+        const n = Math.ceil(isaDeviationC / stepC);
+        factor = c.mode === 'factor_per_step'
+          ? Math.pow(Number(c.value), n)
+          : 1 + (Number(c.value) / 100) * n;
+        detail = `ISA+${Math.round(isaDeviationC)} °C → ${n} tranche${n > 1 ? 's' : ''} de ${stepC} °C `
+               + `(entamée = due) → ${fmtFactor(factor)}`;
+      }
     } else if (kind === 'surface') {
       if (!surface) {
         note = 'surface de piste inconnue — non appliqué : vérifiez manuellement';
@@ -342,9 +429,41 @@ export function applyPerformanceCorrections({ distance, phase, corrections, cond
         before: Math.round(before), after: Math.round(current), note: note || null
       });
       result.applied = true;
+      if (kind === 'temperature') temperatureCorrigee = true;
     } else if (note) {
       result.steps.push({ id: c.id, label, detail: '', factor: null, before: null, after: null, note });
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 🛡️ POINT DE SÉCURITÉ (2026-08-23) — DISTANCE STANDARD NON CORRIGÉE.
+  //
+  // La source ne tient PAS compte de la température (`temperatureAppliedBySource`
+  // explicitement false : grille « conditions standard seulement », abaque sans
+  // panneau OAT), il fait plus chaud que la standard, et AUCUNE règle d'écart ISA
+  // n'a corrigé la distance. Le chiffre lu vaut alors pour l'ISA et pour elle
+  // seule : l'afficher un jour à 35 °C serait présenter une distance trop courte
+  // comme utilisable. On le DIT, et l'appelant écarte la valeur (« — »).
+  //
+  // Le drapeau vaut aussi quand des règles existent mais qu'AUCUNE n'a pu être
+  // appliquée (deux règles ambiguës neutralisées par la garde anti-cumul, facteur
+  // hors bornes, règle mal saisie) : la distance y est tout aussi peu corrigée.
+  // ══════════════════════════════════════════════════════════════════════════
+  if (conditions?.temperatureAppliedBySource === false
+      && Number.isFinite(isaDeviationC) && isaDeviationC > 0
+      && !temperatureCorrigee) {
+    const existeUneRegle = applicables.some((c) => CORRECTION_TYPES[c.type]?.kind === 'temperature');
+    result.unresolvedTemperature = true;
+    result.steps.push({
+      id: 'isa-non-corrige',
+      label: CORRECTION_TYPES.isa_deviation.label,
+      detail: '', factor: null, before: null, after: null,
+      note: `distance donnée aux conditions standard, non corrigée d'un écart ISA de `
+          + `+${Math.round(isaDeviationC)} °C — `
+          + (existeUneRegle
+              ? `la règle d'écart ISA de la fiche avion n'a PAS pu être appliquée (voir ci-dessus)`
+              : `saisissez la règle du manuel (Performances → Facteurs correctifs)`),
+    });
   }
 
   result.corrected = current;

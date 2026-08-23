@@ -14,7 +14,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { resolveOperation } from '../operationResolver';
-import { chainIncludesWind } from '../atelierCascadeAdapter';
+import { chainIncludesWind, chainIncludesTemperature } from '../atelierCascadeAdapter';
 import { performCascadeCalculationWithParameters, findGraphChain } from '../../abac/curves/core/cascade';
 
 const mkCurve = (id, familyValue, pts, windDirection) => {
@@ -316,5 +316,47 @@ describe("windIncluded — le vent est-il DÉJÀ lu par la chaîne d'abaques ? (
     expect(chainIncludesWind([primary, panel])).toBe(false);
     expect(chainIncludesWind([])).toBe(false);
     expect(chainIncludesWind(null)).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// 23/08/2026 — temperatureIncluded : jumeau de windIncluded pour l'OAT.
+// Vrai, la règle « écart ISA » de la fiche avion N'est PAS appliquée (la
+// température compterait deux fois) ; faux, c'est elle qui doit corriger — et
+// son absence rend la distance inutilisable (fail-closed côté PerformanceModule).
+describe("temperatureIncluded — l'OAT est-elle DÉJÀ lue par la chaîne d'abaques ?", () => {
+  const inputs = { mass: 1000, oat: 20, pressureAltitude: 2000, headwind: 0, windComponent: 0, tailwind: 0 };
+
+  it("abaque à primaire OAT (cas courant) → temperatureIncluded true", () => {
+    const r = resolveOperation(mkAircraft([mkPrimary('takeoff_50ft')]), 'takeoff_50ft', inputs);
+    expect(r.status).toBe('COMPUTED');
+    expect(r.temperatureIncluded).toBe(true);
+    expect(r.standardConditionsOnly).toBe(false);
+  });
+
+  it('chainIncludesTemperature : critères un par un', () => {
+    const primary = mkPrimary('takeoff_50ft');
+    // Primaire SANS OAT : axe X en masse, famille en altitude.
+    const primaireSansOat = {
+      ...primary, familyAxisVariable: 'pressure_altitude',
+      axes: { xAxis: { title: 'mass' }, yAxis: { title: 'd' } }
+    };
+    const panel = { id: 'p', role: 'intermediate', axes: { xAxis: { title: 'mass' }, yAxis: { title: 'd' } } };
+
+    expect(chainIncludesTemperature([primary])).toBe(true);                                    // axe X = OAT
+    expect(chainIncludesTemperature([primaireSansOat, { ...panel, axes: { xAxis: { title: 'oat' } } }])).toBe(true);
+    expect(chainIncludesTemperature([{ ...primaireSansOat, familyAxisVariable: 'oat' }])).toBe(true); // famille du primaire
+    expect(chainIncludesTemperature([primaireSansOat, { ...panel, readoutAxis: 'x', familyAxisVariable: 'oat' }])).toBe(true);
+    // Famille « OAT » sur un panneau slope-follow : c'est son X (masse) qui est lu.
+    expect(chainIncludesTemperature([primaireSansOat, { ...panel, familyAxisVariable: 'oat' }])).toBe(false);
+    expect(chainIncludesTemperature([primaireSansOat, panel])).toBe(false);
+    // Titre d'axe X non reconnu sur le PRIMAIRE : l'entrée de la chaîne retombe
+    // sur conditions.temperature (cf. entryDim) — la température EST donc lue.
+    const primaireTitreInconnu = { ...primary, axes: { xAxis: { title: 'zzz' }, yAxis: { title: 'd' } } };
+    expect(chainIncludesTemperature([primaireTitreInconnu])).toBe(true);
+    // Sur un panneau intermédiaire en revanche, un titre inconnu ne vaut rien.
+    expect(chainIncludesTemperature([primaireSansOat, { ...panel, axes: { xAxis: { title: 'zzz' } } }])).toBe(false);
+    expect(chainIncludesTemperature([])).toBe(false);
+    expect(chainIncludesTemperature(null)).toBe(false);
   });
 });

@@ -302,6 +302,10 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
       let mappedStatus = ResultStatus.COMPUTED;
       if (tableResult.status === 'MISSING_INPUT') mappedStatus = ResultStatus.MISSING_INPUT;
       else if (tableResult.status === 'ERROR') mappedStatus = ResultStatus.ERROR;
+      // 🌡️ `temperatureIncluded` / `standardConditionsOnly` sont posés par
+      // l'adaptateur de tableaux et remontés tels quels (2026-08-23) : l'appelant
+      // n'applique la règle d'écart ISA que si la grille N'intègre PAS la
+      // température, et écarte la distance si aucune règle ne la corrige.
       return { ...tableResult, status: mappedStatus };
     }
 
@@ -469,6 +473,14 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     // Absent (undefined) sur les résultats issus de TABLEAUX : le vent y reste
     // à corriger par les règles.
     windIncluded: cascade.windIncluded === true,
+    // 🌡️ TEMPÉRATURE DÉJÀ INTÉGRÉE PAR LA CHAÎNE (2026-08-23) : un panneau à axe
+    // X (ou famille de guides) en OAT lit déjà la température — la règle d'écart
+    // ISA de la fiche avion NE s'applique alors PAS. Faux : la chaîne ignore la
+    // température, c'est la note du manuel qui doit la corriger.
+    temperatureIncluded: cascade.temperatureIncluded === true,
+    // Une chaîne d'abaques n'est jamais une grille « conditions standard seulement »
+    // (notion propre aux tableaux) : le drapeau est explicitement faux.
+    standardConditionsOnly: false,
     warnings,
     debug: {
       perGraph: []
