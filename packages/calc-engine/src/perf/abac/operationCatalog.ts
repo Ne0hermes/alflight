@@ -347,15 +347,20 @@ export function getOperationsGroupedByPhase(): Array<{
 // atterrissage, chacun roulage (sol) + franchissement 15 m, répartis par
 // volets — décollage TAKEOFF/lisse, atterrissage LANDING/lisse. 8 tables.
 // L'ordre ci-dessous = ordre d'affichage dans la fiche.
+// 🔒 DÉCISION PILOTE 23/08/2026 — le minimum OBLIGATOIRE est réduit aux QUATRE
+// opérations de la configuration normale : décollage volets décollage (roulage
+// et passage 15 m) et atterrissage volets atterrissage (roulage et passage
+// 15 m). Les variantes « volets rentrés » (décollage comme atterrissage) sont
+// OPTIONNELLES : beaucoup de manuels ne les publient pas, et les réclamer
+// obligeait à certifier leur absence avion par avion pour rien.
+// Elles restent parfaitement utilisables : si un manuel les donne, elles se
+// saisissent et le moteur les consomme — elles ne comptent simplement plus
+// dans la couverture minimale.
 const MINIMUM_EXPECTED_OPERATION_IDS: OperationId[] = [
   'takeoff_ground_roll_flaps_to',
   'takeoff_50ft_flaps_to',
-  'takeoff_ground_roll_flaps_up',
-  'takeoff_50ft_flaps_up',
   'landing_ground_roll_flaps_landing',
-  'landing_50ft_flaps_landing',
-  'landing_ground_roll_flaps_up',
-  'landing_50ft_flaps_up'
+  'landing_50ft_flaps_landing'
 ];
 
 /** Les opérations du minimum attendu (ordre d'affichage), filtrées si un id
