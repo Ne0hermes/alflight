@@ -36,9 +36,10 @@ import FormHelperText from '@mui/material/FormHelperText';
 import { unitsSelectors } from '@core/stores/unitsStore';
 import { convertValue, getUnitSymbol } from '@utils/unitConversions';
 import { formatCanonical } from '@utils/unitsDisplay';
-// ⛽ Deux contenances par réservoir (17/08/2026) : accesseurs canoniques du
-// moteur (repli legacy `capacity` inclus) — importés, jamais réécrits.
-import { sumTotalLtr, sumUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
+// 🛢️ 23/08/2026 : la capacité de l'avion vient de sa CONFIGURATION par défaut
+// (pas de la somme du catalogue de réservoirs, qui peut contenir des réservoirs
+// exclusifs). Accesseurs du moteur — importés, jamais réécrits.
+import { defaultVariantCapacities } from '@alflight/calc-engine/wb/tankVariants';
 import UpdateAircraftDialog from '../UpdateAircraftDialog';
 import aircraftVersioningService from '../../services/aircraftVersioningService';
 import ImageEditor from '../../../../components/ImageEditor';
@@ -708,26 +709,29 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               </StyledFormControl>
             </Box>
 
-            {/* ⛽ Deux contenances (17/08/2026) — cas F-BXQT (F150M, 98 L total /
-                85 L utilisable) : l'ancien `disabled` dès qu'UN réservoir existait
-                grisait le champ alors que les réservoirs n'avaient qu'une contenance
-                ambiguë — le 98 du manuel était insaisissable. Désormais le champ
-                n'est dérivé (lecture seule, Σ tankTotalLtr) que quand TOUS les
-                réservoirs portent un `totalCapacity` explicite ; sinon le pilote
-                peut le saisir directement, tout de suite. */}
+            {/* 🛢️ 23/08/2026 — CAPACITÉS DÉRIVÉES DE LA CONFIGURATION PAR DÉFAUT.
+                Historique : le champ était d'abord grisé dès qu'un réservoir
+                existait (F-BXQT : le 98 L du manuel devenait insaisissable), puis
+                dérivé de la SOMME DE TOUS les réservoirs quand ils portaient leurs
+                deux contenances. Cette somme est fausse dès que le catalogue
+                contient des réservoirs qui s'excluent (F-GOFP : 98 + 147 = 245 L
+                d'un avion qui n'existe pas). Désormais : tant qu'aucun réservoir
+                n'est déclaré, le pilote saisit librement ; dès le premier
+                réservoir, les deux champs sont DÉRIVÉS de la configuration par
+                défaut (étape Masse & Centrage) et en lecture seule. */}
             {(() => {
               const tanks = Array.isArray(data.additionalFuelTanks) ? data.additionalFuelTanks : [];
               const hasTanks = tanks.length > 0;
-              const allTanksHaveTotal = hasTanks && tanks.every(t => Number.isFinite(parseFloat(t?.totalCapacity)));
-              const allTanksHaveUsable = hasTanks && tanks.every(t => Number.isFinite(parseFloat(t?.usableCapacity)));
-              // Sommes dérivées (accesseurs avec repli legacy `capacity`) — ne
-              // servent à l'AFFICHAGE que quand le champ est verrouillé-dérivé.
-              const derivedTotal = sumTotalLtr(tanks);
-              const derivedUsable = sumUsableLtr(tanks);
-              const totalDerived = allTanksHaveTotal && derivedTotal != null;
-              const usableDerived = allTanksHaveUsable && derivedUsable != null;
-              const totalShown = totalDerived ? derivedTotal : data.fuelCapacity;
-              const usableShown = usableDerived ? derivedUsable : data.fuelUsableCapacity;
+              // Capacités de la configuration PAR DÉFAUT (fail-closed : null si un
+              // réservoir de cette configuration n'a pas la contenance).
+              const caps = defaultVariantCapacities({
+                additionalFuelTanks: tanks,
+                tankVariants: data.tankVariants
+              });
+              const totalDerived = hasTanks;
+              const usableDerived = hasTanks;
+              const totalShown = totalDerived ? caps.totalLtr : data.fuelCapacity;
+              const usableShown = usableDerived ? caps.usableLtr : data.fuelUsableCapacity;
               return (
                 <>
                   <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
@@ -750,10 +754,12 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       error={!!errors.fuelCapacity}
                       helperText={
                         totalDerived
-                          ? `Capacité totale = somme des réservoirs (${formatCanonical(totalShown, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & Centrage.`
+                          ? (totalShown == null
+                            ? 'Calculé depuis la configuration par défaut — une contenance totale manque sur un réservoir de cette configuration (étape Masse & Centrage).'
+                            : `Calculé depuis la configuration par défaut (${formatCanonical(totalShown, 'fuel', units, { both: true })}). Modifiez les réservoirs et les configurations à l'étape Masse & Centrage.`)
                           : (errors.fuelCapacity || (totalShown
                             ? `≈ ${formatCanonical(totalShown, 'fuel', units, { both: true })} — se précise à l'étape Masse & Centrage`
-                            : 'Somme des réservoirs — se précise à l\'étape Masse & Centrage'))
+                            : 'Se précise à l\'étape Masse & Centrage (réservoirs puis configurations)'))
                       }
                       required
                       InputProps={{
@@ -781,7 +787,9 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                       disabled={usableDerived}
                       helperText={
                         usableDerived
-                          ? `Volume utilisable = somme des réservoirs (${formatCanonical(usableShown, 'fuel', units, { both: true })}). Modifiez les réservoirs à l'étape Masse & Centrage.`
+                          ? (usableShown == null
+                            ? 'Calculé depuis la configuration par défaut — un volume utilisable manque sur un réservoir de cette configuration (étape Masse & Centrage).'
+                            : `Calculé depuis la configuration par défaut (${formatCanonical(usableShown, 'fuel', units, { both: true })}). Modifiez les réservoirs et les configurations à l'étape Masse & Centrage.`)
                           : (usableShown
                             ? `≈ ${formatCanonical(usableShown, 'fuel', units, { both: true })} (carburant réellement consommable)`
                             // ⛽ Reformulé (17/08/2026) : l'ancien texte promettait un

@@ -6,7 +6,7 @@ import { useAircraft, useNavigation } from '@core/contexts';
 import { flightTypeToGeneralInfo } from '@core/flightType';
 import { useFuelStore } from '@core/stores/fuelStore';
 import { useWeightBalanceStore } from '@core/stores/weightBalanceStore';
-import { applyTankVariant, hasTankVariants, getDefaultVariantId } from '@utils/tankVariants';
+import { applyTankVariant, hasTankVariants, getDefaultVariantId, variantCapacities } from '@utils/tankVariants';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -226,11 +226,16 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
     onUpdate();
   };
 
-  const variantCapacityLtr = (aircraft, variant) => {
-    const keys = new Set((Array.isArray(variant?.tankIds) ? variant.tankIds : []).map(String));
-    return (aircraft?.additionalFuelTanks || []).reduce(
-      (s, t, i) => (keys.has(String(t?.id ?? i)) ? s + (parseFloat(t?.capacity) || 0) : s), 0
-    );
+  // 🛢️ 23/08/2026 — libellé d'une configuration : ses capacités viennent du
+  // moteur (variantCapacities : Σ totale et Σ utilisable de ses réservoirs, avec
+  // repli legacy `capacity`). L'ancienne somme locale de `capacity` affichait
+  // « 0 L » pour les réservoirs au modèle deux-contenances.
+  const variantLabel = (aircraft, variant) => {
+    const { totalLtr, usableLtr } = variantCapacities(aircraft, variant?.id);
+    const parts = [];
+    if (totalLtr != null) parts.push(`${totalLtr.toFixed(0)} L total`);
+    if (usableLtr != null) parts.push(`${usableLtr.toFixed(0)} L utilisables`);
+    return parts.length > 0 ? parts.join(' · ') : 'capacité incomplète';
   };
 
   const formatDate = (date) => {
@@ -274,15 +279,20 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             value={selectedTankVariantId || ''}
             onChange={(e) => handleTankVariantSelection(e.target.value)}
           >
-            {/* Option « sans variante » : tous les réservoirs de l'avion —
-                aussi l'état affiché d'un brouillon d'avant les variantes */}
-            <option value="">
-              Tous les réservoirs — {((rawSelectedAircraft.additionalFuelTanks || [])
-                .reduce((s, t) => s + (parseFloat(t?.capacity) || 0), 0)).toFixed(0)} L
-            </option>
+            {/* 🛢️ 23/08/2026 — l'option « Tous les réservoirs » a été RETIRÉE :
+                elle sommait le CATALOGUE de l'avion, y compris des réservoirs
+                qui s'excluent (F-GOFP : 98 L OU 147 L ⇒ « 245 L » d'un avion
+                qui n'existe pas). Le vol se fait TOUJOURS dans une configuration
+                déclarée. Placeholder inerte tant qu'aucune n'est choisie
+                (brouillon d'avant les configurations). */}
+            {!selectedTankVariantId && (
+              <option value="" disabled>
+                — Choisir une configuration —
+              </option>
+            )}
             {(rawSelectedAircraft.tankVariants || []).map((variant) => (
               <option key={variant.id} value={variant.id}>
-                {variant.name} — {variantCapacityLtr(rawSelectedAircraft, variant).toFixed(0)} L
+                {variant.name} — {variantLabel(rawSelectedAircraft, variant)}
                 {variant.isDefault ? ' (défaut)' : ''}
               </option>
             ))}

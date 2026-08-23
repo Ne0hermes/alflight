@@ -3,7 +3,10 @@ import {
   applyTankVariant,
   getDefaultVariantId,
   hasTankVariants,
-  sanitizeTankVariants
+  sanitizeTankVariants,
+  ensureDefaultVariant,
+  variantCapacities,
+  defaultVariantCapacities
 } from '../tankVariants';
 
 const TANKS = [
@@ -78,6 +81,22 @@ describe('getDefaultVariantId / hasTankVariants', () => {
     expect(hasTankVariants({ tankVariants: [AC.tankVariants[0]] })).toBe(true);
     expect(hasTankVariants({ tankVariants: [] })).toBe(false);
     expect(hasTankVariants({})).toBe(false);
+  });
+});
+
+// 🛢️ 23/08/2026 — le shim @utils/tankVariants doit exposer TOUTE l'API du
+// moteur : Step1GeneralInfo (préparation de vol) et AircraftCreationWizard
+// importent ensureDefaultVariant / variantCapacities / defaultVariantCapacities
+// par ce chemin. Un `export *` incomplet ne se verrait qu'à l'exécution.
+describe('shim @utils/tankVariants — API catalogue/configurations', () => {
+  it('ré-exporte les fonctions de capacité par configuration', () => {
+    expect(typeof ensureDefaultVariant).toBe('function');
+    expect(typeof variantCapacities).toBe('function');
+    expect(typeof defaultVariantCapacities).toBe('function');
+    // la capacité de l'avion vient de la variante par défaut, pas du catalogue
+    expect(defaultVariantCapacities(AC)).toEqual({ totalLtr: 150, usableLtr: 150 });
+    expect(variantCapacities(AC, 'v-lr')).toEqual({ totalLtr: 230, usableLtr: 230 });
+    expect(ensureDefaultVariant(AC)).toBe(AC);
   });
 });
 

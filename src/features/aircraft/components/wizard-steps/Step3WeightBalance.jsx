@@ -14,7 +14,8 @@ import {
   AccordionDetails,
   Radio,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -42,10 +43,33 @@ import { getFuelDensity } from '../../utils/mbUnits';
 // ⛽ Deux contenances par réservoir (17/08/2026) : accesseurs canoniques du
 // moteur — usableCapacity ?? capacity (utilisable), totalCapacity ?? capacity
 // (total). On les IMPORTE, on ne les réécrit pas (source unique de vérité).
-import { tankUsableLtr, tankTotalLtr, tankUnusableLtr, sumUsableLtr, sumTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
+import { tankUsableLtr, tankTotalLtr, tankUnusableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
+// 🛢️ Refonte 23/08/2026 : CATALOGUE de réservoirs vs CONFIGURATIONS. Les
+// capacités de l'avion sont DÉRIVÉES de la configuration par défaut — le
+// catalogue n'est plus jamais sommé (cf. moteur, source unique de vérité).
+import {
+  variantCapacities,
+  defaultVariantCapacities,
+  DEFAULT_VARIANT_NAME
+} from '@alflight/calc-engine/wb/tankVariants';
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 import { uploadWeighingReportPdf } from '@services/blobStorage';
+
+// 🛢️ TYPES de réservoirs du CATALOGUE (23/08/2026). « principal » est le seul
+// type porteur d'un effet : il désigne le réservoir qui alimente les champs de
+// compatibilité arms.fuelMain / moments.fuelMain, et il est UNIQUE. Les autres
+// qualifient le réservoir pour le pilote (et pré-cochent « amovible » via la
+// dérivation historique `tank.optional ?? ['aux','optional','tip'].includes(type)`).
+// 'tip' reste listé : des fiches de la flotte le portent déjà.
+const TANK_TYPE_OPTIONS = [
+  { value: '', label: 'Non précisé' },
+  { value: 'main', label: 'Principal' },
+  { value: 'wing', label: "Aile" },
+  { value: 'aux', label: 'Auxiliaire' },
+  { value: 'optional', label: 'Optionnel' },
+  { value: 'tip', label: 'Tip tank' }
+];
 
 const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
@@ -242,32 +266,90 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     setTankVariants(updated);
     updateData('tankVariants', updated);
   };
+  // Message d'interdiction affiché SOUS la configuration concernée (index →
+  // texte). Aucune correction silencieuse : on refuse l'action et on l'explique.
+  const [variantNotices, setVariantNotices] = useState({});
+  const setVariantNotice = (vi, message) =>
+    setVariantNotices(prev => ({ ...prev, [vi]: message }));
+
+  const newVariantId = () => `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const addTankVariant = () => {
+    const isFirst = tankVariants.length === 0;
     const newVariant = {
-      id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name: tankVariants.length === 0 ? 'Standard' : `Variante ${tankVariants.length + 1}`,
-      isDefault: tankVariants.length === 0,
-      // Pré-remplissage : les réservoirs NON optionnels (proto « Standard »)
-      tankIds: additionalFuelTanks
-        .map((t, i) => ({ optional: !!t?.optional, key: tankKeyOf(t, i) }))
-        .filter(x => !x.optional)
-        .map(x => x.key)
+      id: newVariantId(),
+      // La PREMIÈRE configuration décrit l'avion tel qu'il est équipé : tous les
+      // réservoirs déclarés cochés. Les suivantes partent des réservoirs NON
+      // optionnels (proto d'une configuration alternative à compléter).
+      name: isFirst ? DEFAULT_VARIANT_NAME : `Configuration ${tankVariants.length + 1}`,
+      isDefault: isFirst,
+      tankIds: isFirst
+        ? additionalFuelTanks.map((t, i) => tankKeyOf(t, i))
+        : additionalFuelTanks
+            .map((t, i) => ({ optional: !!t?.optional, key: tankKeyOf(t, i) }))
+            .filter(x => !x.optional)
+            .map(x => x.key)
     };
     syncTankVariants([...tankVariants, newVariant]);
   };
+
+  // ─── Création AUTOMATIQUE de la configuration par défaut ─────────────────
+  // Dès qu'un réservoir existe, l'avion a AU MOINS une configuration — même
+  // s'il n'y en a qu'une. C'est elle (et non la somme du catalogue) qui porte
+  // la capacité de l'avion : sans elle, un catalogue de réservoirs exclusifs
+  // (98 L OU 142 L) donnait un total fantôme de 235 L (cas F-GOFP).
+  // Miroir EXACT d'ensureDefaultVariant côté moteur, écrit ici dans le
+  // formulaire (le moteur reste pur : il ne connaît pas updateData).
+  useEffect(() => {
+    if (additionalFuelTanks.length === 0) return;
+    if (tankVariants.length > 0) return;
+    // ⏳ On attend le backfill d'ids (effet de montage ci-dessus) : créer la
+    // configuration avant lui figerait des références par INDEX que
+    // l'assignation d'ids rendrait aussitôt mortes.
+    if (additionalFuelTanks.some(t => t && t.id == null)) return;
+    syncTankVariants([{
+      id: newVariantId(),
+      name: DEFAULT_VARIANT_NAME,
+      isDefault: true,
+      tankIds: additionalFuelTanks.map((t, i) => tankKeyOf(t, i))
+    }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [additionalFuelTanks, tankVariants]);
+
   const updateTankVariant = (vi, patch) =>
     syncTankVariants(tankVariants.map((v, i) => (i === vi ? { ...v, ...patch } : v)));
   const setDefaultTankVariant = (vi) =>
     syncTankVariants(tankVariants.map((v, i) => ({ ...v, isDefault: i === vi })));
-  const removeTankVariant = (vi) =>
-    syncTankVariants(tankVariants.filter((_, i) => i !== vi));
-  const toggleVariantTank = (vi, key, checked) =>
-    syncTankVariants(tankVariants.map((v, i) => {
-      if (i !== vi) return v;
-      const keys = new Set((Array.isArray(v.tankIds) ? v.tankIds : []).map(String));
-      if (checked) keys.add(String(key)); else keys.delete(String(key));
-      return { ...v, tankIds: Array.from(keys) };
-    }));
+  const removeTankVariant = (vi) => {
+    // La DERNIÈRE configuration n'est pas supprimable : sans elle l'avion
+    // n'aurait plus de capacité du tout (et le catalogue serait re-sommé).
+    if (tankVariants.length <= 1) {
+      setVariantNotice(vi, "Impossible de supprimer la dernière configuration : c'est elle qui donne la capacité de l'avion. Modifiez plutôt les réservoirs qu'elle embarque.");
+      return;
+    }
+    const removedWasDefault = !!tankVariants[vi]?.isDefault;
+    let remaining = tankVariants.filter((_, i) => i !== vi);
+    // La configuration par défaut ne disparaît jamais : la première reprend le rôle.
+    if (removedWasDefault && remaining.length > 0) {
+      remaining = remaining.map((v, i) => ({ ...v, isDefault: i === 0 }));
+    }
+    setVariantNotices({});
+    syncTankVariants(remaining);
+  };
+  const toggleVariantTank = (vi, key, checked) => {
+    const current = tankVariants[vi];
+    const keys = new Set((Array.isArray(current?.tankIds) ? current.tankIds : []).map(String));
+    if (!checked && keys.size <= 1) {
+      // Configuration vide INTERDITE : refus explicite, pas de suppression
+      // silencieuse au save (l'ancien sanitize jetait la variante sans le dire).
+      setVariantNotice(vi, 'Une configuration doit embarquer au moins un réservoir. Cochez-en un autre avant de décocher celui-ci.');
+      return;
+    }
+    setVariantNotice(vi, null);
+    if (checked) keys.add(String(key)); else keys.delete(String(key));
+    syncTankVariants(tankVariants.map((v, i) =>
+      (i === vi ? { ...v, tankIds: Array.from(keys) } : v)
+    ));
+  };
 
   // ─── Sync local ← data après mise à jour externe (ex. CentrogramReader) ──
   // Quand le CentrogramReader écrit dans data.additionalFuelTanks[i].arm via
@@ -380,38 +462,39 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     console.log('🔄 [Step3] Migration legacy fuelMainCapacity → tank principal (additionalFuelTanks)');
   }, []); // mount uniquement
 
-  // ─── Sync auto : data.fuelCapacity = somme des réservoirs ───────────────
-  // La capacité totale devient une valeur DÉRIVÉE de la somme de tous les
-  // réservoirs (refonte demandée par le pilote). Si la somme diverge de
-  // ce qui est stocké actuellement (ex. ancien total MANEX), on aligne.
-  // 🔧 Phase 0 (2026-08-17) — La somme ne REMPLACE plus une capacité déjà saisie.
-  // Cet effet réalignait `fuelCapacity` sur la somme des réservoirs à chaque
-  // ouverture de la fiche. Conséquence : toute correction de la capacité totale
-  // était annulée à la réouverture. Cas vécu sur F-BXQT — 98 L relevés au manuel
-  // et acceptés à l'extraction, écrasés à 85 L par la somme des réservoirs.
-  // Désormais la somme ne sert qu'à RENSEIGNER un champ vide. Un écart entre la
-  // somme et la capacité déclarée n'est plus masqué : c'est le signe qu'un
-  // réservoir manque ou qu'une capacité est fausse, et cela doit se corriger à
-  // la source, pas se recouvrir en silence.
-  // ⛽ Deux contenances (17/08/2026) : chaque réservoir porte désormais
-  // totalCapacity (volume physique) ET usableCapacity (carburant utilisable).
-  // Les DEUX champs racine sont dérivés en remplir-si-vide uniquement :
-  //   fuelCapacity       ← Σ tankTotalLtr  (avitaillement, documentation)
-  //   fuelUsableCapacity ← Σ tankUsableLtr (centrage, autonomie, escales)
-  // Les accesseurs retombent sur l'ancien `capacity` pour les fiches legacy.
+  // ─── Capacités de l'avion = celles de la CONFIGURATION PAR DÉFAUT ───────
+  // 🛢️ Refonte 23/08/2026 (demande pilote). Historique du champ :
+  //   • à l'origine, fuelCapacity = Σ de TOUS les réservoirs déclarés ;
+  //   • Phase 0 (17/08) : la somme ne remplaçait plus une valeur saisie
+  //     (F-BXQT — 98 L du manuel écrasés à 85 L par la somme).
+  // Les deux règles partaient du même postulat FAUX : que le catalogue de
+  // réservoirs décrit un avion. Il décrit ce que la cellule PEUT recevoir, y
+  // compris des réservoirs qui s'excluent — d'où le 235 L de F-GOFP (93 + 142
+  // de deux configurations alternatives) et le 189 L de F-GGZO (152 + 37).
+  // Désormais : la capacité de l'avion est celle de sa configuration PAR
+  // DÉFAUT, recalculée en continu, en lecture seule dans l'écran. Fail-closed :
+  // une contenance manquante sur un réservoir de la configuration laisse le
+  // champ VIDE (jamais un 0, jamais une somme partielle) — cf.
+  // defaultVariantCapacities / strictSum côté moteur.
+  const derivedCapacities = defaultVariantCapacities({
+    additionalFuelTanks,
+    tankVariants
+  });
   useEffect(() => {
-    if (!additionalFuelTanks || additionalFuelTanks.length === 0) return;
-    const totalSum = sumTotalLtr(additionalFuelTanks);   // null si rien d'exploitable
-    const usableSum = sumUsableLtr(additionalFuelTanks);
+    if (additionalFuelTanks.length === 0) return;
+    const { totalLtr, usableLtr } = derivedCapacities;
     const currentTotal = parseFloat(data.fuelCapacity);
-    if (totalSum != null && (!Number.isFinite(currentTotal) || currentTotal <= 0)) {
-      updateData('fuelCapacity', totalSum);
+    const nextTotal = totalLtr == null ? '' : totalLtr;
+    if ((Number.isFinite(currentTotal) ? currentTotal : '') !== nextTotal) {
+      updateData('fuelCapacity', nextTotal);
     }
     const currentUsable = parseFloat(data.fuelUsableCapacity);
-    if (usableSum != null && (!Number.isFinite(currentUsable) || currentUsable <= 0)) {
-      updateData('fuelUsableCapacity', usableSum);
+    const nextUsable = usableLtr == null ? '' : usableLtr;
+    if ((Number.isFinite(currentUsable) ? currentUsable : '') !== nextUsable) {
+      updateData('fuelUsableCapacity', nextUsable);
     }
-  }, [additionalFuelTanks, data.fuelCapacity, data.fuelUsableCapacity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [additionalFuelTanks, tankVariants, data.fuelCapacity, data.fuelUsableCapacity]);
 
   // ─── Auto-calcul dynamique masse/bras/moment pour la masse à vide ───
   // Relation physique : moment = masse × bras
@@ -880,10 +963,50 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     });
   };
 
+  // 🛢️ 23/08/2026 — TYPE du réservoir (demande pilote : « j'entre des TYPES de
+  // réservoirs »). Le type qualifie le réservoir DANS LE CATALOGUE ; il ne
+  // décide plus de rien dans les calculs, à une exception : « principal » est
+  // un RÔLE UNIQUE (il alimente arms.fuelMain / moments.fuelMain au save), donc
+  // le choisir ici le RETIRE de l'ancien porteur — exactement setMainTank.
+  const setTankType = (tankId, type) => {
+    if (type === 'main') { setMainTank(tankId); return; }
+    setAdditionalFuelTanks(prev => {
+      const updated = prev.map(t =>
+        t.id === tankId ? { ...t, type: type || undefined } : t
+      );
+      updateData('additionalFuelTanks', updated);
+      return updated;
+    });
+  };
+
   const removeFuelTank = (tankId) => {
     const updated = additionalFuelTanks.filter(t => t.id !== tankId);
     setAdditionalFuelTanks(updated);
     updateData('additionalFuelTanks', updated);
+    // 🛢️ 23/08/2026 — le réservoir disparaît AUSSI des configurations qui le
+    // cochaient : sinon elles garderaient une référence morte et leur capacité
+    // deviendrait silencieusement fausse. Une configuration qui ne référençait
+    // QUE ce réservoir ne décrit plus rien → elle est retirée (le pilote vient
+    // de supprimer le réservoir, l'effet est visible et voulu) ; s'il n'en reste
+    // aucune, l'effet ci-dessus recrée « Configuration standard ».
+    if (tankVariants.length === 0) return;
+    // Sécurité : sans id sur chaque réservoir, les clés sont des INDEX que la
+    // suppression décale — on ne touche alors à rien plutôt que de repointer
+    // une configuration sur le mauvais réservoir (sanitizeTankVariants au save
+    // reste le filet pour les références mortes).
+    if (updated.some(t => t && t.id == null)) return;
+    const validKeys = new Set(updated.map((t, i) => tankKeyOf(t, i)));
+    const purged = tankVariants
+      .map(v => ({
+        ...v,
+        tankIds: (Array.isArray(v.tankIds) ? v.tankIds : []).map(String).filter(k => validKeys.has(k))
+      }))
+      .filter(v => v.tankIds.length > 0);
+    if (purged.length > 0 && !purged.some(v => v.isDefault)) {
+      purged[0] = { ...purged[0], isDefault: true };
+    }
+    setVariantNotices({});
+    syncTankVariants(purged);
   };
 
   const updateFuelTank = (tankId, field, value) => {
@@ -1180,50 +1303,95 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         >
           <FuelIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Capacité utilisable
+            Carburant — réservoirs et configurations
           </Typography>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            {/* Capacité totale (importée depuis Step1, lecture seule).
+            {/* ─── Capacités de l'avion : DÉRIVÉES, en lecture seule ─────────
+                🛢️ 23/08/2026 — elles ne sont plus jamais saisies à la main ni
+                sommées sur le catalogue : elles viennent de la configuration
+                par défaut définie plus bas. Vides tant qu'une contenance
+                manque (fail-closed : jamais un 0 ni une somme partielle).
                 NOTE : data.fuelCapacity est stocké en CANONIQUE (litres). On
                 convertit vers l'unité de préférence pilote pour l'affichage. */}
             <Box sx={{ width: '100%', maxWidth: 700, mb: 2 }}>
-              <StyledTextField
-                fullWidth
-                size="small"
-                label="Capacité totale carburant (importée du manuel de vol)"
-                type="number"
-                value={
-                  data.fuelCapacity
-                    ? Math.round(convertValue(data.fuelCapacity, 'ltr', units.fuel, 'fuel') * 10) / 10
-                    : ''
-                }
-                disabled
-                InputProps={{
-                  readOnly: true,
-                  endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
-                }}
-                sx={{
-                  '& .MuiInputBase-input.Mui-disabled': {
-                    color: 'text.primary',
-                    WebkitTextFillColor: 'unset',
-                  },
-                }}
-              />
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="Capacité totale de l'avion"
+                    type="number"
+                    value={dispTankLiters(derivedCapacities.totalLtr)}
+                    disabled
+                    helperText="Calculé depuis la configuration par défaut"
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                    }}
+                    sx={{
+                      '& .MuiInputBase-input.Mui-disabled': {
+                        color: 'text.primary',
+                        WebkitTextFillColor: 'unset',
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <StyledTextField
+                    fullWidth
+                    size="small"
+                    label="Capacité utilisable de l'avion"
+                    type="number"
+                    value={dispTankLiters(derivedCapacities.usableLtr)}
+                    disabled
+                    helperText="Calculé depuis la configuration par défaut"
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: <InputAdornment position="end">{getUnitSymbol(units.fuel)}</InputAdornment>,
+                    }}
+                    sx={{
+                      '& .MuiInputBase-input.Mui-disabled': {
+                        color: 'text.primary',
+                        WebkitTextFillColor: 'unset',
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+              {additionalFuelTanks.length > 0 &&
+                (derivedCapacities.totalLtr == null || derivedCapacities.usableLtr == null) && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  <Typography variant="body2">
+                    Une contenance manque sur au moins un réservoir de la configuration par
+                    défaut : la capacité correspondante reste VIDE (aucune somme partielle
+                    n'est écrite). Complétez les contenances ci-dessous.
+                  </Typography>
+                </Alert>
+              )}
             </Box>
 
-            {/* ─── Réservoirs (refonte) ───
-                Tous les types de réservoirs (principal, aile, optionnel, tip,
-                aux…) sont gérés uniformément dans additionalFuelTanks. Chacun
-                a son type modifiable via le sélecteur en ligne. La capacité
-                totale (au-dessus) est la SOMME calculée de tous ces réservoirs. */}
+            {/* ─── (a) CATALOGUE des réservoirs de l'avion ───
+                🛢️ 23/08/2026 — cette liste déclare les réservoirs que la
+                cellule PEUT recevoir, chacun de façon ISOLÉE, y compris ceux
+                qui s'excluent mutuellement. Elle n'est JAMAIS sommée : la
+                capacité de l'avion vient des configurations (section suivante). */}
             <Box sx={{ width: '100%', mt: 3 }}>
-              <Divider sx={{ mb: 2 }}>
+              <Divider sx={{ mb: 1.5 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Réservoirs (principal, ailes, optionnel, tip-tank…)
+                  1 · Réservoirs de l'avion (catalogue)
                 </Typography>
               </Divider>
+
+              <Alert severity="info" icon={<InfoIcon />} sx={{ maxWidth: 700, mx: 'auto', mb: 2 }}>
+                <Typography variant="body2">
+                  Déclarez ici <strong>tous les réservoirs possibles</strong>, y compris ceux
+                  qui s'excluent (98 L standard <em>OU</em> 142 L longue distance). La capacité
+                  de l'avion ne vient <strong>PAS</strong> de cette liste mais des
+                  configurations ci-dessous.
+                </Typography>
+              </Alert>
 
               <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 {/* 🔧 17/08/2026 — les boutons ne figent plus un « type » : ce sont
@@ -1279,8 +1447,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     <strong>Aucun réservoir défini.</strong> Ajoute au moins un réservoir
                     en cliquant sur l'un des boutons ci-dessus. La plupart des avions
                     GA ont juste un « Réservoir principal » ; certains ont aussi des
-                    réservoirs d'aile et/ou un optionnel. La capacité totale affichée
-                    en haut sera la <em>somme de tous les réservoirs</em>.
+                    réservoirs d'aile et/ou un optionnel. Dès le premier réservoir, une
+                    <em> configuration standard</em> est créée automatiquement : c'est
+                    elle qui portera la capacité de l'avion.
                   </Typography>
                 </Alert>
               ) : (
@@ -1298,21 +1467,26 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                               value={tank.name || ''}
                               onChange={(e) => updateFuelTank(tank.id, 'name', e.target.value)}
                             />
-                            {/* 🔧 17/08/2026 — la pastille remplace le menu de types :
-                                « principal » est un RÔLE (alimente les champs de
-                                compatibilité), la position (aile, tip…) vit dans le
-                                nom. Un seul réservoir porte la pastille. */}
-                            <FormControlLabel
-                              sx={{ whiteSpace: 'nowrap', mr: 0 }}
-                              control={
-                                <Radio
-                                  size="small"
-                                  checked={tank.type === 'main'}
-                                  onChange={() => setMainTank(tank.id)}
-                                />
-                              }
-                              label={<Typography variant="body2">Principal</Typography>}
-                            />
+                            {/* 🛢️ 23/08/2026 — TYPE du réservoir (demande pilote) :
+                                on déclare CE QU'EST le réservoir, isolément. Le type
+                                reste informatif pour les calculs (aucun moteur ne le
+                                lit) SAUF « principal », rôle UNIQUE qui alimente les
+                                champs de compatibilité arms.fuelMain / moments.fuelMain
+                                — d'où le déplacement du rôle via setMainTank. */}
+                            <StyledTextField
+                              select
+                              size="small"
+                              label="Type"
+                              value={TANK_TYPE_OPTIONS.some(o => o.value === (tank.type || '')) ? (tank.type || '') : ''}
+                              onChange={(e) => setTankType(tank.id, e.target.value)}
+                              sx={{ minWidth: 150 }}
+                            >
+                              {TANK_TYPE_OPTIONS.map(opt => (
+                                <MenuItem key={opt.value || 'none'} value={opt.value}>
+                                  {opt.label}
+                                </MenuItem>
+                              ))}
+                            </StyledTextField>
                             <IconButton
                               color="error"
                               onClick={() => removeFuelTank(tank.id)}
@@ -1490,83 +1664,91 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               )}
             </Box>
 
-            {/* ─── LOT 5 : Variantes de configuration des réservoirs ─────────
-                Ex. « Standard » (réservoirs fixes) vs « Long Range » (+ aux).
-                À la préparation du vol, le pilote choisit la variante : le
-                bilan carburant ET le devis de masse n'utilisent que ses
-                réservoirs. Sans variante : tous les réservoirs (inchangé). */}
+            {/* ─── (b) CONFIGURATIONS (variantes) ────────────────────────────
+                🛢️ 23/08/2026 — une configuration est une SÉLECTION de
+                réservoirs du catalogue, jamais un réservoir. Il y en a
+                toujours AU MOINS UNE (créée automatiquement au premier
+                réservoir), même s'il n'y en a qu'une : c'est elle qui donne la
+                capacité de l'avion. À la préparation du vol, le pilote choisit
+                la configuration — bilan carburant ET devis de masse suivent. */}
             {additionalFuelTanks.length > 0 && (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  Configurations de réservoirs (variantes)
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                  Définissez des configurations nommées (ex. « Standard », « Long Range »).
-                  Le pilote choisira la variante à l'étape 1 de la préparation de vol —
-                  carburant et centrage suivront automatiquement. Sans variante définie,
-                  tous les réservoirs restent disponibles.
-                </Typography>
-                {/* 🔎 17/08/2026 — la règle du jeu n'était écrite nulle part : un
-                    pilote créait une variante, ne voyait « rien se passer », et ne
-                    pouvait pas deviner qu'il fallait d'abord déclarer le réservoir
-                    de l'autre configuration dans la liste ci-dessus. Vécu sur
-                    F-BXQT (98 L standard / 144 L grand réservoir du manuel). */}
-                <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'var(--accent-primary)' }}>
-                  Comment ça marche : déclarez d'abord, dans la liste ci-dessus, TOUS les
-                  réservoirs que l'avion peut recevoir — y compris ceux qui se remplacent
-                  (ex. réservoir standard 98 L ET grand réservoir 144 L, même s'ils ne
-                  volent jamais ensemble). Puis cochez, dans chaque variante, les seuls
-                  réservoirs qu'elle embarque. Une variante n'est pas un réservoir : c'est
-                  une sélection.
+              <Box sx={{ mt: 3, width: '100%' }}>
+                <Divider sx={{ mb: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    2 · Configurations (variantes)
+                  </Typography>
+                </Divider>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                  Chaque configuration coche, parmi les réservoirs déclarés ci-dessus, ceux
+                  qui sont RÉELLEMENT installés ensemble — d'où des volumétries différentes
+                  (réservoirs d'ailes standard ou longue distance) et des réservoirs
+                  optionnels compatibles avec certaines configurations seulement. La
+                  configuration <strong>par défaut</strong> donne la capacité de l'avion ;
+                  le pilote choisira la sienne à l'étape 1 de la préparation de vol.
                 </Typography>
 
                 {tankVariants.map((variant, vi) => {
                   const variantKeys = new Set((Array.isArray(variant.tankIds) ? variant.tankIds : []).map(String));
-                  // ⛽ Deux contenances (17/08/2026) : la capacité d'une variante
-                  // s'affiche en UTILISABLE (grandeur des moteurs) avec le TOTAL
-                  // entre parenthèses (avitaillement) — accesseurs calc-engine
-                  // avec repli legacy `capacity`.
-                  const variantTanks = additionalFuelTanks.filter((t, i) => variantKeys.has(tankKeyOf(t, i)));
-                  const variantUsable = sumUsableLtr(variantTanks) ?? 0;
-                  const variantTotal = sumTotalLtr(variantTanks) ?? 0;
+                  // Capacités de la CONFIGURATION via le moteur (fail-closed :
+                  // null si un réservoir coché n'a pas la contenance — on
+                  // n'affiche alors pas un « 0 L » qui ferait croire à un vide).
+                  const caps = variantCapacities({ additionalFuelTanks, tankVariants }, variant.id);
+                  const notice = variantNotices[vi];
                   return (
                     <Box
                       key={variant.id}
-                      sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)', p: 2, mb: 2 }}
+                      sx={{
+                        border: '1px solid',
+                        borderColor: variant.isDefault ? 'primary.main' : 'divider',
+                        borderRadius: 'var(--radius-sm)',
+                        p: 2,
+                        mb: 2
+                      }}
                     >
                       <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, sm: 5 }}>
                           <StyledTextField
                             fullWidth
                             size="small"
-                            label="Nom de la variante"
+                            label="Nom de la configuration"
                             value={variant.name || ''}
                             onChange={(e) => updateTankVariant(vi, { name: e.target.value })}
                           />
                         </Grid>
                         <Grid size={{ xs: 8, sm: 5 }}>
+                          {/* Pastille RADIO : une seule configuration par défaut
+                              (une case à cocher laissait croire qu'on pouvait en
+                              avoir plusieurs, ou aucune). */}
                           <FormControlLabel
                             control={
-                              <Checkbox
+                              <Radio
                                 size="small"
                                 checked={!!variant.isDefault}
                                 onChange={() => setDefaultTankVariant(vi)}
                               />
                             }
-                            label={<Typography variant="body2">Variante par défaut</Typography>}
+                            label={<Typography variant="body2">Configuration par défaut</Typography>}
                           />
                         </Grid>
                         <Grid size={{ xs: 4, sm: 2 }} sx={{ textAlign: 'right' }}>
-                          <Button size="small" color="error" onClick={() => removeTankVariant(vi)}>
+                          <Button
+                            size="small"
+                            color="error"
+                            disabled={tankVariants.length <= 1}
+                            onClick={() => removeTankVariant(vi)}
+                          >
                             Supprimer
                           </Button>
                         </Grid>
                         <Grid size={12}>
                           {additionalFuelTanks.map((tank, ti) => {
                             const key = tankKeyOf(tank, ti);
+                            const tTotal = tankTotalLtr(tank);
+                            const tUsable = tankUsableLtr(tank);
                             return (
                               <FormControlLabel
                                 key={key}
+                                sx={{ display: 'flex' }}
                                 control={
                                   <Checkbox
                                     size="small"
@@ -1576,16 +1758,35 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                                 }
                                 label={
                                   <Typography variant="body2">
-                                    {tank.name || `Réservoir ${ti + 1}`} ({tankUsableLtr(tank) ?? 0} L utilisables)
+                                    {tank.name || `Réservoir ${ti + 1}`}
+                                    {' — '}
+                                    <Typography component="span" variant="caption" color="text.secondary">
+                                      {tTotal == null ? 'total non renseigné' : `${dispTankLiters(tTotal)} ${getUnitSymbol(units.fuel)} total`}
+                                      {' · '}
+                                      {tUsable == null ? 'utilisable non renseigné' : `${dispTankLiters(tUsable)} ${getUnitSymbol(units.fuel)} utilisables`}
+                                    </Typography>
                                   </Typography>
                                 }
                               />
                             );
                           })}
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                            Capacité de la variante : {variantUsable.toFixed(0)} L utilisables ({variantTotal.toFixed(0)} L total)
-                            {variantKeys.size === 0 && ' — ⚠ aucune case cochée : la variante sera ignorée au save'}
+                          <Typography variant="body2" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
+                            Capacité de cette configuration :{' '}
+                            {caps.totalLtr == null ? '—' : `${dispTankLiters(caps.totalLtr)} ${getUnitSymbol(units.fuel)} total`}
+                            {' · '}
+                            {caps.usableLtr == null ? '—' : `${dispTankLiters(caps.usableLtr)} ${getUnitSymbol(units.fuel)} utilisables`}
                           </Typography>
+                          {(caps.totalLtr == null || caps.usableLtr == null) && (
+                            <Typography variant="caption" sx={{ display: 'block', color: 'warning.main' }}>
+                              Contenance manquante sur un réservoir coché : rien n'est sommé
+                              partiellement (aucune valeur fabriquée).
+                            </Typography>
+                          )}
+                          {notice && (
+                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'error.main' }}>
+                              {notice}
+                            </Typography>
+                          )}
                         </Grid>
                       </Grid>
                     </Box>
@@ -1593,62 +1794,48 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 })}
 
                 <Button size="small" variant="outlined" onClick={addTankVariant}>
-                  + Ajouter une variante
+                  + Ajouter une configuration
                 </Button>
               </Box>
             )}
 
-            {/* ─── Récap : somme calculée vs total importé MANEX ───
-                Toutes les valeurs en mémoire sont en CANONIQUE (litres).
-                Le total est désormais la SOMME de tous les réservoirs (le
-                « principal » est juste un réservoir parmi les autres). On
-                garde le total MANEX en comparaison pour vérifier la cohérence. */}
-            {(() => {
-              const total = parseFloat(data.fuelCapacity) || 0;          // litres (MANEX/Step1)
-              // ⛽ Deux contenances (17/08/2026) : data.fuelCapacity est le volume
-              // PHYSIQUE total → la somme comparable est Σ tankTotalLtr
-              // (totalCapacity, repli legacy `capacity`). Sommer l'ancien champ
-              // affichait 0 L pour les réservoirs modernes → fausse alerte.
-              const computed = sumTotalLtr(additionalFuelTanks) ?? 0;     // litres
-              const hasData = computed > 0;
-              if (!hasData && total <= 0) return null;
-              const diff = computed - total;
-              const isMatch = Math.abs(diff) < 0.5;
-              // Helper local : convertit canonique (L) vers unité user
-              const toDisp = (v) => Math.round(convertValue(v, 'ltr', units.fuel, 'fuel') * 10) / 10;
+            {/* ─── Récap : capacité par CONFIGURATION ───
+                🛢️ 23/08/2026 — l'ancien récapitulatif comparait la capacité
+                racine à la SOMME DU CATALOGUE et criait à l'écart : sur un
+                avion à réservoirs exclusifs, cet écart est NORMAL et la somme
+                du catalogue n'existe sur aucun avion (F-GOFP : 235 L). Il est
+                remplacé par la lecture qui a un sens : ce que porte chaque
+                configuration, celle par défaut en tête. */}
+            {additionalFuelTanks.length > 0 && tankVariants.length > 0 && (() => {
+              const rows = tankVariants.map((v) => ({
+                name: v.name || 'Configuration',
+                isDefault: !!v.isDefault,
+                caps: variantCapacities({ additionalFuelTanks, tankVariants }, v.id)
+              }));
+              const incomplete = rows.some(r => r.caps.totalLtr == null || r.caps.usableLtr == null);
+              const fmt = (v) => (v == null ? '—' : `${dispTankLiters(v)} ${getUnitSymbol(units.fuel)}`);
               return (
                 <Box sx={{ width: '100%', maxWidth: 700, mt: 2 }}>
-                  <Alert
-                    severity={isMatch ? 'success' : Math.abs(diff) < total * 0.05 ? 'info' : 'warning'}
-                    icon={isMatch ? false : <WarningIcon />}
-                  >
+                  <Alert severity={incomplete ? 'warning' : 'success'} icon={incomplete ? <WarningIcon /> : false}>
                     <Typography variant="body2" fontWeight={600}>
-                      Récapitulatif des capacités
+                      Capacités par configuration
                     </Typography>
                     <Box sx={{ mt: 1, fontFamily: 'monospace', fontSize: 13 }}>
-                      {additionalFuelTanks.map(t => (
-                        <div key={t.id}>
-                          {t.name || 'Réservoir'} :{' '}
-                          <strong>{toDisp(tankTotalLtr(t) ?? 0).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
+                      {rows.map((r, i) => (
+                        <div key={i}>
+                          {r.name}{r.isDefault ? ' (par défaut)' : ''} :{' '}
+                          <strong>{fmt(r.caps.totalLtr)} total</strong>
+                          {' · '}
+                          <strong>{fmt(r.caps.usableLtr)} utilisables</strong>
                         </div>
                       ))}
                       <Divider sx={{ my: 0.5 }} />
                       <div>
-                        <strong>Somme calculée :</strong>{' '}
-                        <strong style={{ color: isMatch ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
-                          {toDisp(computed).toFixed(1)} {getUnitSymbol(units.fuel)}
-                        </strong>
+                        <strong>Capacité de l'avion (configuration par défaut) :</strong>{' '}
+                        <strong>{fmt(derivedCapacities.totalLtr)} total</strong>
+                        {' · '}
+                        <strong>{fmt(derivedCapacities.usableLtr)} utilisables</strong>
                       </div>
-                      <div>
-                        <strong>Capacité totale (manuel de vol) :</strong>{' '}
-                        <strong>{toDisp(total).toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
-                      </div>
-                      {!isMatch && (
-                        <div style={{ marginTop: 6, color: Math.abs(diff) < total * 0.05 ? 'var(--text-secondary)' : 'var(--color-red-critical)' }}>
-                          Écart : <strong>{diff > 0 ? '+' : ''}{diff.toFixed(1)} {getUnitSymbol(units.fuel)}</strong>
-                          {' '}({((diff / total) * 100).toFixed(1)}%)
-                        </div>
-                      )}
                     </Box>
                   </Alert>
                 </Box>

@@ -18,7 +18,7 @@ import { computeMissingPerformanceTables, computeCertifiedAbsentPerformanceTable
 // nouveaux champs via les accesseurs canoniques du moteur — Σ tankTotalLtr
 // pour la capacité, Σ tankUsableLtr pour l'utilisable — avec l'ancien
 // `capacity` en DERNIER recours (repli intégré aux accesseurs).
-import { sumTotalLtr, sumUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
+import { defaultVariantCapacities } from '@alflight/calc-engine/wb/tankVariants';
 
 // R22 — poids FIXE du groupe « Performances » (décision pilote : la liste des
 // tables manquantes est informative et ne doit pas diluer le % avec 8 lignes).
@@ -85,8 +85,13 @@ const findTank = (aircraft, type) => {
 // ⛽ Deux contenances (17/08/2026) : les sommes passent par les accesseurs
 // calc-engine (totalCapacity / usableCapacity, repli legacy `capacity`).
 // null → undefined pour rester cohérent avec le contrat hasValue de valueOf.
-const sumTankTotal = (aircraft) => sumTotalLtr(aircraft?.additionalFuelTanks) ?? undefined;
-const sumTankUsable = (aircraft) => sumUsableLtr(aircraft?.additionalFuelTanks) ?? undefined;
+// 🛢️ 23/08/2026 — ces replis ne somment plus le CATALOGUE de réservoirs mais
+// la CONFIGURATION PAR DÉFAUT : sommer un catalogue qui contient des réservoirs
+// exclusifs (98 L OU 142 L) donne la capacité d'un avion qui n'existe pas.
+// Sans configuration déclarée, defaultVariantCapacities retombe sur tout le
+// catalogue — les fiches non migrées gardent exactement le même score.
+const sumTankTotal = (aircraft) => defaultVariantCapacities(aircraft).totalLtr ?? undefined;
+const sumTankUsable = (aircraft) => defaultVariantCapacities(aircraft).usableLtr ?? undefined;
 
 // Résolution unifiée d'un champ : essaye le `path` traditionnel (legacy
 // + alternatives via « | »), puis si rien n'a été trouvé, tente le getter

@@ -1,7 +1,37 @@
 [
- { "itid": "F-BXNG-01", "status": "valide", "note": "Rapport pilote 23/08 : « ce sont exactement les perfs présentes dans le manuel de vol, elles sont justes ». Vérifié : les 4 tables portent 15/10/5/0 °C à 0/2500/5000/7500 ft = EXACTEMENT la ligne ISA. La saisie est donc fidèle : le manuel ne publie que les conditions standard. Ce n'est PAS une erreur de données — mais le moteur refuse alors toute OAT différente (fail-closed). Question ouverte : le manuel donne-t-il une note de correction en température (ex. « +10 % par 10 °C au-dessus de la standard ») ? Si oui, j'ajoute un type de facteur correctif « écart ISA » et l'avion redevient calculable toute l'année." },
- { "itid": "F-BXNG-03", "status": "code", "note": "Rapport pilote 23/08 : « les deux seules configs sont décollage en lisse, atterrissage en LDG ». CORRECTIF LIVRÉ le 23/08 (commit a2e83105) : le minimum attendu devient 4 couvertures phase × métrique, satisfaites par n'importe quelle configuration de volets. Un C150 renseigné volets rentrés est désormais COMPLET, sans rien à certifier." },
- { "itid": "F-BXNG-08", "status": "code", "note": "Rapport pilote 23/08 : « non, il y a 2 compartiments ; masse max 54 mais 54+18 > 54 ». Exact : les vraies limites sont dans baggageCompartments (54 kg à 1,63 m + 18 kg à 2,13 m, cumul 54). CORRECTIF LIVRÉ : l'app ne fabrique plus de limite 50/20 ; reste à purger les deux champs en base (script prêt, en attente de votre feu vert)." },
- { "itid": "F-BXNG-09", "status": "code", "note": "Rapport pilote 23/08 : « le 50 et le 20 doivent être retirés de l'app, ce sont des merdes ». CORRECTIF LIVRÉ (commit a2e83105) : le module Masse & centrage ne propose plus de curseurs à limites inventées, le formulaire legacy n'écrit plus ces champs. Purge en base à lancer sur votre accord." },
- { "itid": "F-BXNG-12", "status": "fait", "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId)." }
+ {
+  "itid": "F-BXNG-01",
+  "status": "valide",
+  "note": "Rapport pilote 23/08 : « ce sont exactement les perfs présentes dans le manuel de vol, elles sont justes ». Vérifié : les 4 tables portent 15/10/5/0 °C à 0/2500/5000/7500 ft = EXACTEMENT la ligne ISA. La saisie est donc fidèle : le manuel ne publie que les conditions standard. Ce n'est PAS une erreur de données — mais le moteur refuse alors toute OAT différente (fail-closed). Question ouverte : le manuel donne-t-il une note de correction en température (ex. « +10 % par 10 °C au-dessus de la standard ») ? Si oui, j'ajoute un type de facteur correctif « écart ISA » et l'avion redevient calculable toute l'année."
+ },
+ {
+  "itid": "F-BXNG-03",
+  "status": "code",
+  "note": "Rapport pilote 23/08 : « les deux seules configs sont décollage en lisse, atterrissage en LDG ». CORRECTIF LIVRÉ le 23/08 (commit a2e83105) : le minimum attendu devient 4 couvertures phase × métrique, satisfaites par n'importe quelle configuration de volets. Un C150 renseigné volets rentrés est désormais COMPLET, sans rien à certifier."
+ },
+ {
+  "itid": "F-BXNG-08",
+  "status": "code",
+  "note": "Rapport pilote 23/08 : « non, il y a 2 compartiments ; masse max 54 mais 54+18 > 54 ». Exact : les vraies limites sont dans baggageCompartments (54 kg à 1,63 m + 18 kg à 2,13 m, cumul 54). CORRECTIF LIVRÉ : l'app ne fabrique plus de limite 50/20 ; reste à purger les deux champs en base (script prêt, en attente de votre feu vert)."
+ },
+ {
+  "itid": "F-BXNG-09",
+  "status": "code",
+  "note": "Rapport pilote 23/08 : « le 50 et le 20 doivent être retirés de l'app, ce sont des merdes ». CORRECTIF LIVRÉ (commit a2e83105) : le module Masse & centrage ne propose plus de curseurs à limites inventées, le formulaire legacy n'écrit plus ces champs. Purge en base à lancer sur votre accord."
+ },
+ {
+  "itid": "F-BXNG-12",
+  "status": "fait",
+  "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId)."
+ },
+ {
+  "itid": "F-HSTR-01",
+  "status": "valide",
+  "note": "Rapport pilote 23/08 : « elles ne sont pas présentes, j'ai mis ce qui est disponible » — le manuel DA40 NG ne publie pas de majoration herbe mouillée ni sol mou à l'atterrissage. Vérifié en base le 23/08 : 11 règles cohérentes avec cette lecture (6 au décollage, 5 à l'atterrissage). Conforme : rien n'est inventé, et un état de piste sans règle est simplement sans objet pour la phase concernée."
+ },
+ {
+  "itid": "F-HSTR-02",
+  "status": "fait",
+  "note": "Rapport pilote 23/08 : coché fait."
+ }
 ]

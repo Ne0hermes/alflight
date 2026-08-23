@@ -39,7 +39,7 @@ import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { initialWindLimits } from '../utils/windLimits';
-import { sanitizeTankVariants } from '@utils/tankVariants';
+import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities } from '@utils/tankVariants';
 import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
@@ -339,7 +339,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
     // 🔧 LOT 5 : variantes de configuration des réservoirs (Standard / Long
     // Range…) — sous-ensembles nommés de additionalFuelTanks, référencés par id
-    tankVariants: existingAircraft?.tankVariants || [],
+    // 🛢️ 23/08/2026 — HYDRATATION : une fiche qui déclare des réservoirs sans
+    // aucune configuration signifie « tous installés ensemble ». On matérialise
+    // cette configuration EN MÉMOIRE (ensureDefaultVariant, pure et idempotente)
+    // pour que l'écran n'ait qu'un seul modèle à afficher et que la capacité
+    // vienne toujours d'une configuration. AUCUNE écriture en base ici : elle
+    // sera persistée au prochain enregistrement de la fiche par le pilote.
+    tankVariants: ensureDefaultVariant(existingAircraft)?.tankVariants || [],
 
     // Performances
     advancedPerformance: existingAircraft?.advancedPerformance || null,
@@ -1058,30 +1064,34 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           if (Number.isFinite(armVal) && armVal !== 0) dataToSave.arms.fuelMain = armVal;
           if (Number.isFinite(momVal) && momVal > 0) dataToSave.moments.fuelMain = momVal;
         }
-        // ⛽ 17/08/2026 — DEUX contenances par réservoir (totalCapacity /
-        // usableCapacity, repli legacy `capacity`). Les champs racine sont des
-        // SOMMES, chacune dans sa sémantique :
-        //   • fuelUsableCapacity = Σ utilisable — LA grandeur des moteurs
-        //     (l'ancienne recopie du seul réservoir principal ignorait les
-        //     autres réservoirs) ;
-        //   • fuelCapacity = Σ totale — documentation et avitaillement.
-        // Règle Phase 0 conservée : on RENSEIGNE un champ vide, on n'ÉCRASE
-        // jamais une valeur saisie (le 98 L du manuel de F-BXQT doit tenir).
+        // 🛢️ 23/08/2026 — LA CAPACITÉ DE L'AVION EST CELLE DE SA CONFIGURATION
+        // PAR DÉFAUT, plus jamais la somme du catalogue de réservoirs.
+        // `additionalFuelTanks` déclare ce que la CELLULE peut recevoir, y
+        // compris des réservoirs qui s'EXCLUENT : les sommer donne un avion qui
+        // n'existe pas (F-GOFP 93 + 142 = 235 L ; F-GGZO 152 + 37 = 189 L alors
+        // que ses configurations valent 163 et 204). La règle « remplir-si-vide »
+        // du 17/08 ne suffisait pas non plus : elle laissait ces racines fausses
+        // en place pour toujours. Désormais les deux champs sont RECALCULÉS :
+        //   • fuelUsableCapacity = Σ utilisable de la config par défaut ;
+        //   • fuelCapacity       = Σ totale     de la config par défaut.
+        // Fail-closed : si une contenance manque, le champ est RETIRÉ de l'objet
+        // enregistré (absent reste absent — jamais un 0, jamais une somme
+        // partielle qui sous-estimerait l'autonomie).
+        // NB : dataToSave.tankVariants est assaini juste après ; on passe donc
+        // les variantes de l'état WIZARD, source de vérité, via ensureDefaultVariant
+        // (fiches sans configuration = tous les réservoirs installés ensemble).
         if (tanks.length > 0) {
-          const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 ? n : null; };
-          const sumOf = (pick) => {
-            const vals = tanks.map(pick).filter((v) => v !== null);
-            return vals.length ? vals.reduce((s, v) => s + v, 0) : null;
-          };
-          const sumUsable = sumOf((t) => num(t?.usableCapacity) ?? num(t?.capacity));
-          const sumTotal = sumOf((t) => num(t?.totalCapacity) ?? num(t?.capacity));
-          if (sumUsable !== null && !Number.isFinite(parseFloat(dataToSave.fuelUsableCapacity))) {
-            dataToSave.fuelUsableCapacity = sumUsable;
-          }
-          const currentTotal = parseFloat(dataToSave.fuelCapacity);
-          if (sumTotal !== null && (!Number.isFinite(currentTotal) || currentTotal <= 0)) {
-            dataToSave.fuelCapacity = sumTotal;
-          }
+          const forCaps = ensureDefaultVariant({
+            additionalFuelTanks: tanks,
+            tankVariants: Array.isArray(aircraftData.tankVariants) && aircraftData.tankVariants.length > 0
+              ? aircraftData.tankVariants
+              : dataToSave.tankVariants
+          });
+          const { totalLtr, usableLtr } = defaultVariantCapacities(forCaps);
+          if (usableLtr !== null) dataToSave.fuelUsableCapacity = usableLtr;
+          else delete dataToSave.fuelUsableCapacity;
+          if (totalLtr !== null) dataToSave.fuelCapacity = totalLtr;
+          else delete dataToSave.fuelCapacity;
         }
         console.log('🔄 [Save] Sync additionalFuelTanks → arms.fuelMain / moments.fuelMain / fuelUsableCapacity', {
           fuelMain: dataToSave.arms?.fuelMain,
