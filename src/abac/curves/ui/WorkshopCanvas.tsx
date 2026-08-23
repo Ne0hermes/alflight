@@ -1356,26 +1356,38 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               if (p.id === undefined) return null;
               const px = xValueToPixel(p.x, focusedGraph.axes!.xAxis, focusedFrame);
               const py = yValueToPixel(p.y, workshop.sharedY, inner.h, workshop.yTicks);
+              // Retour pilote 23/08 : marqueurs DEUX FOIS plus petits (2,5 px au
+              // lieu de 5 sur la courbe sélectionnée, 1,5 au lieu de 3 ailleurs)
+              // pour ne plus masquer le trait du manuel — la zone de saisie du
+              // glisser reste large (cercle transparent de 7 px) pour le confort.
               return (
-                <circle
-                  key={`pt-${curve.id}-${p.id}`}
-                  cx={px} cy={py} r={isSel ? 5 : 3}
-                  fill={curve.color}
-                  stroke="var(--bg-surface)"
-                  strokeWidth={isSel ? 2 : 1}
-                  style={{ cursor: isSel ? 'grab' : 'default' }}
-                  onPointerDown={isSel ? (e) => {
-                    e.stopPropagation();
-                    setDrag({ kind: 'point', graphId: focusedGraph.id, curveId: curve.id, pointId: p.id! });
-                  } : undefined}
-                  onContextMenu={isSel && onPointDelete ? (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onPointDelete(curve.id, p.id!);
-                  } : undefined}
-                >
-                  <title>{`${curve.name} · (${p.x.toFixed(1)}, ${p.y.toFixed(1)})${isSel ? ' — glisser / clic droit pour supprimer' : ''}`}</title>
-                </circle>
+                <g key={`pt-${curve.id}-${p.id}`}>
+                  <circle
+                    cx={px} cy={py} r={isSel ? 2.5 : 1.5}
+                    fill={curve.color}
+                    stroke="var(--bg-surface)"
+                    strokeWidth={isSel ? 1 : 0.5}
+                    pointerEvents="none"
+                  />
+                  {isSel && (
+                    <circle
+                      cx={px} cy={py} r={7}
+                      fill="transparent"
+                      style={{ cursor: 'grab' }}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        setDrag({ kind: 'point', graphId: focusedGraph.id, curveId: curve.id, pointId: p.id! });
+                      }}
+                      onContextMenu={onPointDelete ? (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onPointDelete(curve.id, p.id!);
+                      } : undefined}
+                    >
+                      <title>{`${curve.name} · (${p.x.toFixed(1)}, ${p.y.toFixed(1)}) — glisser / clic droit pour supprimer`}</title>
+                    </circle>
+                  )}
+                </g>
               );
             });
           })}
