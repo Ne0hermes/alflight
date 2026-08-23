@@ -25,6 +25,15 @@ const [, , auditFile = 'audit-23-08.json', dateLabel = new Date().toISOString().
 
 const avions = JSON.parse(fs.readFileSync(here(auditFile), 'utf8')).filter(Boolean);
 
+// Retours du pilote sur les points de CETTE édition (itid → statut + note).
+// fait|valide|code|obsolete = point réglé (coché, grisé, note ✓) ; note = simple
+// annotation ✎ qui laisse le point ouvert.
+const retoursFile = auditFile.replace(/^audit-/, 'retours-');
+const retours = fs.existsSync(here(retoursFile))
+  ? Object.fromEntries(JSON.parse(fs.readFileSync(here(retoursFile), 'utf8')).map(r => [r.itid, r]))
+  : {};
+const CLOS = new Set(['fait', 'valide', 'code', 'obsolete']);
+
 // ── Gabarits repris de la page actuelle (style + script) ────────────────────
 const source = fs.readFileSync(here('checklist-source.html'), 'utf8');
 const style = source.match(/<style>[\s\S]*?<\/style>/)[0];
@@ -60,8 +69,11 @@ function renderItem(reg, item, n) {
   const classePill = item.classe === 'a-confirmer'
     ? '<span class="pill a-manuel">À confirmer au manuel</span>'
     : '<span class="pill a-bloque">Erreur démontrée</span>';
-  return `<div class="it ${sev}" data-sev="${sev}" data-id="${uid()}" data-itid="${itid}" data-champ="${esc(item.champ)}" data-sevlbl="${sev}">
-<input type="checkbox" aria-label="Corrigé">
+  const r = retours[itid];
+  const clos = r && CLOS.has(r.status);
+  const noteHtml = r ? `<div class="notefait">${clos ? '✓' : '✎'} ${esc(r.note)}</div>` : '';
+  return `<div class="it ${sev}${clos ? ' regle' : ''}" data-sev="${sev}" data-id="${uid()}" data-itid="${itid}" data-champ="${esc(item.champ)}" data-sevlbl="${sev}">
+<input type="checkbox" aria-label="Corrigé"${clos ? ' checked' : ''}>
 <div class="body">
 <div class="tags"><span class="itid">${itid}</span><span class="pill p-${sev}">${sev}</span>${classePill}
 <span class="cap">${esc(item.categorie)}</span><span class="path">${esc(item.champ)}</span></div>
@@ -70,7 +82,7 @@ function renderItem(reg, item, n) {
 <dt>Attendu</dt><dd>${esc(item.attendu)}</dd>
 <dt>En vol</dt><dd>${esc(item.enVol)}</dd>
 <dt>Action</dt><dd>${esc(item.action)}</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">${esc(item.demontrePar)}</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (${itid}) — repris dans le rapport à copier"></textarea></div></div>`;
+</dl>${noteHtml}<textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (${itid}) — repris dans le rapport à copier"></textarea></div></div>`;
 }
 
 // ── Rendu d'un avion ────────────────────────────────────────────────────────
@@ -118,7 +130,8 @@ ${style}
   <p class="lede" style="margin-top:10px"><b>${all.length} points au total</b> : <b>${n('critique')} critiques</b>, ${n('majeur')} majeurs et ${n('mineur')} mineurs.
   À l'ouverture, seuls les <b>${n('critique') + n('majeur')} critiques et majeurs</b> sont affichés — le bouton « Mineurs » de la barre révèle les ${n('mineur')} autres
   — dont ${nConf} « à confirmer au manuel » (aucune erreur démontrée, mais une valeur que seul le manuel de vol tranche).
-  Les points corrigés depuis les audits précédents ne figurent plus : cette page ne montre que ce qui reste.</p>
+  Les points corrigés depuis les audits précédents ne figurent plus : cette page ne montre que ce qui reste.
+  ${Object.keys(retours).length ? `<br><b>${Object.values(retours).filter(r => CLOS.has(r.status)).length} points</b> ont déjà reçu votre retour depuis cette édition : ils sont cochés, grisés, avec ma réponse en vert.` : ''}</p>
   <p class="lede" style="margin-top:10px">Méthode : uniquement des contradictions internes à la fiche, des défauts
   prouvés en rejouant le moteur de préparation de vol sur vos abaques, ou des champs obligatoires vides. Aucune valeur
   n’est jugée « improbable » de mémoire.</p>
