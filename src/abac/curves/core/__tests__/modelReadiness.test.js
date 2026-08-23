@@ -208,14 +208,18 @@ describe('modèle décollage complet — tout done, canSave true', () => {
     expect(byId(items, ':identity').detail).toMatch(/décollage/i);
   });
 
-  it('G2 (intermédiaire standard) : 4 items, tous done (pas d\'item identité)', () => {
+  // 23/08 (retour pilote) : un panneau de correction n'a plus d'item « valeur
+  // de famille » mais un item « Numérotation des guides » — le moteur ne lit
+  // pas la valeur des guides, seulement leur numéro d'ordre. D'où 5 items.
+  it('G2 (intermédiaire standard) : items done, pas d identité, numérotation vérifiée', () => {
     const items = computeGraphReadiness(
       graphs[1],
       ctxOf({ isLast: true, frame: workshop.frames[1] })
     );
-    expect(items).toHaveLength(4);
+    expect(items).toHaveLength(5);
     expect(items.every(it => it.state === 'done')).toBe(true);
     expect(byId(items, ':identity')).toBeUndefined();
+    expect(byId(items, ':family-values').label).toBe('Numérotation des guides');
   });
 });
 
@@ -335,9 +339,30 @@ describe('courbes — valeurs de famille et direction du vent', () => {
     expect(fam.detail).toMatch(/1 courbe sur 3/);
   });
 
-  it('⑥ famille non déclarée : pas d\'item familyValue', () => {
+  // 23/08 : sur un panneau de correction, l'item existe toujours mais porte
+  // sur la NUMÉROTATION des guides (aucune valeur de famille n'est attendue).
+  it('⑥ panneau de correction sans famille : item de numérotation des guides', () => {
     const g = mkMassPanel({ familyAxisVariable: undefined });
-    expect(byId(computeGraphReadiness(g, ctxOf()), ':family-values')).toBeUndefined();
+    const it6 = byId(computeGraphReadiness(g, ctxOf()), ':family-values');
+    expect(it6).toBeDefined();
+    expect(it6.label).toBe('Numérotation des guides');
+    expect(it6.state).toBe('done');
+  });
+
+  it('⑥ guide sans numéro : todo avec invitation à déduire des noms', () => {
+    const g = mkMassPanel({ familyAxisVariable: undefined });
+    g.curves = g.curves.map((c, i) => (i === 0 ? { ...c, familyValue: undefined, name: 'guide' } : c));
+    const it6 = byId(computeGraphReadiness(g, ctxOf()), ':family-values');
+    expect(it6.state).toBe('todo');
+    expect(it6.detail).toMatch(/sans numéro/);
+  });
+
+  it('⑥ premier cadre : la VALEUR de famille reste exigée (bracket par valeur)', () => {
+    const g = mkMassPanel({ familyAxisVariable: 'pressure_altitude' });
+    g.curves = g.curves.map(c => ({ ...c, familyValue: undefined }));
+    const it6 = byId(computeGraphReadiness(g, ctxOf({ isFirst: true })), ':family-values');
+    expect(it6.label).toBe('Valeurs de famille des courbes');
+    expect(it6.state).toBe('todo');
   });
 
   it('⑦ graphe vent : courbe sans windDirection → todo avec compte', () => {

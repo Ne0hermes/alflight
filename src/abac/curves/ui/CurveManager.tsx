@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { guideNumber } from '../core/guideMode';
 import { Curve, WindDirection } from '../core/types';
 import styles from './styles.module.css';
 
@@ -15,6 +16,10 @@ interface CurveManagerProps {
   familyAxisVariable?: string;
   /** Libellé court de la variable familiale (pour affichage UI). */
   familyAxisLabel?: string;
+  /** 23/08 — panneau de CORRECTION : les courbes sont des guides de pente
+   *  numérotés (le moteur ne lit pas leur valeur). Le numéro s'affiche en
+   *  badge non éditable et n'est jamais réclamé. */
+  numberedGuides?: boolean;
 }
 
 // Palette de COURBES (data-viz) — EXCEPTION charte documentée : un éditeur de
@@ -30,7 +35,8 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
   onReorderCurves,
   isWindRelated = false,
   familyAxisVariable,
-  familyAxisLabel
+  familyAxisLabel,
+  numberedGuides = false
 }) => {
   // Lot 1 (décision pilote 20/08) : la CRÉATION de courbe vit UNIQUEMENT dans
   // la capsule « ➕ Nouvelle courbe » de l'atelier (nom par valeur + sens du
@@ -93,7 +99,7 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
     <div className={styles.curveManager}>
       {/* R16b — visible quand le graphe a une variable de famille et qu'il
           reste des courbes sans valeur : un clic remplit depuis les noms. */}
-      {familyAxisVariable && curves.some(c => typeof c.familyValue !== 'number') && (
+      {!numberedGuides && familyAxisVariable && curves.some(c => typeof c.familyValue !== 'number') && (
         <div className={styles.curveManagerHeader}>
           <button
             onClick={deduceFamilyFromNames}
@@ -195,8 +201,24 @@ export const CurveManager: React.FC<CurveManagerProps> = ({
                 )}
               </div>
 
+              {/* 23/08 — guides numérotés : le numéro d'ordre s'affiche en badge,
+                  jamais en champ à remplir (aucune valeur physique attendue). */}
+              {numberedGuides && editingCurveId !== curve.id && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '2px 8px', alignSelf: 'flex-start',
+                  backgroundColor: 'var(--bg-overlay)', borderRadius: 3, fontSize: 11,
+                  color: 'var(--text-secondary)'
+                }}
+                title="Guide de pente : le numéro sert seulement à distinguer les guides entre eux."
+                onClick={(e) => e.stopPropagation()}
+                >
+                  <span>n° {guideNumber(curve) ?? '—'}</span>
+                </div>
+              )}
+
               {/* Champ familyValue (visible uniquement si le graphe a déclaré un paramètre familial) */}
-              {familyAxisVariable && editingCurveId !== curve.id && (
+              {!numberedGuides && familyAxisVariable && editingCurveId !== curve.id && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '4px 8px',

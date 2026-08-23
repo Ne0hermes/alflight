@@ -41,6 +41,7 @@ import { ensureFittedGraphs } from './fittedRuntime';
 import { runAllReferenceCases } from './referenceBench';
 import { getOperation } from './operationCatalog';
 import { getAxisVariable, getAxisVariableLabel } from './axisVariables';
+import { usesNumberedGuides, guideNumber } from './guideMode';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Types publics
@@ -269,8 +270,22 @@ export function computeGraphReadiness(
     }
   }
 
-  // ── ⑥ Valeurs de famille des courbes (si famille déclarée) ─────────────
-  if (graph.familyAxisVariable && curves.length > 0) {
+  // ── ⑥ Valeurs de famille des courbes ───────────────────────────────────
+  // 23/08 (retour pilote) : sur un panneau de CORRECTION, les courbes sont des
+  // guides de pente — le moteur ne lit pas leur valeur, il exige seulement un
+  // NUMÉRO distinct par guide. On vérifie donc la numérotation, pas une masse
+  // ou un vent (qui n'ont jamais eu de sens ici).
+  if (usesNumberedGuides(graph, ctx.isFirst) && curves.length > 0) {
+    const sansNumero = curves.filter(c => guideNumber(c) === null);
+    items.push({
+      id: `${gid}:family-values`,
+      label: 'Numérotation des guides',
+      state: sansNumero.length > 0 ? 'todo' : 'done',
+      detail: sansNumero.length > 0
+        ? `${curveCountLabel(sansNumero.length)} sur ${curves.length} sans numéro — utilise « Déduire des noms » ou recrée le guide`
+        : `${curveCountLabel(curves.length)} numérotés`
+    });
+  } else if (graph.familyAxisVariable && curves.length > 0) {
     const missing = curves.filter(c => !hasFamilyValue(c));
     items.push({
       id: `${gid}:family-values`,

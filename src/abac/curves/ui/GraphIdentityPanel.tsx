@@ -20,6 +20,9 @@ import React from 'react';
 import { GraphConfig } from '../core/types';
 import { getOperation } from '../core/operationCatalog';
 import { getAxisVariable, getFamilyVariablesGrouped, isWindAxisVariable } from '../core/axisVariables';
+// 23/08 — guides numérotés : un panneau de correction ne demande plus de
+// valeur de famille (le moteur suit la pente, il ne lit pas la valeur).
+import { usesNumberedGuides } from '../core/guideMode';
 import { ReadinessItem } from '../core/modelReadiness';
 import { KitBadge, KitButton, KitPanel, FONT, SPACING } from './kit';
 
@@ -56,6 +59,7 @@ const rowStyle: React.CSSProperties = {
 export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
   graph, onUpdateGraph, frameNumber, isFirst, readiness, showAdvancedRoles, onEditOperation, onRemoveGraph
 }) => {
+  const numberedGuides = usesNumberedGuides(graph, isFirst);
   const isPrimary = (graph.role || 'primary') === 'primary';
   const op = graph.operationId ? getOperation(graph.operationId) : undefined;
 
@@ -86,6 +90,20 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
             déclarer débloque la saisie de la VALEUR par courbe dans le
             gestionnaire — le moteur lit alors cette valeur structurée au lieu
             d'interpréter les NOMS de courbes (source d'erreurs silencieuses). */}
+        {/* 23/08 (retour pilote) : sur un panneau de CORRECTION, les courbes
+            sont des guides de pente — le moteur ne lit pas leur valeur. On ne
+            réclame donc ni masse ni vent : on le dit, et c'est tout. Un
+            familyAxisVariable déjà en base est conservé (compat) mais n'est
+            plus exigé ni proposé. */}
+        {numberedGuides ? (
+          <div style={rowStyle}>
+            <span style={labelStyle}>Courbes du panneau</span>
+            <span style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+              Guides de pente <strong>numérotés automatiquement</strong> — aucune valeur à saisir
+              {graph.isWindRelated ? ' ; chaque guide porte son SENS (face / arrière), choisi à la création.' : '.'}
+            </span>
+          </div>
+        ) : (
         <div style={rowStyle}>
           <span
             style={labelStyle}
@@ -138,6 +156,7 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
               : null;
           })()}
         </div>
+        )}
 
         {/* Lecture descendante (planches d'atterrissage Piper) : le résultat du
             dernier cadre se lit sur l'axe X, en bas. Jamais le premier cadre

@@ -22,6 +22,9 @@ import { KitBadge, KitButton, KitPanel, SPACING } from './kit';
 export type EditorMode = 'idle' | 'placing-points';
 
 interface AbacGraphWizardProps {
+  /** 23/08 — panneau de correction : guides de pente numérotés (aucune
+   *  valeur de famille à saisir). Calculé par le builder (position du cadre). */
+  numberedGuides?: boolean;
   graph: GraphConfig;
   totalGraphs: number;
 
@@ -62,6 +65,7 @@ interface AbacGraphWizardProps {
 export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
   const {
     graph, totalGraphs, selectedCurveId,
+    numberedGuides = false,
     onSelectCurve, onRemoveCurve, onUpdateCurve, onReorderCurves,
     onPointClick, onPointDrag, onPointDelete,
     onFinish, onEditorModeChange,
@@ -208,6 +212,7 @@ export const AbacGraphWizard: React.FC<AbacGraphWizardProps> = (props) => {
                   isWindRelated={graph.isWindRelated || false}
                   familyAxisVariable={graph.familyAxisVariable}
                   familyAxisLabel={graph.familyAxisVariable ? (getAxisVariable(graph.familyAxisVariable)?.label || graph.familyAxisVariable) : undefined}
+                  numberedGuides={numberedGuides}
                 />
               </div>
             </div>

@@ -23,6 +23,10 @@ import {
 } from '../core/types';
 import { BezierSegment } from '../core/bezier';
 import { getAxisVariable, getAxisVariableLabel, getAxisVariablesGroupedForCore } from '../core/axisVariables';
+// 23/08 — guides NUMÉROTÉS : sur un panneau de correction (masse, vent…), le
+// moteur suit la pente entre deux guides et ne lit jamais leur valeur : la
+// capsule ne réclame plus ni masse ni vent, elle numérote.
+import { usesNumberedGuides, isFirstFramedGraph, nextGuideNumber, guideAutoName } from '../core/guideMode';
 // Lot 1-E — kit visuel de l'atelier : bandeau de mode permanent (Échap
 // universel embarqué) + bouton à raison de désactivation affichée.
 // Lot 1-G — libellés STABLES + kit partout : KitButton sur la barre d'outils
@@ -961,15 +965,38 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         const famUnit = fam?.defaultUnit || '';
         const isAltitudeFam = !!famId && ALTITUDE_FAMILIES.includes(famId);
         const isWindGraph = !!focusedGraph?.isWindRelated;
+        // 23/08 — panneau de correction : guides de pente NUMÉROTÉS (le moteur
+        // ne lit pas leur valeur). Le premier cadre et les zones en lecture
+        // descendante gardent la création PAR VALEUR.
+        const numberedGuides = usesNumberedGuides(
+          focusedGraph,
+          isFirstFramedGraph(workshop, focusedGraph?.id)
+        );
         const valueNum = parseFloat(newCurveValue);
         const valueOk = Number.isFinite(valueNum);
         // Lot 1-E (piège « sens du vent par défaut ») : tant que le sens n'est
         // pas choisi, pas de nom, pas de création — la raison est affichée.
-        const windMissing = !!fam && isWindGraph && newCurveWindDir === '';
+        const windMissing = (!!fam || numberedGuides) && isWindGraph && newCurveWindDir === '';
+        // Guide numéroté : le numéro est attribué automatiquement (max + 1) —
+        // il n'a aucune signification physique, il ne sert qu'à distinguer.
+        const guideN = numberedGuides ? nextGuideNumber(focusedGraph?.curves) : 0;
+        const guideName = guideAutoName(guideN, isWindGraph ? newCurveWindDir : undefined);
+        const createGuide = () => {
+          if (!focusedFrame || windMissing) return;
+          onCreateCurve(
+            guideName,
+            newCurveColor,
+            guideN,
+            isWindGraph ? (newCurveWindDir as 'headwind' | 'tailwind' | 'none') : undefined
+          );
+          if (isWindGraph) setNewCurveWindDir('');
+        };
         const autoName = valueOk
           ? `${isWindGraph && newCurveWindDir !== '' ? (newCurveWindDir === 'headwind' ? 'Face ' : newCurveWindDir === 'tailwind' ? 'Arrière ' : 'Vent nul ') : ''}${valueNum}${famUnit ? ` ${famUnit}` : ''}`
           : '';
-        const createDisabled = (fam ? !valueOk || windMissing : !newCurveName.trim()) || !focusedFrame;
+        const createDisabled = (numberedGuides
+          ? windMissing
+          : (fam ? !valueOk || windMissing : !newCurveName.trim())) || !focusedFrame;
         const createByValue = () => {
           if (!valueOk || !focusedFrame || windMissing) return;
           onCreateCurve(autoName, newCurveColor, valueNum, isWindGraph ? (newCurveWindDir as 'headwind' | 'tailwind' | 'none') : undefined);
@@ -979,13 +1006,21 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
         };
         return (
           <div style={{ ...pill, border: '1px solid var(--border-regular)' }}>
-            <strong style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>➕ Nouvelle courbe</strong>
-            {fam ? (
+            <strong style={{ fontSize: 12, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+              {numberedGuides ? '➕ Nouveau guide' : '➕ Nouvelle courbe'}
+            </strong>
+            {(numberedGuides || fam) ? (
               <>
-                <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                  {fam.label}{famUnit ? ` (${famUnit})` : ''} :
-                </span>
-                {isAltitudeFam ? (
+                {numberedGuides ? (
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                    Guides de pente : <strong>numérotés automatiquement</strong>, sans valeur propre
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    {fam!.label}{famUnit ? ` (${famUnit})` : ''} :
+                  </span>
+                )}
+                {numberedGuides ? null : isAltitudeFam ? (
                   <select
                     value={newCurveValue}
                     disabled={!focusedFrame}
@@ -1029,9 +1064,9 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
                     Choisissez le sens du vent du guide
                   </span>
                 )}
-                {valueOk && !windMissing && (
+                {((numberedGuides && !windMissing) || (!numberedGuides && valueOk && !windMissing)) && (
                   <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                    → « {autoName} »
+                    → « {numberedGuides ? guideName : autoName} »
                   </span>
                 )}
               </>
@@ -1062,6 +1097,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             />
             <button
               onClick={() => {
+                if (numberedGuides) { createGuide(); return; }
                 if (fam) { createByValue(); return; }
                 if (!newCurveName.trim() || !focusedFrame) return;
                 onCreateCurve(newCurveName.trim(), newCurveColor);

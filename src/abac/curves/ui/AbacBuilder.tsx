@@ -22,6 +22,9 @@ import { AbacCurveManager } from '../core/manager';
 import { AbacGraphWizard } from './AbacGraphWizard';
 import { GraphIdentityPanel } from './GraphIdentityPanel';
 import { ReferenceCasesPanel } from './ReferenceCasesPanel';
+// 23/08 — guides numérotés : un panneau de correction ne réclame plus de
+// valeur de famille (le moteur suit la pente entre les guides).
+import { usesNumberedGuides, isFirstFramedGraph } from '../core/guideMode';
 import { runAllReferenceCases } from '../core/referenceBench';
 import { ensureFittedGraphs, stripFittedGraphs } from '../core/fittedRuntime';
 import { isValidOperationId, getOperation } from '../core/operationCatalog';
@@ -1409,6 +1412,10 @@ const renderStepContent = () => {
                 « Créer un cadre par graphe » (D4, non destructif). */}
             {workshop.frames.length > 0 && (
             <AbacGraphWizard
+              numberedGuides={usesNumberedGuides(
+                currentGraphForWizard,
+                isFirstFramedGraph(workshop, currentGraphForWizard?.id)
+              )}
               bezierActive={!!bezierSession}
               onStartBezier={startBezierSession}
               onApplyBezier={applyBezierSession}
