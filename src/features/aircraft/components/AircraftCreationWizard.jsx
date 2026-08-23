@@ -1551,7 +1551,7 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     >
       {/* 🎨 En-tête éditorial ALFlight — espacement standardisé mb: 3 (24px)
           partout pour rythme vertical cohérent entre toutes les sections. */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
         <Typography
           variant="h3"
           sx={{
@@ -1564,6 +1564,57 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         >
           Création d'avion
         </Typography>
+        {/* 23/08/2026 (demande pilote) : l'IMMATRICULATION doit être visible à
+            CHAQUE étape — on ne doit jamais se demander quel avion on est en
+            train de modifier. Affichée dès qu'elle est saisie, avec le modèle
+            en second plan. */}
+        {(aircraftData.registration || aircraftData.model) && (
+          <Box
+            sx={{
+              ml: 'auto',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 1,
+              px: 1.5,
+              py: 0.5,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 'var(--radius-sm)',
+              bgcolor: 'var(--bg-overlay)',
+              minWidth: 0
+            }}
+          >
+            {aircraftData.registration && (
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--fs-title)',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  color: 'var(--accent-primary)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {aircraftData.registration}
+              </Typography>
+            )}
+            {aircraftData.model && (
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: 'var(--fs-caption)',
+                  color: 'var(--text-secondary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {aircraftData.model}
+              </Typography>
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* 🎨 Stepper compact ALFlight — unifié desktop ET mobile.

@@ -363,6 +363,66 @@ const MINIMUM_EXPECTED_OPERATION_IDS: OperationId[] = [
   'landing_50ft_flaps_landing'
 ];
 
+// 🔒 PRÉCISION PILOTE 23/08/2026 (rapport F-BXNG) : « les deux seules
+// configurations sont décollage en LISSE, atterrissage en LDG ». La
+// configuration normale dépend de l'avion — un Cessna 150 décolle volets
+// rentrés, un PA-28 volets décollage. Le minimum n'est donc pas une liste
+// d'operationId figée mais QUATRE COUVERTURES : décollage roulage, décollage
+// passage 15 m, atterrissage roulage, atterrissage passage 15 m — chacune
+// satisfaite par N'IMPORTE QUELLE configuration de volets présente dans la
+// fiche. Sinon un C150 correctement renseigné était compté « incomplet » et
+// devait certifier l'absence de tables qui n'existent pas pour lui.
+export interface ExpectedOperationGroup {
+  /** Clé stable du groupe (sert de clé de bypass : performance.<key>). */
+  key: string;
+  labelFr: string;
+  phase: 'takeoff' | 'landing';
+  metric: 'ground_roll' | '50ft';
+  /** Les operationId qui satisfont ce groupe, par ordre de préférence. */
+  operationIds: OperationId[];
+}
+
+const EXPECTED_OPERATION_GROUPS: ExpectedOperationGroup[] = [
+  {
+    key: 'takeoff_ground_roll',
+    labelFr: 'Décollage — roulage au sol',
+    phase: 'takeoff',
+    metric: 'ground_roll',
+    operationIds: ['takeoff_ground_roll_flaps_to', 'takeoff_ground_roll_flaps_up', 'takeoff_ground_roll']
+  },
+  {
+    key: 'takeoff_50ft',
+    labelFr: 'Décollage — passage 15 m (50 ft)',
+    phase: 'takeoff',
+    metric: '50ft',
+    operationIds: ['takeoff_50ft_flaps_to', 'takeoff_50ft_flaps_up', 'takeoff_50ft']
+  },
+  {
+    key: 'landing_ground_roll',
+    labelFr: 'Atterrissage — roulage au sol',
+    phase: 'landing',
+    metric: 'ground_roll',
+    operationIds: ['landing_ground_roll_flaps_landing', 'landing_ground_roll_flaps_up', 'landing_ground_roll']
+  },
+  {
+    key: 'landing_50ft',
+    labelFr: 'Atterrissage — passage 15 m (50 ft)',
+    phase: 'landing',
+    metric: '50ft',
+    operationIds: ['landing_50ft_flaps_landing', 'landing_50ft_flaps_up', 'landing_50ft']
+  }
+];
+
+/** Les QUATRE couvertures attendues (une par phase × métrique), chacune
+ *  satisfaite par n'importe quelle configuration de volets renseignée.
+ *  Les operationId inconnus du catalogue sont filtrés. */
+export function getExpectedOperationGroups(): ExpectedOperationGroup[] {
+  return EXPECTED_OPERATION_GROUPS.map(g => ({
+    ...g,
+    operationIds: g.operationIds.filter(id => !!getOperation(id))
+  }));
+}
+
 /** Les opérations du minimum attendu (ordre d'affichage), filtrées si un id
  *  venait à manquer du catalogue. Source de vérité unique du contrôle de
  *  couverture (cf. performanceCoverage.js). */

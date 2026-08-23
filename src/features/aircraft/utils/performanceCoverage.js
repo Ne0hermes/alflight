@@ -8,6 +8,7 @@
 
 import {
   getExpectedPerformanceOperations,
+  getExpectedOperationGroups,
   getOperation
 } from '../../../abac/curves/core/operationCatalog';
 
@@ -65,14 +66,25 @@ export function getPresentOperationIds(aircraft) {
 export function computeMissingPerformanceTables(aircraft, bypassedSet = new Set()) {
   const present = getPresentOperationIds(aircraft);
   const missing = [];
-  for (const op of getExpectedPerformanceOperations()) {
-    const bypassKey = PERF_BYPASS_PREFIX + op.id;
-    if (present.has(op.id) || bypassedSet.has(bypassKey)) continue;
+  // 23/08/2026 (précision pilote, rapport F-BXNG) : une couverture est
+  // satisfaite par N'IMPORTE QUELLE configuration de volets. Un Cessna 150
+  // décolle volets rentrés : sa table « flaps UP » COUVRE le décollage, et
+  // rien ne doit lui réclamer une table « volets décollage » qui n'existe pas
+  // dans son manuel. La clé de bypass devient celle du GROUPE, les clés par
+  // operationId restant acceptées (fiches déjà certifiées).
+  for (const grp of getExpectedOperationGroups()) {
+    if (grp.operationIds.some(id => present.has(id))) continue;
+    const bypassKey = PERF_BYPASS_PREFIX + grp.key;
+    const bypassed = bypassedSet.has(bypassKey)
+      || grp.operationIds.some(id => bypassedSet.has(PERF_BYPASS_PREFIX + id));
+    if (bypassed) continue;
+    const principal = getOperation(grp.operationIds[0]);
     missing.push({
-      operationId: op.id,
-      label: op.labelFr,
-      phase: op.phase,
-      flaps: op.configuration?.flaps || null,
+      operationId: grp.operationIds[0],
+      groupKey: grp.key,
+      label: grp.labelFr,
+      phase: grp.phase,
+      flaps: principal?.configuration?.flaps || null,
       bypassKey
     });
   }
@@ -97,16 +109,20 @@ export function computeMissingPerformanceTables(aircraft, bypassedSet = new Set(
 export function computeCertifiedAbsentPerformanceTables(aircraft, bypassedSet = new Set()) {
   const present = getPresentOperationIds(aircraft);
   const certifiedAbsent = [];
-  for (const op of getExpectedPerformanceOperations()) {
-    const bypassKey = PERF_BYPASS_PREFIX + op.id;
-    // Une table redevenue PRÉSENTE n'est plus « absente du manuel » même si
-    // le flag de bypass traîne encore : la donnée réelle prime.
-    if (present.has(op.id) || !bypassedSet.has(bypassKey)) continue;
+  for (const grp of getExpectedOperationGroups()) {
+    const bypassKey = PERF_BYPASS_PREFIX + grp.key;
+    const bypassed = bypassedSet.has(bypassKey)
+      || grp.operationIds.some(id => bypassedSet.has(PERF_BYPASS_PREFIX + id));
+    // Une couverture redevenue PRÉSENTE n'est plus « absente du manuel » même
+    // si le flag de bypass traîne encore : la donnée réelle prime.
+    if (grp.operationIds.some(id => present.has(id)) || !bypassed) continue;
+    const op = getOperation(grp.operationIds[0]);
     certifiedAbsent.push({
-      operationId: op.id,
-      label: op.labelFr,
-      phase: op.phase,
-      flaps: op.configuration?.flaps || null,
+      operationId: grp.operationIds[0],
+      groupKey: grp.key,
+      label: grp.labelFr,
+      phase: grp.phase,
+      flaps: op?.configuration?.flaps || null,
       bypassKey
     });
   }

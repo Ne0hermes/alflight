@@ -4230,8 +4230,13 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       // Ajouter aussi les masses importantes pour le module Weight & Balance
       emptyWeight: toValidNumber(formData.masses.emptyMass, 600),
       minTakeoffWeight: toValidNumber(formData.masses.minTakeoffMass, 600),
-      maxBaggageWeight: toValidNumber(formData.limitations.maxBaggageLest, 50),
-      maxAuxiliaryWeight: 20, // Valeur par défaut pour rangement annexe
+      // 23/08/2026 (décision pilote) : plus AUCUNE limite de soute fabriquée.
+      // Les vraies limites sont dans baggageCompartments ; ces deux champs
+      // historiques ne sont plus écrits (une valeur déjà en base n'est pas
+      // touchée par ce formulaire — voir le script de purge de la flotte).
+      ...(formData.limitations.maxBaggageLest !== '' && formData.limitations.maxBaggageLest != null
+        ? { maxBaggageWeight: toValidNumber(formData.limitations.maxBaggageLest, 0) }
+        : {}),
       // Équipements
       equipmentCom: formData.equipmentCom,
       equipmentNav: formData.equipmentNav,

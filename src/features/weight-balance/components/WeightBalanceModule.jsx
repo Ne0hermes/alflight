@@ -243,24 +243,19 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
             ))}
           </div>
         ) : (
-          // Fallback vers les compartiments par défaut si aucun n'est défini
-          <div style={styles.grid2}>
-            <LoadInputWithInfo
-              label={`🎒 Bagages (max ${aircraft.maxBaggageWeight || 50} kg)`}
-              value={safeLoads.baggage}
-              onChange={(v) => onLoadChange('baggage', v)}
-              arm={wb.baggageArm}
-              max={aircraft.maxBaggageWeight || 50}
-              loadKey="baggage"
-            />
-            <LoadInputWithInfo
-              label={`📦 Rangement annexe (max ${aircraft.maxAuxiliaryWeight || 20} kg)`}
-              value={safeLoads.auxiliary}
-              onChange={(v) => onLoadChange('auxiliary', v)}
-              arm={wb.auxiliaryArm}
-              max={aircraft.maxAuxiliaryWeight || 20}
-              loadKey="auxiliary"
-            />
+          // 23/08/2026 (décision pilote) — les limites 50 kg / 20 kg étaient des
+          // valeurs FABRIQUÉES par l'application, jamais lues dans un manuel :
+          // « le 50 et le 20 doivent être retirés, ce sont des merdes ». Les
+          // vraies limites vivent dans baggageCompartments (masse ET bras par
+          // compartiment, plus la limite cumulée). Sans compartiment déclaré,
+          // on ne propose donc AUCUN curseur inventé : on le dit.
+          <div style={{
+            padding: 12, border: '1px dashed var(--border-subtle)', borderRadius: 6,
+            fontSize: 13, color: 'var(--text-secondary)'
+          }}>
+            Aucun compartiment bagages n'est déclaré sur cet avion — renseignez-les
+            dans la fiche (nom, bras, masse maximale, et la limite cumulée si le
+            manuel en donne une) pour pouvoir charger des bagages.
           </div>
         )}
       </div>
