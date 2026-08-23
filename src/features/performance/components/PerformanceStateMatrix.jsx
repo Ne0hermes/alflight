@@ -243,6 +243,21 @@ export function PerformanceStateMatrix({ aircraft, inputs = {}, title = 'État d
                           </>
                         );
                       })()}
+                      {/* 23/08/2026 — un tableau donné AUX CONDITIONS STANDARD
+                          seulement ne doit pas se lire comme une distance du
+                          jour : la valeur est celle de l'atmosphère type, à
+                          corriger de l'écart ISA (règle du manuel, saisie dans
+                          les facteurs correctifs). Le module de préparation
+                          écarte la distance tant que la règle manque ; ici on
+                          le DIT au lieu d'un discret « 1 warning ». */}
+                      {result.standardConditionsOnly && (
+                        <div style={{
+                          fontSize: 10, color: 'var(--color-red-critical)', marginTop: 2,
+                          fontWeight: 600, lineHeight: 1.25
+                        }}>
+                          ⚠ conditions standard — à corriger de l'écart ISA
+                        </div>
+                      )}
                       {result.warnings?.length > 0 && (
                         <div style={{ fontSize: 10, color: 'var(--accent-primary)', marginTop: 2 }}>
                           {result.warnings.length} warning{result.warnings.length > 1 ? 's' : ''}
