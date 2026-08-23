@@ -30,7 +30,17 @@ const source = fs.readFileSync(here('checklist-source.html'), 'utf8');
 const style = source.match(/<style>[\s\S]*?<\/style>/)[0];
 const script = source
   .match(/<script>[\s\S]*?<\/script>/)[0]
-  .replace(/check-list du \d{2}\/\d{2}\/\d{4}/g, `check-list du ${dateLabel}`);
+  .replace(/check-list du \d{2}\/\d{2}\/\d{4}/g, `check-list du ${dateLabel}`)
+  // Retour pilote 23/08 : « il a toujours marqué 81 problèmes et non plus 200 ».
+  // Le filtre « Mineurs » est désactivé par défaut : le compteur ne portait que
+  // sur les lignes AFFICHÉES, sans dire que d'autres étaient masquées. On le dit.
+  .replace(
+    "document.getElementById('prog').textContent=tot?fait+' / '+tot+' corrigés':'';",
+    "const masques=document.querySelectorAll('.it').length-tot;"
+    + "document.getElementById('prog').textContent="
+    + "(tot?fait+' / '+tot+' corrigés':'')"
+    + "+(masques?' · '+masques+' masqués par le filtre':'');"
+  );
 
 const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -105,7 +115,8 @@ ${style}
   <p class="lede">Audit intégral refait le ${dateLabel} sur l’extraction réelle de la base : chaque ligne est un point
   encore à revoir aujourd’hui, avec la valeur trouvée, ce qui est attendu, ce que cela change en vol et la preuve.
   Cochez au fur et à mesure — cases et commentaires sont enregistrés dans ce navigateur.</p>
-  <p class="lede" style="margin-top:10px"><b>${n('critique')} critiques</b>, ${n('majeur')} majeurs et ${n('mineur')} mineurs
+  <p class="lede" style="margin-top:10px"><b>${all.length} points au total</b> : <b>${n('critique')} critiques</b>, ${n('majeur')} majeurs et ${n('mineur')} mineurs.
+  À l'ouverture, seuls les <b>${n('critique') + n('majeur')} critiques et majeurs</b> sont affichés — le bouton « Mineurs » de la barre révèle les ${n('mineur')} autres
   — dont ${nConf} « à confirmer au manuel » (aucune erreur démontrée, mais une valeur que seul le manuel de vol tranche).
   Les points corrigés depuis les audits précédents ne figurent plus : cette page ne montre que ce qui reste.</p>
   <p class="lede" style="margin-top:10px">Méthode : uniquement des contradictions internes à la fiche, des défauts
