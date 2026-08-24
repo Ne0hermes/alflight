@@ -1,0 +1,1152 @@
+[
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 96,
+  "extrait": "const armToMeters = (value, defaultValue = 0) => {",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Utilise l.107-114 pour les HUIT bras de levier (masse a vide, carburant, 4 sieges, soute, soute auxiliaire). Tout bras absent devient 0 m — c'est-a-dire le POINT DE REFERENCE de l'avion, la position la plus avant possible. La charge concernee pese alors avec un moment nul : elle alourdit l'avion sans jamais deplacer son centrage. Le resultat n'est pas une erreur visible, c'est un centrage faussement rassurant. Preuve en base : 12 des 13 fiches portent weightBalance.baggageArm = 0 ET auxiliaryArm = 0 — signature exacte de ce defaut.",
+  "correctif": "Renvoyer null quand la valeur est absente ou non numerique, et ne PAS ecrire la cle dans armsToWB dans ce cas (champ absent, pas champ a zero). Le moteur sait deja traiter l'absence : computeWeightBalance leve baggageArmMissing / fuelArmMissing et refuse le verdict.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/components/AircraftCreationWizard.jsx",
+  "line": 261,
+  "extrait": "baggageFwd: pick(a.baggageFwd, wb.baggageArm,        al.baggageFwdArm),",
+  "valeurFabriquee": "0 (12 avions) ou 3.50 (F-GUVV)",
+  "gravite": "majeur",
+  "consequence": "C'EST L'ETAPE DE BLANCHIMENT. `pick` (l.246-251) ecarte null, undefined et '' — mais PAS 0. Le bras invente par le normalizer ou par contexts/index.jsx est donc relu depuis le miroir weightBalance et recopie dans `arms.baggageFwd`, le champ CANONIQUE. A l'enregistrement il part en base. La fiche declare desormais un bras de soute que personne n'a jamais saisi, indiscernable d'un relevé au manuel. Meme mecanisme l.262 pour baggageAft via wb.auxiliaryArm. Verifie sur les 13 fiches : arms.baggageFwd = 0 et arms.baggageAft = 0 sur 12 d'entre elles, 3.5 / 3.7 sur F-GUVV.",
+  "correctif": "Faire ecarter 0 par `pick` au meme titre que la chaine vide pour les bras (un bras de 0 m n'existe pas sur un avion leger), et surtout ne jamais alimenter `arms.*` depuis `weightBalance.*` tant que ce miroir peut contenir du fabrique. Champ vide dans l'assistant = champ absent en base.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 583,
+  "extrait": "currentAircraft.communityPresetId || currentAircraft.id",
+  "valeurFabriquee": "aucune en propre — declencheur",
+  "gravite": "critique",
+  "consequence": "Dans handleOpenWizard (l.580-588), CHAQUE ouverture de l'assistant — pas seulement un import communautaire — appelle getPresetById, donc normalizeAircraftImport, donc la fabrique a zeros de armToMeters. La ligne suivante fait `currentAircraft = { ...currentAircraft, ...fullFromSupabase }` : le weightBalance FABRIQUE ecrase celui, eventuellement correct, du record local. Ouvrir un avion pour corriger un detail suffit a remplacer ses vrais bras de soute par des zeros, qui seront ensuite ecrits en base a l'enregistrement. C'est ce qui explique que le defaut touche 12 fiches sur 13 et non les seuls avions importes.",
+  "correctif": "Ne plus faire transiter l'hydratation d'edition par le chemin d'import communautaire. Lire la fiche Supabase telle quelle, sans passer par normalizeAircraftImport ; et ne fusionner que les champs REELLEMENT presents cote serveur (absence serveur = on garde le local, jamais un zero de remplacement).",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/core/contexts/index.jsx",
+  "line": 256,
+  "extrait": "baggageArm: parseOrNull(light.arms.baggage) || 3.50,",
+  "valeurFabriquee": "3.50",
+  "gravite": "critique",
+  "consequence": "Bras de soute invente a 3,50 m des le chargement de la liste d'avions. Le miroir weightBalance ainsi fabrique est ensuite relu par l'assistant (l.261) et ecrit en base. C'est la source directe des bras fantomes de F-GUVV, qui porte aujourd'hui 3,5 m en base alors que son unique compartiment reel est a 3,65 m : un ecart de 15 cm applique a 30 kg de bagages, dans le sens qui MINORE le moment arriere — donc qui rassure a tort sur la limite arriere de centrage.",
+  "correctif": "Laisser null. Si arms.baggage est absent, weightBalance.baggageArm doit etre absent, et l'interface doit afficher « bras de soute non renseigne » plutot qu'un nombre.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/core/contexts/index.jsx",
+  "line": 257,
+  "extrait": "auxiliaryArm: parseOrNull(light.arms.auxiliaryBaggage) || 3.70,",
+  "valeurFabriquee": "3.70",
+  "gravite": "critique",
+  "consequence": "Meme mecanisme pour la soute auxiliaire. F-GUVV porte 3,7 m en base — valeur inventee pour un compartiment auxiliaire qui n'existe meme pas sur cet avion (une seule soute declaree, a 3,65 m). L'application a donc cree de toutes pieces un emplacement de chargement.",
+  "correctif": "Laisser null, et ne pas creer la cle auxiliaryArm si aucun compartiment auxiliaire n'est declare.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/core/contexts/index.jsx",
+  "line": 234,
+  "extrait": "light.minTakeoffWeight = 600;",
+  "valeurFabriquee": "600",
+  "gravite": "critique",
+  "consequence": "Masse minimale de vol inventee a 600 kg. Presente TELLE QUELLE en base sur F-GGZO et F-GIEA. Pire, F-GIEA declare 550 kg dans weights.minTakeoffWeight : la valeur fabriquee CONTREDIT la vraie donnee de la meme fiche, et selon le lecteur c'est l'une ou l'autre qui sort. Cette masse sert au controle « masse insuffisante au decollage » (Step6WeightBalance l.460-486) et a la borne basse de l'enveloppe (WeightBalanceChart l.49) : un 600 invente peut declencher une alerte sur un vol parfaitement legal, ou en masquer une.",
+  "correctif": "Ne rien ecrire. Sans masse minimale de vol saisie, le controle correspondant doit etre annonce comme non effectue, pas simule sur un chiffre rond.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/core/contexts/index.jsx",
+  "line": 230,
+  "extrait": "light.minTakeoffWeight = light.emptyWeight;",
+  "valeurFabriquee": "la masse a vide, recopiee",
+  "gravite": "critique",
+  "consequence": "La masse MINIMALE DE VOL n'est pas la masse a vide : c'est une limite du manuel (souvent bien superieure, ex. 940 kg sur DA40 pour une masse a vide de 796 kg). Cette recopie fabrique une limite plausible mais fausse, et elle est en base : F-BXNG 527,1 / F-GBTU 690 / F-GNAM 732,2 / F-GOFP 515 / F-GOVE 574 / F-HDIM 706,5 portent tous exactement leur masse a vide. Consequence concrete : le controle de masse minimale ne se declenchera JAMAIS, puisque tout vol pese forcement plus que l'avion vide. Le garde-fou existe a l'ecran mais ne protege rien.",
+  "correctif": "Supprimer la recopie. Champ absent = controle explicitement annonce indisponible.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4241,
+  "extrait": "minTakeoffWeight: toValidNumber(formData.masses.minTakeoffMass, 600),",
+  "valeurFabriquee": "600 (ou 0 si le champ est vide)",
+  "gravite": "critique",
+  "consequence": "Deuxieme source du 600 en base, cote ancien formulaire. Double piege : toValidNumber (l.4093) fait `Number(value)`, or Number('') vaut 0 et non NaN — un champ laisse VIDE par le pilote n'ecrit donc pas 600 mais ZERO, sans un mot. Une masse minimale de vol a 0 kg desarme silencieusement le controle. Le 600 n'apparait que si toute la section masses est absente.",
+  "correctif": "Ne pas ecrire la cle quand la saisie est vide. Et corriger toValidNumber pour qu'une chaine vide soit traitee comme une absence, pas comme un zero.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4240,
+  "extrait": "emptyWeight: toValidNumber(formData.masses.emptyMass, 600),",
+  "valeurFabriquee": "600 (ou 0 si le champ est vide)",
+  "gravite": "critique",
+  "consequence": "Masse a VIDE fabriquee. C'est la grandeur qui entre en premier dans absolument tout le devis de masse et de centrage : masse au decollage, moment a vide, position du centre de gravite, carburant embarquable. Un 600 kg invente — ou un 0 si le champ est vide — fausse la totalite du bilan du vol, et part en base ou il devient la masse a vide « officielle » de l'avion.",
+  "correctif": "Refuser l'enregistrement, ou ne pas ecrire le champ. Une fiche sans masse a vide doit etre declaree inexploitable pour la preparation de vol, ce que le module sait deja signaler.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4234,
+  "extrait": "forward: 2.00,",
+  "valeurFabriquee": "2.00",
+  "gravite": "critique",
+  "consequence": "Limite AVANT de centrage inventee, ecrite en base quand le pilote n'a saisi aucun point d'enveloppe (bloc l.4232-4236). Un centrage est declare « dans les limites » ou « hors limites » par comparaison a ces deux nombres. Sur un F150 (limites reelles 0,798 / 0,951 m) une limite avant a 2,00 m rend tout vol hors limites ; sur un DA40 (2,40 / 2,59 m) elle valide un centrage franchement trop avant. Dans les deux cas le verdict affiche est faux et rien ne le signale.",
+  "correctif": "Ne pas ecrire cgLimits du tout quand aucune enveloppe n'a ete saisie. Le calcul de centrage doit alors refuser de rendre un verdict, comme il le fait deja pour un bras manquant.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4235,
+  "extrait": "aft: 2.45",
+  "valeurFabriquee": "2.45",
+  "gravite": "critique",
+  "consequence": "Limite ARRIERE de centrage inventee, ecrite en base dans le meme bloc. La limite arriere est celle dont le depassement rend l'avion instable en tangage et potentiellement irrecuperable au decrochage. Un 2,45 m generique n'a de sens sur aucun des 13 avions de la flotte (limites arriere reelles : 0,951 a 2,59 m selon le type).",
+  "correctif": "Ne pas ecrire cgLimits. Absence d'enveloppe = verdict de centrage refuse et annonce comme tel.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4220,
+  "extrait": "toValidNumber(formData.cgEnvelope.forwardPoints[0].cg, aircraft?.weightBalance?.cgLimits?.forward || 2.00) :",
+  "valeurFabriquee": "2.00 — ou 0 quand le point existe avec un cg vide",
+  "gravite": "critique",
+  "consequence": "Le point d'enveloppe existe mais son cg n'a pas ete rempli : Number('') vaut 0, donc la limite avant est ecrite a ZERO — pas 2,00. C'est exactement ce qu'on lit sur F-GOFP en base : cgLimits.forward = 0, avec un forwardVariable contenant un point a cg '0.0'. Une limite avant au point de reference signifie qu'AUCUN centrage ne sera jamais juge trop avant : le controle avant est neutralise en silence sur cette fiche.",
+  "correctif": "Traiter la chaine vide comme une absence : ne pas produire de limite. Et ne jamais ecrire cgLimits partiel — une enveloppe incomplete doit bloquer le verdict, pas le rendre permissif.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4212,
+  "extrait": "baggageArm: toValidNumber(formData.armLengths.standardBaggageArm, 3.50),",
+  "valeurFabriquee": "3.50",
+  "gravite": "critique",
+  "consequence": "Deuxieme source du 3,50 m, cote ancien formulaire. Comme armLengths est null sur les 13 fiches de la flotte, formData.armLengths.standardBaggageArm est undefined, Number(undefined) vaut NaN, et le defaut 3,50 se declenche a COUP SUR a chaque enregistrement par ce formulaire. C'est le chemin qui a depose 3,5 m dans weightBalance.baggageArm de F-GUVV, d'ou l'assistant l'a ensuite recopie dans arms.baggageFwd.",
+  "correctif": "Ne pas ecrire la cle en l'absence de saisie. Le bras de soute reel vit dans baggageCompartments[].arm — le miroir ne doit rien inventer pour le remplacer.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4213,
+  "extrait": "auxiliaryArm: toValidNumber(formData.armLengths.aftBaggageExtensionArm || formData.armLengths.baggageTubeArm, 3.70),",
+  "valeurFabriquee": "3.70",
+  "gravite": "critique",
+  "consequence": "Source du 3,70 m. Les deux champs sources etant absents, l'expression vaut undefined et le defaut se declenche systematiquement. F-GUVV porte 3,7 m en base pour une soute auxiliaire inexistante. Toute charge saisie sur cet emplacement fantome sera pesee a un bras invente.",
+  "correctif": "Ne pas ecrire la cle. Pas d'extension de soute declaree = pas de champ, pas de curseur de chargement.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4214,
+  "extrait": "fuelArm: toValidNumber(formData.armLengths.fuelArm, 2.18),",
+  "valeurFabriquee": "2.18",
+  "gravite": "critique",
+  "consequence": "Bras du carburant invente a 2,18 m. C'est la charge la plus lourde et la plus variable du vol (jusqu'a 240 L, soit ~173 kg sur F-HFGI) : son bras pilote a lui seul le deplacement du centrage entre le decollage et l'atterrissage. Les bras carburant reels de la flotte vont de 0,82 a 2,63 m — 2,18 m ne correspond a aucun. Ecrit en base, il devient la reference du calcul de centrage en croisiere.",
+  "correctif": "Ne pas ecrire la cle. Le moteur dispose deja de fuelArmMissing pour refuser le centrage plutot que de le calculer sur un bras invente.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4207,
+  "extrait": "emptyWeightArm: toValidNumber(formData.armLengths.emptyMassArm, 2.00),",
+  "valeurFabriquee": "2.00",
+  "gravite": "critique",
+  "consequence": "Bras de la masse a vide invente a 2,00 m. C'est le terme dominant du moment total : la masse a vide represente 55 a 70 % de la masse au decollage. Un bras faux ici decale la totalite du centrage. Bras reels de la flotte : 0,32 a 2,52 m. Ecrit en base.",
+  "correctif": "Ne pas ecrire la cle ; laisser le moteur declarer le centrage non calculable.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4210,
+  "extrait": "rearLeftSeatArm: toValidNumber(formData.armLengths.rearSeat1Arm, 2.90),",
+  "valeurFabriquee": "2.90",
+  "gravite": "critique",
+  "consequence": "Bras des sieges arriere invente a 2,90 m (idem l.4211 pour le siege droit, et l.4208-4209 a 2,00 m pour les sieges avant). Les passagers arriere sont la charge qui tire le plus vers la limite ARRIERE de centrage. Sur les Cessna et Robin de la flotte, le bras arriere reel va de 1,14 a 1,85 m : 2,90 m surestime enormement le moment arriere. Sur les DA40 il vaut 3,25 m : le 2,90 le sous-estime, dans le sens dangereux.",
+  "correctif": "Ne pas ecrire les cles de bras de sieges sans saisie. Le nombre de sieges reellement chargeables doit decouler des bras connus, pas l'inverse.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 170,
+  "extrait": "arm: parseFloat(comp.arm) || 0,",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Execute a chaque import communautaire (communityService.js:283). Un compartiment a bagages dont le bras est absent est ecrit en base avec arm = 0. C'est le pire cas possible : 0 est un nombre FINI, donc le garde-fou du moteur (`if (weight > 0 && !Number.isFinite(arm)) baggageArmMissing = true`) ne se declenche pas. Le moment des bagages est compte comme nul, le CG est calcule et le verdict annonce « dans les limites » alors que 30 kg de bagages a 3,65 m n'ont pas ete pris en compte — soit 110 kg.m manquants sur F-GUVV.",
+  "correctif": "Ne pas normaliser un bras absent : laisser la cle absente (undefined) pour que Number.isFinite echoue et que le moteur refuse. Meme regle que tankUsableLtr qui rend null.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 171,
+  "extrait": "maxWeight: parseFloat(comp.maxWeight) || 0",
+  "valeurFabriquee": "0",
+  "gravite": "majeur",
+  "consequence": "Limite de masse d'un compartiment reecrite a 0 kg quand elle est inconnue. Ecrit en base. Le controle de depassement (computeWeightBalance l.190-195) exige maxW > 0 : a zero, il ne se declenche jamais. La fiche affiche donc une limite de soute de 0 kg qui, en pratique, n'interdit rien.",
+  "correctif": "Ne pas ecrire la cle maxWeight sans donnee. Absence = pas de controle, et l'interface doit le dire.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/weight-balance/components/WeightBalanceTable.jsx",
+  "line": 65,
+  "extrait": "const arm = parseFloat(compartment.arm) || 3.50;",
+  "valeurFabriquee": "3.50",
+  "gravite": "critique",
+  "consequence": "Le tableau de masse et centrage affiche le bagage a 3,50 m et publie un moment calcule dessus, alors que le moteur (computeWeightBalance l.184-187) refuse ce meme compartiment et remonte baggageArmMissing. Le pilote lit donc une ligne complete et credible — masse, bras, moment — pour une charge que le calcul officiel a ecartee. Les deux affichages du meme vol se contredisent, et c'est le plus rassurant qui est le plus lisible.",
+  "correctif": "Afficher la ligne avec un bras et un moment vides et une mention « bras non renseigne », en coherence avec le refus du moteur.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/weight-balance/components/WeightBalanceModule.jsx",
+  "line": 239,
+  "extrait": "arm={parseFloat(compartment.arm) || 3.50}",
+  "valeurFabriquee": "3.50",
+  "gravite": "critique",
+  "consequence": "Meme 3,50 m invente sur le curseur de chargement : l'infobulle et l'apercu de moment associes a la saisie du bagage reposent sur un bras que personne n'a fourni. Le pilote arbitre son chargement sur un chiffre fabrique.",
+  "correctif": "Passer null et desactiver l'apercu de moment tant que le bras du compartiment n'est pas renseigne.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/weight-balance/components/WeightBalanceModule.jsx",
+  "line": 240,
+  "extrait": "max={parseFloat(compartment.maxWeight) || 50}",
+  "valeurFabriquee": "50",
+  "gravite": "critique",
+  "consequence": "Plafond de saisie invente a 50 kg. C'est precisement la valeur que la decision pilote du 23/08 a fait purger (« le 50 et le 20 doivent etre retires »), et le commentaire juste en dessous, l.246-251, l'affirme — mais la ligne 240 la reinjecte. Concretement : sur un compartiment dont la limite reelle est 30 kg (F-GUVV, F-HSTR) mais non lue, le curseur autorise 50 kg. Le F-BXNG, limite a 54 kg au manuel, se voit lui brider a 50.",
+  "correctif": "Pas de limite fabriquee : max non borne, et refus explicite du controle de soute quand maxWeight est absent.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/weight-balance/components/WeightBalanceModule.jsx",
+  "line": 236,
+  "extrait": "label={`🎒 ${compartment.name} (max ${compartment.maxWeight || '50'} kg)`}",
+  "valeurFabriquee": "50",
+  "gravite": "majeur",
+  "consequence": "Le libelle annonce « max 50 kg » comme s'il venait du manuel de vol. C'est la forme la plus trompeuse de la valeur fantome : elle se presente au pilote sous l'apparence d'une limite certifiee, dans le meme format que les vraies.",
+  "correctif": "Afficher « max non renseigne » quand la limite est absente.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step1GeneralInfo.jsx",
+  "line": 119,
+  "extrait": "emptyWeight: selectedAircraft.emptyWeight || 0,",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Ecrit dans le PLAN DE VOL (flightPlan.updateAircraft l.197) — donc dans le brouillon persiste du vol. Un avion sans masse a vide connue entre dans la preparation avec une masse a vide de 0 kg : le devis de masse part de zero, la masse au decollage devient la seule charge utile, et le vol apparait tres loin sous la masse maximale. C'est l'erreur qui rassure le plus et se voit le moins.",
+  "correctif": "Ne pas ecrire la cle. Sans masse a vide, la preparation de vol doit etre bloquee a cette etape avec un message explicite.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step1GeneralInfo.jsx",
+  "line": 120,
+  "extrait": "maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Masse maximale au decollage a 0 kg dans le plan de vol persiste. Selon le lecteur, soit tout vol est declare en surcharge, soit — si le controle exige une limite > 0 — le controle de surcharge est purement et simplement desactive pour ce vol.",
+  "correctif": "Ne pas ecrire la cle ; bloquer la preparation tant que la MTOW n'est pas connue.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 1088,
+  "extrait": "return s + (tankUsableLtr(t) || 0) * fuelDensity * (Number.isFinite(a) ? a : 0);",
+  "valeurFabriquee": "0 (contenance) et 0 (bras)",
+  "gravite": "critique",
+  "consequence": "Double invention sur la meme ligne, dans le calcul du scenario « pleins ». Un reservoir de contenance inconnue compte pour zero litre : le plein affiche est inferieur au plein reel, et la marge de masse restante parait plus confortable qu'elle ne l'est. Un reservoir sans bras contribue un moment nul : son carburant pese sans deplacer le centrage. Sur F-GUKQ, dont les deux reservoirs n'ont ni totalCapacity ni usableCapacity renseignes, ce chemin est directement concerne.",
+  "correctif": "Refuser le scenario « pleins » des qu'un reservoir coche a une contenance ou un bras inconnu, et le dire — comme le fait deja computeMaxFuel avec ok:false / error:'noTanks'.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 1090,
+  "extrait": ": fullTankKg * (arms.fuel || 0);",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Chemin sans configuration de reservoirs : bras carburant absent, le moment du plein est calcule a zero. La charge la plus lourde du vol est alors comptee comme sans effet sur le centrage. Le point de centrage affiche pour le scenario « pleins » est faux, et rien ne le signale.",
+  "correctif": "Refuser le calcul du scenario plutot que de multiplier par zero.",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 127,
+  "extrait": "s + (tankConfig?.tanks?.[String(t?.id ?? i)]?.active ? (tankUsableLtr(t) || 0) : 0), 0);",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Somme des reservoirs coches : un reservoir de contenance inconnue compte pour ZERO litre. La capacite de reference du bilan carburant est donc sous-evaluee en silence. Consequence directe l.593 : l'alerte « un troncon depasse les X L des reservoirs coches » se declenche a tort, ou — a l'inverse, si un autre reservoir couvre la difference — la capacite reelle disponible n'est jamais opposee au besoin du vol.",
+  "correctif": "Renvoyer null si un seul reservoir coche a une contenance inconnue, et refuser d'afficher une capacite de reference : « capacite inconnue, verifier la fiche avion ».",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 134,
+  "extrait": "const effectiveCapacityLtr = tankConfigAuthoritative ? checkedCapacityLtr : (selectedAircraft?.fuelCapacity || 0);",
+  "valeurFabriquee": "0 quand la capacite manque ; et surtout le volume TOTAL presente comme embarquable",
+  "gravite": "critique",
+  "consequence": "Double probleme. (a) Le repli lit fuelCapacity, c'est-a-dire le volume PHYSIQUE, la ou toutes les autres lectures de l'application utilisent l'UTILISABLE : sur F-GUKQ le module Carburant plafonne le vol a 159 L quand les deroutements calculent sur 105 L (fuelUsableCapacity) — 54 L, soit environ 2 h d'autonomie d'ecart entre deux ecrans du meme vol. (b) Capacite absente => 0, donc alerte de depassement permanente ou pourcentage de remplissage infini selon le chemin.",
+  "correctif": "Lire getFuelUsableCapacityLtr et refuser (null) si l'utilisable n'est pas saisi. Et trancher le miroir racine/reservoirs : sur F-GUKQ (105 vs 159), F-GBTU (182 vs 188) et F-GIEA (182 vs 189), l'application doit dire laquelle fait foi ou signaler la contradiction.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 996,
+  "extrait": "const aftMaxWeight = fullAircraft.cgEnvelope.aftMaxWeight || fullAircraft.weights?.mtow || 1000;",
+  "valeurFabriquee": "1000",
+  "gravite": "majeur",
+  "consequence": "Dans la generation du PDF de la fiche avion : le sommet de l'enveloppe de centrage est trace a 1000 kg quand ni la borne haute de l'enveloppe ni la MTOW ne sont connues. Le graphique imprime — celui que le pilote emporte — montre alors une enveloppe dont la limite superieure est une invention ronde. Aucun des 13 avions de la flotte n'a une MTOW de 1000 kg.",
+  "correctif": "Ne pas tracer le graphique du tout si la borne haute manque, et imprimer a la place « enveloppe incomplete — non tracable ».",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx",
+  "line": 2685,
+  "extrait": "placeholder={String(dispWeight(data.weights?.minTakeoffWeight) || '940')}",
+  "valeurFabriquee": "940",
+  "gravite": "mineur",
+  "consequence": "Suggestion grisee de 940 kg pour la masse minimale de vol — la valeur du DA40, proposee a tous les types. Ce n'est pas ecrit en base et cela ne participe a aucun calcul, mais un indice de saisie chiffre et plausible invite a le recopier : c'est un candidat a devenir une vraie valeur fantome par la main du pilote.",
+  "correctif": "Remplacer par un libelle non chiffre : « masse minimale de vol (manuel) ».",
+  "angle": "LES VALEURS FABRIQUEES QUI PAR"
+ },
+ {
+  "file": "src/core/stores/fuelStore.js",
+  "line": 35,
+  "extrait": "roulage: { gal: 1.0, ltr: 3.79 },",
+  "valeurFabriquee": "3.79 L (1 gal US) de roulage",
+  "gravite": "critique",
+  "consequence": "Etat initial du store carburant, et il est persiste (partialize ligne 204-207 inclut fuelData). Tout vol demarre donc avec 3,79 L de roulage que PERSONNE n a saisis. Le champ roulage est manuel : rien ne le recalcule ni ne le remet a zero — contrairement a trip/contingency/finalReserve/alternate qui sont recalcules par les effets. Ces 3,79 L entrent dans calculateTotal (ligne 118-126), donc dans le total requis, dans isFobSufficient, dans la comparaison a la capacite embarquable et dans le TOTAL du tronçon 1 que le module renvoie a l etape Masse & Centrage. Sur un ULM a 55 L utilisables, c est 7 % du plein invente. Meme valeur re-injectee par resetToDefault ligne 142.",
+  "correctif": "roulage: { gal: 0, ltr: 0 } avec un champ marque « non renseigne » tant que le pilote n a rien tape, et le total refuse de conclure « suffisant » tant que le roulage n a pas ete confirme. Le roulage depend de l aerodrome et du temps d attente : aucune valeur ne peut etre devinee.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/core/stores/fuelStore.js",
+  "line": 38,
+  "extrait": "alternate: { gal: 2.0, ltr: 7.57 },",
+  "valeurFabriquee": "7.57 L (2 gal US) de degagement",
+  "gravite": "critique",
+  "consequence": "Meme mecanisme : 7,57 L de carburant de degagement presents au demarrage sans qu aucun deroutement ne soit selectionne. L effet de FuelModule.jsx:262-272 les remet a 0 quand hasAlternates est faux, mais seulement une fois le module carburant monte : entre-temps le total affiche et lu par les autres ecrans (Step6, Step7, isFobSufficient) inclut ces litres. Et comme fuelData est persiste, la valeur survit a un rechargement de page avant que le module ne soit ouvert. Identique dans resetToDefault ligne 145.",
+  "correctif": "alternate: { gal: 0, ltr: 0 }. Le degagement est un poste entierement derive de computeWorstDiversion — il ne doit jamais avoir de valeur d amorçage.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 466,
+  "extrait": "const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000; // fallback-ok : matrice de couverture (outil de DIAGNOSTIC, pas le bilan signe)",
+  "valeurFabriquee": "1000 kg de masse au decollage — et, un cran avant, la masse A VIDE prise pour la masse au decollage",
+  "gravite": "critique",
+  "consequence": "C est le site le plus grave de mon perimetre, pour deux raisons cumulees. (1) Le commentaire est perime : depuis l effet des lignes 560-692, takeoffMass n alimente plus seulement la matrice de diagnostic, il part dans takeoffInputsForMatrix (ligne 530) vers generatePerformanceState (ligne 592), et les distances qui en sortent sont PERSISTEES dans flightPlan.performance.departure.takeoff (lignes 671-676) puis reprises par la synthese et le PDF. Le repli est devenu signant. (2) Il DESARME la garde fail-closed du resolveur : operationResolver.missingRequiredInputs (src/services/operationResolver.js:221-228) refuse de calculer si la masse manque, avec le message « performance non calculee (aucune valeur inventee) » — mais cette branche est inatteignable puisqu il reçoit toujours un nombre. Concretement : centrage pas encore fait, avion sans emptyWeight, l application calcule et enregistre une distance de decollage pour 1000 kg. L intermediaire `|| selectedAircraft?.emptyWeight` est aussi dangereux : c est une masse REELLE mais la MAUVAISE (avion vide, sans pilote ni carburant), donc une distance systematiquement trop courte, et elle ne declenche meme pas le warning « masse hors plage » du tableau.",
+  "correctif": "takeoffMass = calculations?.totalWeight ?? null. Masse absente : ne pas appeler le resolveur, afficher « masse au decollage non disponible — terminez l etape Masse & Centrage » et ne RIEN persister dans flightPlan.performance. La garde du resolveur fera alors son travail.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 315,
+  "extrait": "    // 3. Valeur par defaut pour DA40 NG\n    return 1310; // kg (MTOW typique DA40 NG)",
+  "valeurFabriquee": "1310 kg de MTOW",
+  "gravite": "critique",
+  "consequence": "fallbackWeight sert de dernier recours a la masse enregistree dans les conditions de performance (lignes 384 et 432 : `mass: metadata.conditions.weight || calculations?.totalWeight || fallbackWeight`). Un avion qui n est pas un DA40 NG — un Cessna 150 a 726 kg de MTOW, par exemple — se voit attribuer 1310 kg comme masse de reference, ECRITE dans flightPlan.performance.*.conditions.mass, donc dans la fiche de preparation et le PDF. Le pilote lit « distances calculees a 1310 kg » sur un avion qui ne peut pas peser la moitie de ça. C est une donnee du manuel d un AUTRE avion presentee comme celle du sien.",
+  "correctif": "Supprimer la branche 3. fallbackWeight = MTOW de la fiche, sinon masse max des tableaux, sinon null. Et remplacer la cascade des lignes 384/432 par la seule masse reellement utilisee au calcul (metadata.conditions.weight) : si elle est absente, il n y a pas de resultat a enregistrer.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 589,
+  "extrait": "      return r.value; // unite non declaree/inconnue : valeur native (meme repli que la matrice)",
+  "valeurFabriquee": "le METRE comme unite supposee (ligne 583 : String(r.unit || 'm'))",
+  "gravite": "critique",
+  "consequence": "toMeters est la derniere etape avant la persistance des distances dans flightPlan.performance. Une distance dont l abaque n a pas declare l unite est traitee comme des metres. Le resolveur SAIT que c est faux — operationResolver.js:435-439 pousse explicitement le warning « Unite non declaree par l abaque » — mais ce warning n est ni lu ni bloquant ici. Si l abaque est en PIEDS (cas courant sur les manuels americains, et la fiche avion stocke deja landingDistance50ft en pieds, cf. aircraftPerf.js:68-81), une distance de 1800 ft est enregistree comme 1800 m puis comparee a une LDA en metres : la piste parait largement suffisante alors qu il manque un facteur 3,28. C est la seule erreur de mon audit qui se compte en facteur et non en pourcents, et elle va dans le sens dangereux.",
+  "correctif": "if (!r.unit) return null; — une distance sans unite declaree n est pas une distance. La distance est ecartee comme un resultat non-COMPUTED (le module sait deja faire, cf. `retenue` ligne 660-661) et la carte affiche « unite de l abaque non declaree — declarez l axe Y du modele ».",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 178,
+  "extrait": "const consumptionLph = getFuelConsumptionLph(selectedAircraft) || 0;",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Annule le fail-closed du helper canonique. La garde qui suit fait retomber tripLtr a 0 : le bilan carburant affiche 0 L de trip pour une navigation de 200 NM, ce qui se lit comme « rien a emporter » et non comme « donnee manquante ».",
+  "correctif": "Garder null et propager l'absence : trip non calculable => champ vide + message, jamais 0 L.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 203,
+  "extrait": "const reserveConsumptionLph = getFuelConsumptionLph(selectedAircraft) || 0;",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "getFuelConsumptionLph rend null quand la consommation n'est pas renseignee (fail-closed correct). Le `|| 0` la retransforme en zero, et reserveLtr = 0 x heures = 0. Le bilan carburant affiche alors une RESERVE FINALE REGLEMENTAIRE de 0 L, sans aucun avertissement — contrairement au trip fuel juste au-dessus qui est protege par `if (consumptionLph > 0 && cruiseSpeed)`. Un pilote peut decoller en croyant sa reserve calculee.",
+  "correctif": "Consommation nulle => ne pas ecrire finalReserve dans fuelData et afficher « reserve non calculable : consommation non renseignee », comme le fait deja getReserveDescription() l.302.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 201,
+  "extrait": "const reserveMinutes = navigationResults.regulationReserveMinutes || 30;",
+  "valeurFabriquee": "30 minutes de reserve reglementaire",
+  "gravite": "critique",
+  "consequence": "Deuxieme copie de la regle 30/45/+15 dans le code, alors que src/core/flightType.js:14-19 declare noir sur blanc « calculee ICI et NULLE PART AILLEURS [...] plus aucune copie de la regle 30/45/+15 ailleurs dans le code ». Si navigationResults ne porte pas la valeur, le module suppose VFR jour et calcule la reserve sur 30 min : un vol de nuit (45 min) ou IFR (+15) se voit provisionner 15 a 30 min de carburant en moins que le minimum legal, sans aucun signe a l ecran. La meme ligne est dupliquee en 296 pour le libelle, ce qui rend le mensonge coherent : la description affiche « 30 min = 0.5h x ... » et rien ne detonne. Falsifie un CHIFFRE, pas seulement un affichage.",
+  "correctif": "Importer computeRegulatoryReserveMinutes depuis @core/flightType et, si le type de vol n est pas encore saisi, ne pas produire de reserve du tout (voir site suivant). Supprimer les deux `|| 30`.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/core/flightType.js",
+  "line": 42,
+  "extrait": "let minutes = period === 'nuit' ? NIGHT_RESERVE_MINUTES : BASE_RESERVE_MINUTES;",
+  "valeurFabriquee": "« VFR jour » (donc 30 min) comme type de vol par defaut",
+  "gravite": "critique",
+  "consequence": "La fonction est documentee « Toujours un nombre (defaut = base VFR jour) ; tolere un flightType partiel/absent ». C est exactement le repli interdit : un vol dont le pilote n a PAS encore declare la periode ni les regles est traite comme un VFR de jour. Un flightType absent, ou dont `period` vaut undefined a cause d un plan restaure partiellement, produit 30 min au lieu des 45 min d un vol de nuit. La valeur remonte ensuite partout — navigationStore.js:95-97, les deux useNavigationResults, FuelModule — donc la reserve en litres, le total requis et le verdict d escale sont tous batis dessus. Aucun ecran ne distingue « 30 min parce que VFR jour declare » de « 30 min parce qu on ne sait pas ».",
+  "correctif": "Renvoyer null si period ou rules est absent, et laisser les appelants afficher « type de vol non defini — reserve reglementaire non calculable ». La constante DEFAULT_FLIGHT_TYPE (ligne 21-25) peut rester pour amorcer un FORMULAIRE, mais elle ne doit pas servir de reponse a un calcul.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/fuel/legFuelPlan.js",
+  "line": 67,
+  "extrait": "legAlternateLtr = div?.hasComputable ? Math.max(0, div.supplementLtr || 0) : 0;  // commentaire ligne 65 : « fail-closed : statuts d erreur -> 0 »",
+  "valeurFabriquee": "0 L de degagement sur un tronçon",
+  "gravite": "critique",
+  "consequence": "Le commentaire dit fail-closed, le code fait exactement l inverse : quand AUCUN deroutement du tronçon n est calculable (position perdue, route incomplete, avion incomplet — les statuts que computeDiversionFuel prend soin de distinguer dans alternateFuelCalculations.js:136-147), le tronçon se voit attribuer 0 L de degagement et son TOTAL est presente comme un bilan complet dans le tableau par tronçon (FuelModule.jsx:565-581), avec la colonne « Degag. » affichant « — » comme si aucun degagement n etait requis. Le verdict « chaque tronçon tient dans les X L embarquables » (ligne 594) est alors rendu sur un besoin sous-estime.",
+  "correctif": "Propager l impossibilite : le tronçon renvoie alternateLtr: null et totalLtr: null, la ligne du tableau affiche « degagement non calculable » et le verdict global devient indisponible. Un poste manquant doit invalider le total, pas y compter pour zero.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 258,
+  "extrait": "alternate: { gal: parseFloat((alternateFuelRequiredGal || 0).toFixed(1)), ltr: parseFloat((alternateFuelRequired || 0).toFixed(1)) }",
+  "valeurFabriquee": "0 L de carburant de degagement",
+  "gravite": "critique",
+  "consequence": "Pendant symetrique du site precedent, cote bilan global. alternateFuelRequired vient de useAlternatesIntegration.js:76 (`diversionAnalysis.supplementLtr`), qui vaut 0 des qu aucun deroutement n est calculable. Le bloc s execute quand hasAlternates est vrai : des deroutements SONT selectionnes, et pourtant 0 L est ecrit dans le store puis compte au total. La description (getAlternateDescription, lignes 324-352) fait un excellent travail en expliquant la cause exacte — mais elle vit dans une colonne de texte a cote d une case qui affiche « 0.0 L », et c est le 0 qui part dans le calcul, pas le texte.",
+  "correctif": "Ne pas ecrire dans le store quand diversionAnalysis.hasComputable est faux : laisser la ligne vide/barree et rendre le total indisponible. Le module distingue deja parfaitement les causes, il suffit de ne pas conclure a zero litre.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/services/tableInterpolationAdapter.js",
+  "line": 300,
+  "extrait": "const clampedMass = targetMass < minMass ? minMass : maxMass;\nvalue = trilinearInterpolate(masses, altitudes, temperatures, values, clampedMass, targetAlt, tempLookup);",
+  "valeurFabriquee": "la distance du tableau a la masse MAXI, presentee comme la distance de l avion",
+  "gravite": "critique",
+  "consequence": "Quand l avion est PLUS LOURD que la derniere masse du tableau et que l extrapolation echoue (tableau publie a une seule masse, cas frequent), la masse est ecrasee sur maxMass et la distance de cette masse est renvoyee en COMPUTED. Le code le sait et l ecrit lui-meme au warning ligne 316 : « NON conservateur (masse reelle > max -> distance reelle plus longue) ». Cette distance trop courte remonte ensuite comme un resultat normal, est corrigee des facteurs manuel, PERSISTEE dans flightPlan.performance et comparee a la TODA/LDA de la piste. Le pilote lit une marge de piste positive qui n existe pas. Le meme fichier refuse pourtant de calculer, un peu plus haut (lignes 271-289), pour un depassement d altitude ou de temperature au motif exact que la valeur rendue serait optimiste : le depassement de masse merite le meme traitement.",
+  "correctif": "Symetriser avec le refus altitude/temperature : masse au-dela de maxMass et extrapolation impossible => status ERROR, « masse superieure a la plage du manuel, distance non calculable ». Conserver le clamp UNIQUEMENT sous minMass, ou il est reellement conservateur.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/nav/routeWindTimes.js",
+  "line": 61,
+  "extrait": "let gsKt = tas;   [...] const timeMin = (distanceNM / gsKt) * 60;",
+  "valeurFabriquee": "vent nul sur tout segment dont le vent n est pas connu",
+  "gravite": "critique",
+  "consequence": "Un segment sans donnee de vent est chronometre a la TAS, c est-a-dire en supposant l air immobile. Le temps total ainsi obtenu alimente navigationResults.totalTime, et FuelModule.jsx:187-190 en tire directement le trip fuel. Vent de face non charge = trip fuel sous-estime, exactement le probleme que ce module a ete ecrit pour refermer (cf. son propre en-tete lignes 5-8). Le drapeau windCorrected 'partial'/'none' est bien pose et honnete, mais aucun consommateur du carburant ne le lit : ni FuelModule ni computeLegFuelPlans ne s en servent pour degrader ou refuser le chiffre. Cas encore plus net lignes 73-76 : un segment ou le vent DEPASSE la TAS (physiquement intenable, l avion recule) est quand meme chronometre a la TAS — le temps affiche est fini et plausible pour un vol impossible.",
+  "correctif": "Deux niveaux. (a) Le module continue de renvoyer les segments non corriges mais avec timeMin: null, et totalTimeMin devient null des qu un segment manque. (b) A defaut, les consommateurs carburant refusent de conclure quand windCorrected !== 'full', avec « vents en altitude non charges — carburant de trip non calculable ». Un segment untenable doit invalider le vol, pas produire un horaire.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/navigation/utils/effectiveSpeed.js",
+  "line": 12,
+  "extrait": "const DEFAULT_WIND_ALT_FT = 3000; // « Altitude d echantillonnage par defaut (alignee sur plannedAltitude defaut) »",
+  "valeurFabriquee": "3000 ft comme altitude de croisiere pour aller chercher le vent",
+  "gravite": "critique",
+  "consequence": "Le vent utilise pour corriger les temps — donc le trip fuel — est TOUJOURS lu a 3000 ft, quelle que soit l altitude reellement prevue. Meme constante dupliquee dans src/features/navigation/hooks/useNavigationResults.js:10. Le vent varie fortement avec l altitude (cisaillement, jet de basse couche) : un vol prevu a 6500 ft se voit appliquer le vent de 3000 ft, et la vitesse sol — donc le carburant — est fausse dans un sens imprevisible. Ce n est pas un defaut d affichage : getRouteEffectiveSpeedKt est passe a computeLegFuelPlans (FuelModule.jsx:527) et pilote les litres de chaque tronçon. Le commentaire est lucide (« alignee sur plannedAltitude defaut ») — il documente le fait qu on empile un defaut sur un autre defaut (voir site suivant).",
+  "correctif": "Passer l altitude de croisiere reelle du segment en parametre. Tant qu aucune altitude n est saisie, ne pas echantillonner de vent du tout et renvoyer null (le consommateur affiche « altitude de croisiere non definie — correction de vent indisponible ») plutot que le vent d une altitude que personne n a choisie.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step7Summary.jsx",
+  "line": 58,
+  "extrait": "const plannedAltitude = 3000;   // « Altitude planifiee par defaut »",
+  "valeurFabriquee": "3000 ft d altitude de croisiere",
+  "gravite": "critique",
+  "consequence": "Altitude de vol inventee, en dur, sans aucun moyen pour le pilote de la corriger — dans Step3Route.jsx:90 elle est meme declaree `const [plannedAltitude] = useState(3000)`, c est-a-dire un state SANS setter. Elle sert de repli a l altitude de croisiere reelle (Step7Summary.jsx:211 `const cruiseAltitude = lastSegmentAlt || plannedAltitude`, idem Step3Route.jsx:106), donc au calcul du Top of Descent, a l analyse de penetration d espaces aeriens (DangerousZonesDetector, AirspacesSummaryTable) et — via le site precedent — a l altitude d echantillonnage du vent. Un vol prepare au-dessus du Massif central ou des Alpes est analyse a 3000 ft : les espaces traverses et le point de descente sont ceux d un autre vol. Troisieme copie de la meme valeur dans FlightRecapTable.jsx:521.",
+  "correctif": "Une seule source : l altitude saisie par segment. Aucune altitude saisie => pas de TOD, pas d analyse d espaces, pas de correction de vent, et un message « altitude de croisiere non definie ». Et supprimer les trois copies au profit d un champ unique du plan de vol.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step7Summary.jsx",
+  "line": 64,
+  "extrait": "const terrainElevation = lastWaypoint.elevation || 0;  [ligne 67] setTargetAltitude(terrainElevation + 1000);",
+  "valeurFabriquee": "0 ft d altitude terrain a la destination",
+  "gravite": "critique",
+  "consequence": "L altitude du terrain d arrivee, si elle n est pas connue, vaut zero — c est-a-dire le niveau de la mer. L altitude cible de fin de descente devient alors 1000 ft AMSL. Sur un aerodrome situe a 3000 ft (Gap-Tallard, Megeve, la plupart des terrains de montagne), le calcul de Top of Descent des lignes 214-234 planifie une descente qui se termine 2000 ft SOUS le terrain, et le module affiche une distance au TOD, un temps et un angle de descente parfaitement plausibles pour cette trajectoire. Le `|| 0` est doublement piegeux ici : 0 ft est une elevation VALIDE (terrain en bord de mer), donc rien ne permet a l aval de distinguer le cas connu du cas invente.",
+  "correctif": "if (!Number.isFinite(lastWaypoint.elevation)) => pas de targetAltitude, pas de TOD, message « altitude du terrain d arrivee inconnue ». Et utiliser une garde Number.isFinite plutot que ||, pour ne pas confondre le zero reel et le zero fabrique — le module Performance fait deja exactement ça pour l altitude-pression (PerformanceModule.jsx:486).",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/utils/runwayCompatibility.js",
+  "line": 45,
+  "extrait": "const todaM = runway.toda ?? runway.length ?? runway.dimensions?.length ?? 0;\nconst ldaM  = runway.lda  ?? runway.length ?? runway.dimensions?.length ?? 0;",
+  "valeurFabriquee": "la LONGUEUR physique de la piste prise pour la TODA et pour la LDA, sinon 0 m",
+  "gravite": "critique",
+  "consequence": "Deux inventions dans une ligne. (1) Longueur physique != distance declaree : la LDA est frequemment PLUS COURTE que la piste (seuil decale), la TODA frequemment plus longue (prolongement degage). Substituer la longueur a la LDA surestime la distance disponible a l atterrissage et fait passer en « compatible » une piste qui ne l est pas — le message de la ligne 77 annonce meme une marge en metres, chiffree, sur une LDA que personne n a publiee. (2) Le `?? 0` final : sans aucune donnee de longueur, todaM/ldaM valent 0, les gardes `todaM > 0` (ligne 51) et `ldaM > 0` (ligne 71) sont fausses, et le controle de distance est purement et simplement SAUTE — sans message. La piste ressort « compatible » parce qu on ne l a pas verifiee. C est le zero qui eteint l alerte, dans sa forme la plus pure.",
+  "correctif": "Garder toda et lda comme SEULES sources des distances declarees. Absentes => distance non verifiable : compatible: 'unknown' et « distances declarees de la piste indisponibles — verifiez la carte VAC ». Supprimer le repli sur length et le ?? 0.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/fuelArm.js",
+  "line": 114,
+  "extrait": "? (parseFloat(aircraft?.fuelUsableCapacity) || parseFloat(aircraft?.fuelCapacity) || 0)",
+  "valeurFabriquee": "0 L (capacite pour le scenario « Pleins »)",
+  "gravite": "critique",
+  "consequence": "Avion sans contenance renseignee : le scenario « Reservoirs pleins » calcule 0 L, la garde `if (liters <= 0) return empty` (l.122) renvoie `{ok:true, weight:0}` — donc un scenario VALIDE, affiche en vert, montrant l'avion aux pleins avec zero carburant. C'est le pire cas de figure : la carte censee verifier la configuration la PLUS lourde affiche la plus legere.",
+  "correctif": "Contenance inconnue => `{ok:false, reason:'capacity'}` et carte « Pleins » indisponible. Le message existe deja pour 'fuelArm' et 'distribution' dans ScenarioCards.jsx:69-73, il suffit d'en ajouter un.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/fuelArm.js",
+  "line": 49,
+  "extrait": "cap: tankUsableLtr(t) ?? NaN, ... .filter((t) => Number.isFinite(t.cap) && t.cap > 0)",
+  "valeurFabriquee": "disparition silencieuse d'un reservoir (equivaut a 0 L, 0 kg.m)",
+  "gravite": "critique",
+  "consequence": "Un reservoir dont la contenance n'est pas renseignee est retire de la liste sans un mot. Deux consequences : (1) le scenario « Pleins » l'oublie, la masse et le moment sont sous-estimes ; (2) la detection d'ambiguite de bras (`tanksShareOneArm`, l.80 et 144) ne voit plus que les reservoirs restants — un avion a bras differents peut ainsi etre declare mono-bras et se voir appliquer un bras unique, alors que la regle du fichier interdit precisement ce raccourci. Un reservoir absent de la liste ne declenche jamais `reason:'distribution'`.",
+  "correctif": "Ne jamais filtrer en silence : un reservoir declare dont la contenance manque doit rendre le scenario indisponible ('capacity'), pas disparaitre du calcul.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 539,
+  "extrait": "runwaySlope: 0",
+  "valeurFabriquee": "0 % de pente de piste",
+  "gravite": "critique",
+  "consequence": "Injecte en dur dans takeoffInputsForMatrix (ligne 539) et landingInputsForMatrix (ligne 551), c est-a-dire dans les entrees du resolveur d abaques, comme si la piste avait ete mesuree horizontale. Aucune pente reelle n est jamais lue, alors que la donnee existe cote piste. Sur un abaque ou un tableau qui declare un axe de pente, l avion est calcule a plat : une piste en descente de 2 % au decollage ou en montee a l atterrissage voit sa distance sous-estimee, et le resultat part en persistance et en comparaison de piste comme un calcul valide. La valeur pretend representer CETTE piste alors que personne ne l a saisie — le critere exact de la consigne.",
+  "correctif": "Ne pas fournir la cle du tout (undefined) : le resolveur declenchera son propre MISSING_INPUT si un abaque a besoin de la pente, et l ignorera sinon. Puis cabler la pente reelle de la piste quand elle est disponible.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 513,
+  "extrait": "const takeoffWindComponent = resolveWindComponent(departureRunwayWind.headwindComponent).component;",
+  "valeurFabriquee": "0 kt de composante de vent quand la direction est indeterminee",
+  "gravite": "critique",
+  "consequence": "windComponent.js:16-21 fait exactement ce qu il faut : il renvoie { component: 0, unknown: true } et documente le 0 comme conservateur. L appelant ne lit que `.component` et jette `unknown` — l information « on ne sait pas » est perdue des cette ligne (idem ligne 514 pour l atterrissage). Le 0 part ensuite comme une donnee meteo reelle dans les entrees du resolveur (lignes 534-536, 546-548), dans la correction des facteurs manuel (applyCorr, lignes 642-645, avec windComponentKt = 0 : la regle de vent arriere du manuel n est donc jamais declenchee) et dans les conditions persistees (lignes 674, 681). Et 0 n est conservateur que face a un vent de FACE : si le vent reel est arriere et que la direction n a pas pu etre resolue (pas de piste chargee, METAR partiel), la distance rendue est plus courte que la realite. Le pilote ne voit nulle part que le vent n a pas ete pris en compte.",
+  "correctif": "Recuperer et propager le drapeau : const { component, unknown } = resolveWindComponent(...). Si unknown, ne pas fournir de composante au resolveur (undefined, pas 0), afficher « composante de vent indeterminee — distances non corrigees du vent » et ne rien persister sur cette base.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/fuel/maxFuel.js",
+  "line": 45,
+  "extrait": ".map((t, i) => ({ key: String(t?.id ?? i), cap: tankUsableLtr(t) ?? 0 }))",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Dans le moteur lui-meme : un reservoir de contenance inconnue recoit cap = 0, puis est elimine par le `.filter(t => t.cap > 0)` juste apres. Le calcul « volume max jusqu'a MTOW » l'ignore donc en silence au lieu de refuser. Si TOUS les reservoirs sont dans ce cas, la fonction retombe sur `num(fuelUsableCapacity) ?? num(fuelCapacity) ?? 0` (l.57), c'est-a-dire sur la capacite racine — celle-la meme qui diverge de 54 L des reservoirs sur F-GUKQ. Le bouton est actuellement retire de l'UI (Lot 7) mais la fonction est conservee pour son retour.",
+  "correctif": "Un reservoir coche sans contenance exploitable doit faire echouer le calcul ({ ok:false, error:'tankCapacity', tank }), pas etre ecarte.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/navigation/hooks/useNavigationResults.js",
+  "line": 47,
+  "extrait": "const fuelRequired = (totalTime > 0 && fuelConsumption) ? (totalTime / 60) * fuelConsumption : 0;\n[ligne 53] const regulationReserveLiters = fuelConsumption ? (regulationReserveMinutes / 60) * fuelConsumption : 0;",
+  "valeurFabriquee": "0 L de carburant requis et 0 L de reserve reglementaire",
+  "gravite": "majeur",
+  "consequence": "Ces deux zeros sont exposes dans navigationResults et lus par tout l aval. Le plus concret : FuelStopAdvisor.jsx:36 (`navigationResults?.regulationReserveLiters || 0`) les passe a analyzeFuelAutonomy comme la reserve du vol. Le planificateur d escale evalue alors les tronçons SANS reserve reglementaire, ce qui reduit le besoin de chaque tronçon et peut conclure « ok » la ou une escale est necessaire. Le meme hook cohabite avec deux autres implementations qui, elles, refusent proprement : navigationStore.js:97 renvoie null, et features/alternates/hooks/useNavigationResults.js:37-39 renvoie null pour tout le resultat. Trois hooks, trois politiques — le zero est celui qui gagne dans la chaine escale. Ligne 44 (`totalDistance = windTimes ? ... : 0`) souffre du meme defaut, en amont.",
+  "correctif": "Aligner sur navigationStore : null partout, et faire tomber analyzeFuelAutonomy en 'no-data' (le planificateur sait deja afficher ce statut, cf. fuelStopPlanner.js:64-67) plutot que de calculer sur une reserve nulle.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 492,
+  "extrait": "return `${(totalLtr * 0.8).toFixed(1)} ${getSymbol('fuel')}`;   [ligne 494] `${(totalLtr * 0.8 * 2.20462).toFixed(1)}`",
+  "valeurFabriquee": "densite carburant 0,8 kg/L",
+  "gravite": "majeur",
+  "consequence": "Quand le pilote a choisi kg ou lbs comme unite carburant, le TOTAL du bilan est converti avec une densite de 0,8 codee en dur — une densite qui ne correspond a AUCUN carburant de la table canonique du projet (constants.js:1-5 : AVGAS 100LL 0,72 ; MOGAS 0,72 ; JET A-1 0,84), et qui ignore le fuelType de l avion. Erreur de +11 % sur AVGAS (60 L lus 48 kg au lieu de 43,2) et de -5 % sur Jet A-1. C est le TOTAL de la fiche carburant, celui que le pilote recopie sur son devis de masse : une masse trop lourde de 5 kg le fait renoncer a une charge, une masse trop legere passe sous la MTOW a tort. L en-tete de fuelDensity.js designe nommement cette valeur 0,80 comme l anomalie A1 corrigee partout ailleurs — c est le dernier endroit ou elle survit. Fausse un CHIFFRE affiche, pas un calcul interne : je le classe majeur et non critique parce qu il ne repart pas dans le moteur, mais il est lu et recopie.",
+  "correctif": "getFuelDensity(selectedAircraft?.fuelType), et si elle renvoie null (type non renseigne) : afficher le total en litres uniquement, avec « conversion en masse indisponible — type de carburant non renseigne ». Jamais de densite generique.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternatesIntegration.js",
+  "line": 86,
+  "extrait": "distance: result?.status === 'ok' ? result.distFootToAlternateNM : 0,",
+  "valeurFabriquee": "0 NM de distance au deroutement",
+  "gravite": "majeur",
+  "consequence": "Un deroutement non calculable est publie avec une distance de 0 NM. Le champ `status` porte bien la vraie raison a cote, mais tout consommateur qui affiche ou trie sur `distance` montre « 0 NM » — soit le deroutement le plus proche du monde, presente comme une donnee. Meme fabrication ligne 102 pour maxDistanceAlternate (`{ distance: 0, status: ... }`), qui est l objet designant le deroutement dimensionnant. Un 0 NM ne se distingue pas d un deroutement situe sur la route.",
+  "correctif": "distance: null quand status !== 'ok', et cote affichage un tiret avec le motif. Le statut existe deja, il suffit de ne pas lui adjoindre un nombre qui le contredit.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/services/unifiedPerformanceService.js",
+  "line": 910,
+  "extrait": "pressure_alt_ft: data.conditions?.altitude || 0,\noat_c: data.conditions?.temperature || 15,\nmass_kg: data.conditions?.weight || 1000,\nvalue: data.takeoff.tod || data.takeoff.distance || 0",
+  "valeurFabriquee": "0 ft, 15 degres C (ISA), 1000 kg et 0 m — un point de grille de performance entierement invente",
+  "gravite": "majeur",
+  "consequence": "extractValuesFromLegacy fabrique les QUATRE coordonnees d un point de grille de performance : conditions standard au niveau de la mer, masse de 1000 kg et distance nulle. Le point ainsi cree est integre a une structure ABAC (convertLegacyToABAC, ligne 879-894) qui a vocation a etre stockee comme un modele de performance de l avion — donc a etre interrogee ensuite par le resolveur comme si elle venait du manuel. Un ISA 15 degres et une masse 1000 kg fabriques a l EXTRACTION contaminent la fiche de façon permanente, bien plus durablement qu un repli d affichage. A verifier avant correction : convertLegacyToABAC n a aujourd hui aucun appelant dans src/ (methode exportee, jamais invoquee) — le danger est latent, pas actif.",
+  "correctif": "Soit supprimer convertLegacyToABAC/extractValuesFromLegacy s ils sont morts, soit ne produire un point que si les quatre valeurs sont reellement presentes dans la donnee legacy, et rejeter la conversion sinon. Une grille de performance incomplete doit etre refusee, pas completee.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/services/abacValidationService.js",
+  "line": 429,
+  "extrait": "return nearest?.value || 0;      [ligne 397] return sorted[0]?.value || 0;",
+  "valeurFabriquee": "0 (metres) comme valeur lue sur l abaque",
+  "gravite": "majeur",
+  "consequence": "Deux sorties d interpolation qui renvoient 0 quand aucun point exploitable n existe. Une distance de decollage nulle est le pire zero possible : elle compare favorablement a toutes les pistes du monde. S y ajoute la politique par defaut ligne 382-383 : hors du domaine de l abaque, `default: return this.nearestNeighbor(...)` remplace silencieusement la lecture par le point de grille le plus proche, alors que le mode 'forbid' (ligne 375-376) existe et leve correctement. Comme pour le site precedent, la portee est a verifier : ce service n est reference que par unifiedPerformanceService (chaine d extraction atelier), pas par le resolveur de preparation de vol.",
+  "correctif": "return null au lieu de 0 dans les deux cas, et faire de 'forbid' le comportement par defaut hors domaine. Un point le plus proche n est pas une lecture d abaque.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/utils/runwayCompatibility.js",
+  "line": 91,
+  "extrait": "const surfaceInfo = SURFACE_TYPES[surfaceRaw] || { name: surfaceRaw, icon: '❓', quality: 0.5 };",
+  "valeurFabriquee": "un coefficient de qualite de surface de 0,5 pour une surface inconnue",
+  "gravite": "majeur",
+  "consequence": "Une surface non repertoriee se voit attribuer une qualite de 0,5, et le message des lignes 100-101 / 106-107 annonce alors au pilote « Surface <nom> autorisee - performances reduites (50%) ». Un pourcentage chiffre, presente comme une donnee de performance, sur une surface dont l application ne sait rien. Plus largement, toute la table SURFACE_TYPES (lignes 15-23 : herbe 0,8, gravier 0,7, neige 0,5, glace 0,3) est un bareme sans source qui ne vient d aucun manuel de vol. Il n entre dans aucun calcul — c est un texte — d ou le classement majeur ; mais il ressemble a s y meprendre a un facteur correctif du manuel, alors que les VRAIS facteurs de surface vivent ailleurs et proprement (performanceCorrections.js, alimente par la fiche avion).",
+  "correctif": "Surface inconnue => « surface non identifiee, effet sur les distances non evaluable », sans pourcentage. Et pour les surfaces connues, renvoyer au facteur reel de la fiche avion plutot qu a un bareme maison.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/navigation/components/FuelStopAdvisor.jsx",
+  "line": 36,
+  "extrait": "const reserveLiters = navigationResults?.regulationReserveLiters || 0;",
+  "valeurFabriquee": "0 L de reserve finale reglementaire dans l analyse d escale",
+  "gravite": "majeur",
+  "consequence": "Passe tel quel a analyzeFuelAutonomy (ligne 41), qui l additionne au besoin de chaque tronçon (fuelStopPlanner.js:78). Reserve a 0 = besoin sous-estime de 30 a 60 min de vol par tronçon = un tronçon en defaut peut ressortir `fits: true` et l alerte d escale ne s affiche jamais. Le declenchement reel depend de l amont : aujourd hui regulationReserveLiters ne vaut 0 que lorsque la consommation manque, cas ou analyzeFuelAutonomy tombe de toute façon en 'no-data' (ligne 65-67) — la faille est donc masquee par un heureux hasard, pas par une garde. Elle s ouvrira des que l amont produira un 0 pour une autre raison. Meme remarque pour taxiLtr/alternateLtr lignes 44-45.",
+  "correctif": "Ne pas ecraser : passer la valeur telle quelle (null compris) et laisser fuelStopPlanner refuser explicitement, en ajoutant reserveLiters a sa garde de la ligne 65 au meme titre que la vitesse, la consommation et la capacite.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/services/abacInterpolation.js",
+  "line": 126,
+  "extrait": "temperature:       defaultCond.temperature       ?? 15,\npressure_altitude: defaultCond.pressure_altitude ?? 0,\nmass:              defaultCond.mass              ?? 1000,\nwind:              defaultCond.wind              ?? 0,\ndistance:          0",
+  "valeurFabriquee": "ISA 15 degres C, 0 ft, 1000 kg, vent nul, distance 0",
+  "gravite": "majeur",
+  "consequence": "C est le retour exact de l ISA fabrique que le commentaire de la ligne 36-38 du meme fichier declare avoir supprime : inputsToConditions renvoie desormais null pour une donnee absente (ligne 41-43), et `null ?? 15` vaut 15. Le refus fail-closed de l etage superieur est annule un etage plus bas, dans le nuage de points sur lequel porte ensuite l interpolation IDW. La ligne 130 (`distance: 0`) ajoute un point de distance nulle pour tout point dont l axe Y n est pas une distance, ce qui tire toute moyenne IDW vers le bas. Portee a verifier avant de coder : depuis le passage a atelierCascadeAdapter (operationResolver.js:364-369), extractPoints n est plus appele que par ses propres tests — la fonction reste exportee et prete a resservir.",
+  "correctif": "Propager null (`defaultCond.temperature`, sans ??) et ecarter tout point dont une dimension reste inconnue. Ou supprimer extractPoints/interpolateIDW4D si le moteur atelier les a definitivement remplaces — du code mort qui fabrique de l ISA finira par etre rebranche.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/fuel/tankCapacity.js",
+  "line": 53,
+  "extrait": "const vals = list.map(tankUsableLtr).filter((v) => v !== null && v > 0);",
+  "valeurFabriquee": "une somme de contenances presentee comme complete alors qu un reservoir en a ete retire",
+  "gravite": "majeur",
+  "consequence": "sumUsableLtr et sumTotalLtr filtrent les reservoirs dont la contenance est nulle — le total renvoye est donc une somme PARTIELLE presentee comme le total de l avion, sans aucun signe distinctif. Le fichier est par ailleurs le modele du fail-closed du projet (tankUnusableLtr ligne 42-47 refuse exemplairement de fabriquer un zero), ce qui rend l incoherence d autant plus facile a corriger. Consequence pratique : une capacite totale sous-estimee, donc des alertes d escale ou de depassement declenchees a tort, ou un pourcentage de remplissage faux.",
+  "correctif": "Renvoyer null des qu un reservoir de la liste a une contenance inconnue, ou renvoyer { total, incomplet: true, reservoirsSansContenance: [...] } pour que l appelant puisse nommer le probleme. Un total dont on sait qu il manque une piece n est pas un total.",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "src/features/performance/PerformanceModule.jsx",
+  "line": 516,
+  "extrait": "const takeoffWindSpeed = departureWeather?.metar?.decoded?.wind?.speed ?? 0;",
+  "valeurFabriquee": "0 kt de vitesse du vent",
+  "gravite": "mineur",
+  "consequence": "Un vent absent est affiche comme un vent calme — « 0 kt » se lit comme une mesure, pas comme une absence de mesure. L impact calcul est aujourd hui nul : la seule consommation en aval est windMagnitude (lignes 538 et 550), conditionnee par takeoffWindVariable qui exige speed > 0 (lignes 523-524) ; le 0 ne peut donc pas atteindre le resolveur. Le commentaire ligne 515 est exact sur ce point (« AFFICHAGE seulement »). Je le signale parce que la meme forme, deux lignes plus haut (site n°23), n est PAS cosmetique — et parce que « vent 0 kt » affiche a cote de distances de performance invite a croire que le vent a ete pris en compte.",
+  "correctif": "?? null et un tiret a l affichage, pour que « pas de METAR » ne se lise jamais « vent calme ».",
+  "angle": "Carburant et performances — au"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/scenarios.js",
+  "line": 96,
+  "extrait": "const emptyWeight = parseFloat(aircraft.weights?.emptyWeight || aircraft.emptyWeight || aircraft.masses?.emptyMass || 0); ... if (emptyWeight > 0) { items.push(...) }",
+  "valeurFabriquee": "0 (masse a vide)",
+  "gravite": "critique",
+  "consequence": "Masse a vide introuvable : elle vaut 0, donc la ligne n'est PAS ajoutee (garde `emptyWeight > 0` l.99) et les quatre scenarios (Pleins / Decollage / Atterrissage / ZFW) sont calcules SANS l'avion. Le devis affiche une masse au decollage de l'ordre de 150 kg au lieu de 900, et un CG issu des seuls occupants et du carburant — le terme dominant du moment a disparu. Aucun avertissement, aucun `unavailableReason` : les cartes s'affichent normalement, y compris dans la synthese finale (Step7Summary l.1433).",
+  "correctif": "Masse a vide absente => les scenarios ne sont PAS calculables. Retourner `{ unavailableReason: 'emptyWeight' }` pour les quatre scenarios (ZFW compris), exactement comme le fait deja `computeWeightBalance.js:55-59` qui, lui, retourne null.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/scenarios.js",
+  "line": 104,
+  "extrait": "moment: emptyWeight * (wb.emptyWeightArm || 0)",
+  "valeurFabriquee": "0 (bras de la masse a vide)",
+  "gravite": "critique",
+  "consequence": "Bras de masse a vide absent : le moment de l'avion vide vaut 0 alors que sa masse est comptee. Le CG resultant (moment total / masse totale) est tire violemment vers l'avant — typiquement 0,3 a 0,6 m au lieu de 2,1 m. Compare a une enveloppe qui commence vers 2,0 m, cela donne un verdict « hors limites avant » sur un avion parfaitement centre, ou l'inverse selon le trace. Les memes `|| 0` frappent les quatre sieges aux lignes 114, 122, 130 et 138.",
+  "correctif": "Aligner sur computeWeightBalance.js : un bras absent sur une station CHARGEE rend le centrage non verifiable. Marquer le scenario indisponible ('arm') et ne rien afficher, plutot que multiplier une masse reelle par un bras nul.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/scenarios.js",
+  "line": 147,
+  "extrait": "const arm = parseFloat(compartment.arm) || 0;  puis  moment: weight * arm",
+  "valeurFabriquee": "0 (bras d'un compartiment bagages)",
+  "gravite": "critique",
+  "consequence": "Un compartiment sans bras (ou avec le bras 0 ecrit par le normaliseur d'import, cf. aircraftNormalizer.js:170) prend 20 kg de bagages dans la masse mais 0 kg.m dans le moment. Bagages en soute arriere : le CG calcule est plus AVANT que la realite, l'application declare le vol centre alors qu'il est arriere-limite. Idem lignes 163 et 171 pour les compartiments legacy (`wb.baggageArm || 0`, `wb.auxiliaryArm || 0`).",
+  "correctif": "Bras de compartiment absent ou nul avec une charge > 0 => scenario indisponible et message « bras du compartiment X non renseigne ».",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/computeWeightBalance.js",
+  "line": 185,
+  "extrait": "const arm = parseFloat(compartment.arm); if (weight > 0 && !Number.isFinite(arm)) baggageArmMissing = true; ... baggageMoment += weight * (Number.isFinite(arm) ? arm : 0);",
+  "valeurFabriquee": "0 accepte comme un bras reel",
+  "gravite": "critique",
+  "consequence": "Le garde-fou ne teste que `Number.isFinite`. Or `parseFloat('0')` vaut 0, qui EST fini : un bras de 0 (valeur que le formulaire avion et le normaliseur d'import ecrivent en base, cf. AircraftModule.jsx:4180 et aircraftNormalizer.js:170) passe pour un vrai bras. Le moment du compartiment vaut 0, `baggageArmMissing` reste faux, `cgReliable` reste VRAI, aucun avertissement n'est emis — et le verdict « dans les limites » est rendu sur un moment ampute. C'est le cas le plus dangereux de tout l'audit : le systeme est fail-closed en apparence et fail-open en fait. Meme faille lignes 202-205 pour baggageArm/auxiliaryArm.",
+  "correctif": "Utiliser le meme predicat que `armOrNull` (l.69-72) partout : un bras n'est valide que si `Number.isFinite(n) && n !== 0`. Un 0 doit declencher `baggageArmMissing`, pas un moment nul.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/computeWeightBalance.js",
+  "line": 187,
+  "extrait": "baggageMoment += weight * (Number.isFinite(arm) ? arm : 0);",
+  "valeurFabriquee": "0 (bras absent dans le produit masse x bras)",
+  "gravite": "critique",
+  "consequence": "Meme quand le bras est bien detecte absent, le moteur continue a additionner `poids x 0` puis renvoie `cg` et `totalMoment` comme des nombres finis (l.359 : `cg: parseFloat(cg.toFixed(3))`). `cgReliable:false` accompagne le resultat, mais le chiffre fabrique voyage avec lui : WeightBalanceTable.jsx:107 l'affiche des qu'il est un `number`, sans consulter `cgReliable`. Le pilote lit donc un CG a 3 decimales qui n'existe pas. Idem lignes 204-205, 251, 264 et 277-281 (`emptyWeight * wb.emptyWeightArm` avec un arm null vaut 0).",
+  "correctif": "Quand `cgReliable` est faux, ne pas renvoyer `cg`/`totalMoment` (les mettre a null). Un consommateur ne doit pas pouvoir afficher un centrage que le moteur sait faux.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/computeWeightBalance.js",
+  "line": 247,
+  "extrait": "const w = fuelDensity == null ? 0 : liters * fuelDensity;",
+  "valeurFabriquee": "0 kg (masse du carburant)",
+  "gravite": "critique",
+  "consequence": "Type de carburant inconnu : chaque reservoir pese 0 kg. `totalWeight` (l.267) exclut donc tout le carburant — 100 L d'essence, soit 72 kg, disparaissent du bilan — et `isWithinWeight` (l.314) compare cette masse amputee a la MTOW : une surcharge reelle est declaree conforme. `fuelDensityMissing` bascule bien `isWithinLimits` a faux, mais `totalWeight` et `isWithinWeight` restent exposes et affiches tels quels.",
+  "correctif": "Densite inconnue avec du carburant a bord => refuser le calcul en bloc (return null / verdict indisponible), au lieu de produire une masse totale fausse assortie d'un drapeau.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/computeWeightBalance.js",
+  "line": 337,
+  "extrait": "const cgLimitsAtTOW = cgLimitsAtMass(aircraft.cgEnvelope || aircraft.cgLimits || wb.cgLimits, totalWeight, { category: aircraft.cgCategory });",
+  "valeurFabriquee": "limite CG extrapolee (bornage aux extremites de l'enveloppe)",
+  "gravite": "critique",
+  "consequence": "`cgLimitsAtMass` renvoie un objet `{forward, aft, warnings}` dont le champ `warnings` est ICI purement ignore. Or `interpAt` (cgEnvelope.js:25-27) BORNE la courbe : au-dela de la masse maximale couverte par l'enveloppe, il rend la limite du dernier point connu. Pour une masse hors plage certifiee, le moteur compare donc le CG a une limite fabriquee par prolongement horizontal, conclut `isWithinCG = true` (l.346-349) et n'affiche jamais l'avertissement « Masse hors plage enveloppe — limite CG bornee » que cgEnvelope.js:149 avait pourtant produit. A noter l'incoherence : la fonction voisine `isWithinEnvelope` (cgEnvelope.js:176) retourne bien `false` hors plage — ce moteur-ci ne l'utilise pas.",
+  "correctif": "Fusionner `cgLimitsAtTOW.warnings` dans `warnings`, et traiter la masse hors plage d'enveloppe comme un `isWithinCG = null` (indetermine), jamais comme un `true`.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/cgEnvelope.js",
+  "line": 24,
+  "extrait": "if (points.length === 1) return points[0].y; // un seul point => constante",
+  "valeurFabriquee": "enveloppe rectangulaire deduite d'un seul point",
+  "gravite": "critique",
+  "consequence": "Une enveloppe saisie a moitie (un seul point de limite avant, cas frequent d'une fiche en cours de remplissage) est transformee en limite CONSTANTE valable a toutes les masses. Sur un avion dont la limite avant recule de 2,05 m a 2,20 m entre la masse a vide et la MTOW, on compare donc le CG a 2,05 m a pleine charge : le verdict « dans les limites » est rendu contre une enveloppe que personne n'a saisie.",
+  "correctif": "Une limite ne peut etre interpolee qu'a partir de 2 points. Un seul point => `source:'incomplete'` et verdict CG indetermine, comme le cas 'missing'.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 815,
+  "extrait": "fuelDensity = DENSITIES.AVGAS;   // console.warn('[Step6] Densite inconnue — repli AVGAS (affichage uniquement)')",
+  "valeurFabriquee": "0.72 kg/L (densite AVGAS)",
+  "gravite": "critique",
+  "consequence": "Le commentaire assume le repli comme « affichage uniquement », mais l'affichage en question est le devis de masse que le pilote lit et recopie : masse carburant, moment carburant, masse au decollage de la section Chargement. Pour un DA40 diesel (JET A-1, 0,84) le repli AVGAS sous-estime la masse carburant de 14 % — 17 kg sur 147 L de F-GUVV. Le verdict du store est bien fail-closed, donc l'ecran et le verdict se contredisent sans le dire.",
+  "correctif": "Densite inconnue => ne rien afficher pour les lignes carburant et afficher « type de carburant non renseigne », comme le fait deja ScenarioCards.jsx:23.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 464,
+  "extrait": "const takeoffWeight = scenarios.toCrm?.w || calculations?.totalWeight || 0;\n        const landingWeight = scenarios.landing?.w || 0;",
+  "valeurFabriquee": "0 kg (masse de decollage / d'atterrissage)",
+  "gravite": "critique",
+  "consequence": "Quand le scenario est indisponible (`w: null`, cas voulu par le fail-closed de scenarios.js:210-211) ou que le moteur a refuse (`calculations` null), la masse retombe a 0. Consequence directe : les controles de SURCHARGE l.491 (`takeoffWeight > maxTakeoffWeight`) et l.503 (`landingWeight > maxLandingWeight`) deviennent 0 > MTOW, donc FAUX — aucune violation n'est levee. Le fail-closed du moteur est integralement annule ici : l'ecran de securite conclut « aucune violation » precisement quand la masse est inconnue. Accessoirement, le controle l.467 produit le message « MASSE INSUFFISANTE AU DECOLLAGE : 0.000 kg », un chiffre fabrique affiche au pilote.",
+  "correctif": "Masse indisponible => ne pas produire de verdict de limites. Afficher « masse au decollage non calculable — controles de masse impossibles », qui est une information de securite, pas un silence.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/flight-wizard/models/FlightPlanData.js",
+  "line": 94,
+  "extrait": "withinLimits: true,   // Dans les limites ?",
+  "valeurFabriquee": "true (verdict de masse et centrage)",
+  "gravite": "critique",
+  "consequence": "Verdict de securite fabrique par defaut. Tout plan de vol nait « dans les limites » AVANT le moindre calcul. Et `isComplete()` (l.341-353) s'appuie dessus : un plan dont l'etape masse et centrage n'a jamais ete ouverte est declare COMPLET. La correction n'arrive que si Step6WeightBalance.jsx:560 s'execute, c'est-a-dire seulement si le pilote visite l'ecran ET que le moteur a produit un resultat.",
+  "correctif": "`withinLimits: null` (non evalue), et `isComplete()` doit exiger `=== true`. Un verdict de securite ne se presume jamais favorable.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/tankVariants.js",
+  "line": 390,
+  "extrait": "const fuelCapacity = sumTotalLtr(filteredTanks) ?? 0;",
+  "valeurFabriquee": "0 L (capacite de la configuration reservoirs)",
+  "gravite": "critique",
+  "consequence": "Appliquer une variante de reservoirs dont les contenances ne sont pas renseignees ecrit `fuelCapacity: 0` sur l'objet avion transmis aux moteurs. Ce 0 est ensuite consomme par fuelArm.js:114 (scenario « Pleins » = 0 L de carburant) et par ScenarioCards.jsx:32. La configuration choisie par le pilote fait ainsi disparaitre le carburant du devis. A noter aussi : `sumUsableLtr`/`sumTotalLtr` (tankCapacity.js:51-61) ne renvoient null que si TOUS les reservoirs sont inconnus — un melange (un reservoir renseigne, un autre non) rend une somme PARTIELLE presentee comme la capacite totale.",
+  "correctif": "Capacite indeterminee => ne pas ecrire `fuelCapacity` (laisser absent) ; et faire echouer les sommes des qu'UN reservoir de la liste a une contenance inconnue.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 853,
+  "extrait": "value={aircraft.emptyWeight || 0}   puis l.878 : {((aircraft.emptyWeight || 0) * arms.empty).toFixed(3)} kg.m",
+  "valeurFabriquee": "0 kg (masse a vide) et 0,000 kg.m (son moment)",
+  "gravite": "majeur",
+  "consequence": "Le devis de masse du wizard ouvre sur la ligne « Masse a vide : 0 kg » suivie de « Moment : 0.000 kg.m », les deux presentes comme des donnees de l'avion. Le bras, lui, affiche correctement « MANQUANT » en rouge s'il est absent (l.871) — le traitement de la masse est donc en retard d'une correction sur celui du bras, dans la meme carte.",
+  "correctif": "Masse a vide absente => afficher « MANQUANT » comme pour le bras, et supprimer la ligne de moment.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 541,
+  "extrait": "const takeoffWeight = calculations.totalWeight || 0;\n          const landingCG = scenarios?.landing?.cg || calculations.cg || 0;  ...  cg: { takeoff: calculations.cg || 0, landing: landingCG }",
+  "valeurFabriquee": "0 kg et 0,000 m (masses et CG ecrits dans le plan de vol)",
+  "gravite": "majeur",
+  "consequence": "Ces zeros sont PERSISTES dans `flightPlan.weightBalance` (l.552-572), donc dans le brouillon sauvegarde et dans tout ce qui le relit — notamment la synthese Step7Summary.jsx:1446 qui passe cet objet a WeightBalanceChart comme `calculations`. Un centrage inconnu devient un CG a 0,000 m enregistre, c'est-a-dire un point trace tout a l'avant de l'enveloppe.",
+  "correctif": "Ne rien ecrire quand la valeur est absente : `null` au lieu de 0, et les consommateurs affichent « non calcule ».",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 597,
+  "extrait": "passengers: Math.round(totalPassengerWeight / 77),",
+  "valeurFabriquee": "77 kg (masse forfaitaire par personne)",
+  "gravite": "majeur",
+  "consequence": "Le NOMBRE d'occupants est deduit de la masse totale par une masse forfaitaire inventee, puis ecrit dans le plan de vol (`flightPlan.updateWeightBalance`) et affiche dans le resume (FlightPlanData.js:369 `passengers`). Deux occupants de 60 kg donnent « 2 personnes », mais deux de 95 kg en donnent « 2 » et trois enfants de 30 kg en donnent « 1 ». Ce champ alimente aussi `isComplete()` (FlightPlanData.js:351 : `passengers > 0`). Le meme forfait existe en dur ailleurs sous la valeur 80 (FlightPlanData.js:85 `passengersWeight: 80`).",
+  "correctif": "Le nombre d'occupants est une donnee a saisir, pas a deduire d'une masse. Compter les postes charges (`loads` non nuls) ou demander le nombre.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/weight-balance/components/ScenarioCards.jsx",
+  "line": 27,
+  "extrait": "const fuelArm = aircraft.weightBalance?.fuelArm || 0;",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Les cartes de scenario (masse sans carburant, masse au decollage, masse a l'atterrissage) affichent un bras carburant de 0,00 m si le champ manque, et le detail du calcul montre au pilote une ligne carburant a moment nul dans une equation CG = somme des moments / masse totale presentee comme la justification du bilan.",
+  "correctif": "fuelArm null quand la donnee manque ; la carte affiche « bras carburant non renseigne » et ne publie ni CG ni moment.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/models/PerformanceModels.js",
+  "line": 562,
+  "extrait": "checkLimits(loadingData, _chart) { return { cgInLimits: true, weightInLimits: true }; } // placeholder",
+  "valeurFabriquee": "true (verdict d'enveloppe et de masse)",
+  "gravite": "majeur",
+  "consequence": "La classe `WeightBalanceCharts` retourne en dur « centrage dans les limites, masse dans les limites » sans lire le moindre abaque. Elle est instanciee (l.25) mais son `calculateWeightBalance` n'est appele nulle part aujourd'hui : le danger est donc latent, pas actif. Il devient immediat le jour ou quelqu'un branche cette API en croyant qu'elle calcule. Ses lignes 546 et 555 fabriquent au passage des moments avec `(item.arm || 0)`, et 550 un CG de 0.",
+  "correctif": "Supprimer la classe, ou faire lever une exception explicite a `checkLimits` tant qu'elle n'est pas implementee. Un placeholder qui repond « OK » est pire que pas de code du tout.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4174,
+  "extrait": "emptyMassArm: toValidNumber(formData.armLengths.emptyMassArm, 0),   (idem l.4175-4182 pour fuelArm, frontSeat1/2Arm, rearSeat1/2Arm, standardBaggageArm, baggageTubeArm, aftBaggageExtensionArm)",
+  "valeurFabriquee": "0 m (tous les bras de levier)",
+  "gravite": "majeur",
+  "consequence": "Le bloc `armLengths` ecrit 0 pour chaque bras non saisi. Ce 0 est plus insidieux que les bras generiques voisins : la plupart des lecteurs le neutralisent bien (`armOrNull` traite 0 comme null dans computeWeightBalance.js:69-72, WeightBalanceModule.jsx:129-132 et Step6 l.106-111), mais les compartiments bagages et les reservoirs, eux, ne passent pas par `armOrNull` — un 0 y devient un bras reel et un moment nul silencieux. Les memes `, 0)` frappent les masses lignes 4165-4169 (`emptyMass`, `minTakeoffMass`) et les limitations l.4187-4188 (`maxLandingMass`, `maxBaggageLest`), ou ils desactivent silencieusement les controles correspondants (gardes `> 0` en aval).",
+  "correctif": "Un champ non saisi ne doit pas etre ecrit. Et partout ou un bras est lu, appliquer le meme predicat que `armOrNull` : fini ET non nul.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "packages/calc-engine/src/wb/scenarios.js",
+  "line": 66,
+  "extrait": "const fuelDensityForCalc = fuelDensity ?? 0;  ...  const remainingFuelKg = remainingFuelL * fuelDensityForCalc;",
+  "valeurFabriquee": "0 kg (carburant restant a l'atterrissage)",
+  "gravite": "majeur",
+  "consequence": "Quand la densite est inconnue, le scenario « Atterrissage » est bien marque indisponible (l.210), MAIS l'objet `fuelDerivation` est fusionne APRES par le spread `...extra` (l.210-211) : il part avec `remainingKg: 0` et `density: null`. ScenarioCards.jsx:217 affiche alors la ligne de derivation « ... = 0.000 L x 0.000 = 0.000 kg », c'est-a-dire une justification chiffree d'un calcul qui n'a pas eu lieu.",
+  "correctif": "Ne pas joindre `fuelDerivation` a un scenario indisponible, ou n'y mettre que des valeurs reellement calculees.",
+  "angle": "Masse et centrage — bras de le"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 77,
+  "extrait": "const parseArm = (value, defaultValue = 0) => { if (!value || value === '') return defaultValue; ... }",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Tout bras de levier absent d'une fiche importee devient 0,00 m. Un bras nul place la charge EXACTEMENT au point de reference : son moment vaut zero, le centrage calcule est faux tout en restant plausible. C'est ce helper qui a produit les 24 zeros de bras de soute constates sur 12 des 13 avions de la flotte.",
+  "correctif": "Retourner null (ou undefined) quand la valeur est absente, jamais 0. Le champ doit disparaitre de weightBalance, et le moteur de centrage doit refuser le bilan si une station chargee a un bras null (le mecanisme existe deja : baggageArmMissing / fuelArmMissing dans computeWeightBalance.js).",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 113,
+  "extrait": "baggageArm: armToMeters(aircraftData.arms.baggageFwd),",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "A chaque import communautaire, un avion sans arms.baggageFwd (12 des 13) recoit weightBalance.baggageArm = 0. Cette valeur est ensuite affichee comme le bras de la ligne « Bagages » dans le recapitulatif des moments (WeightBalanceTable.jsx:80) et utilisee telle quelle par computeWeightBalance.js:206 quand l'avion n'a pas de compartiments declares : 30 kg de bagages produisent alors un moment de 0 kg.m.",
+  "correctif": "Ne pas ecrire la cle du tout si arms.baggageFwd est absent. Le bras de soute REEL vit dans baggageCompartments[].arm — ce miroir n'a plus de raison d'exister et devrait etre supprime, pas rempli.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 114,
+  "extrait": "auxiliaryArm: armToMeters(aircraftData.arms.baggageAft)",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Idem pour le rangement auxiliaire : 12 avions sur 13 portent auxiliaryArm = 0 en base, et F-GUVV porte 3,70 alors qu'il n'a AUCUN deuxieme compartiment. Une charge saisie dans « Rangement auxiliaire » est comptee au point de reference (ou a 3,70 m sur F-GUVV, un emplacement qui n'existe pas sur cet avion).",
+  "correctif": "Cle absente si la donnee est absente. Supprimer le miroir au profit de baggageCompartments.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/utils/aircraftNormalizer.js",
+  "line": 148,
+  "extrait": "normalized.weightBalance = { ...armsToWB, cgLimits: cgLimits };",
+  "valeurFabriquee": "bloc weightBalance entier reconstruit depuis des replis a 0",
+  "gravite": "critique",
+  "consequence": "L'import ne complete pas weightBalance : il le REMPLACE integralement par armsToWB, dont chaque champ absent vaut 0 (l. 77). Un weightBalance existant, plus riche (bras gauche/droite dissymetriques, bras de soute reel), est detruit et remplace par des zeros. C'est le point ou le fantome est ecrit en base de facon definitive.",
+  "correctif": "Fusionner au lieu d'ecraser, et n'ecrire que les cles REELLEMENT presentes dans arms. Aucune cle fabriquee, aucune destruction d'une donnee existante.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4221,
+  "extrait": "aircraft?.weightBalance?.cgLimits?.forward || 2.00,",
+  "valeurFabriquee": "2.00",
+  "gravite": "critique",
+  "consequence": "Limite de centrage AVANT fabriquee a 2,00 m quand l'enveloppe n'est pas saisie. C'est l'enveloppe de vol elle-meme qui devient fictive : le verdict « dans les limites / hors limites » ne veut plus rien dire. Sur les DR400 et Cessna de la flotte, dont la limite avant reelle est entre 0,19 et 0,89 m, un 2,00 declarerait « hors limites » tout vol normal ; sur les PA-28 (limite 2,108) il declarerait « dans les limites » un centrage trop avant.",
+  "correctif": "Absence d'enveloppe = pas de cgLimits ecrit et verification de centrage DESACTIVEE avec message explicite. Le mecanisme existe deja dans computeWeightBalance.js (avertissement « Limites de centrage non renseignees »).",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4222,
+  "extrait": "aft: toValidNumber(formData.cgEnvelope.aftCG, aircraft?.weightBalance?.cgLimits?.aft || 2.45),",
+  "valeurFabriquee": "2.45",
+  "gravite": "critique",
+  "consequence": "Limite de centrage ARRIERE fabriquee a 2,45 m. Meme portee que ci-dessus, cote arriere — le cote ou le depassement est le plus dangereux (perte d'efficacite en tangage). Les valeurs reelles de la flotte vont de 0,5619 a 2,59 m.",
+  "correctif": "Idem : pas de limite fabriquee, verification desactivee et annoncee. Voir aussi le bloc `else` l. 4226-4229 qui ecrit en dur { forward: 2.00, aft: 2.45 } quand aucun point d'enveloppe n'est saisi.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "packages/calc-engine/src/units/mbUnits.js",
+  "line": 157,
+  "extrait": "return canonicalFuelDensity(fuelType) ?? FUEL_DENSITIES.default;   // default = 0.72",
+  "valeurFabriquee": "0.72",
+  "gravite": "critique",
+  "consequence": "Il existe DEUX getFuelDensity dans le projet. Celle de fuelDensity.js renvoie null quand le type est inconnu (fail-closed correct) ; celle-ci renvoie 0,72 (AVGAS) pour n'importe quoi. Step3WeightBalance.jsx et CentrogramReader.jsx importent CETTE version tout en testant `density != null` : leurs garde-fous fail-closed, deja ecrits, ne se declenchent jamais. Sur un avion JET A-1 dont le type n'est pas encore choisi (F-GUVV, F-HSTR), toute masse carburant est sous-estimee de 14 % — 147 L de plein comptent 106 kg au lieu de 124 kg.",
+  "correctif": "Supprimer FUEL_DENSITIES.default et faire de mbUnits.getFuelDensity un simple re-export de la version fail-closed (ou supprimer la fonction). Cela reactive d'un coup tous les tests `density != null` deja en place.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx",
+  "line": 1564,
+  "extrait": "fields.usableCapacity = Math.round((M / (arm * density)) * 100) / 100;  // L",
+  "valeurFabriquee": "contenance utilisable derivee d'une densite 0.72 inventee",
+  "gravite": "critique",
+  "consequence": "Le trio reciproque moment / bras / contenance utilise la densite renvoyee par mbUnits (0,72 par defaut). Avec un type carburant non encore saisi, la saisie d'un moment redérive une contenance utilisable — ou un bras (l. 1560) — sur une densite fausse, et `updateFuelTankFields` l'ECRIT EN BASE. Sur un JET A-1 l'ecart est de 17 % sur la contenance deduite. Meme mecanisme aux lignes 1503 (momentAtFull a la saisie de l'utilisable) et 1529 (momentAtFull a la saisie du bras).",
+  "correctif": "Importer getFuelDensity depuis calc-engine/units/fuelDensity (celle qui renvoie null) : les tests `density != null` deja presents feront alors leur office et aucune derivation ne sera ecrite tant que le type carburant n'est pas choisi.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/aircraft/components/wizard-steps/Step3WeightBalance.jsx",
+  "line": 1569,
+  "extrait": "helperText={`× ${getFuelDensity(data.fuelType)}`}",
+  "valeurFabriquee": "0.72",
+  "gravite": "majeur",
+  "consequence": "Affiche « × 0.72 » sous le champ Moment a plein alors qu'aucun type carburant n'est renseigne. Le pilote lit une densite presentee comme celle de SON avion ; sur un DA40 elle devrait etre 0,84.",
+  "correctif": "Afficher « densite inconnue — choisissez le type de carburant » quand getFuelDensity renvoie null.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 1420,
+  "extrait": "density = DENSITIES.AVGAS;   // repli pour l'affichage de la masse PAR RESERVOIR",
+  "valeurFabriquee": "0.72",
+  "gravite": "critique",
+  "consequence": "Meme repli sur le panneau de planification par reservoir : chaque reservoir affiche une masse embarquee calculee en AVGAS, quel que soit le carburant reel. Le pilote coche ses reservoirs et lit un total en kg faux de 14 % sur un avion diesel.",
+  "correctif": "Masse par reservoir non affichee (tiret) et mention explicite, plutot qu'un kilo invente.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 827,
+  "extrait": "const fuelMoment = fuelWeightKg * (arms.fuel || 0);",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "arms.fuel est explicitement construit pour valoir null quand le bras est inconnu (bloc commente « SECURITE CRITIQUE : PAS DE VALEURS PAR DEFAUT POUR LES BRAS », l.789). Le `|| 0` annule cette precaution pour la seule ligne carburant : le moment carburant s'affiche a 0,0 kg.m au lieu de MANQUANT — alors que la ligne masse a vide juste en dessous (l.869-880) affiche correctement MANQUANT / N/A. Deux lignes du meme tableau, deux comportements opposes.",
+  "correctif": "Aligner sur le traitement de arms.empty : bras null => MANQUANT et pas de moment.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 202,
+  "extrait": "const reserveMinutes = navigationResults.regulationReserveMinutes || 30;",
+  "valeurFabriquee": "30",
+  "gravite": "majeur",
+  "consequence": "30 minutes de reserve finale appliquees quand le type de vol n'a pas encore ete determine. 30 min est bien la reserve VFR de jour, mais elle est FAUSSE en VFR de nuit (45 min) et en IFR : l'application affiche donc une reserve reglementaire qui peut etre inferieure a celle exigee, sans le signaler. Meme repli l. 296 pour le libelle.",
+  "correctif": "Type de vol non defini = ligne Final Reserve non calculee, avec « definir le type de vol ». A verifier avec le pilote : c'est la limite entre constante reglementaire documentee et valeur fabriquee.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternatesIntegration.js",
+  "line": 135,
+  "extrait": "const requiredLength = selectedAircraft.performances?.landingDistance * 1.43 || 500;",
+  "valeurFabriquee": "500",
+  "gravite": "critique",
+  "consequence": "AUCUN des 13 avions ne possede `performances.landingDistance` : le produit vaut NaN et le repli se declenche sur 13/13. Tout deroutement est donc filtre sur une distance d'atterrissage requise de 500 m inventee, et le motif de rejet affiche au pilote est « Piste trop courte (min 500m requis) » — un chiffre presente comme derive de SON avion. Un terrain de degagement parfaitement utilisable par un F150M (qui atterrit en moins de 200 m) est ecarte ; a l'inverse, sur un avion plus exigeant, un terrain trop court serait accepte.",
+  "correctif": "Distance d'atterrissage inconnue = pas de filtre de longueur de piste, et le dire : « longueur de piste requise non evaluable — performances d'atterrissage non renseignees ». Aucun deroutement ecarte sur un critere fabrique.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternateSelection.js",
+  "line": 628,
+  "extrait": "selectedAircraft.performances?.landingDistance || selectedAircraft.landingDistance || 200; // mètres",
+  "valeurFabriquee": "200",
+  "gravite": "critique",
+  "consequence": "Les deux sources etant absentes sur les 13 avions, la selection des deroutements travaille sur une distance d'atterrissage de 200 m pour tous — du F150M au DA40NG. Ce chiffre alimente ldaFilterParams, donc le filtrage LDA de tous les terrains proposes.",
+  "correctif": "Absence de performance d'atterrissage = filtre LDA desactive et signale, jamais une distance forfaitaire.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternateSelection.js",
+  "line": 764,
+  "extrait": "const minRunwayLength = ldaFilterParams?.minRunwayRequired || 300;",
+  "valeurFabriquee": "300",
+  "gravite": "majeur",
+  "consequence": "Troisieme valeur fabriquee sur le meme critere, et differente des deux autres (500 ici, 200 la, 300 ailleurs) : selon l'ecran, l'application n'exige pas la meme piste pour le meme avion. Longueur minimale de piste de 300 m appliquee a la recherche de deroutements quand le calcul LDA n'a rien produit.",
+  "correctif": "Pas de longueur minimale par defaut : recherche sans filtre de piste, avec mention explicite que le critere n'a pas pu etre applique.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/navigation/utils/zoneDetection.js",
+  "line": 24,
+  "extrait": "const altitude = segmentAltitudes[segmentId]?.startAlt || 3000;",
+  "valeurFabriquee": "3000",
+  "gravite": "critique",
+  "consequence": "La detection de penetration des zones R, D et P d'un segment sans altitude saisie est faite a 3000 ft inventes. Selon le plancher et le plafond de la zone, l'application annonce une penetration qui n'aura pas lieu, ou — plus grave — n'annonce RIEN alors que l'altitude reelle du segment traverse une zone interdite.",
+  "correctif": "Segment sans altitude = pas de verdict de zone pour ce segment, affiche comme « altitude du segment non renseignee — penetration non evaluee ».",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/navigation/NavigationModule.jsx",
+  "line": 66,
+  "extrait": "const [plannedAltitude] = useState(flightParams.altitude || 3000); // Altitude par défaut en pieds",
+  "valeurFabriquee": "3000",
+  "gravite": "majeur",
+  "consequence": "Aggravant : la valeur n'est pas seulement affichee, le useEffect des lignes 67-71 la REECRIT dans flightParams. Une altitude de croisiere jamais choisie par le pilote devient donc 3000 ft dans l'etat du vol, et de la alimente la detection de zones, les calculs d'altitude-pression et le recapitulatif.",
+  "correctif": "Ne rien pre-remplir et ne rien reecrire dans flightParams. Champ vide tant que le pilote n'a pas saisi son altitude ; les consommateurs refusent leur calcul en le disant.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step7Summary.jsx",
+  "line": 188,
+  "extrait": "const terrainElevation = lastWaypoint.elevation || 0;",
+  "valeurFabriquee": "0",
+  "gravite": "majeur",
+  "consequence": "Elevation inconnue du terrain d'arrivee traitee comme le niveau de la mer, pour le calcul du point de descente et (l. 64) pour l'initialisation de l'altitude cible a « terrain + 1000 ft ». Sur un terrain a 1500 ft, le TOD est calcule sur 1500 ft de descente en trop et l'altitude cible proposee est 1500 ft trop basse.",
+  "correctif": "Elevation absente = TOD non calcule, altitude cible non proposee, motif affiche.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/weight-balance/components/WeightBalanceChart.jsx",
+  "line": 49,
+  "extrait": "parseFloat(aircraft.weights?.minTakeoffWeight || aircraft.minTakeoffWeight),",
+  "valeurFabriquee": "lit la masse minimale fabriquee par contexts/index.jsx",
+  "gravite": "majeur",
+  "consequence": "Quand weights.minTakeoffWeight est vide — c'est le cas sur 6 des 13 avions — le graphique retombe sur la racine minTakeoffWeight, qui vaut alors la MASSE A VIDE recopiee par contexts/index.jsx:230. La borne basse de l'enveloppe de centrage est donc tracee sur une valeur qui n'est pas une limite du manuel, avec l'autorite visuelle d'un diagramme certifie.",
+  "correctif": "Ne lire que la source saisie (weights.minTakeoffWeight). Absente = pas de borne basse tracee.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/navigation/components/VFRNavigationTable.jsx",
+  "line": 185,
+  "extrait": "const magneticHeading = (((headingWithDrift - (declination ?? 0)) % 360) + 360) % 360;",
+  "valeurFabriquee": "0",
+  "gravite": "mineur",
+  "consequence": "Declinaison magnetique indisponible : le cap magnetique affiche est en realite le cap VRAI. Le repli est signale (suffixe « (vrai) » dans la colonne) et l'ecart en France metropolitaine est de 1 a 2 degres — je le signale pour completude, pas comme une urgence.",
+  "correctif": "Rien a corriger si le suffixe « (vrai) » reste visible partout ou la valeur est reprise (fiche PDF, log de navigation) ; a verifier.",
+  "angle": "COMBIEN, ET SUR QUELS AVIONS —"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 255,
+  "extrait": "const hasValidCgLimits = fullAircraft.cgLimits && fullAircraft.cgLimits.forward !== '' && fullAircraft.cgLimits.aft !== ''; if (hasValidCgLimits) { return fullAircraft.cgLimits; }",
+  "valeurFabriquee": "cgLimits plat {forward 2.05, aft 2.31} imposé à F-GUVV à la place de son enveloppe 2.40 / 2.59",
+  "gravite": "critique",
+  "consequence": "Ce bloc s'exécute a chaque entree dans l'etape Masse & Centrage des lors que l'avion a des `arms` (les 13). Il RECONSTRUIT weightBalance et ECRASE weightBalance.cgLimits — qui portait la bonne valeur sur F-GUVV (2.40/2.59) — par le champ plat perime (2.05/2.31). Le resultat est ecrit dans le store avion ET dans le brouillon de plan de vol via flightPlan.updateAircraft. Le test `!== ''` accepte 0 : sur F-GOFP il impose forward = 0 m. Le verdict lui-meme survit parce que computeWeightBalance relit cgEnvelope en priorite, mais tout ce qui lit weightBalance.cgLimits (affichages, exports, plan sauvegarde) hérite d'une enveloppe fausse de 35 cm.",
+  "correctif": "Supprimer la branche `hasValidCgLimits` : cgEnvelope est la seule source editable, donc la seule source de verite. Ne reconstruire cgLimits QUE depuis cgEnvelope ; si l'enveloppe est absente, laisser cgLimits absent et laisser le moteur refuser.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/aircraft/components/AircraftCreationWizard.jsx",
+  "line": 280,
+  "extrait": "forward: pick(cg.forward, wbCg.forward, fwdFromEnv), aft: pick(cg.aft, wbCg.aft, env.aftCG)   // cg = existingAircraft?.cgLimits",
+  "valeurFabriquee": "cgLimits plat {2.05 / 2.31} recharge puis re-enregistre a chaque sauvegarde du wizard",
+  "gravite": "critique",
+  "consequence": "Le wizard hydrate `aircraftData.cgLimits` depuis le champ PLAT en premier, avant le miroir weightBalance et avant l'enveloppe. Aucune etape du wizard n'edite ce champ (verifie : aucun `cgLimits` dans wizard-steps/). Il traverse donc le formulaire intact et ressort dans dataToSave a l'enregistrement. Le fantome de F-GUVV se re-ecrit tout seul en base a chaque passage du pilote dans l'assistant, ce qui rend toute correction manuelle impossible a tenir.",
+  "correctif": "Ne plus hydrater ni ré-enregistrer `cgLimits` racine : le derivant de cgEnvelope au moment de la lecture, ou mieux, cesser d'ecrire ce champ et le purger des 13 fiches (comme maxBaggageWeight le 24/08).",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step1GeneralInfo.jsx",
+  "line": 155,
+  "extrait": "const hasValidCgLimits = selectedAircraft.cgLimits && selectedAircraft.cgLimits.forward !== '' && selectedAircraft.cgLimits.aft !== ''; if (hasValidCgLimits) { return selectedAircraft.cgLimits; }",
+  "valeurFabriquee": "cgLimits plat copie tel quel dans le plan de vol (2.05 / 2.31 sur F-GUVV, forward 0 sur F-GOFP)",
+  "gravite": "critique",
+  "consequence": "Au choix de l'avion, la preparation de vol copie le champ plat dans flightPlan.aircraft. Le brouillon — et le plan sauvegarde en base — transporte donc une enveloppe de centrage qui n'est pas celle de l'avion. Si le contexte selectedAircraft est perdu (rechargement de brouillon), Step6 retombe sur flightPlan.aircraft et calcule avec cette copie.",
+  "correctif": "Ne copier dans le plan de vol que cgEnvelope. Enveloppe absente => champ absent, et l'etape Masse & Centrage doit refuser le verdict.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 867,
+  "extrait": "['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],",
+  "valeurFabriquee": "aucune ici — mais c'est l'AUTRE cote du miroir : l'export lit weights.minTakeoffWeight, le moteur lit le champ plat",
+  "gravite": "majeur",
+  "consequence": "La fiche PDF de l'avion imprime 940 kg pour F-HSTR (valeur saisie) pendant que le verdict de masse & centrage applique 650 kg (champ plat). Le pilote a sous les yeux deux documents produits par la meme application qui donnent deux masses minimales differentes, sans qu'aucun ne signale la contradiction. Meme situation sur F-GIEA (550 imprime / 600 applique) et F-GUKQ (575 applique / 550 dans l'enveloppe).",
+  "correctif": "Une seule source pour cette grandeur, lue par l'export ET par le moteur. Tant que les deux divergent, afficher explicitement le desaccord plutot qu'un des deux chiffres.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4233,
+  "extrait": "} : { cgLimits: { forward: 2.00, aft: 2.45 } }",
+  "valeurFabriquee": "forward 2.00 / aft 2.45",
+  "gravite": "critique",
+  "consequence": "Branche else atteinte quand l'enveloppe du formulaire est vide (aucun point avant valide ET aftCG vide). Elle ecrit alors une enveloppe de centrage complete et plausible — 2,00 / 2,45 — pour un avion dont personne n'a saisi l'enveloppe. Ces bornes sont celles d'un PA-28 : sur un DR400 (bras reels 0,20 / 0,56) elles declareraient hors limites tous les chargements, et sur un DA40 (2,40 / 2,59) elles autoriseraient un centrage avant interdit.",
+  "correctif": "Enveloppe absente => ne rien ecrire (supprimer la cle cgLimits de l'objet enregistre) et laisser le moteur refuser le verdict.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 1076,
+  "extrait": "? checkedTanks.reduce((s, { t }) => s + (tankUsableLtr(t) || 0), 0)",
+  "valeurFabriquee": "0",
+  "gravite": "critique",
+  "consequence": "Meme repli, cote Masse & Centrage, sur le scenario « Full Tank ». Un reservoir de contenance inconnue est compte 0 L : le scenario reservoirs pleins sous-estime la masse au decollage et peut declarer dans les limites un avion qui ne l'est pas une fois reellement rempli. La ligne 1088 fait la meme chose sur le MOMENT, avec en plus `(Number.isFinite(a) ? a : 0)` : un reservoir sans bras contribue une masse sans moment, ce qui deplace le CG calcule vers l'avant.",
+  "correctif": "Contenance ou bras inconnu sur un reservoir coche => scenario Full Tank non calculable, affiche comme tel.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step1GeneralInfo.jsx",
+  "line": 116,
+  "extrait": "cruiseSpeed: selectedAircraft.cruiseSpeed || 0,",
+  "valeurFabriquee": "0",
+  "gravite": "majeur",
+  "consequence": "Miroir mort verifie sur la flotte : `cruiseSpeed` est undefined sur les 13 avions (seul `cruiseSpeedKt` existe). Ce `|| 0` ecrit donc 0 kt dans flightPlan.aircraft pour TOUS les vols, systematiquement. La navigation est sauvee par getCruiseSpeedKt (qui lit cruiseSpeedKt en premier et rend null si absent), mais le plan de vol sauvegarde en base transporte une vitesse de croisiere de 0 kt presentee comme une donnee avion.",
+  "correctif": "Ne pas ecrire le miroir mort : utiliser getCruiseSpeedKt et omettre le champ si null. Meme traitement pour fuelConsumption (l.117) et fuelCapacity (l.118).",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/flight-wizard/steps/Step6WeightBalance.jsx",
+  "line": 1563,
+  "extrait": "Capacite {(tankUsableLtr(tank) ?? 0).toFixed(1)} L utilisables",
+  "valeurFabriquee": "0.0",
+  "gravite": "majeur",
+  "consequence": "La liste des reservoirs du vol affiche « Capacite 0.0 L utilisables » pour un reservoir dont la contenance n'est pas renseignee. C'est presente comme une caracteristique du reservoir, pas comme une absence de donnee — et cela contredit le champ de saisie juste a cote (FuelTankInput, l.1322) qui, lui, garde correctement NaN et n'affiche pas de plafond.",
+  "correctif": "Contenance null => « contenance non renseignee », et desactiver la case a cocher du reservoir.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternateSelection.js",
+  "line": 554,
+  "extrait": "const maxCapacity = aircraft.fuelCapacity || 0;   // puis fobLiters: maxCapacity (l.564)",
+  "valeurFabriquee": "FOB = capacite totale reservoirs, reserve = 0",
+  "gravite": "critique",
+  "consequence": "Quand le FOB du vol n'est pas defini, le calcul des zones de deroutement FABRIQUE un avion plein a ras bord — et avec le volume TOTAL (inutilisable compris), pas l'utilisable — puis calcule l'autonomie SANS reserve reglementaire (`tripFuel: 0, finalReserve: 0`). Le rayon de deroutement trace sur la carte est donc surestime deux fois. Le drapeau isEstimate est pose mais l'ecran affiche un cercle de la meme facon qu'un calcul exact.",
+  "correctif": "FOB inconnu => aucune zone de deroutement tracee, message explicite. Un rayon de secours invente est pire que pas de rayon.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/alternates/hooks/useAlternateSelection.js",
+  "line": 562,
+  "extrait": "radiusAtDep: Math.max(10, Math.min(100, maxRadius)), // Plafonner a 100 NM si FOB inconnu",
+  "valeurFabriquee": "plancher 10 NM / plafond 100 NM (et 5 / 50 NM a la ligne suivante)",
+  "gravite": "critique",
+  "consequence": "Le rayon affiche n'est plus celui de l'avion mais un nombre borne arbitrairement : un ULM a faible autonomie se voit accorder au minimum 10 NM de rayon de deroutement, un avion a grande autonomie est ampute a 100 NM. Dans les deux cas le cercle dessine sur la carte ne represente plus rien de physique, et le plancher de 10 NM est un fail-open (il promet une portee qui peut ne pas exister).",
+  "correctif": "Supprimer les bornes. Le rayon est le rayon calcule, ou rien.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/aircraft/AircraftModule.jsx",
+  "line": 4106,
+  "extrait": "cruiseSpeed: toValidNumber(formData.cruiseSpeedKt, 0), // Ajouter cruiseSpeed pour compatibilite",
+  "valeurFabriquee": "0",
+  "gravite": "majeur",
+  "consequence": "Ecrit deliberement un miroir mort (`cruiseSpeed`, absent des 13 fiches) a cote de la vraie valeur (`cruiseSpeedKt`, l.4107). Si le pilote vide le champ, les deux sont ecrits a 0 : une vitesse de croisiere de 0 kt en base. L'export PDF (l.1152) lit `cruiseSpeed || cruiseSpeedKt` — le miroir mort D'ABORD : une valeur non nulle restee dans cruiseSpeed sur une fiche importee prendrait le pas sur la saisie reelle du pilote.",
+  "correctif": "Cesser d'ecrire le miroir cruiseSpeed et le purger ; faire lire cruiseSpeedKt (ou getCruiseSpeedKt) partout, y compris a l'export.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "packages/calc-engine/src/perf/aircraftPerf.js",
+  "line": 57,
+  "extrait": "const usable = parseFloat(aircraft.fuelUsableCapacity); ... return total;   // repli sur la capacite PHYSIQUE",
+  "valeurFabriquee": "le volume TOTAL presente comme volume utilisable",
+  "gravite": "majeur",
+  "consequence": "Quand l'utilisable n'est pas saisi, la fonction rend le volume total — donc l'inutilisable est compte comme embarquable et consommable. L'ecart reel sur la flotte : 13 L sur F-BXNG et F-BXQT, 11 L sur F-GGZO et F-HDIM, 8 L sur F-HSTR. C'est un fail-open sur l'autonomie : l'application peut conclure qu'une escale carburant n'est pas necessaire alors qu'elle l'est. Le commentaire assume le compromis (« mieux vaut l'ancienne borne que pas de borne »), ce qui est exactement l'inverse de la regle demandee.",
+  "correctif": "Utilisable non saisi => null, et l'appelant refuse le calcul d'autonomie en le disant. La fiche est deja signalee incomplete par aircraftCompleteness.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ },
+ {
+  "file": "src/features/fuel/FuelModule.jsx",
+  "line": 197,
+  "extrait": "const contingencyGal = Math.max(1, tripGal * 0.05);",
+  "valeurFabriquee": "plancher de 1 gallon",
+  "gravite": "mineur",
+  "consequence": "Le 5 % de marge est une regle ; le plancher de 1 gallon (3,79 L) n'est ecrit dans aucun texte et n'a pas d'unite coherente avec le reste de l'application (tout est canonique en litres). Sur un vol court il double ou triple la marge affichee. L'effet est conservatif (il ajoute du carburant), donc sans danger, mais le chiffre presente au pilote n'est pas celui de la regle annoncee.",
+  "correctif": "Soit documenter ce plancher comme une regle club et l'afficher comme telle, soit le supprimer et n'afficher que les 5 %.",
+  "angle": "LES MIROIRS QUI SE CONTREDISEN"
+ }
+]
