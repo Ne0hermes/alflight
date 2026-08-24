@@ -2,7 +2,7 @@
 //
 // Rendu SERVEUR (sans DOM) de l'étape Vitesses — garde-fou contre un plantage au
 // montage après la refonte du 21/08/2026 : tableau des vitesses de décrochage
-// (lisse / décollage / atterrissage × 0° / 20° / 40° / 60°), VS T/O obligatoire,
+// (lisse / décollage / atterrissage × 0° et 6 inclinaisons), VS T/O obligatoire,
 // VFE T/O facultative déplacée dans « Vitesses d'utilisation ». On vérifie la
 // STRUCTURE rendue, pas le style.
 
@@ -19,19 +19,19 @@ const fiche = { speeds: { vso: 45, vsTO: 48, vs1: 50, vne: 160, vno: 125, vfeLdg
 const count = (html, needle) => html.split(needle).length - 1;
 
 describe('Step2Speeds — rendu de l\'étape Vitesses', () => {
-  it('une fiche SANS stallByBank s\'ouvre telle quelle : 9 cellules 20/40/60° vides', () => {
+  it('une fiche SANS stallByBank s\'ouvre telle quelle : 18 cellules inclinées vides', () => {
     const html = render(fiche);
     expect(html).toContain('Vitesses de décrochage selon l');
-    for (const h of ['0° *', '20°', '40°', '60°']) expect(html).toContain(h);
-    // 3 configurations × 3 inclinaisons facultatives
-    expect(count(html, 'aria-label="Décrochage ')).toBe(9);
+    for (const h of ['0° *', '20°', '30°', '35°', '40°', '45°', '60°']) expect(html).toContain(h);
+    // 3 configurations × 6 inclinaisons facultatives (grille générale, 24/08/2026)
+    expect(count(html, 'aria-label="Décrochage ')).toBe(18);
     // colonne 0° = VS1 / VS T/O / VSO (mêmes champs que les arcs)
     expect(html).toContain('aria-label="VS1 — décrochage lisse');
     expect(html).toContain('aria-label="VS T/O — décrochage décollage');
     expect(html).toContain('aria-label="VSO — décrochage atterrissage');
   });
 
-  it('les colonnes 20/40/60° affichent les valeurs de speeds.stallByBank', () => {
+  it('les colonnes inclinées affichent les valeurs de speeds.stallByBank', () => {
     const html = render({ speeds: { ...fiche.speeds, stallByBank: { clean: { b20: 52 }, landing: { b60: 64 } } } });
     expect(html).toContain('value="52"');
     expect(html).toContain('value="64"');

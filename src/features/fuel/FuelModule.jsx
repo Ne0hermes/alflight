@@ -14,6 +14,7 @@ import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit } from '@utils/unitsDisplay';
 import { getCruiseSpeedKt, getFuelConsumptionLph, getFuelCapacityLtr, getFuelUsableCapacityLtr } from '@utils/aircraftPerf';
 import { computeLegFuelPlans } from './utils/legFuelPlan';
+import { tankUsableLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 // 🎨 Charte éditoriale ALFlight
 import { ModuleHero } from '@shared/components/editorial';
 import { tokens } from '@shared/styles/designSystem';
@@ -117,9 +118,13 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   // (une config vierge — reload de brouillon — n'écrase rien, cf. fuelStore).
   const flightTankIds = activeTankIdsFrom(tankConfig, selectedAircraft);
   const tankConfigAuthoritative = hasTanks && flightTankIds != null;
-  // Somme des capacités des réservoirs COCHÉS.
+  // Somme des capacités UTILISABLES des réservoirs COCHÉS. tankUsableLtr, pas
+  // t.capacity : sur une fiche à deux contenances (17/08/2026), le champ legacy
+  // `capacity` peut être resté sur une vieille valeur — F-GNAM portait 91 L
+  // (une aile) face à usableCapacity = 182 L, et le module carburant plafonnait
+  // le vol à 91 L. L'utilisable EST la grandeur des moteurs.
   const checkedCapacityLtr = aircraftTanks.reduce((s, t, i) =>
-    s + (tankConfig?.tanks?.[String(t?.id ?? i)]?.active ? (parseFloat(t.capacity) || 0) : 0), 0);
+    s + (tankConfig?.tanks?.[String(t?.id ?? i)]?.active ? (tankUsableLtr(t) || 0) : 0), 0);
   // Capacité EFFECTIVE du vol = somme des réservoirs cochés quand la config
   // fait foi (base des alertes de dépassement et du % remplissage — plus
   // jamais la capacité long-range quand l'avion vole en standard). Config

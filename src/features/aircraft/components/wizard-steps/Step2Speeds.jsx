@@ -955,20 +955,20 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
             {/* Tableau des vitesses de décrochage (demande pilote 21/08/2026) —
                 lignes = configuration volets, colonnes = inclinaison. La colonne
                 0° EST vs1 / vsTO / vso : MÊMES champs que les arcs ci-dessus (une
-                seule source de vérité, obligatoire) ; 20 / 40 / 60° vivent dans
-                speeds.stallByBank (facultatif, absent tant que rien n'est saisi —
+                seule source de vérité, obligatoire) ; toutes les inclinaisons vivent dans
+                speeds.stallByBank (TOUTES facultatives, absentes tant que rien n'est saisi —
                 cf. setStallByBank, jamais de 0 fabriqué). */}
-            <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
+            <Box sx={{ width: '100%', maxWidth: 980, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                 Vitesses de décrochage selon l'inclinaison
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                 Colonne 0° obligatoire : VS1 / VS T/O / VSO — mêmes champs que les arcs ci-dessus.
-                Colonnes 20°, 40°, 60° facultatives, d'après la table de décrochage du manuel de vol.
+                Colonnes inclinées toutes facultatives : ne remplissez que les inclinaisons publiées par votre manuel de vol — les autres restent vides.
               </Typography>
               {/* overflow-x : lisible sur écran étroit, le tableau défile dans son conteneur */}
               <Box sx={{ overflowX: 'auto' }}>
-                <Table size="small" sx={{ minWidth: 560, '& td, & th': { border: 0, px: 0.5, py: 0.5 } }}>
+                <Table size="small" sx={{ minWidth: 880, '& td, & th': { border: 0, px: 0.5, py: 0.5 } }}>
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ width: 130 }}>

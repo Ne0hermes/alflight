@@ -3,11 +3,20 @@
 // Tableau des vitesses de décrochage (demande pilote, 21/08/2026).
 //
 // Lignes = configuration volets (lisse / décollage / atterrissage), colonnes =
-// inclinaison 0° / 20° / 40° / 60°. La colonne 0° EST vs1 / vsTO / vso : mêmes
-// champs que les arcs du badin — une seule source de vérité, pas de
-// duplication. Les colonnes 20 / 40 / 60° vivent dans une structure dédiée :
+// inclinaison 0° / 20° / 30° / 35° / 40° / 45° / 60°. La colonne 0° EST
+// vs1 / vsTO / vso : mêmes champs que les arcs du badin — une seule source de
+// vérité, pas de duplication. Les inclinaisons vivent dans une structure
+// dédiée :
 //
-//   speeds.stallByBank = { clean: { b20, b40, b60 }, takeoff: {…}, landing: {…} }
+//   speeds.stallByBank = { clean: { b20, b30, b35, b40, b45, b60 },
+//                          takeoff: {…}, landing: {…} }
+//
+// TABLEAU GÉNÉRAL (décision pilote, 24/08/2026) : les mêmes colonnes pour TOUS
+// les avions, TOUTES facultatives. Les inclinaisons publiées varient d'un
+// manuel à l'autre (20/40/60 chez Piper, 30/45 ailleurs) : plutôt que de
+// paramétrer les colonnes avion par avion, on offre la grille complète et
+// chaque fiche ne remplit que ce que son manuel donne. Une colonne vide sur
+// toute la flotte reste vide — elle ne coûte rien et n'invente rien.
 //
 // Valeurs numériques en kt, ABSENTES si non saisies — jamais un 0 fabriqué
 // (règle du projet, cf. writeNumeric dans Step2Speeds). Une configuration sans
@@ -21,9 +30,14 @@ export const STALL_CONFIGS = [
   { key: 'landing', label: 'Atterrissage', field: 'vso',  short: 'VSO' },
 ];
 
+// Grille générale, triée par inclinaison croissante — l'ordre porte le sens :
+// stallSpeedWarnings compare les colonnes de proche en proche.
 export const STALL_BANKS = [
   { key: 'b20', deg: 20 },
+  { key: 'b30', deg: 30 },
+  { key: 'b35', deg: 35 },
   { key: 'b40', deg: 40 },
+  { key: 'b45', deg: 45 },
   { key: 'b60', deg: 60 },
 ];
 
@@ -36,10 +50,12 @@ const toNum = (v) => {
 
 /**
  * Vitesse de décrochage d'une configuration à une inclinaison donnée.
- * 0° → champ de base (vs1 / vsTO / vso) ; 20 / 40 / 60° → speeds.stallByBank.
+ * 0° → champ de base (vs1 / vsTO / vso) ; toute inclinaison de STALL_BANKS →
+ * speeds.stallByBank. Une inclinaison hors grille rend null (jamais
+ * d'interpolation : le manuel de vol fait foi).
  * @param {object} speeds  aircraft.speeds
  * @param {'clean'|'takeoff'|'landing'} configKey
- * @param {0|20|40|60} bankDeg
+ * @param {0|20|30|35|40|45|60} bankDeg
  * @returns {number|null}
  */
 export function getStallSpeed(speeds, configKey, bankDeg) {
@@ -52,7 +68,7 @@ export function getStallSpeed(speeds, configKey, bankDeg) {
 }
 
 /**
- * Nouvelle valeur de `speeds.stallByBank` après saisie d'une cellule 20/40/60°.
+ * Nouvelle valeur de `speeds.stallByBank` après saisie d'une cellule inclinée.
  * Pure : ne mute pas l'objet reçu.
  *   • vidé → la clé disparaît ; configuration vide → disparaît ; plus rien →
  *     undefined (la clé speeds.stallByBank quitte le JSON) — JAMAIS un 0 ;
@@ -82,7 +98,8 @@ export function setStallByBank(stallByBank, configKey, bankKey, raw) {
  * Avertissements de cohérence du tableau — SIMPLES AVERTISSEMENTS, jamais
  * bloquants : le manuel de vol fait foi.
  *   1. Pour une configuration, le décrochage CROÎT avec l'inclinaison
- *      (0° < 20° < 40° < 60°) — comparaison des valeurs renseignées consécutives.
+ *      (0° < 20° < … < 60°) — comparaison des valeurs RENSEIGNÉES consécutives,
+ *      les colonnes laissées vides sont simplement sautées.
  *   2. À inclinaison égale, l'ordre habituel est lisse ≥ décollage ≥ atterrissage
  *      (paires adjacentes : la paire VS1 / VSO à 0° est déjà couverte par
  *      l'avertissement des arcs, pas de doublon).

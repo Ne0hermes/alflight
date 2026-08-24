@@ -1,7 +1,10 @@
 // src/features/aircraft/utils/__tests__/stallSpeedTable.test.js
 //
 // Tableau des vitesses de décrochage (21/08/2026) : colonne 0° = vs1 / vsTO /
-// vso (mêmes champs que les arcs), colonnes 20/40/60° dans speeds.stallByBank.
+// vso (mêmes champs que les arcs), colonnes inclinées dans speeds.stallByBank.
+// Grille GÉNÉRALE 20/30/35/40/45/60° (24/08/2026) : les mêmes colonnes pour
+// tous les avions, toutes facultatives — chaque manuel ne publie que les
+// siennes, les autres restent vides.
 // Règle du projet : absent reste absent — on n'écrit RIEN quand c'est vide,
 // jamais un 0 fabriqué. Les incohérences sont des avertissements, pas des
 // blocages (le manuel fait foi).
@@ -21,9 +24,9 @@ describe('modèle du tableau', () => {
     expect(STALL_CONFIGS.map((c) => c.field)).toEqual(['vs1', 'vsTO', 'vso']);
   });
 
-  it('trois inclinaisons facultatives 20 / 40 / 60°', () => {
-    expect(STALL_BANKS.map((b) => b.deg)).toEqual([20, 40, 60]);
-    expect(STALL_BANKS.map((b) => b.key)).toEqual(['b20', 'b40', 'b60']);
+  it('six inclinaisons facultatives, triées 20 / 30 / 35 / 40 / 45 / 60°', () => {
+    expect(STALL_BANKS.map((b) => b.deg)).toEqual([20, 30, 35, 40, 45, 60]);
+    expect(STALL_BANKS.map((b) => b.key)).toEqual(['b20', 'b30', 'b35', 'b40', 'b45', 'b60']);
   });
 
   it('la colonne 0° LIT le champ de base — une seule source de vérité', () => {
@@ -107,6 +110,23 @@ describe('stallSpeedWarnings — avertissements, jamais bloquants', () => {
     // 20° absent : 40° est comparé à 0°.
     expect(stallSpeedWarnings({ vs1: 50, stallByBank: { clean: { b40: 49 } } })).toHaveLength(1);
     expect(stallSpeedWarnings({ vs1: 50, stallByBank: { clean: { b40: 57 } } })).toEqual([]);
+  });
+
+  it('un manuel qui ne publie que 30 et 45° ne déclenche aucun avertissement (grille générale)', () => {
+    // Grille commune à toute la flotte : les colonnes 20 / 35 / 40 / 60° restent
+    // vides et sont simplement sautées — une fiche partielle est NORMALE.
+    const speeds = {
+      vs1: 50, vsTO: 48, vso: 45,
+      stallByBank: {
+        clean:   { b30: 54, b45: 59 },
+        takeoff: { b30: 52, b45: 57 },
+        landing: { b30: 49, b45: 53 },
+      },
+    };
+    expect(stallSpeedWarnings(speeds)).toEqual([]);
+    expect(getStallSpeed(speeds, 'clean', 30)).toBe(54);
+    expect(getStallSpeed(speeds, 'clean', 35)).toBeNull();   // vide, pas interpolé
+    expect(getStallSpeed(speeds, 'landing', 45)).toBe(53);
   });
 
   it('à inclinaison égale, signale décollage > lisse ou atterrissage > décollage', () => {

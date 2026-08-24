@@ -40,6 +40,7 @@ import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { initialWindLimits } from '../utils/windLimits';
 import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities } from '@utils/tankVariants';
+import { tankUsableLtr, tankTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
 // 🔧 FIX MEMORY: Import LAZY des étapes pour éviter de charger tous les composants en mémoire d'un coup
@@ -804,7 +805,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           const tanks = Array.isArray(aircraftData.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
           const sansBras = [];
           tanks.forEach((t, i) => {
-            const cap = parseFloat(t?.capacity);
+            // Contenance = utilisable, à défaut totale, à défaut le legacy capacity
+            // (tankUsableLtr le couvre) : une fiche moderne qui ne porte QUE
+            // usableCapacity doit elle aussi exiger son bras de levier.
+            const cap = tankUsableLtr(t) ?? tankTotalLtr(t);
             const arm = parseFloat(t?.arm);
             if (Number.isFinite(cap) && cap > 0 && (!Number.isFinite(arm) || arm === 0)) {
               newErrors[`additionalFuelTanks[${i}].arm`] = 'Bras de levier requis';

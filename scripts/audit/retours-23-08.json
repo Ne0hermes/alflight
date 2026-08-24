@@ -83,5 +83,15 @@
   "itid": "F-GOFP-06",
   "status": "fait",
   "note": "Vérifié en base le 24/08 : GRASS a été ajouté aux surfaces compatibles — les deux règles herbe (+15 % décollage et atterrissage) sont désormais cohérentes avec les pistes proposées."
+ },
+ {
+  "itid": "F-GNAM-01",
+  "status": "valide",
+  "note": "Rapport pilote 24/08 : « tu as raison mais les courbes ne vont pas à −40 à 0 ft ». VÉRIFIÉ, le pilote a raison : le tracé reproduit fidèlement la coupe diagonale de la planche Piper. Chaque courbe s'arrête d'autant plus tôt que l'altitude est basse — 0 ft à 11,3 °C, 1000 ft à 0,1 °C, 2000 ft à −11,4 °C, 3000 ft à −22,1 °C, 4000 ft à −31,6 °C, 5000/6000 ft jusqu'à −40 °C. Ce n'est donc PAS une courbe tronquée par erreur : ces couples (altitude, OAT) sont hors planche. L'axe X déclaré −40..30 est l'étendue du CADRE, pas de chaque courbe. Conséquence assumée : au niveau de la mer sous ~11 °C, le moteur refuse de calculer plutôt que d'extrapoler — comportement fail-closed correct. Item CLASSÉ SANS SUITE. Réserve mineure, non bloquante : la courbe 0 ft ne porte que 2 points (11,3 et 30 °C), soit une droite ; si la ligne du manuel s'incurve sur cet intervalle, un point intermédiaire améliorerait la fidélité."
+ },
+ {
+  "itid": "F-GNAM-05",
+  "status": "code",
+  "note": "Rapport pilote 24/08 : « de quoi tu me parles, il n'y a qu'une configuration ». Ma formulation était mauvaise (elle parlait d'une « fusion de deux réservoirs » qui n'existe pas ici) — le point de fond, lui, était réel. Le réservoir unique porte capacity = 91 (champ legacy resté sur une vieille valeur) face à usableCapacity = 182 et totalCapacity = 189. Les moteurs de calcul lisent bien 182 (tankUsableLtr), MAIS le module Carburant lisait t.capacity en brut : il plafonnait le vol de F-GNAM à 91 L au lieu de 182 L dès qu'une config réservoirs était engagée. DÉFAUT DE CODE, pas de données. CORRECTIF LIVRÉ le 24/08 : FuelModule.jsx passe par tankUsableLtr ; la validation du bras de levier dans le wizard aussi (une fiche ne portant QUE usableCapacity échappait à l'exigence de bras). Le champ legacy capacity = 91 reste en base mais n'est plus lu nulle part — purge à faire avec celle de maxBaggageWeight/maxAuxiliaryWeight."
  }
 ]
