@@ -80,3 +80,8 @@ scripts/.airac-tmp/
 # Sauvegardes de base avant écriture (purge, migrations) — restent en local :
 # ce sont des copies intégrales des fiches avion, elles ne sont pas à versionner.
 backups/
+
+# Données extraites/générées par l agent d audit quotidien — jamais versionnées :
+scripts/audit/fleet-live.json
+scripts/audit/fleet/
+scripts/audit/agent/rapports/

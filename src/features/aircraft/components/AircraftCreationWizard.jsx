@@ -276,9 +276,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       const fwdFromEnv = Array.isArray(env.forwardPoints) && env.forwardPoints.length > 0
         ? env.forwardPoints[0]?.cg
         : env.forwardCG;
+      // ⚖️ 24/08/2026 — priorité INVERSÉE : l'enveloppe saisie d'abord, le
+      // miroir weightBalance ensuite, le champ plat en dernier. L'ancien ordre
+      // rechargeait le plat faux de F-GUVV (2,05–2,31, réfuté par la fiche de
+      // pesée) et le réécrivait à chaque enregistrement.
       return {
-        forward: pick(cg.forward, wbCg.forward, fwdFromEnv),
-        aft:     pick(cg.aft,     wbCg.aft,     env.aftCG)
+        forward: pick(fwdFromEnv, wbCg.forward, cg.forward),
+        aft:     pick(env.aftCG,  wbCg.aft,     cg.aft)
       };
     })(),
 

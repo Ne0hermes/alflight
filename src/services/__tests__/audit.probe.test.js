@@ -6,7 +6,8 @@ import { it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { evaluateAbacWithAtelierEngine } from '../atelierCascadeAdapter';
-const FLEET = 'C:/Users/neohe/AppData/Local/Temp/claude/D--Applicator/b9873912-3901-434f-8efc-9ca9fccee018/scratchpad/fleet';
+// PROBE_FLEET : répertoire des fiches (l'agent quotidien pointe scripts/audit/fleet).
+const FLEET = process.env.PROBE_FLEET || 'C:/Users/neohe/AppData/Local/Temp/claude/D--Applicator/b9873912-3901-434f-8efc-9ca9fccee018/scratchpad/fleet';
 const OUT = 'D:/Applicator/alflight/scripts/audit';
 const COND = [
   { label: '15 °C / 500 ft / vent 0', temperature: 15, pressure_altitude: 500, wind: 0 },

@@ -152,21 +152,26 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
           // Copier cgLimits depuis selectedAircraft
           // Si cgLimits existe mais que forward/aft sont vides, utiliser cgEnvelope
           cgLimits: (() => {
+            // ⚖️ 24/08/2026 — L'ENVELOPPE SAISIE FAIT FOI, le champ plat cgLimits
+            // n'est plus qu'un repli. L'ancien ordre copiait dans le plan de vol un
+            // miroir invisible et non éditable : F-GUVV portait {2,05–2,31} alors
+            // que sa fiche de pesée PROUVE 2,40–2,59 (exemple de chargement officiel
+            // à CG 2,555 m / 1150 kg). Aligné sur computeWeightBalance.
+            const envPts = selectedAircraft.cgEnvelope?.forwardPoints;
+            const envAft = parseOrNull(selectedAircraft.cgEnvelope?.aftCG);
+            if ((Array.isArray(envPts) && envPts.length > 0) || envAft !== null) {
+              return {
+                forward: parseOrNull(envPts?.[0]?.cg),
+                aft: envAft,
+                forwardVariable: envPts || []
+              };
+            }
+
             const hasValidCgLimits = selectedAircraft.cgLimits &&
               selectedAircraft.cgLimits.forward !== '' &&
               selectedAircraft.cgLimits.aft !== '';
-
             if (hasValidCgLimits) {
               return selectedAircraft.cgLimits;
-            }
-
-            // Utiliser cgEnvelope comme fallback
-            if (selectedAircraft.cgEnvelope) {
-              return {
-                forward: parseOrNull(selectedAircraft.cgEnvelope.forwardPoints?.[0]?.cg),
-                aft: parseOrNull(selectedAircraft.cgEnvelope.aftCG),
-                forwardVariable: selectedAircraft.cgEnvelope.forwardPoints || []
-              };
             }
 
             // Dernier fallback

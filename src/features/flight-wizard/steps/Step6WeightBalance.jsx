@@ -252,21 +252,29 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               emptyWeightArm: parseOrNull(fullAircraft.arms.empty),
               // Copier cgLimits - vérifier si valides avant d'utiliser cgLimits
               cgLimits: (() => {
+                // ⚖️ 24/08/2026 — L'ENVELOPPE SAISIE FAIT FOI, le champ plat
+                // cgLimits n'est plus qu'un repli. L'ancien ordre faisait
+                // gagner un miroir invisible et non éditable : F-GUVV portait
+                // {2,05–2,31} alors que sa fiche de pesée PROUVE 2,40–2,59
+                // (l'exemple de chargement officiel donne CG 2,555 m à
+                // 1150 kg — hors limites de 24 cm dans le champ plat). Le
+                // calcul (computeWeightBalance) lisait déjà l'enveloppe en
+                // priorité : cette copie est désormais alignée sur lui.
+                const envPts = fullAircraft.cgEnvelope?.forwardPoints;
+                const envAft = parseOrNull(fullAircraft.cgEnvelope?.aftCG);
+                if ((Array.isArray(envPts) && envPts.length > 0) || envAft !== null) {
+                  return {
+                    forward: parseOrNull(envPts?.[0]?.cg),
+                    aft: envAft,
+                    forwardVariable: envPts || []
+                  };
+                }
+
                 const hasValidCgLimits = fullAircraft.cgLimits &&
                   fullAircraft.cgLimits.forward !== '' &&
                   fullAircraft.cgLimits.aft !== '';
-
                 if (hasValidCgLimits) {
                   return fullAircraft.cgLimits;
-                }
-
-                // Utiliser cgEnvelope comme fallback
-                if (fullAircraft.cgEnvelope) {
-                  return {
-                    forward: parseOrNull(fullAircraft.cgEnvelope.forwardPoints?.[0]?.cg),
-                    aft: parseOrNull(fullAircraft.cgEnvelope.aftCG),
-                    forwardVariable: fullAircraft.cgEnvelope.forwardPoints || []
-                  };
                 }
 
                 // Dernier fallback
