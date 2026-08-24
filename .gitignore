@@ -76,3 +76,7 @@ public/data/*.xml
 
 # Mise a jour AIRAC (extraction temporaire)
 scripts/.airac-tmp/
+
+# Sauvegardes de base avant écriture (purge, migrations) — restent en local :
+# ce sont des copies intégrales des fiches avion, elles ne sont pas à versionner.
+backups/
