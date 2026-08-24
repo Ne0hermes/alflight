@@ -966,12 +966,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   //   • le RÔLE « principal » est une pastille unique (type:'main' conservé en
   //     base pour la compatibilité — les moteurs, eux, ignorent le type) ;
   //   • « amovible » reste la case existante (pilote les variantes).
-  const addFuelTank = (preset = {}) => {
+  const addFuelTank = () => {
     const newTank = {
       id: Date.now() + Math.random(),
-      // Le preset ne préremplit plus qu'un NOM : ni type, ni rôle, ni
-      // « amovible ». Ces notions appartiennent à la configuration.
-      name: `${preset.name || 'Réservoir'}${additionalFuelTanks.length > 0 ? ` ${additionalFuelTanks.length + 1}` : ''}`,
+      // Nom prérempli et TOUJOURS numéroté — « Réservoir 1 », « Réservoir 2 »… —
+      // librement renommable ensuite. Aucun type, aucun rôle, aucune notion
+      // d'« amovible » : tout cela appartient à la configuration.
+      name: `Réservoir ${additionalFuelTanks.length + 1}`,
       arm: ''
       // ⛽ Deux contenances (17/08/2026) : aucune initialisation de volume —
       // totalCapacity / usableCapacity sont écrits à la saisie uniquement
@@ -1401,51 +1402,20 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 </Typography>
               </Alert>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                {/* 🔧 17/08/2026 — les boutons ne figent plus un « type » : ce sont
-                    des préremplissages de NOM (+ rôle principal ou case amovible
-                    quand ça va de soi). Un réservoir d'aile peut être LE principal :
-                    ajoutez « Réservoir d'aile » puis posez la pastille Principal. */}
+              {/* 🔧 24/08/2026 (demande pilote) — UN SEUL bouton. Les cinq
+                  raccourcis de nom (« Réservoir principal », « Réservoir d'aile »,
+                  « Tip tank », « Auxiliaire », « Autre ») ne servaient à rien : le
+                  pilote renomme de toute façon. Le nom est prérempli « Réservoir 1 »,
+                  « Réservoir 2 », … et reste librement modifiable. */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir principal' })}
+                  onClick={() => addFuelTank()}
                 >
-                  Réservoir principal
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir d\'aile' })}
-                >
-                  Réservoir d'aile
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Tip tank' })}
-                >
-                  Tip tank
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir auxiliaire' })}
-                >
-                  Auxiliaire
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir' })}
-                >
-                  Autre
+                  Ajouter un réservoir
                 </Button>
               </Box>
 
@@ -1453,9 +1423,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 <Alert severity="warning" icon={<InfoIcon />} sx={{ maxWidth: 700, mx: 'auto' }}>
                   <Typography variant="body2">
                     <strong>Aucun réservoir défini.</strong> Ajoute au moins un réservoir
-                    en cliquant sur l'un des boutons ci-dessus. La plupart des avions
-                    GA ont juste un « Réservoir principal » ; certains ont aussi des
-                    réservoirs d'aile et/ou un optionnel. Dès le premier réservoir, une
+                    avec le bouton ci-dessus, puis renomme-le comme dans ton manuel de
+                    vol. Dès le premier réservoir, une
                     <em> configuration standard</em> est créée automatiquement : c'est
                     elle qui portera la capacité de l'avion.
                   </Typography>
@@ -1728,9 +1697,31 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             const tUsable = tankUsableLtr(tank);
                             const coche = variantKeys.has(key);
                             return (
-                              <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              // ⚠️ 24/08/2026 — le thème global impose fullWidth: true à
+                              // TOUT MuiTextField / MuiFormControl. Sans fullWidth={false}
+                              // ci-dessous, le sélecteur de rôle prenait 942 px et se
+                              // superposait au nom du réservoir et à ses contenances
+                              // (signalement pilote). La largeur est donc FIXÉE, et la
+                              // ligne passe en colonne sous 600 px plutôt que de comprimer.
+                              <Box
+                                key={key}
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1.5,
+                                  flexWrap: 'wrap',
+                                  py: 0.25
+                                }}
+                              >
                                 <FormControlLabel
-                                  sx={{ display: 'flex', flex: 1, minWidth: 0, mr: 0 }}
+                                  sx={{
+                                    flex: '1 1 240px',
+                                    minWidth: 0,
+                                    mr: 0,
+                                    // Le libellé doit pouvoir RÉTRÉCIR : sans minWidth 0 sur
+                                    // lui aussi, un nom long pousse le sélecteur hors ligne.
+                                    '& .MuiFormControlLabel-label': { minWidth: 0, flex: 1 }
+                                  }}
                                   control={
                                     <Checkbox
                                       size="small"
@@ -1760,9 +1751,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                                     select
                                     size="small"
                                     label="Rôle"
+                                    fullWidth={false}
                                     value={roleOf(key)}
                                     onChange={(e) => setVariantTankRole(vi, key, e.target.value)}
-                                    sx={{ minWidth: 190, flexShrink: 0 }}
+                                    sx={{ width: 200, flex: '0 0 200px' }}
                                   >
                                     <MenuItem value="">—</MenuItem>
                                     {TANK_ROLES.map(r => (
