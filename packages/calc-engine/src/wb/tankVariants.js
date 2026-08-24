@@ -78,16 +78,33 @@ const variantsOf = (aircraft) =>
 // les rôles soient saisis, si.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Les 3 rôles qu'un réservoir peut tenir DANS une configuration. */
+/**
+ * LES DEUX RÔLES (24/08/2026, décision pilote — simplification).
+ *
+ * « Principal » et « Annexe » ont FUSIONNÉ en « Inamovible ». La distinction ne
+ * portait aucune information exploitable : un réservoir d'aile qui ne se démonte
+ * pas remplit le même office qu'un principal central, et l'avion vole avec les
+ * deux. Ce qui compte opérationnellement tient en une question : ce réservoir
+ * est-il TOUJOURS à bord, ou peut-on le monter et le démonter ?
+ *
+ *   • inamovible → toujours à bord. C'est lui qui porte la capacité annoncée
+ *     de la configuration, et son bras qui alimente arms.fuelMain.
+ *   • amovible   → monté selon la mission. Compté À PART, jamais dans le total
+ *     annoncé : additionner une option non montée annoncerait une contenance
+ *     que l'avion n'a pas.
+ */
 export const TANK_ROLES = [
-  { value: 'main',     label: 'Principal' },
-  { value: 'aux',      label: 'Annexe' },
-  { value: 'optional', label: 'Optionnel (amovible)' }
+  { value: 'fixed',     label: 'Inamovible' },
+  { value: 'removable', label: 'Amovible' }
 ];
 
-/** Types legacy du catalogue traduits en rôle. 'wing' et '' n'en portent AUCUN :
- *  une aile n'est ni principale ni annexe en soi — la configuration le dit. */
-const ROLE_FROM_LEGACY_TYPE = { main: 'main', aux: 'aux', optional: 'optional', tip: 'optional' };
+/** Types legacy du catalogue traduits. 'wing' et '' n'en portent AUCUN : une
+ *  aile peut être inamovible comme amovible, seule la configuration le dit. */
+const ROLE_FROM_LEGACY_TYPE = { main: 'fixed', aux: 'fixed', optional: 'removable', tip: 'removable' };
+
+/** Rôles écrits par la version à trois rôles du 24/08 (quelques heures de vie) :
+ *  on les relit sans rien casser plutôt que de migrer la base. */
+const ROLE_ALIAS = { main: 'fixed', aux: 'fixed', optional: 'removable' };
 
 /**
  * ENTRÉES D'UNE VARIANTE — point d'entrée UNIQUE : [{ id, role }].
@@ -119,9 +136,10 @@ const roleFromVariant = (aircraft, variantId, tank, index) => {
   const key = tankKey(tank, index);
   const entries = variantEntries(variant);
   const mine = entries.find(e => e.id === key);
-  if (mine?.role) return mine.role;
-  // Configuration à UN SEUL réservoir : il est forcément le principal.
-  if (entries.length === 1 && mine) return 'main';
+  if (mine?.role) return ROLE_ALIAS[mine.role] || mine.role;
+  // Configuration à UN SEUL réservoir : il est forcément à bord — sinon
+  // l'avion volerait sans carburant.
+  if (entries.length === 1 && mine) return 'fixed';
   return undefined;
 };
 
@@ -132,21 +150,102 @@ export const resolveTankRole = (aircraft, variantId, tank, index) =>
 
 /** Réservoir PRINCIPAL d'une configuration, ou null. Jamais un repli sur le
  *  premier réservoir venu : sans rôle principal, il n'y a pas de principal. */
-export const variantMainTank = (aircraft, variantId) => {
+export const variantFixedTank = (aircraft, variantId) => {
   const tanks = poolOf(aircraft);
   const variant = variantsOf(aircraft).find(v => v?.id === variantId);
   const keys = variant ? new Set(variantEntries(variant).map(e => e.id)) : null;
   for (let i = 0; i < tanks.length; i++) {
-    if (resolveTankRole(aircraft, variantId, tanks[i], i) !== 'main') continue;
+    if (resolveTankRole(aircraft, variantId, tanks[i], i) !== 'fixed') continue;
     // Le réservoir doit AUSSI appartenir à la configuration.
     if (!keys || keys.has(tankKey(tanks[i], i))) return tanks[i];
   }
   return null;
 };
 
-/** Réservoir principal de la configuration PAR DÉFAUT (celle de la fiche). */
-export const defaultVariantMainTank = (aircraft) =>
-  variantMainTank(aircraft, getDefaultVariantId(aircraft));
+/** Réservoir principal de la configuration PAR DÉFAUT (celle de la fiche).
+ *  Avec plusieurs principaux, rend le PREMIER — n'utiliser que pour un libellé.
+ *  Pour le bras et le moment, passer par fixedTanksArm / fixedTanksMoment. */
+export const defaultVariantFixedTank = (aircraft) =>
+  variantFixedTank(aircraft, getDefaultVariantId(aircraft));
+
+/** TOUS les réservoirs principaux d'une configuration (dans l'ordre du
+ *  catalogue). Vide si aucun ne porte le rôle. */
+export const variantFixedTanks = (aircraft, variantId) => {
+  const variant = variantsOf(aircraft).find(v => v?.id === variantId);
+  const keys = variant ? new Set(variantEntries(variant).map(e => e.id)) : null;
+  return poolOf(aircraft).filter((t, i) =>
+    resolveTankRole(aircraft, variantId, t, i) === 'fixed'
+    && (!keys || keys.has(tankKey(t, i)))
+  );
+};
+
+// Tolérance d'égalité des bras (1 mm) — même valeur que fuelArm.js.
+const ARM_EQ_TOL = 1e-3;
+const numArm = (t) => {
+  const v = typeof t?.arm === 'string' ? parseFloat(t.arm) : t?.arm;
+  return Number.isFinite(v) && v !== 0 ? v : null;
+};
+
+/**
+ * BRAS du carburant principal quand il est NON AMBIGU — pour le miroir de
+ * compatibilité arms.fuelMain, qui n'a qu'une case.
+ *   • un seul principal            → son bras ;
+ *   • plusieurs, tous au même bras → ce bras (cas des réservoirs d'aile
+ *     symétriques : un seul point d'application) ;
+ *   • plusieurs à des bras DIFFÉRENTS → null. Le centrage exige alors la
+ *     répartition litre par litre ; une moyenne serait une valeur inventée.
+ * @returns {number|null}
+ */
+export const fixedTanksArm = (aircraft, variantId) => {
+  const mains = variantFixedTanks(aircraft, variantId).map(numArm).filter(a => a !== null);
+  if (mains.length === 0) return null;
+  const a0 = mains[0];
+  return mains.every(a => Math.abs(a - a0) <= ARM_EQ_TOL) ? a0 : null;
+};
+
+/**
+ * MOMENT à plein du carburant principal — somme des moments des principaux,
+ * et SEULEMENT s'ils partagent un bras unique (sinon le miroir à une case ne
+ * veut rien dire). null dès qu'un moment manque : jamais une somme partielle.
+ * @returns {number|null}
+ */
+export const fixedTanksMoment = (aircraft, variantId) => {
+  if (fixedTanksArm(aircraft, variantId) === null) return null;
+  const mains = variantFixedTanks(aircraft, variantId);
+  if (mains.length === 0) return null;
+  let somme = 0;
+  for (const t of mains) {
+    const m = typeof t?.momentAtFull === 'string' ? parseFloat(t.momentAtFull) : t?.momentAtFull;
+    if (!Number.isFinite(m) || m <= 0) return null;
+    somme += m;
+  }
+  return Math.round(somme * 100) / 100;
+};
+
+/**
+ * RÉPARTITION DES CAPACITÉS D'UNE CONFIGURATION — pour l'AFFICHAGE.
+ *   • base    : réservoirs toujours à bord (principal + annexe) ;
+ *   • options : réservoirs OPTIONNELS (amovibles), comptés à part avec le
+ *     volume qu'ils ajoutent s'ils sont montés.
+ * Les sommes restent STRICTES : null si un réservoir du groupe manque la
+ * donnée. `variantCapacities` n'est pas modifié — il continue de rendre la
+ * capacité de l'avion PLEINEMENT équipé, dont dépendent les calculs.
+ */
+export const variantCapacityBreakdown = (aircraft, variantId) => {
+  const variant = variantsOf(aircraft).find(v => v?.id === variantId);
+  const keys = variant ? new Set(variantEntries(variant).map(e => e.id)) : null;
+  const dedans = poolOf(aircraft).filter((t, i) => !keys || keys.has(tankKey(t, i)));
+  const optionnels = dedans.filter((t) => {
+    const i = poolOf(aircraft).indexOf(t);
+    return isTankRemovable(aircraft, variantId, t, i);
+  });
+  const base = dedans.filter(t => !optionnels.includes(t));
+  return {
+    base:    { totalLtr: strictSum(base, tankTotalLtr),        usableLtr: strictSum(base, tankUsableLtr) },
+    options: { count: optionnels.length,
+               totalLtr: strictSum(optionnels, tankTotalLtr),  usableLtr: strictSum(optionnels, tankUsableLtr) }
+  };
+};
 
 /**
  * Le réservoir est-il AMOVIBLE dans cette configuration ?
@@ -162,7 +261,7 @@ export const isTankRemovable = (aircraft, variantId, tank, index) => {
   // c'est-à-dire « ce réservoir n'est pas amovible, quoi qu'en dise son type ».
   // Faire trancher le type traduit inverserait leur réponse en silence.
   const role = roleFromVariant(aircraft, variantId, tank, index);
-  if (role === 'optional') return true;
+  if (role === 'removable') return true;
   if (role) return false;
   return tank?.optional ?? ['aux', 'optional', 'tip'].includes(tank?.type);
 };
@@ -319,16 +418,17 @@ export const sanitizeTankVariants = (tankVariants, additionalFuelTanks) => {
         .filter(e => validKeys.has(e.id))
         .map(e => ({ id: e.id, ...(e.role ? { role: e.role } : {}) }));
 
-      // UN SEUL principal par configuration : le premier gagne, les suivants
-      // sont dégradés en annexe (même politique que isDefault ci-dessous).
-      // Deux principaux rendraient arbitraire le choix de arms.fuelMain.
-      let mainSeen = false;
-      const withRoles = entries.map(e => {
-        if (e.role !== 'main') return e;
-        if (mainSeen) return { ...e, role: 'aux' };
-        mainSeen = true;
-        return e;
-      });
+      // 🛢️ 24/08/2026 — PLUSIEURS PRINCIPAUX SONT AUTORISÉS (demande pilote).
+      // Un avion peut avoir un principal central ET deux réservoirs d'aile qui
+      // remplissent le même office. La dégradation automatique du 2e principal
+      // en annexe a donc été RETIRÉE.
+      //
+      // Ce qui devient ambigu, ce n'est pas le rôle mais le MIROIR de
+      // compatibilité arms.fuelMain / moments.fuelMain, qui n'a qu'une case.
+      // C'est fixedTanksArm (ci-dessous) qui tranche, avec la même doctrine que
+      // fuelArm.js : bras identiques → ce bras ; bras différents → RIEN, jamais
+      // une moyenne.
+      const withRoles = entries;
 
       return {
         id: v.id ?? `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,

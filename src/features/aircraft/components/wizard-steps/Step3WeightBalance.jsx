@@ -54,7 +54,8 @@ import {
   // 🎭 24/08/2026 — le rôle vit dans la configuration : vocabulaire et
   // lecture des entrées viennent du moteur, jamais réécrits ici.
   TANK_ROLES,
-  variantEntries
+  variantEntries,
+  variantCapacityBreakdown
 } from '@alflight/calc-engine/wb/tankVariants';
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
@@ -366,18 +367,19 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   };
 
   // 🎭 Pose le RÔLE d'un réservoir DANS une configuration.
-  // UN SEUL principal par configuration : désigner B retire le rôle à A, dans
-  // CETTE configuration seulement — le même réservoir peut rester principal
-  // ailleurs. Deux principaux rendraient arbitraire le choix de arms.fuelMain.
+  // PLUSIEURS PRINCIPAUX SONT AUTORISÉS (24/08/2026) : un principal central et
+  // deux réservoirs d'aile qui remplissent le même office coexistent. Poser
+  // « principal » sur B ne le retire donc plus à A. Ce qui reste unique, c'est
+  // le miroir arms.fuelMain — le moteur ne l'écrit que si tous les principaux
+  // partagent un même bras (fixedTanksArm), sinon rien.
   const setVariantTankRole = (vi, key, role) => {
     const current = tankVariants[vi];
     const k = String(key);
-    const entries = variantEntries(current).map(e => {
-      if (e.id === k) return { id: e.id, ...(role ? { role } : {}) };
-      // Le principal est unique : l'ancien porteur redevient sans rôle.
-      if (role === 'main' && e.role === 'main') return { id: e.id };
-      return { id: e.id, ...(e.role ? { role: e.role } : {}) };
-    });
+    const entries = variantEntries(current).map(e =>
+      e.id === k
+        ? { id: e.id, ...(role ? { role } : {}) }
+        : { id: e.id, ...(e.role ? { role: e.role } : {}) }
+    );
     setVariantNotice(vi, null);
     syncTankVariants(tankVariants.map((v, i) =>
       (i === vi ? { ...v, tanks: entries, tankIds: entries.map(e => e.id) } : v)
@@ -1638,11 +1640,19 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   // Une configuration sans principal ne peut pas alimenter
                   // arms.fuelMain — sauf si elle n'a qu'un réservoir, auquel cas
                   // le moteur le résout seul (resolveTankRole).
-                  const sansPrincipal = entries.length > 1 && !entries.some(e => e.role === 'main');
+                  // Une configuration dont AUCUN réservoir n'est inamovible n'a pas de
+                  // capacité de base. (Les alias main/aux couvrent la version à 3 rôles.)
+                  const sansFixe = entries.length > 1 && !entries.some(e => ["fixed", "main", "aux"].includes(e.role));
                   // Capacités de la CONFIGURATION via le moteur (fail-closed :
                   // null si un réservoir coché n'a pas la contenance — on
                   // n'affiche alors pas un « 0 L » qui ferait croire à un vide).
                   const caps = variantCapacities({ additionalFuelTanks, tankVariants }, variant.id);
+                  // 🛢️ 24/08/2026 — le total annoncé ne compte QUE ce qui est
+                  // toujours à bord (principal + annexe). Les réservoirs
+                  // OPTIONNELS sont sortis à part : les additionner ferait
+                  // annoncer une contenance que l'avion n'a pas si l'option
+                  // n'est pas montée.
+                  const rep = variantCapacityBreakdown({ additionalFuelTanks, tankVariants }, variant.id);
                   const notice = variantNotices[vi];
                   return (
                     <Box
@@ -1767,9 +1777,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           })}
                           <Typography variant="body2" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
                             Capacité de cette configuration :{' '}
-                            {caps.totalLtr == null ? '—' : `${dispTankLiters(caps.totalLtr)} ${getUnitSymbol(units.fuel)} total`}
+                            {rep.base.totalLtr == null ? '—' : `${dispTankLiters(rep.base.totalLtr)} ${getUnitSymbol(units.fuel)} total`}
                             {' · '}
-                            {caps.usableLtr == null ? '—' : `${dispTankLiters(caps.usableLtr)} ${getUnitSymbol(units.fuel)} utilisables`}
+                            {rep.base.usableLtr == null ? '—' : `${dispTankLiters(rep.base.usableLtr)} ${getUnitSymbol(units.fuel)} utilisables`}
+                            {rep.options.count > 0 && (
+                              <Typography component="span" variant="caption" sx={{ fontWeight: 400, color: 'text.secondary' }}>
+                                {' '}({rep.options.count} option{rep.options.count > 1 ? 's' : ''} de réservoir
+                                {rep.options.usableLtr == null
+                                  ? ' disponible' + (rep.options.count > 1 ? 's' : '')
+                                  : ` : +${dispTankLiters(rep.options.usableLtr)} ${getUnitSymbol(units.fuel)} utilisables`})
+                              </Typography>
+                            )}
                           </Typography>
                           {(caps.totalLtr == null || caps.usableLtr == null) && (
                             <Typography variant="caption" sx={{ display: 'block', color: 'warning.main' }}>
@@ -1782,10 +1800,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                               moments.fuelMain ne sont pas alimentés. Une
                               configuration à UN seul réservoir est exemptée : le
                               moteur sait qu'il est forcément le principal. */}
-                          {sansPrincipal && (
+                          {sansFixe && (
                             <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'warning.main' }}>
-                              Aucun réservoir principal dans cette configuration : le bras
-                              et le moment du réservoir principal ne seront pas renseignés
+                              Aucun réservoir inamovible dans cette configuration : sa
+                              capacité de base reste vide, et le bras du carburant ne sera
                               sur la fiche.
                             </Typography>
                           )}

@@ -6,7 +6,12 @@ import { useAircraft, useNavigation } from '@core/contexts';
 import { flightTypeToGeneralInfo } from '@core/flightType';
 import { useFuelStore } from '@core/stores/fuelStore';
 import { useWeightBalanceStore } from '@core/stores/weightBalanceStore';
-import { applyTankVariant, hasTankVariants, getDefaultVariantId, variantCapacities } from '@utils/tankVariants';
+import { applyTankVariant, hasTankVariants, getDefaultVariantId, variantCapacities, variantCapacityBreakdown } from '@utils/tankVariants';
+// 🎨 24/08/2026 — les <select> NATIFS déroulent une liste dessinée par l'OS :
+// angles vifs sous Windows, surlignage bleu système, police système. Impossible
+// à arrondir en CSS. CustomSelect existe précisément pour ça (cf. son en-tête),
+// et c'est lui qu'utilise le reste de l'application — d'où l'écart signalé.
+import { CustomSelect } from '@shared/components/editorial';
 
 /**
  * Étape 1 : Informations générales du vol
@@ -230,12 +235,21 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
   // moteur (variantCapacities : Σ totale et Σ utilisable de ses réservoirs, avec
   // repli legacy `capacity`). L'ancienne somme locale de `capacity` affichait
   // « 0 L » pour les réservoirs au modèle deux-contenances.
+  // 🛢️ 24/08/2026 — la capacité ANNONCÉE ne compte que les réservoirs
+  // INAMOVIBLES, ceux qui sont toujours à bord. Les réservoirs AMOVIBLES sont
+  // signalés à part, avec le volume qu'ils ajoutent s'ils sont montés :
+  // les additionner d'office annoncerait une contenance que l'avion n'a pas
+  // ce jour-là, et c'est sur cette ligne que le pilote choisit sa configuration.
   const variantLabel = (aircraft, variant) => {
-    const { totalLtr, usableLtr } = variantCapacities(aircraft, variant?.id);
+    const { base, options } = variantCapacityBreakdown(aircraft, variant?.id);
     const parts = [];
-    if (totalLtr != null) parts.push(`${totalLtr.toFixed(0)} L total`);
-    if (usableLtr != null) parts.push(`${usableLtr.toFixed(0)} L utilisables`);
-    return parts.length > 0 ? parts.join(' · ') : 'capacité incomplète';
+    if (base.totalLtr != null) parts.push(`${base.totalLtr.toFixed(0)} L total`);
+    if (base.usableLtr != null) parts.push(`${base.usableLtr.toFixed(0)} L utilisables`);
+    const texte = parts.length > 0 ? parts.join(' · ') : 'capacité incomplète';
+    if (options.count === 0) return texte;
+    const pluriel = options.count > 1 ? 's' : '';
+    const volume = options.usableLtr != null ? ` : +${options.usableLtr.toFixed(0)} L utilisables` : '';
+    return `${texte} (${options.count} option${pluriel} de réservoir${volume})`;
   };
 
   const formatDate = (date) => {
@@ -252,18 +266,16 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
           <Plane size={18} style={styles.icon} />
           Avion
         </label>
-        <select
-          style={styles.select}
+        <CustomSelect
+          ariaLabel="Avion"
+          placeholder="— Sélectionnez un avion —"
           value={flightPlan.generalInfo.callsign || ''}
-          onChange={(e) => handleAircraftSelection(e.target.value)}
-        >
-          <option value="">-- Sélectionnez un avion --</option>
-          {aircraftList.map((aircraft) => (
-            <option key={aircraft.id} value={aircraft.registration}>
-              {aircraft.registration} - {aircraft.model}
-            </option>
-          ))}
-        </select>
+          onChange={handleAircraftSelection}
+          options={aircraftList.map((aircraft) => ({
+            value: aircraft.registration,
+            label: `${aircraft.registration} — ${aircraft.model}`
+          }))}
+        />
       </div>
 
       {/* 🔧 LOT 5 : Configuration de réservoirs (variante) — visible seulement
@@ -274,29 +286,23 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
             <Fuel size={18} style={styles.icon} />
             Configuration réservoirs
           </label>
-          <select
-            style={styles.select}
+          {/* 🛢️ 23/08/2026 — l'option « Tous les réservoirs » a été RETIRÉE :
+              elle sommait le CATALOGUE de l'avion, y compris des réservoirs
+              qui s'excluent (F-GOFP : 98 L OU 147 L ⇒ « 245 L » d'un avion
+              qui n'existe pas). Le vol se fait TOUJOURS dans une configuration
+              déclarée. Le placeholder tient lieu d'état « rien de choisi »
+              (brouillon d'avant les configurations) — il n'est pas
+              sélectionnable, donc on ne peut pas revenir à « aucune ». */}
+          <CustomSelect
+            ariaLabel="Configuration réservoirs"
+            placeholder="— Choisir une configuration —"
             value={selectedTankVariantId || ''}
-            onChange={(e) => handleTankVariantSelection(e.target.value)}
-          >
-            {/* 🛢️ 23/08/2026 — l'option « Tous les réservoirs » a été RETIRÉE :
-                elle sommait le CATALOGUE de l'avion, y compris des réservoirs
-                qui s'excluent (F-GOFP : 98 L OU 147 L ⇒ « 245 L » d'un avion
-                qui n'existe pas). Le vol se fait TOUJOURS dans une configuration
-                déclarée. Placeholder inerte tant qu'aucune n'est choisie
-                (brouillon d'avant les configurations). */}
-            {!selectedTankVariantId && (
-              <option value="" disabled>
-                — Choisir une configuration —
-              </option>
-            )}
-            {(rawSelectedAircraft.tankVariants || []).map((variant) => (
-              <option key={variant.id} value={variant.id}>
-                {variant.name} — {variantLabel(rawSelectedAircraft, variant)}
-                {variant.isDefault ? ' (défaut)' : ''}
-              </option>
-            ))}
-          </select>
+            onChange={handleTankVariantSelection}
+            options={(rawSelectedAircraft.tankVariants || []).map((variant) => ({
+              value: variant.id,
+              label: `${variant.name} — ${variantLabel(rawSelectedAircraft, variant)}${variant.isDefault ? ' (défaut)' : ''}`
+            }))}
+          />
         </div>
       )}
 

@@ -39,7 +39,7 @@ import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { initialWindLimits } from '../utils/windLimits';
-import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities, defaultVariantMainTank } from '@utils/tankVariants';
+import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities, fixedTanksArm, fixedTanksMoment, getDefaultVariantId } from '@utils/tankVariants';
 import { tankUsableLtr, tankTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
@@ -1066,18 +1066,21 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       // disparition de leur source — une fiche gardait un bras carburant
       // fantôme après suppression du réservoir dont il venait.
       try {
-        const mainTank = defaultVariantMainTank(ensureDefaultVariant(dataToSave));
+        // PLUSIEURS principaux sont possibles ; le miroir n'a qu'une case.
+        // fixedTanksArm ne répond que si tous partagent un même bras (tolérance
+        // 1 mm, comme fuelArm.js) — sinon null, et on n'écrit RIEN : le
+        // centrage exigerait la répartition litre par litre, une moyenne
+        // serait une valeur inventée.
+        const av = ensureDefaultVariant(dataToSave);
+        const vid = getDefaultVariantId(av);
+        const armVal = fixedTanksArm(av, vid);
+        const momVal = fixedTanksMoment(av, vid);
         dataToSave.arms = { ...(dataToSave.arms || {}) };
         dataToSave.moments = { ...(dataToSave.moments || {}) };
-        if (mainTank) {
-          const armVal = parseFloat(mainTank.arm);
-          const momVal = parseFloat(mainTank.momentAtFull);
-          if (Number.isFinite(armVal) && armVal !== 0) dataToSave.arms.fuelMain = armVal;
-          if (Number.isFinite(momVal) && momVal > 0) dataToSave.moments.fuelMain = momVal;
-        } else {
-          delete dataToSave.arms.fuelMain;
-          delete dataToSave.moments.fuelMain;
-        }
+        if (armVal !== null) dataToSave.arms.fuelMain = armVal;
+        else delete dataToSave.arms.fuelMain;
+        if (momVal !== null) dataToSave.moments.fuelMain = momVal;
+        else delete dataToSave.moments.fuelMain;
         // 🛢️ 23/08/2026 — LA CAPACITÉ DE L'AVION EST CELLE DE SA CONFIGURATION
         // PAR DÉFAUT, plus jamais la somme du catalogue de réservoirs.
         // `additionalFuelTanks` déclare ce que la CELLULE peut recevoir, y

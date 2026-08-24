@@ -18,7 +18,7 @@ import { computeMissingPerformanceTables, computeCertifiedAbsentPerformanceTable
 // nouveaux champs via les accesseurs canoniques du moteur — Σ tankTotalLtr
 // pour la capacité, Σ tankUsableLtr pour l'utilisable — avec l'ancien
 // `capacity` en DERNIER recours (repli intégré aux accesseurs).
-import { defaultVariantCapacities, defaultVariantMainTank, ensureDefaultVariant } from '@alflight/calc-engine/wb/tankVariants';
+import { defaultVariantCapacities, ensureDefaultVariant, getDefaultVariantId, fixedTanksArm } from '@alflight/calc-engine/wb/tankVariants';
 
 // R22 — poids FIXE du groupe « Performances » (décision pilote : la liste des
 // tables manquantes est informative et ne doit pas diluer le % avec 8 lignes).
@@ -81,7 +81,11 @@ const hasValue = (v) => {
 // matérialise une pour les fiches qui n'en déclarent pas, et resolveTankRole
 // retombe sur le `type` legacy tant que le pilote n'a pas saisi les rôles —
 // aucune fiche existante ne perd son bras de réservoir principal.
-const findMainTank = (aircraft) => defaultVariantMainTank(ensureDefaultVariant(aircraft)) || null;
+// Plusieurs principaux possibles : le bras n'existe que s'ils le partagent.
+const fixedArmOf = (aircraft) => {
+  const av = ensureDefaultVariant(aircraft);
+  return fixedTanksArm(av, getDefaultVariantId(av));
+};
 
 // ⛽ Deux contenances (17/08/2026) : les sommes passent par les accesseurs
 // calc-engine (totalCapacity / usableCapacity, repli legacy `capacity`).
@@ -150,7 +154,7 @@ export const FIELD_DEFINITIONS = [
   { path: 'arms.fuelMain | weightBalance.fuelArm | armLengths.fuelArm', label: 'Bras réservoir principal', severity: 'CRITICAL', weight: 4,
     // Fallback : si les paths legacy sont vides, lire le bras du réservoir qui
     // porte le rôle « principal » dans la configuration par défaut.
-    get: (a) => findMainTank(a)?.arm },
+    get: (a) => fixedArmOf(a) ?? undefined },
   { path: 'cgLimits.forward | weightBalance.cgLimits.forward | cgEnvelope.forwardPoints | cgEnvelope.forwardCG', label: 'Limite CG avant', severity: 'CRITICAL', weight: 5 },
   { path: 'cgLimits.aft | weightBalance.cgLimits.aft | cgEnvelope.aftCG | cgEnvelope.aftPoints', label: 'Limite CG arrière', severity: 'CRITICAL', weight: 5 },
   { path: 'weighingReport | hasWeighingReport | weighingReport.fileName | weighingReport.pdfData', label: 'Rapport de pesée (PDF)', severity: 'CRITICAL', weight: 4 },

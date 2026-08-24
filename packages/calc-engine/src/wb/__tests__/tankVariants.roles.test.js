@@ -1,22 +1,29 @@
 // packages/calc-engine/src/wb/__tests__/tankVariants.roles.test.js
 //
-// 🎭 LE RÔLE APPARTIENT À LA CONFIGURATION (refonte 24/08/2026, demande pilote :
-// « il n'est plus utile de marquer si c'est un type principal ou optionnel quand
-// je déclare les réservoirs ; c'est lorsque je crée les variantes que je dis si
-// c'est principal, optionnel, annexe »).
+// 🎭 LE RÔLE APPARTIENT À LA CONFIGURATION (refonte 24/08/2026, demande pilote).
 //
-// Ce test verrouille la NON-RÉGRESSION sur les formes réellement présentes dans
-// la flotte : les 13 fiches en base portent encore leur `type` / `optional` de
-// catalogue, et aucune n'a été migrée. Le nouveau code doit leur répondre
-// EXACTEMENT comme l'ancien — sauf là où l'amélioration est voulue et nommée.
+// DEUX rôles seulement, après fusion le même jour : « Principal » et « Annexe »
+// ne portaient aucune information exploitable — un réservoir d'aile qui ne se
+// démonte pas remplit le même office qu'un principal central. Ce qui compte
+// tient en une question : ce réservoir est-il TOUJOURS à bord ?
+//
+//   • inamovible (fixed)     → porte la capacité annoncée de la configuration ;
+//   • amovible   (removable) → compté À PART, jamais dans le total annoncé.
+//
+// Ce test verrouille la NON-RÉGRESSION sur les formes réellement en base : les
+// 13 fiches portent encore leur `type` / `optional` de catalogue, aucune n'a été
+// migrée. Le nouveau code doit leur répondre comme l'ancien.
 
 import { describe, it, expect } from 'vitest';
 import {
   TANK_ROLES,
   variantEntries,
   resolveTankRole,
-  variantMainTank,
-  defaultVariantMainTank,
+  variantFixedTanks,
+  defaultVariantFixedTank,
+  fixedTanksArm,
+  fixedTanksMoment,
+  variantCapacityBreakdown,
   isTankRemovable,
   ensureDefaultVariant,
   getDefaultVariantId,
@@ -26,15 +33,16 @@ import {
 const tank = (id, name, extra = {}) => ({ id, name, arm: 1, ...extra });
 
 describe('vocabulaire des rôles', () => {
-  it('trois rôles, aucune position (la position vit dans le nom)', () => {
-    expect(TANK_ROLES.map(r => r.value)).toEqual(['main', 'aux', 'optional']);
+  it('deux rôles : inamovible et amovible', () => {
+    expect(TANK_ROLES.map(r => r.value)).toEqual(['fixed', 'removable']);
+    expect(TANK_ROLES.map(r => r.label)).toEqual(['Inamovible', 'Amovible']);
   });
 });
 
 describe('variantEntries — point d’entrée unique', () => {
   it('lit la forme neuve `tanks` avec ses rôles', () => {
-    expect(variantEntries({ tanks: [{ id: 'a', role: 'main' }, { id: 'b' }] }))
-      .toEqual([{ id: 'a', role: 'main' }, { id: 'b', role: undefined }]);
+    expect(variantEntries({ tanks: [{ id: 'a', role: 'fixed' }, { id: 'b' }] }))
+      .toEqual([{ id: 'a', role: 'fixed' }, { id: 'b', role: undefined }]);
   });
 
   it('dérive de `tankIds` (forme historique) avec un rôle inconnu', () => {
@@ -48,74 +56,141 @@ describe('variantEntries — point d’entrée unique', () => {
   });
 });
 
-describe('résolution du rôle — ordre du plus explicite au plus ancien', () => {
-  it('1. le rôle déclaré dans la configuration gagne sur le type legacy', () => {
+describe('résolution du rôle', () => {
+  it('le rôle de la configuration gagne sur le type legacy', () => {
     const a = {
-      additionalFuelTanks: [tank('t1', 'Aile', { type: 'main' }), tank('t2', 'Long range')],
-      tankVariants: [{ id: 'v1', isDefault: true, tanks: [{ id: 't1', role: 'aux' }, { id: 't2', role: 'main' }] }]
+      additionalFuelTanks: [tank('t1', 'Aile', { type: 'main' })],
+      tankVariants: [{ id: 'v1', isDefault: true, tanks: [{ id: 't1', role: 'removable' }, { id: 't2' }] }]
     };
-    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[0], 0)).toBe('aux');
-    expect(defaultVariantMainTank(a).name).toBe('Long range');
+    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[0], 0)).toBe('removable');
   });
 
-  it('2. configuration à UN seul réservoir : il est forcément le principal', () => {
-    // Forme F-HSTR : un réservoir unique de type 'wing', aucun 'main' déclaré.
-    // AMÉLIORATION ASSUMÉE — l'ancien code ne trouvait aucun principal et
-    // n'alimentait donc jamais arms.fuelMain depuis le réservoir. La valeur
-    // n'en bouge pas pour autant (F-HSTR portait déjà 2,63, le bras du seul
-    // réservoir) : on entretient désormais un miroir qui était figé.
+  it('relit les rôles de la version éphémère à 3 rôles (main/aux → fixed)', () => {
+    const a = {
+      additionalFuelTanks: [tank('t1', 'A'), tank('t2', 'B'), tank('t3', 'C')],
+      tankVariants: [{ id: 'v1', isDefault: true, tanks: [
+        { id: 't1', role: 'main' }, { id: 't2', role: 'aux' }, { id: 't3', role: 'optional' }
+      ] }]
+    };
+    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[0], 0)).toBe('fixed');
+    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[1], 1)).toBe('fixed');
+    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[2], 2)).toBe('removable');
+  });
+
+  it('configuration à UN seul réservoir : il est forcément à bord', () => {
+    // Forme F-HSTR : un réservoir unique de type 'wing'. AMÉLIORATION ASSUMÉE —
+    // l'ancien code n'y voyait aucun principal et n'alimentait jamais
+    // arms.fuelMain. La valeur ne bouge pas (2,63 y était déjà).
     const a = ensureDefaultVariant({
       additionalFuelTanks: [tank('t1', 'Réservoir aile 1', { type: 'wing', arm: 2.63 })]
     });
-    expect(defaultVariantMainTank(a)?.arm).toBe(2.63);
+    expect(defaultVariantFixedTank(a)?.arm).toBe(2.63);
   });
 
-  it('3. à défaut, le type legacy du catalogue est traduit', () => {
+  it('types legacy traduits : main et aux → inamovible, optional et tip → amovible', () => {
     const a = {
-      additionalFuelTanks: [tank('t1', 'Principal', { type: 'main' }), tank('t2', 'Aux', { type: 'aux' })],
-      tankVariants: [{ id: 'v1', isDefault: true, tankIds: ['t1', 't2'] }]
+      additionalFuelTanks: [
+        tank('t1', 'A', { type: 'main' }), tank('t2', 'B', { type: 'aux' }),
+        tank('t3', 'C', { type: 'optional' }), tank('t4', 'D', { type: 'tip' })
+      ],
+      tankVariants: [{ id: 'v1', isDefault: true, tankIds: ['t1', 't2', 't3', 't4'] }]
     };
-    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[0], 0)).toBe('main');
-    expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[1], 1)).toBe('aux');
+    const r = (i) => resolveTankRole(a, 'v1', a.additionalFuelTanks[i], i);
+    expect([r(0), r(1), r(2), r(3)]).toEqual(['fixed', 'fixed', 'removable', 'removable']);
   });
 
-  it('4. rien de tout cela : rôle INCONNU, jamais un rôle par défaut', () => {
+  it('sans rôle ni type exploitable : INCONNU, jamais un rôle par défaut', () => {
     const a = {
       additionalFuelTanks: [tank('t1', 'A', { type: 'wing' }), tank('t2', 'B', { type: 'wing' })],
       tankVariants: [{ id: 'v1', isDefault: true, tankIds: ['t1', 't2'] }]
     };
     expect(resolveTankRole(a, 'v1', a.additionalFuelTanks[0], 0)).toBeUndefined();
-    expect(defaultVariantMainTank(a)).toBeNull();
+    expect(defaultVariantFixedTank(a)).toBeNull();
   });
 });
 
-describe('un même réservoir tient des rôles différents selon la configuration', () => {
-  // C'est le cœur de la demande pilote : « sinon ça ne veut plus rien dire ».
+describe('PLUSIEURS réservoirs inamovibles — le cas F-HFGI', () => {
+  // Un principal central + deux réservoirs d'aile qui ne se démontent pas, plus
+  // un optionnel montable. Les trois premiers sont inamovibles.
+  const flotte = {
+    additionalFuelTanks: [
+      tank('c', 'Central', { arm: 1.10, totalCapacity: 110, usableCapacity: 109, momentAtFull: 120 }),
+      tank('g', 'Aile gauche', { arm: 1.10, totalCapacity: 40, usableCapacity: 40, momentAtFull: 44 }),
+      tank('d', 'Aile droite', { arm: 1.10, totalCapacity: 40, usableCapacity: 40, momentAtFull: 44 }),
+      tank('o', 'Convoyage', { arm: 1.80, totalCapacity: 50, usableCapacity: 50, momentAtFull: 90 })
+    ],
+    tankVariants: [{ id: 'v1', name: 'Standard', isDefault: true, tanks: [
+      { id: 'c', role: 'fixed' }, { id: 'g', role: 'fixed' },
+      { id: 'd', role: 'fixed' }, { id: 'o', role: 'removable' }
+    ] }]
+  };
+
+  it('trois inamovibles coexistent — aucun n’est dégradé', () => {
+    expect(variantFixedTanks(flotte, 'v1').map(t => t.name))
+      .toEqual(['Central', 'Aile gauche', 'Aile droite']);
+  });
+
+  it('bras unique quand tous les inamovibles le partagent', () => {
+    expect(fixedTanksArm(flotte, 'v1')).toBe(1.10);
+    // Moment = SOMME des inamovibles (ils sont pleins ensemble).
+    expect(fixedTanksMoment(flotte, 'v1')).toBe(208);
+  });
+
+  it('bras DIFFÉRENTS → aucun bras, jamais une moyenne', () => {
+    const a = {
+      ...flotte,
+      additionalFuelTanks: [
+        { ...flotte.additionalFuelTanks[0], arm: 1.10 },
+        { ...flotte.additionalFuelTanks[1], arm: 1.45 },
+        flotte.additionalFuelTanks[2], flotte.additionalFuelTanks[3]
+      ]
+    };
+    expect(fixedTanksArm(a, 'v1')).toBeNull();
+    expect(fixedTanksMoment(a, 'v1')).toBeNull();
+  });
+
+  it('le total annoncé EXCLUT l’amovible, qui est compté à part', () => {
+    const r = variantCapacityBreakdown(flotte, 'v1');
+    expect(r.base).toEqual({ totalLtr: 190, usableLtr: 189 });
+    expect(r.options).toEqual({ count: 1, totalLtr: 50, usableLtr: 50 });
+  });
+
+  it('un volume manquant sur un inamovible vide la base, sans somme partielle', () => {
+    const a = {
+      ...flotte,
+      additionalFuelTanks: [
+        { id: 'c', name: 'Central', arm: 1.1 }, // aucun volume
+        ...flotte.additionalFuelTanks.slice(1)
+      ]
+    };
+    expect(variantCapacityBreakdown(a, 'v1').base).toEqual({ totalLtr: null, usableLtr: null });
+  });
+});
+
+describe('un même réservoir change de rôle selon la configuration', () => {
   const a = {
     additionalFuelTanks: [tank('t1', 'Standard'), tank('t2', 'Long range')],
     tankVariants: [
-      { id: 'court', isDefault: true, tanks: [{ id: 't1', role: 'main' }] },
-      { id: 'long', tanks: [{ id: 't1', role: 'aux' }, { id: 't2', role: 'main' }] }
+      { id: 'court', isDefault: true, tanks: [{ id: 't1', role: 'fixed' }] },
+      { id: 'long', tanks: [{ id: 't1', role: 'fixed' }, { id: 't2', role: 'removable' }] }
     ]
   };
 
-  it('principal en configuration courte, annexe en configuration longue', () => {
-    expect(variantMainTank(a, 'court').name).toBe('Standard');
-    expect(variantMainTank(a, 'long').name).toBe('Long range');
-    expect(resolveTankRole(a, 'long', a.additionalFuelTanks[0], 0)).toBe('aux');
+  it('inamovible partout, l’autre amovible seulement en configuration longue', () => {
+    expect(variantFixedTanks(a, 'court').map(t => t.name)).toEqual(['Standard']);
+    expect(variantFixedTanks(a, 'long').map(t => t.name)).toEqual(['Standard']);
+    expect(isTankRemovable(a, 'long', a.additionalFuelTanks[1], 1)).toBe(true);
   });
 
-  it('un réservoir absent de la configuration n’en est jamais le principal', () => {
-    // t2 porte le rôle 'main' dans « long » mais n'appartient pas à « court ».
-    expect(variantMainTank(a, 'court').id).toBe('t1');
+  it('un réservoir absent de la configuration n’y tient aucun rôle', () => {
+    expect(variantFixedTanks(a, 'court').map(t => t.id)).toEqual(['t1']);
   });
 });
 
 describe('amovibilité — le booléen explicite du catalogue reste prioritaire', () => {
   it('type "optional" AVEC optional:false → NON amovible (formes F-GGZO et F-GOFP)', () => {
-    // RÉGRESSION ÉVITÉE : faire trancher le type traduit inverserait la réponse
-    // de deux fiches de la flotte, qui disent « ce réservoir n'est pas amovible,
-    // quoi qu'en dise son type ». Seul un rôle venu de la CONFIGURATION tranche.
+    // RÉGRESSION ÉVITÉE : seul un rôle venu de la CONFIGURATION tranche. Deux
+    // fiches de la flotte disent « pas amovible, quoi qu'en dise le type ».
     const a = {
       additionalFuelTanks: [
         tank('t1', 'Aile standard', { type: 'main', optional: false }),
@@ -134,39 +209,39 @@ describe('amovibilité — le booléen explicite du catalogue reste prioritaire'
   it('un rôle posé dans la configuration prime sur le catalogue', () => {
     const a = {
       additionalFuelTanks: [tank('t1', 'A'), tank('t2', 'B', { optional: false })],
-      tankVariants: [{ id: 'v1', isDefault: true, tanks: [{ id: 't1', role: 'main' }, { id: 't2', role: 'optional' }] }]
+      tankVariants: [{ id: 'v1', isDefault: true, tanks: [{ id: 't1', role: 'fixed' }, { id: 't2', role: 'removable' }] }]
     };
     expect(isTankRemovable(a, 'v1', a.additionalFuelTanks[1], 1)).toBe(true);
     expect(isTankRemovable(a, 'v1', a.additionalFuelTanks[0], 0)).toBe(false);
   });
 });
 
-describe('sanitizeTankVariants — forme canonique et garde-fous', () => {
+describe('sanitizeTankVariants', () => {
   const tanks = [tank('t1', 'A'), tank('t2', 'B'), tank('t3', 'C')];
 
   it('normalise vers `tanks` et écrit `tankIds` en miroir dérivé', () => {
     const out = sanitizeTankVariants(
-      [{ id: 'v1', name: 'Standard', isDefault: true, tanks: [{ id: 't1', role: 'main' }, { id: 't2' }] }],
+      [{ id: 'v1', name: 'Standard', isDefault: true, tanks: [{ id: 't1', role: 'fixed' }, { id: 't2' }] }],
       tanks
     );
-    expect(out[0].tanks).toEqual([{ id: 't1', role: 'main' }, { id: 't2' }]);
+    expect(out[0].tanks).toEqual([{ id: 't1', role: 'fixed' }, { id: 't2' }]);
     expect(out[0].tankIds).toEqual(['t1', 't2']);
   });
 
-  it('UN SEUL principal par configuration : le suivant est dégradé en annexe', () => {
+  it('PLUSIEURS inamovibles sont conservés — plus aucune dégradation', () => {
     const out = sanitizeTankVariants(
-      [{ id: 'v1', name: 'X', isDefault: true, tanks: [{ id: 't1', role: 'main' }, { id: 't2', role: 'main' }] }],
+      [{ id: 'v1', name: 'X', isDefault: true, tanks: [{ id: 't1', role: 'fixed' }, { id: 't2', role: 'fixed' }] }],
       tanks
     );
-    expect(out[0].tanks).toEqual([{ id: 't1', role: 'main' }, { id: 't2', role: 'aux' }]);
+    expect(out[0].tanks).toEqual([{ id: 't1', role: 'fixed' }, { id: 't2', role: 'fixed' }]);
   });
 
   it('une entrée pointant un réservoir supprimé du catalogue disparaît', () => {
     const out = sanitizeTankVariants(
-      [{ id: 'v1', name: 'X', isDefault: true, tanks: [{ id: 't1', role: 'main' }, { id: 'disparu', role: 'aux' }] }],
+      [{ id: 'v1', name: 'X', isDefault: true, tanks: [{ id: 't1', role: 'fixed' }, { id: 'disparu', role: 'removable' }] }],
       tanks
     );
-    expect(out[0].tanks).toEqual([{ id: 't1', role: 'main' }]);
+    expect(out[0].tanks).toEqual([{ id: 't1', role: 'fixed' }]);
     expect(out[0].tankIds).toEqual(['t1']);
   });
 
