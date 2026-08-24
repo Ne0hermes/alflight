@@ -50,26 +50,25 @@ import { tankUsableLtr, tankTotalLtr, tankUnusableLtr } from '@alflight/calc-eng
 import {
   variantCapacities,
   defaultVariantCapacities,
-  DEFAULT_VARIANT_NAME
+  DEFAULT_VARIANT_NAME,
+  // 🎭 24/08/2026 — le rôle vit dans la configuration : vocabulaire et
+  // lecture des entrées viennent du moteur, jamais réécrits ici.
+  TANK_ROLES,
+  variantEntries
 } from '@alflight/calc-engine/wb/tankVariants';
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 import { uploadWeighingReportPdf } from '@services/blobStorage';
 
-// 🛢️ TYPES de réservoirs du CATALOGUE (23/08/2026). « principal » est le seul
-// type porteur d'un effet : il désigne le réservoir qui alimente les champs de
-// compatibilité arms.fuelMain / moments.fuelMain, et il est UNIQUE. Les autres
-// qualifient le réservoir pour le pilote (et pré-cochent « amovible » via la
-// dérivation historique `tank.optional ?? ['aux','optional','tip'].includes(type)`).
-// 'tip' reste listé : des fiches de la flotte le portent déjà.
-const TANK_TYPE_OPTIONS = [
-  { value: '', label: 'Non précisé' },
-  { value: 'main', label: 'Principal' },
-  { value: 'wing', label: "Aile" },
-  { value: 'aux', label: 'Auxiliaire' },
-  { value: 'optional', label: 'Optionnel' },
-  { value: 'tip', label: 'Tip tank' }
-];
+// 🎭 24/08/2026 — LE TYPE A QUITTÉ LE CATALOGUE (demande pilote : « il n'est
+// plus utile de marquer si c'est un type principal ou optionnel quand je
+// déclare les réservoirs ; c'est lorsque je crée les variantes que je dis si
+// c'est principal, optionnel, annexe. Sinon ça ne veut plus rien dire. »).
+//
+// Le catalogue ne décrit plus QUE la pièce : nom, capacité totale, capacité
+// utilisable, bras de levier, moment à plein. Le RÔLE se pose configuration
+// par configuration, dans le bloc « 2 · Configurations » plus bas — c'est là
+// que TANK_ROLES est consommé (importé du moteur, source unique de vérité).
 
 const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
@@ -278,16 +277,22 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     const newVariant = {
       id: newVariantId(),
       // La PREMIÈRE configuration décrit l'avion tel qu'il est équipé : tous les
-      // réservoirs déclarés cochés. Les suivantes partent des réservoirs NON
-      // optionnels (proto d'une configuration alternative à compléter).
+      // réservoirs déclarés cochés.
+      //
+      // 🎭 24/08/2026 — les SUIVANTES DUPLIQUENT la configuration par défaut
+      // (réservoirs ET rôles). Elles partaient des réservoirs « non optionnels »
+      // du catalogue ; ce champ n'existe plus, et le laisser retomber sur « tout
+      // cocher » ferait resurgir exactement la somme de réservoirs exclusifs que
+      // la refonte du 23/08 a éliminée (F-GOFP 93 + 142 = 235 L). Dupliquer part
+      // d'un avion RÉEL, que le pilote ajuste ensuite.
       name: isFirst ? DEFAULT_VARIANT_NAME : `Configuration ${tankVariants.length + 1}`,
       isDefault: isFirst,
-      tankIds: isFirst
-        ? additionalFuelTanks.map((t, i) => tankKeyOf(t, i))
-        : additionalFuelTanks
-            .map((t, i) => ({ optional: !!t?.optional, key: tankKeyOf(t, i) }))
-            .filter(x => !x.optional)
-            .map(x => x.key)
+      tanks: isFirst
+        ? additionalFuelTanks.map((t, i) => ({ id: tankKeyOf(t, i) }))
+        : (() => {
+            const base = tankVariants.find(v => v?.isDefault) || tankVariants[0];
+            return variantEntries(base).map(e => ({ id: e.id, ...(e.role ? { role: e.role } : {}) }));
+          })()
     };
     syncTankVariants([...tankVariants, newVariant]);
   };
@@ -335,19 +340,47 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     setVariantNotices({});
     syncTankVariants(remaining);
   };
+  // Coche/décoche un réservoir dans une configuration. Opère sur `tanks`
+  // (forme neuve, porteuse des rôles) ; `tankIds` est réécrit en miroir pour
+  // les lecteurs non migrés. Décocher OUBLIE le rôle — c'est voulu : un
+  // réservoir absent de la configuration n'y tient aucun rôle.
   const toggleVariantTank = (vi, key, checked) => {
     const current = tankVariants[vi];
-    const keys = new Set((Array.isArray(current?.tankIds) ? current.tankIds : []).map(String));
-    if (!checked && keys.size <= 1) {
+    const entries = variantEntries(current);
+    if (!checked && entries.length <= 1) {
       // Configuration vide INTERDITE : refus explicite, pas de suppression
       // silencieuse au save (l'ancien sanitize jetait la variante sans le dire).
       setVariantNotice(vi, 'Une configuration doit embarquer au moins un réservoir. Cochez-en un autre avant de décocher celui-ci.');
       return;
     }
     setVariantNotice(vi, null);
-    if (checked) keys.add(String(key)); else keys.delete(String(key));
+    const k = String(key);
+    const next = checked
+      ? (entries.some(e => e.id === k) ? entries : [...entries, { id: k }])
+      : entries.filter(e => e.id !== k);
     syncTankVariants(tankVariants.map((v, i) =>
-      (i === vi ? { ...v, tankIds: Array.from(keys) } : v)
+      (i === vi
+        ? { ...v, tanks: next.map(e => ({ id: e.id, ...(e.role ? { role: e.role } : {}) })), tankIds: next.map(e => e.id) }
+        : v)
+    ));
+  };
+
+  // 🎭 Pose le RÔLE d'un réservoir DANS une configuration.
+  // UN SEUL principal par configuration : désigner B retire le rôle à A, dans
+  // CETTE configuration seulement — le même réservoir peut rester principal
+  // ailleurs. Deux principaux rendraient arbitraire le choix de arms.fuelMain.
+  const setVariantTankRole = (vi, key, role) => {
+    const current = tankVariants[vi];
+    const k = String(key);
+    const entries = variantEntries(current).map(e => {
+      if (e.id === k) return { id: e.id, ...(role ? { role } : {}) };
+      // Le principal est unique : l'ancien porteur redevient sans rôle.
+      if (role === 'main' && e.role === 'main') return { id: e.id };
+      return { id: e.id, ...(e.role ? { role: e.role } : {}) };
+    });
+    setVariantNotice(vi, null);
+    syncTankVariants(tankVariants.map((v, i) =>
+      (i === vi ? { ...v, tanks: entries, tankIds: entries.map(e => e.id) } : v)
     ));
   };
 
@@ -427,20 +460,24 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   }, [data.cgEnvelope?.lemac]);
 
   // ─── Migration legacy → array : convertit data.fuelMainCapacity en tank ─
-  // Si l'avion a été créé avant la refonte (fuelMainCapacity > 0 et pas de
-  // tank de type 'main' dans la liste), on insère automatiquement un tank
-  // principal avec les valeurs legacy, puis on nettoie les champs obsolètes.
-  // Idempotent : une fois migré, ne s'exécute plus.
+  // Si l'avion a été créé avant la refonte (fuelMainCapacity > 0 et catalogue
+  // VIDE), on insère un réservoir avec les valeurs legacy.
+  //
+  // 🎭 24/08/2026 — la garde d'idempotence ne peut plus s'appuyer sur
+  // `type === 'main'`, qui n'existe plus. Elle devient STRUCTURELLE : un
+  // catalogue non vide signifie que la migration a eu lieu, ou qu'elle n'a
+  // pas lieu d'être. Sans ce changement, l'effet réinsérerait un réservoir
+  // en tête à CHAQUE montage de l'étape tant que fuelMainCapacity traîne —
+  // catalogue pollué et capacité de la configuration par défaut fausse.
   useEffect(() => {
     const legacyCap = parseFloat(data.fuelMainCapacity);
     const hasLegacy = Number.isFinite(legacyCap) && legacyCap > 0;
-    const hasMainTank = (data.additionalFuelTanks || []).some(t => t.type === 'main');
-    if (!hasLegacy || hasMainTank) return;
+    const catalogueNonVide = (data.additionalFuelTanks || []).length > 0;
+    if (!hasLegacy || catalogueNonVide) return;
 
     const mainTank = {
       id: Date.now() + Math.random(),
       name: 'Réservoir principal',
-      type: 'main',
       // ⛽ Deux contenances (17/08/2026) — EXCEPTION assumée à la règle « on
       // n'écrit plus `capacity` » : fuelMainCapacity est une valeur legacy à
       // la sémantique AMBIGUË (total ? utilisable ?). La relocaliser telle
@@ -930,55 +967,26 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
   //     base pour la compatibilité — les moteurs, eux, ignorent le type) ;
   //   • « amovible » reste la case existante (pilote les variantes).
   const addFuelTank = (preset = {}) => {
-    const hasMain = additionalFuelTanks.some((t) => t?.type === 'main');
     const newTank = {
       id: Date.now() + Math.random(),
+      // Le preset ne préremplit plus qu'un NOM : ni type, ni rôle, ni
+      // « amovible ». Ces notions appartiennent à la configuration.
       name: `${preset.name || 'Réservoir'}${additionalFuelTanks.length > 0 ? ` ${additionalFuelTanks.length + 1}` : ''}`,
-      // « Principal » : seulement s'il n'y en a pas déjà un — sinon la pastille
-      // de la ligne permet de déplacer le rôle.
-      ...(preset.main && !hasMain ? { type: 'main' } : {}),
-      arm: '',
-      // ⛽ Deux contenances (17/08/2026) : plus d'initialisation de l'ancien
-      // `capacity` — les nouveaux réservoirs portent totalCapacity /
-      // usableCapacity, écrits à la saisie uniquement (absent reste absent).
-      optional: !!preset.optional
+      arm: ''
+      // ⛽ Deux contenances (17/08/2026) : aucune initialisation de volume —
+      // totalCapacity / usableCapacity sont écrits à la saisie uniquement
+      // (absent reste absent, jamais un 0 fabriqué).
     };
     const updated = [...additionalFuelTanks, newTank];
     setAdditionalFuelTanks(updated);
     updateData('additionalFuelTanks', updated);
   };
 
-  // Déplace le rôle « principal » sur un réservoir : un seul le porte.
-  // Les anciens libellés de type (wing/tip/aux) des autres réservoirs sont
-  // laissés tels quels — donnée décorative héritée, sans effet de calcul.
-  const setMainTank = (tankId) => {
-    setAdditionalFuelTanks(prev => {
-      const updated = prev.map(t =>
-        t.id === tankId
-          ? { ...t, type: 'main' }
-          : (t.type === 'main' ? { ...t, type: undefined } : t)
-      );
-      updateData('additionalFuelTanks', updated);
-      return updated;
-    });
-  };
-
-  // 🛢️ 23/08/2026 — TYPE du réservoir (demande pilote : « j'entre des TYPES de
-  // réservoirs »). Le type qualifie le réservoir DANS LE CATALOGUE ; il ne
-  // décide plus de rien dans les calculs, à une exception : « principal » est
-  // un RÔLE UNIQUE (il alimente arms.fuelMain / moments.fuelMain au save), donc
-  // le choisir ici le RETIRE de l'ancien porteur — exactement setMainTank.
-  const setTankType = (tankId, type) => {
-    if (type === 'main') { setMainTank(tankId); return; }
-    setAdditionalFuelTanks(prev => {
-      const updated = prev.map(t =>
-        t.id === tankId ? { ...t, type: type || undefined } : t
-      );
-      updateData('additionalFuelTanks', updated);
-      return updated;
-    });
-  };
-
+  // 🎭 setMainTank et setTankType ont été SUPPRIMÉS le 24/08/2026 : le rôle
+  // « principal » ne se pose plus sur le réservoir du catalogue mais sur son
+  // entrée dans une configuration (setVariantTankRole, plus bas). Un même
+  // réservoir peut ainsi être principal dans une configuration et annexe dans
+  // une autre — ce que l'ancien champ unique rendait impossible.
   const removeFuelTank = (tankId) => {
     const updated = additionalFuelTanks.filter(t => t.id !== tankId);
     setAdditionalFuelTanks(updated);
@@ -1403,7 +1411,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   color="primary"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir principal', main: true })}
+                  onClick={() => addFuelTank({ name: 'Réservoir principal' })}
                 >
                   Réservoir principal
                 </Button>
@@ -1419,7 +1427,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Tip tank', optional: true })}
+                  onClick={() => addFuelTank({ name: 'Tip tank' })}
                 >
                   Tip tank
                 </Button>
@@ -1427,7 +1435,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={() => addFuelTank({ name: 'Réservoir auxiliaire', optional: true })}
+                  onClick={() => addFuelTank({ name: 'Réservoir auxiliaire' })}
                 >
                   Auxiliaire
                 </Button>
@@ -1467,26 +1475,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                               value={tank.name || ''}
                               onChange={(e) => updateFuelTank(tank.id, 'name', e.target.value)}
                             />
-                            {/* 🛢️ 23/08/2026 — TYPE du réservoir (demande pilote) :
-                                on déclare CE QU'EST le réservoir, isolément. Le type
-                                reste informatif pour les calculs (aucun moteur ne le
-                                lit) SAUF « principal », rôle UNIQUE qui alimente les
-                                champs de compatibilité arms.fuelMain / moments.fuelMain
-                                — d'où le déplacement du rôle via setMainTank. */}
-                            <StyledTextField
-                              select
-                              size="small"
-                              label="Type"
-                              value={TANK_TYPE_OPTIONS.some(o => o.value === (tank.type || '')) ? (tank.type || '') : ''}
-                              onChange={(e) => setTankType(tank.id, e.target.value)}
-                              sx={{ minWidth: 150 }}
-                            >
-                              {TANK_TYPE_OPTIONS.map(opt => (
-                                <MenuItem key={opt.value || 'none'} value={opt.value}>
-                                  {opt.label}
-                                </MenuItem>
-                              ))}
-                            </StyledTextField>
+                            {/* 🎭 Le sélecteur « Type » a été retiré le 24/08/2026 :
+                                le catalogue ne décrit plus que la pièce. Le rôle se
+                                choisit dans chaque configuration, plus bas. */}
                             <IconButton
                               color="error"
                               onClick={() => removeFuelTank(tank.id)}
@@ -1637,26 +1628,10 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             </Grid>
                           );
                         })()}
-                        <Grid size={12}>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                size="small"
-                                checked={tank.optional ?? ['aux', 'optional', 'tip'].includes(tank.type)}
-                                onChange={(e) => updateFuelTank(tank.id, 'optional', e.target.checked)}
-                              />
-                            }
-                            label={
-                              <Typography variant="body2">
-                                Réservoir optionnel (amovible — long-range / convoyage).{' '}
-                                <Typography component="span" variant="caption" color="text.secondary">
-                                  En préparation de vol, le pilote coche les réservoirs
-                                  réellement embarqués ; ce marquage sert d'indication.
-                                </Typography>
-                              </Typography>
-                            }
-                          />
-                        </Grid>
+                        {/* 🎭 La case « Réservoir optionnel (amovible) » a été retirée
+                            le 24/08/2026 : l'amovibilité est un RÔLE tenu dans une
+                            configuration (« Optionnel (amovible) »), pas une propriété
+                            de la pièce. Elle se coche configuration par configuration. */}
                       </Grid>
                     </Box>
                   ))}
@@ -1688,7 +1663,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                 </Typography>
 
                 {tankVariants.map((variant, vi) => {
-                  const variantKeys = new Set((Array.isArray(variant.tankIds) ? variant.tankIds : []).map(String));
+                  const entries = variantEntries(variant);
+                  const variantKeys = new Set(entries.map(e => e.id));
+                  const roleOf = (k) => entries.find(e => e.id === k)?.role || '';
+                  // Une configuration sans principal ne peut pas alimenter
+                  // arms.fuelMain — sauf si elle n'a qu'un réservoir, auquel cas
+                  // le moteur le résout seul (resolveTankRole).
+                  const sansPrincipal = entries.length > 1 && !entries.some(e => e.role === 'main');
                   // Capacités de la CONFIGURATION via le moteur (fail-closed :
                   // null si un réservoir coché n'a pas la contenance — on
                   // n'affiche alors pas un « 0 L » qui ferait croire à un vide).
@@ -1745,29 +1726,51 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             const key = tankKeyOf(tank, ti);
                             const tTotal = tankTotalLtr(tank);
                             const tUsable = tankUsableLtr(tank);
+                            const coche = variantKeys.has(key);
                             return (
-                              <FormControlLabel
-                                key={key}
-                                sx={{ display: 'flex' }}
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    checked={variantKeys.has(key)}
-                                    onChange={(e) => toggleVariantTank(vi, key, e.target.checked)}
-                                  />
-                                }
-                                label={
-                                  <Typography variant="body2">
-                                    {tank.name || `Réservoir ${ti + 1}`}
-                                    {' — '}
-                                    <Typography component="span" variant="caption" color="text.secondary">
-                                      {tTotal == null ? 'total non renseigné' : `${dispTankLiters(tTotal)} ${getUnitSymbol(units.fuel)} total`}
-                                      {' · '}
-                                      {tUsable == null ? 'utilisable non renseigné' : `${dispTankLiters(tUsable)} ${getUnitSymbol(units.fuel)} utilisables`}
+                              <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <FormControlLabel
+                                  sx={{ display: 'flex', flex: 1, minWidth: 0, mr: 0 }}
+                                  control={
+                                    <Checkbox
+                                      size="small"
+                                      checked={coche}
+                                      onChange={(e) => toggleVariantTank(vi, key, e.target.checked)}
+                                    />
+                                  }
+                                  label={
+                                    <Typography variant="body2">
+                                      {tank.name || `Réservoir ${ti + 1}`}
+                                      {' — '}
+                                      <Typography component="span" variant="caption" color="text.secondary">
+                                        {tTotal == null ? 'total non renseigné' : `${dispTankLiters(tTotal)} ${getUnitSymbol(units.fuel)} total`}
+                                        {' · '}
+                                        {tUsable == null ? 'utilisable non renseigné' : `${dispTankLiters(tUsable)} ${getUnitSymbol(units.fuel)} utilisables`}
+                                      </Typography>
                                     </Typography>
-                                  </Typography>
-                                }
-                              />
+                                  }
+                                />
+                                {/* 🎭 RÔLE dans CETTE configuration — le sens du réservoir
+                                    dépend de l'installation, pas de la pièce. Aucun
+                                    sélecteur sur un réservoir décoché : il n'y tient
+                                    aucun rôle. « — » = rôle non précisé, jamais un
+                                    rôle par défaut. */}
+                                {coche && (
+                                  <StyledTextField
+                                    select
+                                    size="small"
+                                    label="Rôle"
+                                    value={roleOf(key)}
+                                    onChange={(e) => setVariantTankRole(vi, key, e.target.value)}
+                                    sx={{ minWidth: 190, flexShrink: 0 }}
+                                  >
+                                    <MenuItem value="">—</MenuItem>
+                                    {TANK_ROLES.map(r => (
+                                      <MenuItem key={r.value} value={r.value}>{r.label}</MenuItem>
+                                    ))}
+                                  </StyledTextField>
+                                )}
+                              </Box>
                             );
                           })}
                           <Typography variant="body2" sx={{ display: 'block', mt: 0.5, fontWeight: 600 }}>
@@ -1780,6 +1783,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             <Typography variant="caption" sx={{ display: 'block', color: 'warning.main' }}>
                               Contenance manquante sur un réservoir coché : rien n'est sommé
                               partiellement (aucune valeur fabriquée).
+                            </Typography>
+                          )}
+                          {/* Avertissement NON bloquant : sans réservoir principal,
+                              les champs de compatibilité arms.fuelMain et
+                              moments.fuelMain ne sont pas alimentés. Une
+                              configuration à UN seul réservoir est exemptée : le
+                              moteur sait qu'il est forcément le principal. */}
+                          {sansPrincipal && (
+                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: 'warning.main' }}>
+                              Aucun réservoir principal dans cette configuration : le bras
+                              et le moment du réservoir principal ne seront pas renseignés
+                              sur la fiche.
                             </Typography>
                           )}
                           {notice && (

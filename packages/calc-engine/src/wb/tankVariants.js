@@ -55,6 +55,119 @@ const poolOf = (aircraft) =>
 const variantsOf = (aircraft) =>
   (Array.isArray(aircraft?.tankVariants) ? aircraft.tankVariants : []);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🎭 RÔLES — LE RÔLE APPARTIENT À LA CONFIGURATION, PAS AU RÉSERVOIR
+// (refonte 24/08/2026, demande pilote : « il n'est plus utile de marquer si
+// c'est un type principal ou optionnel quand je déclare les réservoirs ; c'est
+// lorsque je crée les variantes que je dis si c'est principal, optionnel,
+// annexe. Sinon ça ne veut plus rien dire. »)
+//
+// POURQUOI. Le catalogue décrit ce que la CELLULE peut recevoir : un volume,
+// un bras, un moment. « Principal » n'y a pas de sens — le même réservoir peut
+// être principal dans une configuration et annexe dans une autre. Le rôle est
+// une propriété de l'INSTALLATION, donc de la configuration.
+//
+// FORME. Une variante porte désormais tanks: [{ id, role }]. Le tableau
+// tankIds est conservé en MIROIR dérivé (écrit par sanitizeTankVariants) : les
+// fiches déjà en base, les imports communautaires et tout code non encore
+// migré continuent de fonctionner à l'identique. On n'enlève rien, on enrichit.
+//
+// AUCUNE MIGRATION EN BASE. Les champs type / optional des 13 fiches restent
+// en place : ils sont le DERNIER repli de lecture. Un champ qu'on ne sait plus
+// écrire mais qu'on sait encore lire ne gêne personne ; l'effacer avant que
+// les rôles soient saisis, si.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Les 3 rôles qu'un réservoir peut tenir DANS une configuration. */
+export const TANK_ROLES = [
+  { value: 'main',     label: 'Principal' },
+  { value: 'aux',      label: 'Annexe' },
+  { value: 'optional', label: 'Optionnel (amovible)' }
+];
+
+/** Types legacy du catalogue traduits en rôle. 'wing' et '' n'en portent AUCUN :
+ *  une aile n'est ni principale ni annexe en soi — la configuration le dit. */
+const ROLE_FROM_LEGACY_TYPE = { main: 'main', aux: 'aux', optional: 'optional', tip: 'optional' };
+
+/**
+ * ENTRÉES D'UNE VARIANTE — point d'entrée UNIQUE : [{ id, role }].
+ * Lit `tanks` s'il existe, sinon dérive de `tankIds` (rôle inconnu).
+ * Aucun autre code ne doit lire tankIds/tanks directement.
+ */
+export const variantEntries = (variant) => {
+  if (Array.isArray(variant?.tanks)) {
+    return variant.tanks
+      .filter(e => e && e.id !== undefined && e.id !== null)
+      .map(e => ({ id: String(e.id), role: e.role || undefined }));
+  }
+  return (Array.isArray(variant?.tankIds) ? variant.tankIds : [])
+    .map(id => ({ id: String(id), role: undefined }));
+};
+
+/**
+ * RÔLE D'UN RÉSERVOIR DANS UNE CONFIGURATION — ordre de résolution, du plus
+ * explicite au plus ancien. Le premier qui répond gagne ; aucun n'invente.
+ *   1. rôle déclaré dans la variante (la vérité neuve) ;
+ *   2. variante à UN SEUL réservoir → il est forcément le principal (rien
+ *      d'autre ne peut l'être ; même règle que singleFuelArm dans fuelArm.js) ;
+ *   3. type legacy du catalogue, traduit (fiches non encore migrées) ;
+ *   4. undefined — rôle INCONNU, jamais un rôle par défaut.
+ */
+const roleFromVariant = (aircraft, variantId, tank, index) => {
+  const variant = variantsOf(aircraft).find(v => v?.id === variantId);
+  if (!variant) return undefined;
+  const key = tankKey(tank, index);
+  const entries = variantEntries(variant);
+  const mine = entries.find(e => e.id === key);
+  if (mine?.role) return mine.role;
+  // Configuration à UN SEUL réservoir : il est forcément le principal.
+  if (entries.length === 1 && mine) return 'main';
+  return undefined;
+};
+
+export const resolveTankRole = (aircraft, variantId, tank, index) =>
+  roleFromVariant(aircraft, variantId, tank, index)
+  ?? ROLE_FROM_LEGACY_TYPE[tank?.type]
+  ?? undefined;
+
+/** Réservoir PRINCIPAL d'une configuration, ou null. Jamais un repli sur le
+ *  premier réservoir venu : sans rôle principal, il n'y a pas de principal. */
+export const variantMainTank = (aircraft, variantId) => {
+  const tanks = poolOf(aircraft);
+  const variant = variantsOf(aircraft).find(v => v?.id === variantId);
+  const keys = variant ? new Set(variantEntries(variant).map(e => e.id)) : null;
+  for (let i = 0; i < tanks.length; i++) {
+    if (resolveTankRole(aircraft, variantId, tanks[i], i) !== 'main') continue;
+    // Le réservoir doit AUSSI appartenir à la configuration.
+    if (!keys || keys.has(tankKey(tanks[i], i))) return tanks[i];
+  }
+  return null;
+};
+
+/** Réservoir principal de la configuration PAR DÉFAUT (celle de la fiche). */
+export const defaultVariantMainTank = (aircraft) =>
+  variantMainTank(aircraft, getDefaultVariantId(aircraft));
+
+/**
+ * Le réservoir est-il AMOVIBLE dans cette configuration ?
+ * ORDRE IMPÉRATIF : un rôle connu tranche SEUL ; le repli legacy ne sert que
+ * si la configuration ne dit rien — sinon un vieux `optional: true` du
+ * catalogue contredirait le rôle que le pilote vient de poser.
+ */
+export const isTankRemovable = (aircraft, variantId, tank, index) => {
+  // SEUL un rôle venu de la CONFIGURATION tranche. Un rôle DÉDUIT du `type`
+  // legacy ne suffit pas : dans l'ancien modèle, le booléen `optional` primait
+  // sur le type (`optional ?? typeInclut`), et deux fiches de la flotte en
+  // dépendent — F-GGZO et F-GOFP portent type: 'optional' AVEC optional: false,
+  // c'est-à-dire « ce réservoir n'est pas amovible, quoi qu'en dise son type ».
+  // Faire trancher le type traduit inverserait leur réponse en silence.
+  const role = roleFromVariant(aircraft, variantId, tank, index);
+  if (role === 'optional') return true;
+  if (role) return false;
+  return tank?.optional ?? ['aux', 'optional', 'tip'].includes(tank?.type);
+};
+
+
 /**
  * MATÉRIALISE LA CONFIGURATION PAR DÉFAUT — un avion qui déclare des réservoirs
  * mais AUCUNE configuration signifie « tous les réservoirs déclarés sont
@@ -88,7 +201,7 @@ export const ensureDefaultVariant = (aircraft) => {
 export const variantTanks = (aircraft, variantId) => {
   const variant = variantsOf(aircraft).find(v => v?.id === variantId);
   if (!variant) return [];
-  const wanted = new Set((Array.isArray(variant.tankIds) ? variant.tankIds : []).map(String));
+  const wanted = new Set(variantEntries(variant).map(e => e.id));
   return poolOf(aircraft).filter((t, i) => wanted.has(tankKey(t, i)));
 };
 
@@ -155,10 +268,13 @@ export const applyTankVariant = (aircraft, variantId) => {
   if (!aircraft || !variantId) return aircraft;
   const variants = Array.isArray(aircraft.tankVariants) ? aircraft.tankVariants : [];
   const variant = variants.find(v => v?.id === variantId);
-  if (!variant || !Array.isArray(variant.tankIds)) return aircraft;
+  // Une variante peut porter `tanks` (forme neuve, avec rôles) OU `tankIds`
+  // (forme historique) : variantEntries lit les deux. Une variante qui ne
+  // porte NI l'un NI l'autre ne s'applique pas — avion inchangé.
+  if (!variant || (!Array.isArray(variant.tanks) && !Array.isArray(variant.tankIds))) return aircraft;
 
   const allTanks = Array.isArray(aircraft.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
-  const wanted = new Set(variant.tankIds.map(String));
+  const wanted = new Set(variantEntries(variant).map(e => e.id));
   const filteredTanks = allTanks.filter((t, i) => wanted.has(tankKey(t, i)));
 
   // Variante vide ou ne référençant plus aucun réservoir existant : ne rien
@@ -196,13 +312,35 @@ export const sanitizeTankVariants = (tankVariants, additionalFuelTanks) => {
 
   const cleaned = variants
     .filter(v => v && typeof v.name === 'string' && v.name.trim() !== '')
-    .map(v => ({
-      id: v.id ?? `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name: v.name.trim(),
-      isDefault: !!v.isDefault,
-      tankIds: (Array.isArray(v.tankIds) ? v.tankIds : []).map(String).filter(k => validKeys.has(k))
-    }))
-    .filter(v => v.tankIds.length > 0);
+    .map(v => {
+      // Forme canonique : tanks[{id, role}]. Les entrées pointant un réservoir
+      // supprimé du catalogue disparaissent (UNE passe, pas de récursion).
+      const entries = variantEntries(v)
+        .filter(e => validKeys.has(e.id))
+        .map(e => ({ id: e.id, ...(e.role ? { role: e.role } : {}) }));
+
+      // UN SEUL principal par configuration : le premier gagne, les suivants
+      // sont dégradés en annexe (même politique que isDefault ci-dessous).
+      // Deux principaux rendraient arbitraire le choix de arms.fuelMain.
+      let mainSeen = false;
+      const withRoles = entries.map(e => {
+        if (e.role !== 'main') return e;
+        if (mainSeen) return { ...e, role: 'aux' };
+        mainSeen = true;
+        return e;
+      });
+
+      return {
+        id: v.id ?? `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        name: v.name.trim(),
+        isDefault: !!v.isDefault,
+        tanks: withRoles,
+        // MIROIR dérivé : conservé pour les lecteurs non migrés, les fiches
+        // déjà en base et l'import communautaire. Jamais la source de vérité.
+        tankIds: withRoles.map(e => e.id)
+      };
+    })
+    .filter(v => v.tanks.length > 0);
 
   // Exactement UN défaut : le premier isDefault gagne, les autres sont
   // dégradés (données importées/fusionnées pouvant en porter plusieurs)

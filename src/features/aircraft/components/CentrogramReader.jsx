@@ -290,7 +290,8 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
       updateData('additionalFuelTanks', [...list, {
         id,
         name: name || `${defaultNames[newElTankType] || 'Réservoir'} ${list.length + 1}`,
-        type: newElTankType,
+        // 🎭 24/08/2026 — plus de `type` : le rôle se pose dans la
+        // configuration (fiche avion, étape Masse & centrage).
         arm: '',
         // Deux contenances (17/08/2026) : on écrit l'UTILISABLE, jamais le champ
         // legacy `capacity` — sinon ce lecteur recréerait après la purge le champ

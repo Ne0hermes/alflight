@@ -507,13 +507,13 @@ export function buildBulkUpdatePayload(reviewItems) {
 
   // Mapping pseudo-type → type interne + nom par défaut
   const fuelTankTypeMap = {
-    main:       { type: 'main',     name: 'Réservoir principal' },
-    wing_left:  { type: 'wing',     name: 'Réservoir aile gauche' },
-    wing_right: { type: 'wing',     name: 'Réservoir aile droite' },
-    wing:       { type: 'wing',     name: 'Réservoir d\'aile' },
-    tip:        { type: 'tip',      name: 'Tip tank' },
-    aux:        { type: 'aux',      name: 'Réservoir auxiliaire' },
-    optional:   { type: 'optional', name: 'Réservoir optionnel' }
+    main:       { name: 'Réservoir principal' },
+    wing_left:  { name: 'Réservoir aile gauche' },
+    wing_right: { name: 'Réservoir aile droite' },
+    wing:       { name: 'Réservoir d\'aile' },
+    tip:        { name: 'Tip tank' },
+    aux:        { name: 'Réservoir auxiliaire' },
+    optional:   { name: 'Réservoir optionnel' }
   };
 
   for (const item of accepted) {
@@ -539,7 +539,7 @@ export function buildBulkUpdatePayload(reviewItems) {
       const sub = path.slice('_fuelTank:'.length);
       const valueNum = typeof item.value === 'number' ? item.value : parseFloat(item.value);
       if (!Number.isFinite(valueNum) || valueNum <= 0) continue;
-      const info = fuelTankTypeMap[sub] || { type: 'optional', name: `Réservoir ${sub}` };
+      const info = fuelTankTypeMap[sub] || { name: `Réservoir ${sub}` };
       fuelTankEntries.push({
         id: Date.now() + Math.random(),
         name: info.name,

@@ -39,7 +39,7 @@ import { useAircraft } from '../../../core/contexts';
 import { useAircraftStore } from '../../../core/stores/aircraftStore';
 import { normalizeAircraftForWizard } from '@utils/armUnits';
 import { initialWindLimits } from '../utils/windLimits';
-import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities } from '@utils/tankVariants';
+import { sanitizeTankVariants, ensureDefaultVariant, defaultVariantCapacities, defaultVariantMainTank } from '@utils/tankVariants';
 import { tankUsableLtr, tankTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 import { markRequestProcessedAfterSave, clearRequestContext } from '../services/aircraftRequestWorkflow';
 
@@ -1055,24 +1055,28 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       }
 
       // ─── Sync réservoir principal → champs legacy ──────────────────────
-      // Le wizard moderne stocke le réservoir principal comme un élément
-      // de `additionalFuelTanks` avec `type: 'main'`. Pour compatibilité
-      // avec tout le reste de l'app (aircraftCompleteness, calcul M&B,
-      // PDF, performance analyzer) on miroir aussi les valeurs dans les
-      // anciens emplacements `arms.fuelMain`, `moments.fuelMain` et
-      // `fuelUsableCapacity` / `fuelCapacity`. Sans ce sync, l'avion
-      // apparaît comme « bras réservoir principal manquant » même après
-      // que l'utilisateur a renseigné le tank dans Step3.
+      // 🎭 24/08/2026 — le réservoir PRINCIPAL est désigné par la CONFIGURATION
+      // par défaut, plus par un `type` posé sur le réservoir du catalogue.
+      // On continue de miroiter son bras et son moment dans les anciens
+      // emplacements `arms.fuelMain` / `moments.fuelMain`, que lisent encore
+      // aircraftCompleteness, le calcul M&B, le PDF et l'analyseur de perfs.
+      //
+      // NOUVEAU : quand PLUS AUCUN réservoir ne porte le rôle principal, les
+      // miroirs sont EFFACÉS. Avant, ils survivaient indéfiniment à la
+      // disparition de leur source — une fiche gardait un bras carburant
+      // fantôme après suppression du réservoir dont il venait.
       try {
-        const tanks = Array.isArray(dataToSave.additionalFuelTanks) ? dataToSave.additionalFuelTanks : [];
-        const mainTank = tanks.find((t) => t && t.type === 'main');
+        const mainTank = defaultVariantMainTank(ensureDefaultVariant(dataToSave));
+        dataToSave.arms = { ...(dataToSave.arms || {}) };
+        dataToSave.moments = { ...(dataToSave.moments || {}) };
         if (mainTank) {
-          dataToSave.arms = { ...(dataToSave.arms || {}) };
-          dataToSave.moments = { ...(dataToSave.moments || {}) };
           const armVal = parseFloat(mainTank.arm);
           const momVal = parseFloat(mainTank.momentAtFull);
           if (Number.isFinite(armVal) && armVal !== 0) dataToSave.arms.fuelMain = armVal;
           if (Number.isFinite(momVal) && momVal > 0) dataToSave.moments.fuelMain = momVal;
+        } else {
+          delete dataToSave.arms.fuelMain;
+          delete dataToSave.moments.fuelMain;
         }
         // 🛢️ 23/08/2026 — LA CAPACITÉ DE L'AVION EST CELLE DE SA CONFIGURATION
         // PAR DÉFAUT, plus jamais la somme du catalogue de réservoirs.

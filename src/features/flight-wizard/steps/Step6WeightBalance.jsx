@@ -13,6 +13,7 @@ import { computeMaxFuel } from '@utils/maxFuel';
 // physique — avitaillement) et usableCapacity (LA grandeur du centrage et de
 // l'autonomie). Accesseurs canoniques du moteur, repli legacy `capacity`.
 import { tankUsableLtr, tankTotalLtr, sumUsableLtr, sumTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
+import { isTankRemovable, resolveTankRole, TANK_ROLES } from '@alflight/calc-engine/wb/tankVariants';
 import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
@@ -1348,7 +1349,10 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
     return (
       <div style={{ ...commonStyles.card, padding: '12px' }}>
         <label style={{ ...commonStyles.label, marginBottom: '6px' }}>
-          {tank.name || 'Réservoir'}{tank.type ? ` · ${tank.type}` : ''} (L)
+          {/* Plus de suffixe `type` : le rôle appartient à la configuration, et
+              il est déjà affiché sur la ligne de cochage du réservoir au-dessus.
+              Ce champ n'a ni l'avion ni l'index, il ne peut pas le résoudre. */}
+          {tank.name || 'Réservoir'} (L)
         </label>
         <input
           type="text"
@@ -1531,7 +1535,10 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
             <div style={{ ...commonStyles.card, padding: '10px 12px', marginBottom: '12px' }}>
               {indexedTanks.map(({ tank, i, key }) => {
                 const active = !!tankConfig?.tanks?.[key]?.active;
-                const isOptional = tank.optional ?? ['aux', 'optional', 'tip'].includes(tank.type);
+                // 🎭 24/08/2026 — l'amovibilité découle du RÔLE tenu dans la
+                // configuration retenue pour ce vol. Repli sur le catalogue
+                // legacy tant que les rôles ne sont pas saisis.
+                const isOptional = isTankRemovable(selectedAircraft, selectedAircraft?._tankVariantId, tank, i);
                 return (
                   <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', margin: 0 }}>
                     <input
@@ -1545,7 +1552,15 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                       <span style={{ color: theme.colors.textSecondary }}>
                         {/* ⛽ Double affichage utilisable/(total) — le pilote embarque
                             l'utilisable, il avitaille le total. */}
-                        {' '}· {isOptional ? 'Optionnel (amovible)' : 'Fixe'} · Capacité {(tankUsableLtr(tank) ?? 0).toFixed(1)} L utilisables
+                        {/* 🎭 Le RÔLE tenu dans la configuration de ce vol, quand il est
+                            connu — c'est lui qui porte le sens (« Principal » n'est pas
+                            la même information que « Fixe »). Rôle inconnu : on retombe
+                            sur la seule chose sûre, amovible ou non. */}
+                        {' '}· {(() => {
+                          const role = resolveTankRole(selectedAircraft, selectedAircraft?._tankVariantId, tank, i);
+                          const label = TANK_ROLES.find(r => r.value === role)?.label;
+                          return label || (isOptional ? 'Optionnel (amovible)' : 'Fixe');
+                        })()} · Capacité {(tankUsableLtr(tank) ?? 0).toFixed(1)} L utilisables
                         {(() => {
                           const tot = tankTotalLtr(tank);
                           const usa = tankUsableLtr(tank) ?? 0;
