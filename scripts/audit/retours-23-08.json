@@ -33,5 +33,55 @@
   "itid": "F-HSTR-02",
   "status": "fait",
   "note": "Rapport pilote 23/08 : coché fait."
+ },
+ {
+  "itid": "F-HDIM-01",
+  "status": "valide",
+  "note": "Rapport pilote 24/08 : « elles ne sont pas données » — le POH ne publie pas ces trois cases (7000 ft/40 °C, 8000 ft/30 °C, 8000 ft/40 °C) à 1089 kg. Conforme : rien n'est inventé, et le moteur refuse proprement de calculer sur ces conditions (fail-closed) au lieu de combler le trou. Vérifié en base le 24/08 : 42 cellules sur 45, exactement les trois mêmes absences dans les deux tables."
+ },
+ {
+  "itid": "F-HDIM-02",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 : les règles de VENT ARRIÈRE ont été ajoutées (+10 % par 2 kt au décollage ET à l'atterrissage), en regard des règles de vent de face (10 % par 9 kt). Les quatre règles sont cohérentes."
+ },
+ {
+  "itid": "F-HDIM-03",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 : speeds.vsTO = 35 kt (entre vso 33 et vs1 44 — ordre physique respecté)."
+ },
+ {
+  "itid": "F-HDIM-04",
+  "status": "fait",
+  "note": "Rapport pilote 24/08 : coché fait — les vitesses de décrochage sont assumées comme lues dans la bonne colonne du POH."
+ },
+ {
+  "itid": "F-GOFP-01",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 : la cellule (4000 ft, 30 °C) de la table « passage 15 m volets décollage » vaut désormais 689 m (était 660) — cohérente avec ses voisines."
+ },
+ {
+  "itid": "F-GOFP-02",
+  "status": "valide",
+  "note": "Rapport pilote 24/08 : coché fait — bras à vide 0,765 m assumé conforme à la fiche de pesée jointe."
+ },
+ {
+  "itid": "F-GOFP-03",
+  "status": "valide",
+  "note": "Rapport pilote 24/08 : coché fait — la pesée de 1977 est celle en vigueur au club."
+ },
+ {
+  "itid": "F-GOFP-04",
+  "status": "fait",
+  "note": "Rapport pilote 24/08 : « les variantes sont déjà rentrées, avec leur composition » — exact, le défaut n'était pas dans vos données mais dans le CODE, qui sommait le catalogue de réservoirs au lieu de lire la configuration. Corrigé le 23/08 (commit acc1980e) ; votre enregistrement du 24/08 à 09h59 a appliqué la correction : la fiche affiche maintenant 98 L total / 93 utilisables au lieu de 235."
+ },
+ {
+  "itid": "F-GOFP-05",
+  "status": "note",
+  "note": "Vérifié en base le 24/08 : maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 sont TOUJOURS présents, alors que vos compartiments déclarent 54 kg à 1,636 m et 18 kg à 2,16 m (cumul 54). Ces deux champs fabriqués ne sont plus écrits ni utilisés par l'app depuis le 23/08, mais restent en base : purge par script sur votre accord (elle vaut aussi pour les autres avions)."
+ },
+ {
+  "itid": "F-GOFP-06",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 : GRASS a été ajouté aux surfaces compatibles — les deux règles herbe (+15 % décollage et atterrissage) sont désormais cohérentes avec les pistes proposées."
  }
 ]
