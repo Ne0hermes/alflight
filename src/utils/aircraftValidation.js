@@ -348,9 +348,13 @@ export function isAircraftDataComplete(aircraft) {
   if (!aircraft) return false;
   
   // Vérifier les propriétés de base
+  // maxBaggageWeight / maxAuxiliaryWeight ont été RETIRÉS de cette liste le
+  // 24/08/2026 : ils sont purgés des fiches (limites réelles = baggageCompartments
+  // + maxBaggageTotalMass). Les exiger ferait déclarer les 13 avions « incomplets »
+  // le jour où cette fonction — aujourd'hui sans appelant — serait branchée.
   const requiredProps = [
     'emptyWeight', 'minTakeoffWeight', 'maxTakeoffWeight',
-    'maxLandingWeight', 'maxBaggageWeight', 'maxAuxiliaryWeight'
+    'maxLandingWeight'
   ];
   
   for (const prop of requiredProps) {

@@ -4243,9 +4243,10 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       // Les vraies limites sont dans baggageCompartments ; ces deux champs
       // historiques ne sont plus écrits (une valeur déjà en base n'est pas
       // touchée par ce formulaire — voir le script de purge de la flotte).
-      ...(formData.limitations.maxBaggageLest !== '' && formData.limitations.maxBaggageLest != null
-        ? { maxBaggageWeight: toValidNumber(formData.limitations.maxBaggageLest, 0) }
-        : {}),
+      // 24/08/2026 : l'écriture conditionnelle de maxBaggageWeight est RETIRÉE.
+      // Elle contredisait le commentaire ci-dessus et ressuscitait le champ à
+      // chaque enregistrement, annulant la purge de la flotte. La limite de soute
+      // vit dans limitations.maxBaggageLest (l. 4188) et dans baggageCompartments.
       // Équipements
       equipmentCom: formData.equipmentCom,
       equipmentNav: formData.equipmentNav,

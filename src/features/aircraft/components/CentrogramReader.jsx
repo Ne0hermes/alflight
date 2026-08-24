@@ -292,7 +292,11 @@ const CentrogramReader = ({ aircraftData, updateData, onExit, onBack, registerNa
         name: name || `${defaultNames[newElTankType] || 'Réservoir'} ${list.length + 1}`,
         type: newElTankType,
         arm: '',
-        capacity: newElCapacity !== '' ? newElCapacity : '',
+        // Deux contenances (17/08/2026) : on écrit l'UTILISABLE, jamais le champ
+        // legacy `capacity` — sinon ce lecteur recréerait après la purge le champ
+        // qu'elle vient de retirer. Vide = clé ABSENTE (jamais '' ni 0 fabriqué) ;
+        // le total se saisit dans la fiche avion (Step3).
+        ...(newElCapacity !== '' ? { usableCapacity: newElCapacity } : {}),
         // Même règle que Step3 : amovible pour les types naturellement optionnels
         optional: newElTankType === 'aux' || newElTankType === 'optional' || newElTankType === 'tip'
       }]);

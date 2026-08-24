@@ -65,20 +65,34 @@ async function api(qs, init = {}) {
 }
 
 const has = (v) => v !== undefined && v !== null && v !== '';
-const n = (v) => (typeof v === 'string' ? parseFloat(v) : v);
+
+// LE MÊME num() QUE LE MOTEUR (packages/calc-engine/src/fuel/tankCapacity.js).
+// Point critique relevé à la vérification : tester la PRÉSENCE de la clé ne
+// suffit pas. Le moteur fait `num(usableCapacity) ?? num(capacity)`, où num()
+// rend null pour '', pour null et pour toute chaîne non numérique. Un réservoir
+// portant usableCapacity: '' passerait un test de présence alors que son
+// utilisable vient AUJOURD'HUI de capacity — le purger l'effacerait en silence,
+// et l'alerte de dépassement de réservoir (Step6WeightBalance) s'éteindrait sans
+// rien afficher. On raisonne donc en VALIDITÉ NUMÉRIQUE, comme le moteur.
+const n = (v) => {
+  const x = typeof v === 'string' ? parseFloat(v) : v;
+  return Number.isFinite(x) ? x : null;
+};
 
 // ─── Décision, réservoir par réservoir ──────────────────────────────────────
-// Un `capacity` n'est purgeable que si les DEUX volumes canoniques existent.
+// Un `capacity` n'est purgeable que si les DEUX volumes canoniques portent
+// chacun un NOMBRE EXPLOITABLE — sinon le champ legacy est encore porteur.
 function tankDecision(t) {
   if (!has(t?.capacity)) return { purge: false, why: 'pas de capacity' };
-  const u = has(t?.usableCapacity), tot = has(t?.totalCapacity);
-  if (u && tot) {
-    const c = n(t.capacity);
-    const doublon = c === n(t.usableCapacity) || c === n(t.totalCapacity);
-    return { purge: true, why: doublon ? 'doublon d’un volume déjà présent' : `valeur morte (${c} ≠ utilisable ${n(t.usableCapacity)} et ≠ total ${n(t.totalCapacity)})` };
+  const c = n(t.capacity);
+  if (c === null) return { purge: true, why: `capacity non numérique (${JSON.stringify(t.capacity)}) — illisible par le moteur` };
+  const u = n(t?.usableCapacity), tot = n(t?.totalCapacity);
+  if (u !== null && tot !== null) {
+    const doublon = c === u || c === tot;
+    return { purge: true, why: doublon ? 'doublon d’un volume déjà présent' : `valeur morte (${c} ≠ utilisable ${u} et ≠ total ${tot})` };
   }
-  if (u && !tot) return { purge: false, why: 'capacity porte le TOTAL (totalCapacity absent)' };
-  if (!u && tot) return { purge: false, why: 'capacity porte l’UTILISABLE (usableCapacity absent)' };
+  if (u !== null && tot === null) return { purge: false, why: 'capacity porte le TOTAL (totalCapacity absent ou illisible)' };
+  if (u === null && tot !== null) return { purge: false, why: 'capacity porte l’UTILISABLE (usableCapacity absent ou illisible)' };
   return { purge: false, why: 'seul volume de ce réservoir' };
 }
 
