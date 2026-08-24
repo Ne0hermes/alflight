@@ -1,0 +1,8 @@
+/* SONDE TEMPORAIRE — neutralise le padding-right 3.6em (alflight-components.css:443)
+   pour les champs de la matrice de décrochage, afin de mesurer la largeur de
+   contenu réellement disponible une fois la règle levée. */
+table .MuiInputBase-adornedEnd .MuiOutlinedInput-input,
+table .MuiInputBase-adornedEnd .MuiInputBase-input {
+  padding-right: 4px !important;
+  padding-left: 4px !important;
+}

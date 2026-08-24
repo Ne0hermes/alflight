@@ -804,5 +804,34 @@ a.vac-download-button:hover {
 }
 
 /* ============================================
+   CHAMPS NUMÉRIQUES — SUPPRESSION DES FLÉCHETTES
+   ============================================
+   Demande pilote du 24/08/2026 : les petites flèches haut/bas des
+   <input type="number"> (spin buttons) sont retirées dans TOUTE
+   l'application — inutiles pour saisir une masse ou une vitesse, et
+   inesthétiques. Elles volaient en plus de la largeur aux cellules
+   étroites (matrice des vitesses de décrochage, tableaux de performance).
+
+   La saisie au clavier, les flèches ↑/↓ du clavier, la molette et la
+   validation numérique du navigateur restent inchangées : seul le
+   contrôle visuel disparaît.
+
+   Règle GLOBALE : elle couvre les champs natifs comme les MUI TextField,
+   qui rendent un vrai <input type="number">. Inutile de la répéter
+   composant par composant. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Firefox : pas de pseudo-élément, c'est le champ lui-même qui se déclare
+   sans contrôle de rotation. */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ============================================
    FIN DU FICHIER CSS UNIFIÉ
    ============================================ */
