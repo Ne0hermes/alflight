@@ -225,14 +225,14 @@ export const AircraftProvider = memo(({ children }) => {
               if (light.weights?.minTakeoffWeight) {
                 light.minTakeoffWeight = parseFloat(light.weights.minTakeoffWeight);
               }
-              // Sinon, utiliser emptyWeight comme valeur minimale
+              // Sinon, la masse à vide est le minimum PHYSIQUE (dérivation
+              // d'une donnée réelle, pas une invention).
               else if (light.emptyWeight) {
                 light.minTakeoffWeight = light.emptyWeight;
               }
-              // Dernière option : valeur par défaut
-              else {
-                light.minTakeoffWeight = 600;
-              }
+              // 🔧 24/08/2026 — le « 600 » de dernier recours est SUPPRIMÉ
+              // (règle pilote : rien, aucun fallback). Ni masse mini ni masse
+              // à vide connues : le champ reste ABSENT et le devis refuse.
               console.log(`✅ [AircraftProvider] Set minTakeoffWeight for ${light.registration}: ${light.minTakeoffWeight} kg`);
             }
 
@@ -253,8 +253,11 @@ export const AircraftProvider = memo(({ children }) => {
                 rearRightSeatArm: parseOrNull(light.arms.rearSeats) || parseOrNull(light.arms.rearSeat),
                 fuelArm: parseOrNull(light.arms.fuelMain) || parseOrNull(light.arms.fuel),
                 emptyWeightArm: parseOrNull(light.arms.empty),
-                baggageArm: parseOrNull(light.arms.baggage) || 3.50,
-                auxiliaryArm: parseOrNull(light.arms.auxiliaryBaggage) || 3.70,
+                // 🔧 24/08/2026 — BONNES clés (baggageFwd/baggageAft ; les
+                // anciennes n'existent dans aucun schéma) et AUCUN défaut :
+                // les 3,50/3,70 fabriqués ici ont contaminé F-GUVV en base.
+                baggageArm: parseOrNull(light.arms.baggageFwd) ?? parseOrNull(light.arms.baggage),
+                auxiliaryArm: parseOrNull(light.arms.baggageAft) ?? parseOrNull(light.arms.auxiliaryBaggage),
                 cgLimits: (() => {
                   // Vérifier si cgLimits existe et est valide
                   const hasValidCgLimits = light.cgLimits &&

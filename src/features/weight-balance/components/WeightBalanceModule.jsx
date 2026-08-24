@@ -233,11 +233,11 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
             {aircraft.baggageCompartments.map((compartment, index) => (
               <LoadInputWithInfo
                 key={compartment.id || `baggage-${index}`}
-                label={`🎒 ${compartment.name} (max ${compartment.maxWeight || '50'} kg)`}
+                label={`🎒 ${compartment.name} (max ${Number.isFinite(parseFloat(compartment.maxWeight)) ? parseFloat(compartment.maxWeight) : '?'} kg)`}
                 value={safeLoads[`baggage_${compartment.id || index}`] || 0}
                 onChange={(v) => onLoadChange(`baggage_${compartment.id || index}`, v)}
-                arm={parseFloat(compartment.arm) || 3.50}
-                max={parseFloat(compartment.maxWeight) || 50}
+                arm={Number.isFinite(parseFloat(compartment.arm)) ? parseFloat(compartment.arm) : null}
+                max={Number.isFinite(parseFloat(compartment.maxWeight)) ? parseFloat(compartment.maxWeight) : undefined}
                 loadKey={`baggage_${compartment.id || index}`}
               />
             ))}
@@ -265,9 +265,11 @@ const LoadingSection = memo(({ loads, aircraft, onLoadChange }) => {
 
 // Composant optimisé pour chaque input de charge
 const LoadInputWithInfo = memo(({ label, value, onChange, arm, max, loadKey }) => {
-  // Mémorisation du moment avec vérification
+  // 🔧 24/08/2026 — bras inconnu (null) : PAS de moment calculé (le « ×0 »
+  // d'avant rendait un moment nul d'apparence normale). On l'affiche.
   const displayValue = value || 0;
-  const moment = useMemo(() => (displayValue * arm).toFixed(1), [displayValue, arm]);
+  const armOk = Number.isFinite(arm);
+  const moment = useMemo(() => (armOk ? (displayValue * arm).toFixed(1) : null), [displayValue, arm, armOk]);
   
   return (
     <div style={sx.components.card.base}>
@@ -280,11 +282,11 @@ const LoadInputWithInfo = memo(({ label, value, onChange, arm, max, loadKey }) =
       <div style={sx.combine(styles.grid2, sx.spacing.mt(2), sx.text.sm, sx.text.secondary)}>
         <div style={sx.flex.between}>
           <span>📏 Bras de levier:</span>
-          <span style={sx.text.primary}>{arm.toFixed(2)} m</span>
+          <span style={armOk ? sx.text.primary : sx.combine(sx.text.primary, { color: sx.theme.colors.danger[600] })}>{armOk ? `${arm.toFixed(2)} m` : 'non renseigné'}</span>
         </div>
         <div style={sx.flex.between}>
           <span>⚖️ Moment:</span>
-          <span style={sx.combine(sx.text.primary, sx.text.bold)}>{moment} kg.m</span>
+          <span style={sx.combine(sx.text.primary, sx.text.bold)}>{moment !== null ? `${moment} kg.m` : '—'}</span>
         </div>
       </div>
     </div>

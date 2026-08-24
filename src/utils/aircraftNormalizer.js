@@ -74,10 +74,13 @@ export function normalizeAircraftImport(aircraftData) {
     console.log('🔄 [Normalizer] Found arms data:', aircraftData.arms);
 
     // Helper pour parser et éviter NaN (parseFloat('') = NaN)
-    const parseArm = (value, defaultValue = 0) => {
-      if (!value || value === '') return defaultValue;
+    // 🔧 24/08/2026 — un bras absent reste ABSENT (null), plus jamais 0 :
+    // le 0 passait pour un vrai bras et plaçait la charge au point de
+    // référence (source de 24 des 26 valeurs fantômes de la base).
+    const parseArm = (value) => {
+      if (value === null || value === undefined || value === '') return null;
       const parsed = parseFloat(value);
-      return isNaN(parsed) ? defaultValue : parsed;
+      return isNaN(parsed) ? null : parsed;
     };
 
     // Helper pour parser null values (permettre null mais pas NaN)
@@ -93,8 +96,9 @@ export function normalizeAircraftImport(aircraftData) {
     // On ramène TOUT en MÈTRES (pivot unique = mètre, cf. AUDIT_MASSE_CENTRAGE_UNITES.md).
     // Pas d'overlap possible : bras réels en m = 0.01–10, en mm = 300–10000 → le seuil 10
     // sépare proprement, zéro faux positif en aviation générale. On loggue chaque correction.
-    const armToMeters = (value, defaultValue = 0) => {
-      const m = parseArm(value, defaultValue);
+    const armToMeters = (value) => {
+      const m = parseArm(value);
+      if (m === null) return null;
       if (Number.isFinite(m) && Math.abs(m) > 10) {
         const fixed = m / 1000;
         console.warn(`⚠️ [Normalizer] Bras de levier ${m} interprété comme MILLIMÈTRES → ${fixed} m (garde-fou m/mm)`);
@@ -103,16 +107,21 @@ export function normalizeAircraftImport(aircraftData) {
       return m;
     };
 
-    const armsToWB = {
-      emptyWeightArm: armToMeters(aircraftData.arms.empty),
-      fuelArm: armToMeters(aircraftData.arms.fuelMain),
-      frontLeftSeatArm: armToMeters(aircraftData.arms.frontSeats),
-      frontRightSeatArm: armToMeters(aircraftData.arms.frontSeats),
-      rearLeftSeatArm: armToMeters(aircraftData.arms.rearSeats),
-      rearRightSeatArm: armToMeters(aircraftData.arms.rearSeats),
-      baggageArm: armToMeters(aircraftData.arms.baggageFwd),
-      auxiliaryArm: armToMeters(aircraftData.arms.baggageAft)
-    };
+    // Un bras inconnu ne produit AUCUNE clé : absent reste absent.
+    const armsToWB = {};
+    for (const [cle, source] of Object.entries({
+      emptyWeightArm: aircraftData.arms.empty,
+      fuelArm: aircraftData.arms.fuelMain,
+      frontLeftSeatArm: aircraftData.arms.frontSeats,
+      frontRightSeatArm: aircraftData.arms.frontSeats,
+      rearLeftSeatArm: aircraftData.arms.rearSeats,
+      rearRightSeatArm: aircraftData.arms.rearSeats,
+      baggageArm: aircraftData.arms.baggageFwd,
+      auxiliaryArm: aircraftData.arms.baggageAft
+    })) {
+      const m = armToMeters(source);
+      if (m !== null) armsToWB[cle] = m;
+    }
 
     console.log('  - Mapped from arms:', armsToWB);
     console.log('  - Existing weightBalance:', aircraftData.weightBalance);
@@ -165,11 +174,18 @@ export function normalizeAircraftImport(aircraftData) {
 
   // 🔧 Conserver baggageCompartments (données dynamiques)
   if (aircraftData.baggageCompartments) {
-    normalized.baggageCompartments = aircraftData.baggageCompartments.map(comp => ({
-      ...comp,
-      arm: parseFloat(comp.arm) || 0,
-      maxWeight: parseFloat(comp.maxWeight) || 0
-    }));
+    // 🔧 24/08/2026 — un bras ou une limite illisibles restent tels quels
+    // (le moteur les signale) : le « || 0 » fabriquait un bras nul qui
+    // passait pour vrai et un plafond 0 qui interdisait tout bagage.
+    normalized.baggageCompartments = aircraftData.baggageCompartments.map(comp => {
+      const arm = parseFloat(comp.arm);
+      const maxW = parseFloat(comp.maxWeight);
+      return {
+        ...comp,
+        ...(Number.isFinite(arm) ? { arm } : {}),
+        ...(Number.isFinite(maxW) ? { maxWeight: maxW } : {})
+      };
+    });
     console.log('✓ Preserved baggageCompartments:', normalized.baggageCompartments.length);
   }
 

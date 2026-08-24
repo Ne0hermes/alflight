@@ -4095,6 +4095,22 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       return isNaN(num) ? defaultValue : num;
     };
 
+    // 🔧 24/08/2026 — pour les BRAS, MASSES et LIMITES : nombre saisi, ou
+    // undefined. Ni défaut codé, ni Number('') === 0 : les deux écrivaient
+    // en base des valeurs que personne n'avait saisies (3,50 / 600 / 0…).
+    const numOrUndefined = (value) => {
+      if (value === null || value === undefined || value === '') return undefined;
+      const num = Number(value);
+      return isNaN(num) ? undefined : num;
+    };
+    // Écrit la clé seulement si une valeur existe (saisie, sinon fiche).
+    const setIf = (obj, key, ...candidates) => {
+      for (const c of candidates) {
+        const v = numOrUndefined(c);
+        if (v !== undefined) { obj[key] = v; return; }
+      }
+    };
+
     // DEBUG : Vérifier les surfaces avant traitement
     console.log('💾 handleSubmit - formData.compatibleRunwaySurfaces:', formData.compatibleRunwaySurfaces);
     console.log('💾 handleSubmit - Type:', typeof formData.compatibleRunwaySurfaces);
@@ -4201,44 +4217,48 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
       },
       
       // Mettre à jour weightBalance avec les données armLengths ET cgLimits
-      weightBalance: {
-        ...aircraft?.weightBalance,
-        // Mapper les bras de levier depuis armLengths vers la structure attendue par WeightBalance
-        emptyWeightArm: toValidNumber(formData.armLengths.emptyMassArm, 2.00),
-        frontLeftSeatArm: toValidNumber(formData.armLengths.frontSeat1Arm, 2.00),
-        frontRightSeatArm: toValidNumber(formData.armLengths.frontSeat2Arm, 2.00),
-        rearLeftSeatArm: toValidNumber(formData.armLengths.rearSeat1Arm, 2.90),
-        rearRightSeatArm: toValidNumber(formData.armLengths.rearSeat2Arm, 2.90),
-        baggageArm: toValidNumber(formData.armLengths.standardBaggageArm, 3.50),
-        auxiliaryArm: toValidNumber(formData.armLengths.aftBaggageExtensionArm || formData.armLengths.baggageTubeArm, 3.70),
-        fuelArm: toValidNumber(formData.armLengths.fuelArm, 2.18),
-        // CG Limits
-        ...((formData.cgEnvelope.forwardPoints.some(p => p.weight && p.cg) || 
-             formData.cgEnvelope.aftCG) ? {
-          cgLimits: {
-            forward: formData.cgEnvelope.forwardPoints.length > 0 ? 
-              toValidNumber(formData.cgEnvelope.forwardPoints[0].cg, aircraft?.weightBalance?.cgLimits?.forward || 2.00) :
-              aircraft?.weightBalance?.cgLimits?.forward || 2.00,
-            aft: toValidNumber(formData.cgEnvelope.aftCG, aircraft?.weightBalance?.cgLimits?.aft || 2.45),
+      // 🔧 24/08/2026 — plus AUCUN bras ni limite fabriqués (règle pilote :
+      // rien, aucun fallback). Une valeur saisie s'écrit ; un champ vide
+      // conserve celle de la fiche ; sinon la clé n'existe pas. L'ancien code
+      // écrivait 2,00/2,90/3,50/3,70/2,18 quand la section manquait — et des
+      // ZÉROS quand les champs étaient vides (Number('') === 0) : c'est la
+      // seconde fabrique des bras fantômes de la flotte.
+      weightBalance: (() => {
+        const wb = { ...aircraft?.weightBalance };
+        setIf(wb, 'emptyWeightArm', formData.armLengths.emptyMassArm, wb.emptyWeightArm);
+        setIf(wb, 'frontLeftSeatArm', formData.armLengths.frontSeat1Arm, wb.frontLeftSeatArm);
+        setIf(wb, 'frontRightSeatArm', formData.armLengths.frontSeat2Arm, wb.frontRightSeatArm);
+        setIf(wb, 'rearLeftSeatArm', formData.armLengths.rearSeat1Arm, wb.rearLeftSeatArm);
+        setIf(wb, 'rearRightSeatArm', formData.armLengths.rearSeat2Arm, wb.rearRightSeatArm);
+        setIf(wb, 'baggageArm', formData.armLengths.standardBaggageArm, wb.baggageArm);
+        setIf(wb, 'auxiliaryArm', formData.armLengths.aftBaggageExtensionArm || formData.armLengths.baggageTubeArm, wb.auxiliaryArm);
+        setIf(wb, 'fuelArm', formData.armLengths.fuelArm, wb.fuelArm);
+        // Limites CG : uniquement depuis des points réellement saisis, avec
+        // repli sur les limites EXISTANTES de la fiche — jamais 2,00/2,45.
+        const fwdSaisi = formData.cgEnvelope.forwardPoints.length > 0
+          ? numOrUndefined(formData.cgEnvelope.forwardPoints[0].cg) : undefined;
+        const aftSaisi = numOrUndefined(formData.cgEnvelope.aftCG);
+        const forward = fwdSaisi ?? numOrUndefined(aircraft?.weightBalance?.cgLimits?.forward);
+        const aft = aftSaisi ?? numOrUndefined(aircraft?.weightBalance?.cgLimits?.aft);
+        if (forward !== undefined || aft !== undefined) {
+          wb.cgLimits = {
+            ...(forward !== undefined ? { forward } : {}),
+            ...(aft !== undefined ? { aft } : {}),
             forwardVariable: formData.cgEnvelope.forwardPoints
               .filter(point => point.weight && point.cg)
-              .map(point => ({
-                weight: toValidNumber(point.weight, 0),
-                cg: toValidNumber(point.cg, 0)
-              }))
+              .map(point => ({ weight: numOrUndefined(point.weight), cg: numOrUndefined(point.cg) }))
               .filter(point => point.weight > 0 && point.cg > 0)
               .sort((a, b) => a.weight - b.weight)
-          }
-        } : {
-          cgLimits: {
-            forward: 2.00,
-            aft: 2.45
-          }
-        })
-      },
-      // Ajouter aussi les masses importantes pour le module Weight & Balance
-      emptyWeight: toValidNumber(formData.masses.emptyMass, 600),
-      minTakeoffWeight: toValidNumber(formData.masses.minTakeoffMass, 600),
+          };
+        } else {
+          delete wb.cgLimits;
+        }
+        return wb;
+      })(),
+      // Masses : saisie, sinon valeur EXISTANTE de la fiche, sinon absente —
+      // le « 600 » fabriqué (et le 0 sur champ vide) ne part plus en base.
+      emptyWeight: numOrUndefined(formData.masses.emptyMass) ?? numOrUndefined(aircraft?.emptyWeight),
+      minTakeoffWeight: numOrUndefined(formData.masses.minTakeoffMass) ?? numOrUndefined(aircraft?.minTakeoffWeight),
       // 23/08/2026 (décision pilote) : plus AUCUNE limite de soute fabriquée.
       // Les vraies limites sont dans baggageCompartments ; ces deux champs
       // historiques ne sont plus écrits (une valeur déjà en base n'est pas

@@ -154,7 +154,7 @@ export function convertMoment(value, units, direction) {
  */
 export function getFuelDensity(fuelType) {
   // Source unique + normalisation des alias ('JET A-1' vs 'JET-A1'…).
-  return canonicalFuelDensity(fuelType) ?? FUEL_DENSITIES.default;
+  return canonicalFuelDensity(fuelType) ?? null; // 🔧 24/08/2026 — plus de 0,72 par défaut : type inconnu => null, ce qui réactive les garde-fous `density != null` de Step3 et du lecteur de centrogramme (morts tant que le défaut répondait toujours).
 }
 
 /**

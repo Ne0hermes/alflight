@@ -243,9 +243,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // vide alors que la donnée existe ailleurs → ce qui menait à un
     // écrasement à la sauvegarde si le pilote ne re-saisissait pas le champ.
     arms: (() => {
+      // 🔧 24/08/2026 — le 0 est écarté comme le vide : un bras à 0 est un
+      // zéro FABRIQUÉ (normaliseur/formulaire legacy), jamais un bras réel.
+      // Sans cela, un 0 en base masquait la vraie valeur des autres formes
+      // et se re-propageait à chaque enregistrement (blanchiment).
       const pick = (...candidates) => {
         for (const c of candidates) {
-          if (c !== null && c !== undefined && c !== '') return c;
+          if (c !== null && c !== undefined && c !== '' && c !== 0 && c !== '0') return c;
         }
         return '';
       };

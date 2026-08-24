@@ -37,6 +37,10 @@ describe('A1 — Jet A-1 = 0.84 partout (plus de 0.80 / 0.74 divergents)', () =>
     expect(MB_DENSITIES.MOGAS).toBe(0.72); // était 0.74
     expect(mbGetFuelDensity('JET-A1')).toBe(0.84);
     expect(mbGetFuelDensity('JET A-1')).toBe(0.84); // normalisation
+    // 🔧 24/08/2026 — plus de 0,72 par défaut : type inconnu rend null (réactive
+    // les garde-fous density != null de Step3 et du lecteur de centrogramme).
+    expect(mbGetFuelDensity('UNKNOWN')).toBeNull();
+    expect(mbGetFuelDensity(undefined)).toBeNull();
   });
   it('cohérence inter-modules pour Jet A-1', () => {
     const canon = FUEL_DENSITIES['JET A-1'];
