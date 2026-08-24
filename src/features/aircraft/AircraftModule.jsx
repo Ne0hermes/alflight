@@ -39,6 +39,7 @@ import communityService from '@services/communityService';
 import { getFuelDensity } from '@utils/fuelDensity';
 import { armToMeters } from '@utils/armUnits';
 import { getCurrentAiracCycle } from '@/config/airacConfig';
+import { tankUsableLtr, tankTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 
 // Composant pour l'aide contextuelle
 const InfoIcon = memo(({ tooltip }) => {
@@ -887,7 +888,15 @@ export const AircraftModule = memo(() => {
           fullAircraft.additionalFuelTanks.forEach((tank, idx) => {
             const name = tank.name || `Réservoir ${idx + 1}`;
             checkNewPage();
-            addText(`  ${name}: ${tank.capacity || '?'} L, bras ${tank.arm || '?'} mm, moment ${tank.momentAtFull || '?'} kg·mm`,
+            // Volumes lus par les helpers canoniques : le champ legacy `capacity`
+            // a été purgé des fiches qui portent déjà utilisable ET total (24/08/2026).
+            const us = tankUsableLtr(tank), tot = tankTotalLtr(tank);
+            const vol = us === null && tot === null
+              ? '?'
+              : (us !== null && tot !== null && us !== tot)
+                ? `${tot} L (dont ${us} L utilisables)`
+                : `${us ?? tot} L`;
+            addText(`  ${name}: ${vol}, bras ${tank.arm || '?'} mm, moment ${tank.momentAtFull || '?'} kg·mm`,
               60, yPosition, { size: 10 });
             yPosition -= 16;
           });

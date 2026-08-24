@@ -56,6 +56,7 @@ import { describeCorrection } from '@utils/performanceCorrections';
 // 🔏 19/08/2026 — tables de perf certifiées ABSENTES du manuel de vol (bypass
 // admin) : la synthèse doit dire que le trou est ASSUMÉ, pas oublié.
 import { computeCertifiedAbsentPerformanceTables } from '../../utils/performanceCoverage';
+import { tankUsableLtr, tankTotalLtr } from '@alflight/calc-engine/fuel/tankCapacity';
 
 // ─── Libellés FR compréhensibles des tableaux de performances ───────────────
 // Demande César 16/08 : « takeoff_ground_roll » ne parle à personne. Basés sur
@@ -1130,7 +1131,9 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
         // 3. Réservoirs (le « principal » est un type parmi additionalFuelTanks)
         const tankRows = (data.additionalFuelTanks || []).map((tank, idx) => ({
           poste: tank.name || `Réservoir ${idx + 1}`,
-          capacite: formatCanonical(tank.capacity, 'fuel', units, { both: true }),
+          // Utilisable (LA grandeur des moteurs) plutôt que le champ legacy
+          // `capacity`, purgé des fiches portant déjà les deux volumes (24/08/2026).
+          capacite: formatCanonical(tankUsableLtr(tank) ?? tankTotalLtr(tank), 'fuel', units, { both: true }),
           bras: fmtA(tank.arm),
           moment: fmtM(tank.momentAtFull)
         }));
