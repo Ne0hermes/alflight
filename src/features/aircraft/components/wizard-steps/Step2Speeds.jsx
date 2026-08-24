@@ -471,9 +471,20 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
   );
 
   // Cellule du tableau de décrochage : champ compact SANS libellé flottant (la
-  // ligne « configuration » et l'en-tête « inclinaison » suffisent), unité en
-  // suffixe. Une erreur de présence (validation wizard) colore la cellule ; le
-  // texte des erreurs est regroupé sous le tableau.
+  // ligne « configuration » et l'en-tête « inclinaison » suffisent) et SANS
+  // adornment d'unité — l'unité est annoncée UNE fois dans le titre du tableau.
+  // Une erreur de présence (validation wizard) colore la cellule ; le texte des
+  // erreurs est regroupé sous le tableau.
+  //
+  // 🐛 24/08/2026 — POURQUOI PAS D'ADORNMENT ICI. Avec le suffixe « kt », la
+  // règle globale `.MuiInputBase-adornedEnd .MuiInputBase-input` impose
+  // padding-right: 3.6em (= 50,4 px à 14 px) en plus des 14 px de gauche. Dans
+  // une cellule de ~67 px — ce qu'elles deviennent à 7 colonnes — il ne restait
+  // que 2,6 px de zone de texte : le chiffre saisi était intégralement rogné et
+  // la cellule PARAISSAIT vide, alors que la donnée était bien écrite (les
+  // avertissements de cohérence l'affichaient). Symptôme invisible en test jsdom,
+  // qui ne calcule aucune mise en page. Le padding est donc resserré ici, et
+  // l'unité sort du champ.
   const stallCell = ({ value, onChange, required = false, error = false, ariaLabel }) => (
     <StyledTextField
       fullWidth
@@ -486,10 +497,15 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       required={required}
       error={error}
       inputProps={{ 'aria-label': ariaLabel }}
-      InputProps={{
-        endAdornment: <InputAdornment position="end">{getUnitSymbol(units.speed)}</InputAdornment>,
+      sx={{
+        minWidth: 64,
+        // Le !important des styles globaux ne cède qu'à un !important.
+        '& .MuiInputBase-input': {
+          paddingLeft: '6px !important',
+          paddingRight: '6px !important',
+          textAlign: 'center !important',
+        },
       }}
-      sx={{ minWidth: 96 }}
     />
   );
   const stallFieldErrors = STALL_CONFIGS.map((c) => errors[`speeds.${c.field}`]).filter(Boolean);
@@ -960,7 +976,7 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
                 cf. setStallByBank, jamais de 0 fabriqué). */}
             <Box sx={{ width: '100%', maxWidth: 980, mx: 'auto', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                Vitesses de décrochage selon l'inclinaison
+                Vitesses de décrochage selon l'inclinaison (kt)
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                 Colonne 0° obligatoire : VS1 / VS T/O / VSO — mêmes champs que les arcs ci-dessus.
@@ -968,10 +984,10 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
               </Typography>
               {/* overflow-x : lisible sur écran étroit, le tableau défile dans son conteneur */}
               <Box sx={{ overflowX: 'auto' }}>
-                <Table size="small" sx={{ minWidth: 880, '& td, & th': { border: 0, px: 0.5, py: 0.5 } }}>
+                <Table size="small" sx={{ minWidth: 700, tableLayout: 'fixed', '& td, & th': { border: 0, px: 0.25, py: 0.5 } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ width: 130 }}>
+                      <TableCell sx={{ width: 128 }}>
                         <Typography variant="caption" sx={{ fontWeight: 600 }}>Configuration</Typography>
                       </TableCell>
                       <TableCell align="center">
