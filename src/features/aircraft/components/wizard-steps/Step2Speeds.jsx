@@ -323,13 +323,16 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
       category: "optional",
       required: false
     },
+    // 24/08/2026 (demande pilote) : « on ne garde que la vitesse de finesse max
+    // en obligatoire » — c'est LA vitesse de la panne moteur, la seule du groupe
+    // qui ne se déduit de rien. La vitesse d'approche, elle, devient facultative.
     vglide: {
-      name: "V Glide",
-      label: "V Glide - Vitesse de plané optimal",
-      description: "Vitesse pour la meilleure finesse",
+      name: "V finesse max",
+      label: "V finesse max (plané) *",
+      description: "Vitesse de meilleure finesse — vitesse à tenir en panne moteur",
       color: "#007bff",
-      category: "optional",
-      required: false
+      category: "required",
+      required: true
     },
     vle: {
       name: "VLE",
@@ -1159,7 +1162,8 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
         </AccordionDetails>
       </Accordion>
 
-      {/* 3. Vitesses d'utilisation (facultatif) — groupées par phase de vol */}
+      {/* 3. Vitesses d'utilisation — groupées par phase de vol. Toutes
+          facultatives SAUF la vitesse de finesse max (24/08, demande pilote). */}
       <Accordion
         expanded={expandedPanels.utilisation}
         onChange={handlePanelChange('utilisation')}
@@ -1227,10 +1231,12 @@ const Step2Speeds = ({ data, updateData, errors = {}, onNext, onPrevious }) => {
               </Typography>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
+                  {/* 24/08 : facultative — elle se déduit de VSO et dépend de
+                      la configuration et des rafales du jour. */}
                   {renderSpeedInput('vapp', {
                     name: "VApp",
                     label: "VApp - Vitesse d'approche",
-                    description: "Vitesse de référence en approche finale",
+                    description: "Vitesse de référence en approche finale (facultative)",
                     color: "#17a2b8",
                     category: "optional",
                     required: false

@@ -172,8 +172,12 @@ export const FIELD_DEFINITIONS = [
   { path: 'speeds.vr',            label: 'VR (rotation)',             severity: 'REQUIRED', weight: 2 },
   { path: 'speeds.vx',            label: 'VX (config. takeoff)',      severity: 'OPTIONAL', weight: 1 },
   { path: 'speeds.vy',            label: 'VY (config. takeoff)',      severity: 'OPTIONAL', weight: 1 },
-  { path: 'speeds.vapp',          label: 'V approche',                severity: 'REQUIRED', weight: 2 },
-  { path: 'speeds.vglide',        label: 'V plané',                   severity: 'REQUIRED', weight: 1 },
+  // 24/08/2026 (demande pilote) : la vitesse d'APPROCHE devient facultative
+  // (elle se déduit de VSO et dépend de la configuration / des rafales du
+  // jour), tandis que la vitesse de FINESSE MAX — celle qui compte en panne
+  // moteur — devient OBLIGATOIRE.
+  { path: 'speeds.vapp',          label: 'V approche',                severity: 'OPTIONAL', weight: 1 },
+  { path: 'speeds.vglide',        label: 'V finesse max (plané)',     severity: 'CRITICAL', weight: 3 },
 
   // === CRITICAL — performance ===
   // R22 — l'ancien contrôle binaire « Tables de performance : présent/absent »

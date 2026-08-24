@@ -838,6 +838,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         if (!aircraftData.speeds?.vne || aircraftData.speeds.vne === '') {
           newErrors['speeds.vne'] = "VNE est requise";
         }
+        // 24/08/2026 (demande pilote) : la vitesse de FINESSE MAX devient
+        // requise (vitesse de la panne moteur) ; la vitesse d'APPROCHE devient
+        // facultative.
+        if (!aircraftData.speeds?.vglide || aircraftData.speeds.vglide === '') {
+          newErrors['speeds.vglide'] = "La vitesse de finesse max est requise";
+        }
         if (!aircraftData.speeds?.vfeLdg || aircraftData.speeds.vfeLdg === '') {
           newErrors['speeds.vfeLdg'] = "VFE LDG est requise";
         }
