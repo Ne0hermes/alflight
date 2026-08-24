@@ -196,8 +196,8 @@
  },
  {
   "itid": "F-GUVV-05",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxBaggageWeight et maxAuxiliaryWeight sont purgés — le compartiment déclaré (30 kg à 3,65 m) fait désormais foi seul. RESTENT les bras legacy 3,50 / 3,70 : F-GUVV est le SEUL avion de la flotte dont ces bras ne valent pas 0, ce qui rend leur origine incertaine (valeurs plausibles du manuel, ou report d’une autre fiche). Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "ouvert",
+  "note": "Rapport pilote 24/08 : « bug persistant, il n'y a qu'un compartiment bagage ». CONFIRMÉ, et voici ce qui reste exactement. La purge du 24/08 a bien retiré maxBaggageWeight (50) et maxAuxiliaryWeight (20). MAIS quatre BRAS legacy subsistent : weightBalance.baggageArm = 3,50, weightBalance.auxiliaryArm = 3,70, arms.baggageFwd = 3,50, arms.baggageAft = 3,70 — alors que votre unique compartiment (« cockpit baggage compartment », 30 kg, plafond cumulé 30) est à 3,65 m. Ces quatre valeurs décrivent donc DEUX compartiments qui n'existent pas, avec des bras qui ne correspondent même pas au vrai. ORIGINE TROUVÉE : ce sont des valeurs FABRIQUÉES par le code — src/core/contexts/index.jsx:256-257 écrit `|| 3.50` et `|| 3.70` en repli, et AircraftModule.jsx:4212-4213 fait de même. F-GUVV est le SEUL avion de la flotte à porter des bras legacy non nuls (les 12 autres sont à 0, autre zéro fabriqué). PAS ENCORE PURGÉ, volontairement : ces bras sont LUS (WeightBalanceTable.jsx:80-90 calcule des moments avec, aircraftNormalizer.js:113-114 les recopie). Les retirer sans corriger d'abord ces lecteurs et les replis codés en dur casserait un calcul de moment. C'est un chantier distinct, à mener avec la même vérification que la purge précédente — j'attends votre feu vert."
  },
  {
   "itid": "F-GGZO-11",
@@ -208,5 +208,50 @@
   "itid": "F-HSTR-09",
   "status": "partiel",
   "note": "Le champ legacy capacity = 155,2 du réservoir a été purgé le 24/08 (il ne servait plus : totalCapacity = 155 et usableCapacity = 147 étaient déjà là). L'ÉCART SIGNALÉ RESTE : la racine porte fuelCapacity = 155,2 et fuelUsableCapacity = 147,5, le réservoir porte 155 et 147. Le manuel donne 155,2 / 147,5 — ce sont les valeurs du réservoir qu'il faut corriger, pas la racine."
+ },
+ {
+  "itid": "F-GGZO-01",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). CORRIGÉ : la règle de vent arrière au DÉCOLLAGE est passée de mode « factor_per_step » (qui multipliait la distance par 10 !) à « percent_per_step », value 10, stepKt 2 — désormais identique à sa jumelle d'atterrissage. Les deux phases appliquent bien +10 % par tranche de 2 kt."
+ },
+ {
+  "itid": "F-GGZO-02",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). CORRIGÉ : la cellule (2000 ft, 20 °C) de la table d'atterrissage 50 ft est passée de 704 m à 407 m — exactement la valeur sur laquelle convergent les deux interpolations indépendantes (396 et 418 en altitude comme en température). Contrôle élargi : plus AUCUNE cellule au-dessus de 600 m dans cette table."
+ },
+ {
+  "itid": "F-GGZO-03",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). CORRIGÉ : speeds.vsTO est désormais présente (44 kt). RÉSERVE, non bloquante : vsTO = 44 est EXACTEMENT la valeur de vs1 (lisse), alors que vso vaut 33. Les volets de décollage ne feraient donc rien gagner au décrochage — c'est possible, mais l'égalité stricte avec vs1 fait penser à une recopie. À confirmer au manuel : si les volets T/O abaissent le décrochage, la valeur doit tomber entre 33 et 44."
+ },
+ {
+  "itid": "F-GGZO-05",
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). CORRIGÉ : la racine fuelCapacity est passée de 189 L à 163 L, soit le total de la variante par défaut « Variante 163L ». Le 189 était la somme des DEUX voilures alternatives, une contenance qui ne correspondait à aucun avion réel."
+ },
+ {
+  "itid": "F-GGZO-04",
+  "status": "partiel",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). MOITIÉ FAITE : la racine fuelUsableCapacity est passée de 141 L à 152 L, alignée sur la variante par défaut — l'écart inexpliqué a disparu. RESTE : le réservoir « Reservoir d'aile Standard » ne porte TOUJOURS PAS de usableCapacity explicite. Ses 152 L utilisables viennent du champ legacy `capacity`, lu par défaut comme l'utilisable. C'est l'un des 11 réservoirs que la purge du 24/08 a délibérément épargnés, justement parce que ce champ y est le seul volume connu. Il faut saisir dans la fiche l'utilisable ET le total du manuel (163 L total est déjà là) pour que ce réservoir cesse de dépendre d'un champ obsolète."
+ },
+ {
+  "itid": "F-GGZO-06",
+  "status": "ouvert",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). PAS FAIT — la donnée n'a pas changé. windLimits.limits ne contient toujours qu'une seule entrée, maxTailwind = 10 kt ; aucune limite de vent traversier, et le champ plat maxCrosswind est toujours vide. L'instantané d'import MANEX porte pourtant « Vent traversier max démontré » = 15 kt avec accepted = true : la valeur est disponible, elle n'a simplement pas été reportée dans la fiche. Sans elle, aucun contrôle de vent de travers n'est possible sur cet avion."
+ },
+ {
+  "itid": "F-GGZO-07",
+  "status": "ouvert",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). PAS FAIT — weighingReport.certificationDate vaut toujours 1979-05-01, soit 47 ans avant le dépôt du document (17/06/2026). C'est de cette pesée que sortent la masse à vide 648 kg et le bras 0,969 m qui fondent TOUS les centrages de cet avion. Deux cas : soit le champ porte par erreur la date de certification de l'appareil au lieu de celle de la pesée (il faut alors saisir la vraie date), soit la pesée date réellement de 1979 et la fiche doit le signaler comme telle."
+ },
+ {
+  "itid": "F-GUVV-01",
+  "status": "code",
+  "note": "Rapport pilote 24/08 : « le graphique que j'ai sur les distances de roulage n'indique rien par rapport au vent arrière, il n'y a que le vent de face sur les courbes ». VOUS AVEZ RAISON, et cela déplace le défaut : le tracé est fidèle au manuel, c'est le MOTEUR qui se comportait mal. Quand le filtre par direction ne laissait aucun guide, il retombait silencieusement sur graph.curves[0] et lisait sa valeur absolue — d'où les 403,1 m au passage des 15 m et 156,6 m au roulage par 5 kt de vent arrière, soit MOINS que par vent nul (756,3 et 293,4). Un vent arrière qui raccourcit l'atterrissage est une valeur inventée, et dangereuse. CORRECTIF LIVRÉ le 24/08 : le moteur REFUSE désormais, avec un motif lisible (« Cette planche du manuel ne porte AUCUN guide de vent arrière : elle ne couvre pas ce cas, et rien ne permet de l'extrapoler »). Le repli général « première courbe par défaut » a été retiré du moteur par la même occasion. Vérifié sur toute la flotte : 6 modèles refusent désormais le vent arrière, 13 le calculent toujours, et PLUS AUCUN ne rend une distance raccourcie par vent arrière. Vos 2 abaques de décollage F-GUVV continuent de calculer normalement (342,0 → 398,3 m). Il reste à décider si vous voulez une règle de correction dédiée pour le vent arrière à l'atterrissage, ou si vous renoncez à cette condition."
+ },
+ {
+  "itid": "F-GUVV-04",
+  "status": "valide",
+  "note": "Rapport pilote 24/08 : « c'est juste, les courbes ne sont pas données ». Item CLASSÉ SANS SUITE : le manuel ne publie pas de lignes à 7000 et 8000 ft, la 5e ligne est bien 9000 ft et la saisie est fidèle. Observation résiduelle, non bloquante : le gradient passe de 23,3 m/kft entre 6000 et 9000 à 79,0 m/kft entre 9000 et 10000. Ce n'est pas une preuve d'erreur — les lignes se resserrent en altitude — mais si un jour un doute revient sur ce modèle, c'est là qu'il faudra regarder."
  }
 ]

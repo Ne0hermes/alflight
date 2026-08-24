@@ -478,7 +478,18 @@ function calculateOutputWithParameterCorrect(
     trace(`   Courbes après filtrage pour ${windDirection}:`, curvesWithParams.map(c => c.name));
 
     if (curvesWithParams.length === 0) {
-      traceWarn(`   ⚠️ Aucune courbe ${windDirection} trouvée dans le graphique`);
+      // ⛔ FAIL-CLOSED (24/08/2026, signalement pilote F-GUVV).
+      // La planche ne porte AUCUN guide dans la direction demandée — cas réel :
+      // les 2 abaques d'atterrissage du F-GUVV n'ont que des guides vent de face,
+      // le manuel ne publie pas de vent arrière. On refuse le calcul.
+      //
+      // Avant ce correctif, la liste vide retombait plus bas sur « la première
+      // courbe par défaut » et lisait sa valeur absolue : un vent arrière de 5 kt
+      // rendait 403,1 m au passage des 15 m et 156,6 m au roulage — soit une
+      // distance PLUS COURTE que par vent nul. Un vent arrière qui raccourcit
+      // l'atterrissage est une valeur inventée, et dangereuse.
+      traceWarn(`   ⛔ Aucun guide ${windDirection} dans ce graphe — calcul REFUSÉ (la planche ne couvre pas cette direction de vent)`);
+      return null;
     }
   }
 
@@ -503,21 +514,13 @@ function calculateOutputWithParameterCorrect(
 
   // Si aucune courbe avec paramètre valide n'est trouvée
   if (curvesWithParams.length === 0) {
-    traceError(`   ❌ Aucune courbe avec paramètre numérique trouvée dans le graphique "${graph.name}"`);
+    // ⛔ FAIL-CLOSED. Le repli « on prend la première courbe » a été RETIRÉ le
+    // 24/08/2026 : il rendait la valeur d'un guide arbitraire, étiquetée
+    // « (défaut) », dès qu'aucun guide ne portait de paramètre exploitable.
+    // C'est précisément une valeur inventée — la règle du projet l'interdit.
+    // Aucun guide utilisable ⇒ on refuse, et l'appelant explique pourquoi.
+    traceError(`   ❌ Aucune courbe avec paramètre numérique dans le graphique "${graph.name}" — calcul REFUSÉ`);
     trace(`   Courbes disponibles:`, graph.curves.map(c => c.name));
-    // Utiliser la première courbe par défaut si disponible
-    if (graph.curves.length > 0) {
-      const defaultCurve = graph.curves[0];
-      const outputY = findYForX(defaultCurve, parameterX);
-      if (outputY !== null) {
-        trace(`   ⚠️ Utilisation de la première courbe "${defaultCurve.name}" par défaut`);
-        return {
-          outputValue: outputY,
-          curveUsed: defaultCurve.name + " (défaut)",
-          interpolated: false
-        };
-      }
-    }
     return null;
   }
 
@@ -1500,11 +1503,26 @@ export function performCascadeCalculationWithParameters(
       result = calculateOutputWithParameterCorrect(graph, currentValue, paramValue, windDirection);
 
       if (!result) {
-        // R11 — le refus le plus fréquent : graphe vent à familles mixtes sans
-        // direction choisie (la garde anti-interpolation mixte a rendu null).
+        // Deux refus courants sur un graphe de vent, deux messages distincts :
+        //  • familles mixtes sans direction choisie (garde R11) ;
+        //  • direction demandée ABSENTE de la planche (24/08/2026, F-GUVV) —
+        //    le manuel ne publie pas de guides pour ce sens de vent. Le dire
+        //    explicitement évite que le pilote croie à une panne du modèle.
+        const sensFr = windDirection === 'tailwind' ? 'vent arrière' : 'vent de face';
+        const aLaDirection = windDirection
+          ? (graph.curves || []).some(c => {
+              const d = c.windDirection && c.windDirection !== 'none'
+                ? c.windDirection
+                : (/tailwind|arri[eè]re/i.test(c.name || '') ? 'tailwind'
+                  : (/headwind|face|debout/i.test(c.name || '') ? 'headwind' : null));
+              return d === windDirection;
+            })
+          : true;
         const windHint = graph.isWindRelated && !windDirection
           ? ' Ce graphe contient des courbes vent de face ET vent arrière : choisis la direction du vent avant de calculer.'
-          : '';
+          : (graph.isWindRelated && windDirection && !aLaDirection
+            ? ` Cette planche du manuel ne porte AUCUN guide de ${sensFr} : elle ne couvre pas ce cas, et rien ne permet de l'extrapoler. Corrige la distance par une règle dédiée, ou renonce à cette condition.`
+            : '');
         return {
           steps,
           finalValue: currentValue,

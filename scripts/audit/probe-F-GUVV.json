@@ -219,10 +219,10 @@
     },
     {
      "cond": "15 °C / 500 ft / vent −5",
-     "chain": "Panneau d'entrée > Correction 2 > Correction 3",
-     "value": 403.0670519605751,
-     "unit": "m",
-     "error": null,
+     "chain": "Panneau d'entrée > Correction 2",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer la sortie pour Y=756.3405139951915 avec wind_component=5 sur le graphique \"Correction 3\". Cette planche du manuel ne porte AUCUN guide de vent arrière : elle ne couvre pas ce cas, et rien ne permet de l'extrapoler. Corrige la distance par une règle dédiée, ou renonce à cette condition.",
      "missing": null
     },
     {
@@ -299,10 +299,10 @@
     },
     {
      "cond": "15 °C / 500 ft / vent −5",
-     "chain": "Panneau d'entrée > Correction 2 > Correction 3",
-     "value": 156.63926655720454,
-     "unit": "m",
-     "error": null,
+     "chain": "Panneau d'entrée > Correction 2",
+     "value": null,
+     "unit": null,
+     "error": "Impossible de calculer la sortie pour Y=293.37974889372435 avec wind_component=5 sur le graphique \"Correction 3\". Cette planche du manuel ne porte AUCUN guide de vent arrière : elle ne couvre pas ce cas, et rien ne permet de l'extrapoler. Corrige la distance par une règle dédiée, ou renonce à cette condition.",
      "missing": null
     },
     {
