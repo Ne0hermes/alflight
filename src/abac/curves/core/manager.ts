@@ -23,7 +23,25 @@ export class AbacCurveManager {
   private curves: Map<string, Curve> = new Map();
   private axesConfig: AxesConfig | null = null;
 
+  // Couleurs attribuées aux courbes créées sans couleur explicite. Toujours du
+  // hex 6 chiffres : interpolateColor() (courbes intermédiaires) ne lit que ce
+  // format — une couleur css nommée ou hsl() y deviendrait du noir.
+  private static readonly CURVE_PALETTE = [
+    '#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed',
+    '#0891b2', '#be185d', '#65a30d', '#ea580c', '#4f46e5'
+  ];
+
   constructor() {}
+
+  // Hotfix 25/08/2026 — cette méthode était APPELÉE (addCurve, deux endroits)
+  // mais n'a JAMAIS existé : toute courbe créée sans couleur faisait crasher
+  // Step4Performance en prod (« this.getRandomColor is not a function »,
+  // constaté sur F-GBTU). Malgré le nom (gardé pour coller aux appels), la
+  // couleur est DÉTERMINISTE : n-ième de la palette selon le nombre de
+  // courbes déjà présentes.
+  private getRandomColor(): string {
+    return AbacCurveManager.CURVE_PALETTE[this.curves.size % AbacCurveManager.CURVE_PALETTE.length];
+  }
 
   setAxesConfig(config: AxesConfig): void {
     this.axesConfig = config;
