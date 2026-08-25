@@ -72,6 +72,20 @@ for (const fiche of fiches) {
     const arm = num(c?.arm);
     if (arm === null || arm === 0) note('critique', `${reg} : compartiment « ${c?.name} » sans bras exploitable`, `arm=${JSON.stringify(c?.arm)}`);
   });
+  // 🛡️ RÉAPPARITIONS (purges des 24-25/08) : tout champ banni qui revient en
+  // base signale un cache local périmé qui a été re-sauvegardé.
+  if (d.maxBaggageWeight !== undefined || d.maxAuxiliaryWeight !== undefined) {
+    note('majeur', reg + ' : maxBaggageWeight/maxAuxiliaryWeight RÉAPPARUS', 'champ purgé le 24/08 — cache local périmé re-sauvegardé ?');
+  }
+  if (d.cgLimits !== undefined) note('majeur', reg + ' : cgLimits plat RÉAPPARU', 'purgé le 25/08');
+  if (d.weightBalance?.cgLimits !== undefined) note('majeur', reg + ' : weightBalance.cgLimits RÉAPPARU', 'purgé le 25/08');
+  for (const conteneur of ['arms', 'weightBalance']) {
+    for (const [k, v] of Object.entries(d[conteneur] || {})) {
+      if (typeof v !== 'object' && num(v) === 0 && /[Aa]rm$|^empty$|^frontSeats$|^rearSeats$|^fuelMain$|^baggageFwd$|^baggageAft$/.test(k)) {
+        note('majeur', reg + ' : bras à ZÉRO réapparu (' + conteneur + '.' + k + ')', 'les zéros fabriqués ont été purgés le 24/08');
+      }
+    }
+  }
   // Fantômes connus : miroir cgLimits plat qui contredit l'enveloppe.
   const platF = num(d.cgLimits?.forward), envF = num(fwd?.[0]?.cg);
   if (platF !== null && envF !== null && Math.abs(platF - envF) > 0.02) {

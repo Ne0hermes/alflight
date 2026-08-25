@@ -109,6 +109,21 @@ function stripBannedLegacyFields(d) {
     out.weightBalance = { ...out.weightBalance };
     delete out.weightBalance.cgLimits;
   }
+  // ⚖️ 25/08/2026 — un BRAS À ZÉRO est impossible par nature (aucun poste
+  // n'est au point de référence) : c'est toujours le zéro fabriqué que les
+  // purges ont retiré. Un cache local antérieur aux purges peut encore
+  // l'envoyer : il est neutralisé ici, au passage obligé.
+  const zeroArm = (v) => { const n = typeof v === 'string' ? parseFloat(v) : v; return n === 0; };
+  for (const conteneur of ['arms', 'weightBalance']) {
+    if (out[conteneur] && typeof out[conteneur] === 'object') {
+      out[conteneur] = { ...out[conteneur] };
+      for (const [k, v] of Object.entries(out[conteneur])) {
+        if (/[Aa]rm$|^empty$|^frontSeats$|^rearSeats$|^fuelMain$|^baggageFwd$|^baggageAft$/.test(k) && zeroArm(v)) {
+          delete out[conteneur][k];
+        }
+      }
+    }
+  }
   if (Array.isArray(out.additionalFuelTanks)) {
     // `capacity` legacy : retiré UNIQUEMENT quand les deux volumes canoniques
     // sont des nombres (même prédicat que la purge — fail-closed sinon).
