@@ -149,6 +149,10 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
   const units = useUnitsStore(state => state.units);
   const [showDifferencesDialog, setShowDifferencesDialog] = useState(false);
   const [differences, setDifferences] = useState([]);
+  // 📣 25/08/2026 — note de mise à jour (facultative) saisie par l'admin au
+  // moment de confirmer l'écriture : elle rejoint _updateHistory de la fiche
+  // et sera montrée aux utilisateurs dont la copie locale est en retard.
+  const [updateNote, setUpdateNote] = useState('');
   const [isUpdatingSupabase, setIsUpdatingSupabase] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateError, setUpdateError] = useState(null);
@@ -274,6 +278,15 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       // vient des performances du jour, pas d'un seuil figé). Les valeurs
       // résiduelles en base sont inertes : on ne les affiche plus en diff.
       'minimumRunwayLength',
+      // ⚖️ 25/08/2026 — cgLimits est PURGÉ de la base (l'enveloppe cgEnvelope
+      // fait foi) et FILTRÉ à l'écriture ; mais le wizard le reconstruit depuis
+      // l'enveloppe à l'ouverture → il apparaissait en « ajout » fantôme À
+      // CHAQUE comparaison (signalement pilote : « forward 0,798 / aft 0,951
+      // alors que je n'ai rien ajouté »). L'enveloppe, elle, EST comparée.
+      'cgLimits',
+      // _updateHistory : journal de mise à jour écrit par le serveur — jamais
+      // une modification du pilote.
+      '_updateHistory',
       // Champs de premier niveau (anciens formats) - doublons avec sous-objets
       'emptyWeight', 'mtow', 'mlw',
       'vso', 'vs1', 'vne', 'vno', 'vfe', 'vr', 'vx', 'vy', 'va', 'vlo', 'vle',
@@ -737,7 +750,8 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
         dataToUpdate,
         manexFile,
         data.manex?.fileName || 'manex.pdf', // Nom du fichier MANEX
-        userIdForUpdate
+        userIdForUpdate,
+        updateNote // 📣 rejoint _updateHistory — visible par les utilisateurs en retard
       );
 
       // 🔧 FIX: Sauvegarder le MANEX dans IndexedDB localement après upload Supabase
@@ -869,7 +883,10 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
       try {
         setIsUpdatingSupabase(true);
         const supabaseAircraft = await communityService.getPresetById(supaId);
-        const diffs = supabaseAircraft ? calculateVariantDifferences(supabaseAircraft, data, { skipEmptyOverwrites: true }) : [];
+        // ⚖️ 25/08/2026 — skipEmptyOverwrites: false : les champs que la
+        // sauvegarde va VIDER apparaissent dans la liste (suprématie admin =
+        // transparence, plus de restauration silencieuse en aval).
+        const diffs = supabaseAircraft ? calculateVariantDifferences(supabaseAircraft, data, { skipEmptyOverwrites: false }) : [];
         setIsUpdatingSupabase(false);
         if (diffs && diffs.length > 0) {
           setDifferences(diffs);
@@ -2238,8 +2255,19 @@ const Step5Review = ({ data, setCurrentStep, onSave, readOnly = false }) => {
             <Typography variant="body2">
               {differences.length} champ(s) diffèrent de la version actuelle sur le serveur.
               Vérifie les changements ci-dessous, puis confirme : « Enregistrer » écrit la fiche sur le serveur.
+              Les utilisateurs qui ont importé cet avion seront prévenus — la note ci-dessous leur sera montrée.
             </Typography>
           </Alert>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            label="Note de mise à jour (facultative, visible par les utilisateurs)"
+            placeholder="Ex. : correction des vitesses de décrochage d'après le manuel de vol, page 31."
+            value={updateNote}
+            onChange={(e) => setUpdateNote(e.target.value)}
+            sx={{ mb: 3 }}
+          />
 
           {differences.length > 0 && (
             <TableContainer component={Paper} variant="outlined" sx={{ mb: 3, maxHeight: 380, overflow: 'auto' }}>

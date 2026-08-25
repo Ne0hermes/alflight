@@ -273,6 +273,18 @@ class CommunityService {
    * @param {string} presetId
    * @returns {Promise<Object>}
    */
+  /** Versions actuelles d'une liste de presets — requête LÉGÈRE pour détecter
+   *  les copies locales en retard (bannière « avion mis à jour »). */
+  async getPresetVersions(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    const { data, error } = await supabase
+      .from('community_presets')
+      .select('id, registration, version')
+      .in('id', ids);
+    if (error) throw error;
+    return data || [];
+  }
+
   async getPresetById(presetId) {
     try {
       const { data, error } = await supabase
@@ -303,6 +315,9 @@ class CommunityService {
         // Les champs ci-dessous sont uniquement pour référence/tracking
         importedFromCommunity: true,
         communityPresetId: data.id,
+        // 📣 25/08/2026 — la VERSION du preset accompagne la copie : c'est elle
+        // qui permet de détecter une copie locale en retard.
+        version: data.version || 1,
         // 🔧 FIX: Propager hasManex depuis Supabase (n'est pas dans aircraft_data)
         hasManex: data.has_manex || false,
         // Revue 16/08 : propager le propriétaire RÉEL de la ligne (colonne) —
@@ -1013,7 +1028,7 @@ class CommunityService {
    * @param {string} userId - ID de l'utilisateur effectuant la mise à jour
    * @returns {Promise<Object>}
    */
-  async updateCommunityPreset(presetId, updatedData, manexFile = null, manexFileName = null, userId) {
+  async updateCommunityPreset(presetId, updatedData, manexFile = null, manexFileName = null, userId, updateNote = '') {
     try {
       
       let manexFileId = null;
@@ -1078,21 +1093,46 @@ class CommunityService {
       delete cleanedData.hasWeighingReport;
       delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
 
-      // 🛡️ ANTI-ÉCRASEMENT : relire la fiche ACTUELLE et fusionner PAR-DESSUS, pour
-      // ne JAMAIS vider une valeur existante avec un champ vide/0 du formulaire (ex.
-      // sous-champ non rechargé par le wizard). Les vraies valeurs du formulaire gagnent.
-      let mergedAircraftData = cleanedData;
+      // ⚖️ 25/08/2026 — SUPRÉMATIE ADMIN (règle produit) : la fusion
+      // « anti-écrasement » est SUPPRIMÉE. Elle restaurait en silence tout
+      // champ vidé — les suppressions du pilote (sièges arrière de F-BXNG,
+      // deux fois) et ses corrections de tables ont été annulées ainsi. Ce
+      // que l'assistant enregistre EST la fiche ; la protection vit désormais
+      // EN AMONT et en TRANSPARENCE : le dialog « Modifications détectées »
+      // liste TOUT (vidages compris) avant confirmation. Seuls restent les
+      // filtres d'impossibles (champs bannis, bras zéro, null de suppression).
+      let mergedAircraftData = stripNullsDeep(cleanedData);
+      // La fiche actuelle reste lue : pour le JOURNAL de mise à jour (version,
+      // note, champs modifiés) montré aux utilisateurs dont la copie retarde.
+      let curRow = null;
       try {
         const { data: cur } = await supabase
           .from('community_presets')
-          .select('aircraft_data')
+          .select('aircraft_data, version')
           .eq('id', presetId)
           .single();
-        if (cur?.aircraft_data && typeof cur.aircraft_data === 'object') {
-          mergedAircraftData = stripNullsDeep(stripBannedLegacyFields(deepMergeKeepExisting(stripBannedLegacyFields(cur.aircraft_data), cleanedData)));
+        curRow = cur || null;
+      } catch (lectureErr) {
+        console.warn('[updateCommunityPreset] Fiche actuelle illisible — journal de mise à jour sans diff:', lectureErr?.message);
+      }
+      const nextVersion = ((curRow?.version ?? updatedData.version) || 1) + 1;
+      try {
+        const avant = curRow?.aircraft_data || {};
+        const champsModifies = [];
+        for (const k of new Set([...Object.keys(avant), ...Object.keys(mergedAircraftData)])) {
+          if (k === '_updateHistory' || k === '_metadata') continue;
+          if (JSON.stringify(avant[k]) !== JSON.stringify(mergedAircraftData[k])) champsModifies.push(k);
+          if (champsModifies.length >= 25) break;
         }
-      } catch (mergeErr) {
-        console.warn('[updateCommunityPreset] Lecture aircraft_data actuelle impossible — écriture directe:', mergeErr?.message);
+        const histo = Array.isArray(avant._updateHistory) ? avant._updateHistory.slice(-9) : [];
+        mergedAircraftData._updateHistory = [...histo, {
+          version: nextVersion,
+          date: new Date().toISOString(),
+          note: String(updateNote || '').slice(0, 500),
+          champs: champsModifies,
+        }];
+      } catch (histErr) {
+        console.warn('[updateCommunityPreset] Historique de mise à jour non écrit :', histErr?.message);
       }
 
       // R20 — strip APRÈS la fusion : la fiche actuelle (cur.aircraft_data) peut
@@ -1116,7 +1156,7 @@ class CommunityService {
         category: updatedData.category || 'SEP',
         aircraft_data: mergedAircraftData, // 🛡️ fusion anti-écrasement (vides → conservent l'existant)
         description: updatedData.description || `Configuration ${updatedData.model} - ${updatedData.registration}`,
-        version: (updatedData.version || 1) + 1, // Incrémenter la version
+        version: nextVersion, // Incrémentée depuis la version SERVEUR (plus fiable que celle du client)
         updated_at: new Date().toISOString()
       };
 

@@ -1054,7 +1054,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
           }
           return target;
         };
-        mergeNonEmpty(dataToSave, existingAircraft);
+        // ⚖️ 25/08/2026 — SUPRÉMATIE ADMIN : mergeNonEmpty N'EST PLUS APPELÉ.
+        // Il restaurait en silence tout champ vidé (les suppressions du pilote
+        // étaient annulées à chaque save). La protection est devenue
+        // TRANSPARENTE : le dialog « Modifications détectées » de la Vérification
+        // liste désormais AUSSI les vidages, et l'admin confirme en connaissance.
+        void mergeNonEmpty; // conservé pour référence, plus jamais appliqué
       }
 
       // Convertir flightManual en manex si présent
