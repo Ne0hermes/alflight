@@ -86,9 +86,18 @@ function renderAvion(a) {
   // ⚠️ NUMÉROTATION HISTORIQUE : tri par gravité PUIS numérotation — c'est
   // ainsi que les itids ont été assignés à l'origine, et ils sont FIGÉS
   // (tous les rapports du pilote les référencent). Ne jamais changer.
-  const items = [...(a.items || [])]
+  const tous = [...(a.items || [])]
     .sort((x, y) => (SEV_ORDER[x.gravite] ?? 3) - (SEV_ORDER[y.gravite] ?? 3))
     .map((it, i) => ({ it, n: i + 1 }));
+  // ✂️ ÉDITION CONSOLIDÉE (demande pilote 25/08) : les points réglés ET
+  // vérifiés en base sont RETIRÉS de la page — elle ne montre que ce qui
+  // reste à faire. Les points annotés mais ouverts (✎/partiel) restent.
+  const estClos = ({ n }) => {
+    const r = retours[`${a.registration}-${String(n).padStart(2, '0')}`];
+    return r && CLOS.has(r.status);
+  };
+  const retires = tous.filter(estClos).length;
+  const items = tous.filter((x) => !estClos(x));
   const nb = (s) => items.filter(({ it }) => it.gravite === s).length;
   const pills = ['critique', 'majeur', 'mineur']
     .filter(s => nb(s) > 0)
@@ -104,9 +113,10 @@ ${pills}
 <span class="cap count"></span><button class="rapport" data-reg="${esc(a.registration)}" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="${esc(a.registration)}" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>${esc(a.generation)}</b> — ${esc(a.resume)}</div>
 <div class="caps">${caps}</div>
+${retires ? `<div class="gen">✂️ ${retires} point${retires > 1 ? 's' : ''} réglé${retires > 1 ? 's' : ''} et vérifié${retires > 1 ? 's' : ''} en base — retiré${retires > 1 ? 's' : ''} de cette édition.</div>` : ''}
 ${items.length
     ? items.map(({ it, n }) => renderItem(a.registration, it, n)).join('\n')
-    : '<div class="it mineur regle done" data-sev="mineur" data-itid="' + esc(a.registration) + '-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">rien à signaler</span></div><dl class="kv"><dt>Trouvé</dt><dd>Aucun défaut démontrable sur cette fiche à la date de l’audit.</dd></dl></div></div>'}
+    : '<div class="it mineur regle done" data-sev="mineur" data-itid="' + esc(a.registration) + '-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>'}
 </details>`;
 }
 
@@ -119,6 +129,10 @@ const n = (s) => all.filter(({ it }) => it.gravite === s).length;
 const nConf = all.filter(({ it }) => it.classe === 'a-confirmer').length;
 const nClos = all.filter(({ itid }) => retours[itid] && CLOS.has(retours[itid].status)).length;
 const nOuverts = all.length - nClos;
+// Compteurs sur les points RESTANTS (les clos sont retirés de la page).
+const ouverts = all.filter(({ itid }) => !(retours[itid] && CLOS.has(retours[itid].status)));
+const nOuvertsSev = (s) => ouverts.filter(({ it }) => it.gravite === s).length;
+const nConfOuverts = ouverts.filter(({ it }) => it.classe === 'a-confirmer').length;
 
 const barre = `<div class="bar" role="group" aria-label="Filtres">
   <button class="f" data-sev="critique" aria-pressed="true">Critiques</button>
@@ -282,11 +296,12 @@ ${style}
 <header class="top">
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>${avions.length} avions — dernier passage sur l’intégrité des données</h1>
-  <p class="lede"><b>${all.length} points recensés</b> depuis l’audit d’origine : <b>${nClos} sont vérifiés réglés</b> (badge ✅ — statut
-  officiel, indépendant de ce navigateur) et <b>${nOuverts} restent ouverts</b>. Sur un point ouvert, cochez « corrigé de mon
-  côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie sur pièces, et le point passe en ✅ à
-  l’édition suivante. Vos coches sont désormais conservées d’une édition à l’autre (enregistrement par numéro de point).</p>
-  <p class="lede" style="margin-top:10px">${n('critique')} critiques, ${n('majeur')} majeurs, ${n('mineur')} mineurs — dont ${nConf} « à confirmer au manuel ».
+  <p class="lede"><b>Édition consolidée</b> : sur les ${all.length} points recensés depuis l’audit d’origine,
+  <b>${nClos} sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du ${dateLabel} : la valeur fautive a réellement disparu). Il reste <b>${nOuverts} points à
+  traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
+  sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
+  <p class="lede" style="margin-top:10px">Restants : ${nOuvertsSev('critique')} critiques, ${nOuvertsSev('majeur')} majeurs, ${nOuvertsSev('mineur')} mineurs — dont ${nConfOuverts} « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : ${dateLabel}.</p>
 </header>
 
