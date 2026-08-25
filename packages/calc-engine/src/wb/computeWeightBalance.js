@@ -182,9 +182,14 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
           const loadKey = `baggage_${compartment.id || index}`;
           const weight = loads[loadKey] || 0;
           const arm = parseFloat(compartment.arm); // A6/P0 : plus de 3.50 inventé
-          if (weight > 0 && !Number.isFinite(arm)) baggageArmMissing = true;
+          // 🔧 25/08/2026 (Lot 1.0) — un bras à 0 est un bras MANQUANT : aucun
+          // poste réel n'est au point de référence, et le normaliseur a
+          // longtemps écrit 0 pour « absent ». Il déclenchait un moment nul
+          // d'apparence normale — fail-closed en façade, fail-open en fait.
+          const armOk = Number.isFinite(arm) && arm !== 0;
+          if (weight > 0 && !armOk) baggageArmMissing = true;
           baggageWeight += weight;
-          baggageMoment += weight * (Number.isFinite(arm) ? arm : 0);
+          baggageMoment += weight * (armOk ? arm : 0);
           // Limite PAR compartiment (manuel de vol). Contrôle moteur : l'UI
           // borne la saisie mais rien ne verrouillait le VERDICT jusqu'ici.
           const maxW = parseFloat(compartment.maxWeight);
@@ -199,10 +204,13 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         baggageWeight = (loads.baggage || 0) + (loads.auxiliary || 0);
         const bArm = parseFloat(wb.baggageArm);
         const aArm = parseFloat(wb.auxiliaryArm);
-        if ((loads.baggage || 0) > 0 && !Number.isFinite(bArm)) baggageArmMissing = true;
-        if ((loads.auxiliary || 0) > 0 && !Number.isFinite(aArm)) baggageArmMissing = true;
-        baggageMoment = (loads.baggage || 0) * (Number.isFinite(bArm) ? bArm : 0) +
-                        (loads.auxiliary || 0) * (Number.isFinite(aArm) ? aArm : 0);
+        // 🔧 25/08/2026 — même règle : 0 = manquant (cf. compartiments).
+        const bOk = Number.isFinite(bArm) && bArm !== 0;
+        const aOk = Number.isFinite(aArm) && aArm !== 0;
+        if ((loads.baggage || 0) > 0 && !bOk) baggageArmMissing = true;
+        if ((loads.auxiliary || 0) > 0 && !aOk) baggageArmMissing = true;
+        baggageMoment = (loads.baggage || 0) * (bOk ? bArm : 0) +
+                        (loads.auxiliary || 0) * (aOk ? aArm : 0);
       }
 
       // Limite TOTALE de soute (maxBaggageTotalMass, kg canonique, racine de la
@@ -342,6 +350,13 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         // enveloppe principale (comportement historique inchangé).
         { category: aircraft.cgCategory }
       );
+      // 🔧 25/08/2026 — les avertissements de l'interpolation d'enveloppe
+      // (« masse hors plage — limite bornée ») rejoignent le verdict au lieu
+      // d'être jetés : comparer un CG à une limite prolongée hors de la
+      // plage certifiée doit se voir.
+      if (Array.isArray(cgLimitsAtTOW.warnings) && cgLimitsAtTOW.warnings.length) {
+        warnings.push(...cgLimitsAtTOW.warnings);
+      }
       // CG non fiable (bras manquant) ⇒ isWithinCG = null (pas un faux « OK »).
       const isWithinCG = !cgReliable ? null
         : ((cgLimitsAtTOW.forward !== null && cgLimitsAtTOW.aft !== null)
@@ -353,10 +368,20 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
       // composent désormais le verdict, au même titre que masse et centrage.
       const isWithinLimits = cgReliable && fuelReliable && isWithinWeight && isWithinCG === true && !isBaggageOverLimit;
 
+      // 🔧 25/08/2026 — un chiffre que le moteur SAIT faux ne sort plus :
+      //   • bras manquant  ⇒ cg et totalMoment sont amputés ⇒ null ;
+      //   • densité inconnue avec carburant chargé ⇒ totalWeight ampute le
+      //     carburant (72 kg pour 100 L) ⇒ totalWeight, totalMoment, cg null.
+      // Les consommateurs affichent déjà « — » pour null (WeightBalanceTable
+      // supprimé, ScenarioCards et Step6 tolèrent null) ; un nombre faux à
+      // trois décimales, personne ne le remet en cause.
+      const fuelMasked = fuelDensityMissing && fuelWeight === 0 &&
+        Object.keys(loads || {}).some((k) => k.startsWith('fuel') && parseFloat(loads[k]) > 0);
+      const masseFiable = !fuelMasked;
       const result = {
-        totalWeight: parseFloat(totalWeight.toFixed(1)),
-        totalMoment: parseFloat(totalMoment.toFixed(1)),
-        cg: parseFloat(cg.toFixed(3)),
+        totalWeight: masseFiable ? parseFloat(totalWeight.toFixed(1)) : null,
+        totalMoment: (cgReliable && masseFiable) ? parseFloat(totalMoment.toFixed(1)) : null,
+        cg: (cgReliable && masseFiable) ? parseFloat(cg.toFixed(3)) : null,
         isWithinLimits,
         isWithinWeight,
         isWithinCG,

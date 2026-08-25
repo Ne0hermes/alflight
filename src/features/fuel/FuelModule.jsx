@@ -123,15 +123,24 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
   // `capacity` peut être resté sur une vieille valeur — F-GNAM portait 91 L
   // (une aile) face à usableCapacity = 182 L, et le module carburant plafonnait
   // le vol à 91 L. L'utilisable EST la grandeur des moteurs.
-  const checkedCapacityLtr = aircraftTanks.reduce((s, t, i) =>
-    s + (tankConfig?.tanks?.[String(t?.id ?? i)]?.active ? (tankUsableLtr(t) || 0) : 0), 0);
+  // 🔧 25/08/2026 (Lot 1.0) — somme STRICTE : un réservoir COCHÉ dont le
+  // volume utilisable est illisible rend la capacité du vol INCONNUE (null).
+  // L'ancien « || 0 » le comptait pour zéro : total amputé d'apparence
+  // normale, alertes de dépassement éteintes.
+  const checkedCapacityLtr = aircraftTanks.reduce((somme, t, i) => {
+    if (somme === null) return null;
+    if (!tankConfig?.tanks?.[String(t?.id ?? i)]?.active) return somme;
+    const u = tankUsableLtr(t);
+    return u === null ? null : somme + u;
+  }, 0);
   // Capacité EFFECTIVE du vol = somme des réservoirs cochés quand la config
   // fait foi (base des alertes de dépassement et du % remplissage — plus
   // jamais la capacité long-range quand l'avion vole en standard). Config
   // vierge/non engagée : capacité historique de l'avion.
   const effectiveCapacityLtr = tankConfigAuthoritative
     ? checkedCapacityLtr
-    : (selectedAircraft?.fuelCapacity || 0);
+    // Capacité historique absente ⇒ null (inconnue), plus jamais 0.
+    : (selectedAircraft?.fuelCapacity ?? null);
 
   // 🔧 LOT 7 — Le bouton « Volume Max (jusqu'à MTOW) » a été retiré à la
   // demande de César (emplacement à redéfinir). La logique de calcul reste
@@ -178,6 +187,14 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
       const consumptionLph = getFuelConsumptionLph(selectedAircraft) || 0;
       const cruiseSpeed = getCruiseSpeedKt(selectedAircraft);
 
+      // 🔧 25/08/2026 (Lot 1.0) — consommation ou vitesse absentes : on ne
+      // FABRIQUE plus un trip à 0 L ni une réserve à 0 L. Les postes gardent
+      // leur valeur (zéro initial du store, plus aucun litre pré-rempli) et
+      // le pilote voit un bilan qui n'a PAS été calculé, au lieu d'un bilan
+      // faux qui a l'air complet.
+      if (!(consumptionLph > 0) || !cruiseSpeed) {
+        return;
+      }
       let tripLtr;
       if (consumptionLph > 0 && cruiseSpeed) {
         // 🔧 C2 (Lot 0.4) : temps CORRIGÉ DU VENT — priorité au temps total du

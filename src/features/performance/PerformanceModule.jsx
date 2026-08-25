@@ -311,8 +311,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
       return maxMass;
     }
 
-    // 3. Valeur par défaut pour DA40 NG
-    return 1310; // kg (MTOW typique DA40 NG)
+    // 🔧 25/08/2026 (Lot 1.0) — plus de « 1310 kg typique DA40 NG » : une
+    // MTOW introuvable rend null, et l'aval refuse au lieu de calculer une
+    // performance sur la masse d'un AUTRE avion.
+    return null;
   }, [selectedAircraft, takeoffGroups]);
 
   // 🔧 FIX: Sauvegarder les températures dans flightPlan pour persistance
@@ -463,7 +465,14 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // la cohérence des résultats produits par le résolveur en cascade.
 
   // Mass : calculations.totalWeight → emptyWeight → 1000 (PAS le MTOW comme avant)
-  const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || 1000; // fallback-ok : matrice de couverture (outil de DIAGNOSTIC, pas le bilan signé) ; cascade les vraies valeurs d'abord, 1000 seulement si AUCUNE masse
+  // 🔧 25/08/2026 (Lot 1.0) — le « || 1000 » est SUPPRIMÉ. Son commentaire
+  // (« outil de diagnostic, pas le bilan signé ») était périmé : depuis
+  // l'effet de persistance, ces distances sont ÉCRITES dans
+  // flightPlan.performance et reprises par la synthèse et le PDF. Et il
+  // garantissait un nombre au résolveur, dont la garde missingRequiredInputs
+  // (« performance non calculée — aucune valeur inventée ») ne pouvait donc
+  // JAMAIS se déclencher sur la masse. Sans masse → null → refus propre.
+  const takeoffMass = calculations?.totalWeight || selectedAircraft?.emptyWeight || null;
 
   // Mass atterrissage : SOURCE UNIQUE = module de centrage (scenarios.landing,
   // écrit dans flightPlan.weightBalance.landingWeight par Step6WeightBalance).
@@ -586,7 +595,10 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
         const conv = convertValue(r.value, 'ft', 'm', 'runway');
         if (Number.isFinite(conv)) return conv;
       }
-      return r.value; // unité non déclarée/inconnue : valeur native (même repli que la matrice)
+      // 🔧 25/08/2026 (Lot 1.0) — unité inconnue : REFUS (null). L'ancien
+      // repli « valeur native » pouvait afficher des pieds comme des mètres
+      // (facteur 3,28 sur une distance d'atterrissage — cas F-HFGI).
+      return null;
     };
 
     const takeoffState = generatePerformanceState(aircraftForResolver, takeoffInputsForMatrix);

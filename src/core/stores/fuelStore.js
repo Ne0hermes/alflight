@@ -31,11 +31,15 @@ export const useFuelStore = create(
   persist(
     immer((set, get) => ({
     // État
+    // 🔧 25/08/2026 (Lot 1.0) — plus AUCUN litre pré-rempli : le roulage
+    // (ex-3,79 L) et le dégagement (ex-7,57 L) démarrent à zéro comme les
+    // autres postes. Des litres que personne n'a calculés partaient dans
+    // le bilan de chaque vol neuf — règle pilote : rien, aucun fallback.
     fuelData: {
-      roulage: { gal: 1.0, ltr: 3.79 },
+      roulage: { gal: 0, ltr: 0 },
       trip: { gal: 0, ltr: 0 },
       contingency: { gal: 0, ltr: 0 },
-      alternate: { gal: 2.0, ltr: 7.57 },
+      alternate: { gal: 0, ltr: 0 },
       finalReserve: { gal: 0, ltr: 0 },
       additional: { gal: 0, ltr: 0 },
       extra: { gal: 0, ltr: 0 },
@@ -138,11 +142,12 @@ export const useFuelStore = create(
     },
     
     resetToDefault: () => set(state => {
+      // 🔧 25/08/2026 — le reset repart de ZÉRO partout (cf. état initial).
       state.fuelData = {
-        roulage: { gal: 1.0, ltr: 3.79 },
+        roulage: { gal: 0, ltr: 0 },
         trip: { gal: 0, ltr: 0 },
         contingency: { gal: 0, ltr: 0 },
-        alternate: { gal: 2.0, ltr: 7.57 },
+        alternate: { gal: 0, ltr: 0 },
         finalReserve: { gal: 0, ltr: 0 },
         additional: { gal: 0, ltr: 0 },
         extra: { gal: 0, ltr: 0 },

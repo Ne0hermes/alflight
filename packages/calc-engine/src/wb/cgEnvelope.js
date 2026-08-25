@@ -141,7 +141,15 @@ export function cgLimitsAtMass(cgEnvelope, mass, opts = {}) {
   }
 
   const m = num(mass);
-  const forward = fwdPts.length ? interpAt(fwdPts, m) : NaN;
+  // 🔧 25/08/2026 (Lot 1.0) — une limite AVANT réduite à UN point (fiche à
+  // moitié saisie) devenait une constante valable à toutes les masses : le
+  // verdict comparait le CG à une enveloppe que personne n'a saisie. Un seul
+  // point avant ⇒ limite indisponible + avertissement. (L'ARRIÈRE constant
+  // à un point reste légitime : c'est la forme aftCG du manuel.)
+  if (fwdPts.length === 1) {
+    warnings.push('Limite avant réduite à un seul point — enveloppe incomplète, limite avant non vérifiable');
+  }
+  const forward = fwdPts.length >= 2 ? interpAt(fwdPts, m) : NaN;
   const aft = aftPts.length ? interpAt(aftPts, m) : NaN;
 
   const range = envelopeWeightRange(env);

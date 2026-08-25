@@ -75,6 +75,37 @@ function deepMergeKeepExisting(base, incoming) {
   return incoming;
 }
 
+// 🛡️ 25/08/2026 (Lot 1.0) — CHAMPS BANNIS : purgés de la base les 24-25/08,
+// ils ne doivent JAMAIS y revenir. Or un client hydraté par un cache local
+// antérieur aux purges peut encore les envoyer — c'est exactement ce qui a
+// réinjecté maxBaggageWeight=50 sur F-GGZO le 24/08 à 15h10, quelques heures
+// après la purge du matin. Ce strip s'applique aux TROIS chemins qui écrivent
+// aircraft_data (création, mise à jour fusionnée, mise à jour rapide).
+function stripBannedLegacyFields(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return d;
+  const out = { ...d };
+  delete out.maxBaggageWeight;   // limites de soute : baggageCompartments fait foi
+  delete out.maxAuxiliaryWeight;
+  delete out.cgLimits;           // enveloppe : cgEnvelope fait foi (miroirs purgés)
+  if (out.weightBalance && typeof out.weightBalance === 'object') {
+    out.weightBalance = { ...out.weightBalance };
+    delete out.weightBalance.cgLimits;
+  }
+  if (Array.isArray(out.additionalFuelTanks)) {
+    // `capacity` legacy : retiré UNIQUEMENT quand les deux volumes canoniques
+    // sont des nombres (même prédicat que la purge — fail-closed sinon).
+    const num = (v) => { const n = typeof v === 'string' ? parseFloat(v) : v; return Number.isFinite(n) ? n : null; };
+    out.additionalFuelTanks = out.additionalFuelTanks.map((t) => {
+      if (t && t.capacity !== undefined && num(t.usableCapacity) !== null && num(t.totalCapacity) !== null) {
+        const { capacity, ...reste } = t;
+        return reste;
+      }
+      return t;
+    });
+  }
+  return out;
+}
+
 /**
  * Service pour gérer les presets communautaires
  */
@@ -684,7 +715,7 @@ class CommunityService {
       }
 
       // 4. Préparer aircraft_data SANS les fichiers volumineux (MANEX, photo volumineuse)
-      const cleanedData = { ...presetData.aircraft_data || presetData };
+      const cleanedData = stripBannedLegacyFields({ ...presetData.aircraft_data || presetData });
 
       // Supprimer le MANEX (stocké séparément dans Supabase Storage)
       delete cleanedData.manex;
@@ -982,7 +1013,7 @@ class CommunityService {
               }
 
       // 2. Préparer aircraft_data SANS les fichiers volumineux (MANEX, photo volumineuse)
-      const cleanedData = { ...updatedData };
+      const cleanedData = stripBannedLegacyFields({ ...updatedData });
 
       // Supprimer le MANEX (stocké séparément dans Supabase Storage)
       delete cleanedData.manex;
@@ -1025,7 +1056,7 @@ class CommunityService {
           .eq('id', presetId)
           .single();
         if (cur?.aircraft_data && typeof cur.aircraft_data === 'object') {
-          mergedAircraftData = deepMergeKeepExisting(cur.aircraft_data, cleanedData);
+          mergedAircraftData = stripBannedLegacyFields(deepMergeKeepExisting(stripBannedLegacyFields(cur.aircraft_data), cleanedData));
         }
       } catch (mergeErr) {
         console.warn('[updateCommunityPreset] Lecture aircraft_data actuelle impossible — écriture directe:', mergeErr?.message);
@@ -1194,7 +1225,7 @@ class CommunityService {
     }
 
     // 2. Nettoyage symétrique à submitPreset/updateCommunityPreset
-    const cleanedData = { ...updatedData };
+    const cleanedData = stripBannedLegacyFields({ ...updatedData });
     delete cleanedData.manex;
     if (cleanedData.photo && typeof cleanedData.photo === 'string' && cleanedData.photo.length > 5000000) {
       console.warn('⚠️ [cloneAsOwnedPreset] Photo > 5 MB strippée avant clone.');

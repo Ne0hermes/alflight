@@ -85,10 +85,17 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
 
   // Construire les listes détaillées de masses pour chaque scénario.
   // `fuelRows` = lignes carburant (une par réservoir, ou une seule mono-bras).
+  // 🔧 25/08/2026 (Lot 1.0) — buildMassDetails SIGNALE les manques au lieu
+  // de les taire : masse à vide introuvable, ou bras absent/0 sur un poste
+  // CHARGÉ. L'appelant rend alors le scénario INDISPONIBLE — l'ancien code
+  // supprimait l'avion du devis (masse au décollage ~150 kg) ou tirait le
+  // CG vers l'avant en multipliant par un bras nul, sans un mot.
+  const armValide = (a) => Number.isFinite(parseFloat(a)) && parseFloat(a) !== 0;
   const buildMassDetails = (fuelRows = []) => {
     const items = [];
+    const manques = [];
 
-    // Masse à vide (toujours présente) - Utiliser weights.emptyWeight en priorité
+    // Masse à vide — le terme dominant du devis. Introuvable ⇒ manque bloquant.
     const emptyWeight = parseFloat(
       aircraft.weights?.emptyWeight ||
       aircraft.emptyWeight ||
@@ -97,45 +104,52 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
     );
 
     if (emptyWeight > 0) {
+      if (!armValide(wb.emptyWeightArm)) manques.push('bras de la masse à vide');
       items.push({
         label: 'Masse à vide',
         value: emptyWeight,
         arm: wb.emptyWeightArm,
-        moment: emptyWeight * (wb.emptyWeightArm || 0)
+        moment: emptyWeight * (armValide(wb.emptyWeightArm) ? parseFloat(wb.emptyWeightArm) : 0)
       });
+    } else {
+      manques.push('masse à vide');
     }
 
     // Sièges
     if (loads.frontLeft > 0) {
+      if (!armValide(wb.frontLeftSeatArm)) manques.push('siège avant gauche');
       items.push({
         label: 'Siège avant gauche',
         value: loads.frontLeft,
         arm: wb.frontLeftSeatArm,
-        moment: loads.frontLeft * (wb.frontLeftSeatArm || 0)
+        moment: loads.frontLeft * (armValide(wb.frontLeftSeatArm) ? parseFloat(wb.frontLeftSeatArm) : 0)
       });
     }
     if (loads.frontRight > 0) {
+      if (!armValide(wb.frontRightSeatArm)) manques.push('siège avant droit');
       items.push({
         label: 'Siège avant droit',
         value: loads.frontRight,
         arm: wb.frontRightSeatArm,
-        moment: loads.frontRight * (wb.frontRightSeatArm || 0)
+        moment: loads.frontRight * (armValide(wb.frontRightSeatArm) ? parseFloat(wb.frontRightSeatArm) : 0)
       });
     }
     if (loads.rearLeft > 0) {
+      if (!armValide(wb.rearLeftSeatArm)) manques.push('siège arrière gauche');
       items.push({
         label: 'Siège arrière gauche',
         value: loads.rearLeft,
         arm: wb.rearLeftSeatArm,
-        moment: loads.rearLeft * (wb.rearLeftSeatArm || 0)
+        moment: loads.rearLeft * (armValide(wb.rearLeftSeatArm) ? parseFloat(wb.rearLeftSeatArm) : 0)
       });
     }
     if (loads.rearRight > 0) {
+      if (!armValide(wb.rearRightSeatArm)) manques.push('siège arrière droit');
       items.push({
         label: 'Siège arrière droit',
         value: loads.rearRight,
         arm: wb.rearRightSeatArm,
-        moment: loads.rearRight * (wb.rearRightSeatArm || 0)
+        moment: loads.rearRight * (armValide(wb.rearRightSeatArm) ? parseFloat(wb.rearRightSeatArm) : 0)
       });
     }
 
@@ -145,6 +159,7 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
         const loadKey = `baggage_${compartment.id || index}`;
         const weight = loads[loadKey] || 0;
         const arm = parseFloat(compartment.arm) || 0;
+        if (weight > 0 && !armValide(compartment.arm)) manques.push('bras du compartiment ' + (compartment.name || (index + 1)));
         if (weight > 0) {
           items.push({
             label: compartment.name || `Compartiment ${index + 1}`,
@@ -156,19 +171,21 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
       });
     } else {
       if (loads.baggage > 0) {
+        if (!armValide(wb.baggageArm)) manques.push('bras des bagages');
         items.push({
           label: 'Bagages',
           value: loads.baggage,
           arm: wb.baggageArm,
-          moment: loads.baggage * (wb.baggageArm || 0)
+          moment: loads.baggage * (armValide(wb.baggageArm) ? parseFloat(wb.baggageArm) : 0)
         });
       }
       if (loads.auxiliary > 0) {
+        if (!armValide(wb.auxiliaryArm)) manques.push('bras du rangement auxiliaire');
         items.push({
           label: 'Rangement auxiliaire',
           value: loads.auxiliary,
           arm: wb.auxiliaryArm,
-          moment: loads.auxiliary * (wb.auxiliaryArm || 0)
+          moment: loads.auxiliary * (armValide(wb.auxiliaryArm) ? parseFloat(wb.auxiliaryArm) : 0)
         });
       }
     }
@@ -180,12 +197,14 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
       items.push({ label: r.label, value: r.value, arm: r.arm, moment: r.moment });
     }
 
-    return items;
+    return { items, manques };
   };
 
   // ✅ CALCUL UNIFIÉ : Tous les scénarios calculés depuis buildMassDetails
   // ZFW (sans carburant) — toujours calculable, seul scénario garanti.
-  const zfwItems = buildMassDetails([]);
+  const zfwDetails = buildMassDetails([]);
+  const zfwItems = zfwDetails.items;
+  const zfwManques = zfwDetails.manques;
   const zfwCalc = calculateFromItems(zfwItems);
 
   // ⚠️ VÉRIFICATION MZFW : Masse sans carburant ne doit pas dépasser MZFW
@@ -209,9 +228,12 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
   const buildFuelScenario = (fuelRes, extra = {}) => {
     if (fuelDensityMissing) return { w: null, cg: null, fuel: null, items: [], unavailableReason: 'fuelDensity', ...extra };
     if (!fuelRes.ok) return { w: null, cg: null, fuel: null, items: [], unavailableReason: fuelRes.reason, ...extra };
-    const items = buildMassDetails(fuelRes.rows);
-    const c = calculateFromItems(items);
-    return { w: c.totalWeight, cg: c.cg, fuel: fuelRes.weight, items, ...extra };
+    const d = buildMassDetails(fuelRes.rows);
+    if (d.manques.length > 0) {
+      return { w: null, cg: null, fuel: null, items: d.items, unavailableReason: 'masse', manques: d.manques, ...extra };
+    }
+    const c = calculateFromItems(d.items);
+    return { w: c.totalWeight, cg: c.cg, fuel: fuelRes.weight, items: d.items, ...extra };
   };
 
   return {
@@ -228,7 +250,11 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
         density: fuelDensity
       }
     }),
-    zfw: {
+    zfw: zfwManques.length > 0 ? {
+      w: null, cg: null, fuel: 0, items: zfwItems,
+      unavailableReason: 'masse', manques: zfwManques,
+      isExceeded: false, exceededMessage: null, maxZfm: maxZeroFuelMass
+    } : {
       w: zfwCalc.totalWeight,
       cg: zfwCalc.cg,
       fuel: 0,

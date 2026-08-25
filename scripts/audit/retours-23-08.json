@@ -111,13 +111,13 @@
  },
  {
   "itid": "F-GGZO-09",
-  "status": "fait",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés."
+  "status": "ouvert",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxBaggageWeight = 50 est REVENU en base (updated_at 24/08 15h10 : réinjection par le cache local via deepMergeKeepExisting, entre la purge de 12h30 et les correctifs du soir). Purge complémentaire préparée (purge-complements.mjs)."
  },
  {
   "itid": "F-GGZO-10",
-  "status": "fait",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés."
+  "status": "ouvert",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxAuxiliaryWeight = 20 revenu, même mécanisme et même remède que F-GGZO-09."
  },
  {
   "itid": "F-GIEA-05",
@@ -166,48 +166,48 @@
  },
  {
   "itid": "F-GBTU-08",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : le reste (auxiliaryArm 0) a été purgé le 24/08 — plus rien en base."
  },
  {
   "itid": "F-GNAM-15",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : le reste (auxiliaryArm 0) purgé le 24/08."
  },
  {
   "itid": "F-GOVE-07",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : le reste (auxiliaryArm 0) purgé le 24/08."
  },
  {
   "itid": "F-GUKQ-07",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : le reste (auxiliaryArm 0) purgé le 24/08."
  },
  {
   "itid": "F-HDIM-08",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxBaggageWeight est purgé. RESTENT arms.baggageFwd, arms.baggageAft et weightBalance.baggageArm, tous à 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxBaggageWeight est purgé. RESTENT arms.baggageFwd, arms.baggageAft et weightBalance.baggageArm, tous à 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : les bras legacy à 0 ont été purgés le 24/08."
  },
  {
   "itid": "F-HDIM-09",
-  "status": "partiel",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. maxAuxiliaryWeight est purgé. RESTE weightBalance.auxiliaryArm = 0. Les bras legacy n'ont PAS été touchés : ils n'entraient pas dans le périmètre vérifié, et 12 des 13 avions les portent à 0 — un zéro fabriqué qui peut être lu quelque part comme un bras réel. À traiter comme un chantier distinct, avec sa propre vérification. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : auxiliaryArm 0 purgé le 24/08."
  },
  {
   "itid": "F-GUVV-05",
-  "status": "ouvert",
-  "note": "Rapport pilote 24/08 : « bug persistant, il n'y a qu'un compartiment bagage ». CONFIRMÉ, et voici ce qui reste exactement. La purge du 24/08 a bien retiré maxBaggageWeight (50) et maxAuxiliaryWeight (20). MAIS quatre BRAS legacy subsistent : weightBalance.baggageArm = 3,50, weightBalance.auxiliaryArm = 3,70, arms.baggageFwd = 3,50, arms.baggageAft = 3,70 — alors que votre unique compartiment (« cockpit baggage compartment », 30 kg, plafond cumulé 30) est à 3,65 m. Ces quatre valeurs décrivent donc DEUX compartiments qui n'existent pas, avec des bras qui ne correspondent même pas au vrai. ORIGINE TROUVÉE : ce sont des valeurs FABRIQUÉES par le code — src/core/contexts/index.jsx:256-257 écrit `|| 3.50` et `|| 3.70` en repli, et AircraftModule.jsx:4212-4213 fait de même. F-GUVV est le SEUL avion de la flotte à porter des bras legacy non nuls (les 12 autres sont à 0, autre zéro fabriqué). PAS ENCORE PURGÉ, volontairement : ces bras sont LUS (WeightBalanceTable.jsx:80-90 calcule des moments avec, aircraftNormalizer.js:113-114 les recopie). Les retirer sans corriger d'abord ces lecteurs et les replis codés en dur casserait un calcul de moment. C'est un chantier distinct, à mener avec la même vérification que la purge précédente — j'attends votre feu vert."
+  "status": "fait",
+  "note": "Rapport pilote 24/08 : « bug persistant, il n'y a qu'un compartiment bagage ». CONFIRMÉ, et voici ce qui reste exactement. La purge du 24/08 a bien retiré maxBaggageWeight (50) et maxAuxiliaryWeight (20). MAIS quatre BRAS legacy subsistent : weightBalance.baggageArm = 3,50, weightBalance.auxiliaryArm = 3,70, arms.baggageFwd = 3,50, arms.baggageAft = 3,70 — alors que votre unique compartiment (« cockpit baggage compartment », 30 kg, plafond cumulé 30) est à 3,65 m. Ces quatre valeurs décrivent donc DEUX compartiments qui n'existent pas, avec des bras qui ne correspondent même pas au vrai. ORIGINE TROUVÉE : ce sont des valeurs FABRIQUÉES par le code — src/core/contexts/index.jsx:256-257 écrit `|| 3.50` et `|| 3.70` en repli, et AircraftModule.jsx:4212-4213 fait de même. F-GUVV est le SEUL avion de la flotte à porter des bras legacy non nuls (les 12 autres sont à 0, autre zéro fabriqué). PAS ENCORE PURGÉ, volontairement : ces bras sont LUS (WeightBalanceTable.jsx:80-90 calcule des moments avec, aircraftNormalizer.js:113-114 les recopie). Les retirer sans corriger d'abord ces lecteurs et les replis codés en dur casserait un calcul de moment. C'est un chantier distinct, à mener avec la même vérification que la purge précédente — j'attends votre feu vert. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : les 4 bras 3,50/3,70 (réfutés par la fiche de pesée) ont été purgés le 24/08 ; le compartiment réel (30 kg à 3,65 m) est seul en base. Vigilance : les replis codés qui les fabriquaient sont éteints (commit c4e72f3b)."
  },
  {
   "itid": "F-GGZO-11",
-  "status": "ouvert",
-  "note": "NON couvert par la purge du 24/08 : cet item ne porte que sur les bras legacy (arms.baggageFwd / baggageAft, weightBalance.baggageArm / auxiliaryArm), tous à 0 sur cet avion. Seuls maxBaggageWeight et maxAuxiliaryWeight ont été purgés. Les bras à 0 sont un zéro FABRIQUÉ, pas une donnée : ils forment un chantier distinct, à vérifier avant purge (un 0 lu comme un bras réel placerait la charge au point de référence)."
+  "status": "fait",
+  "note": "NON couvert par la purge du 24/08 : cet item ne porte que sur les bras legacy (arms.baggageFwd / baggageAft, weightBalance.baggageArm / auxiliaryArm), tous à 0 sur cet avion. Seuls maxBaggageWeight et maxAuxiliaryWeight ont été purgés. Les bras à 0 sont un zéro FABRIQUÉ, pas une donnée : ils forment un chantier distinct, à vérifier avant purge (un 0 lu comme un bras réel placerait la charge au point de référence). ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : les 4 bras legacy à 0 ont été purgés le 24/08 — absents de la fiche fraîche."
  },
  {
   "itid": "F-HSTR-09",
-  "status": "partiel",
-  "note": "Le champ legacy capacity = 155,2 du réservoir a été purgé le 24/08 (il ne servait plus : totalCapacity = 155 et usableCapacity = 147 étaient déjà là). L'ÉCART SIGNALÉ RESTE : la racine porte fuelCapacity = 155,2 et fuelUsableCapacity = 147,5, le réservoir porte 155 et 147. Le manuel donne 155,2 / 147,5 — ce sont les valeurs du réservoir qu'il faut corriger, pas la racine."
+  "status": "ouvert",
+  "note": "Le champ legacy capacity = 155,2 du réservoir a été purgé le 24/08 (il ne servait plus : totalCapacity = 155 et usableCapacity = 147 étaient déjà là). L'ÉCART SIGNALÉ RESTE : la racine porte fuelCapacity = 155,2 et fuelUsableCapacity = 147,5, le réservoir porte 155 et 147. Le manuel donne 155,2 / 147,5 — ce sont les valeurs du réservoir qu'il faut corriger, pas la racine. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : REQUALIFIÉ ouvert — le réservoir porte désormais 155/147 mais la racine dit 155,2/147,5 (valeurs du manuel selon l'audit initial) : trancher 155,2/147,5 vs 155/147 au manuel, puis aligner réservoir OU racine. S'ajoute : weightBalance.cgLimits.aft = 2,59 contredit l'enveloppe (2,53) — purge complémentaire préparée."
  },
  {
   "itid": "F-GGZO-01",
@@ -253,5 +253,70 @@
   "itid": "F-GUVV-04",
   "status": "valide",
   "note": "Rapport pilote 24/08 : « c'est juste, les courbes ne sont pas données ». Item CLASSÉ SANS SUITE : le manuel ne publie pas de lignes à 7000 et 8000 ft, la 5e ligne est bien 9000 ft et la saisie est fidèle. Observation résiduelle, non bloquante : le gradient passe de 23,3 m/kft entre 6000 et 9000 à 79,0 m/kft entre 9000 et 10000. Ce n'est pas une preuve d'erreur — les lignes se resserrent en altitude — mais si un jour un doute revient sur ce modèle, c'est là qu'il faudra regarder."
+ },
+ {
+  "itid": "F-BXNG-07",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : bras fantômes purgés (24/08), absents de la fiche fraîche."
+ },
+ {
+  "itid": "F-BXNG-10",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : ordre des décrochages rétabli en base : vs1 48 ≥ vsTO 42 ≥ vso 41, stallByBank réaligné."
+ },
+ {
+  "itid": "F-BXNG-15",
+  "status": "partiel",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : vglide saisi (61 kt) — vr, vapp, initialClimb toujours vides."
+ },
+ {
+  "itid": "F-GIEA-09",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base (constaté sur la fiche fraîche)."
+ },
+ {
+  "itid": "F-GNAM-13",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base."
+ },
+ {
+  "itid": "F-GNAM-18",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base."
+ },
+ {
+  "itid": "F-GOFP-10",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base."
+ },
+ {
+  "itid": "F-GOVE-01",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base (grille ISA)."
+ },
+ {
+  "itid": "F-GOVE-02",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base."
+ },
+ {
+  "itid": "F-GOVE-04",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : corrigé en base."
+ },
+ {
+  "itid": "F-GUVV-07",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : résolu — densité 0,84 (Jet A-1) appliquée sur le volume utilisable."
+ },
+ {
+  "itid": "F-HFGI-11",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : capacités cohérentes (240/240) après la refonte réservoirs."
+ },
+ {
+  "itid": "F-HDIM-10",
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : capacités cohérentes (162/151)."
  }
 ]
