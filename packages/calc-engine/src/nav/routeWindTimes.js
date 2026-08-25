@@ -32,7 +32,10 @@ const validWp = (wp) => wp && typeof wp.lat === 'number' && typeof wp.lon === 'n
  * @param {object} p
  * @param {Array}  p.waypoints        - route (lat/lon requis)
  * @param {number} p.cruiseSpeedKt    - TAS de croisière (kt) — null ⇒ retour null
- * @param {function} [p.windProvider] - (lat, lon) => {directionDeg, speedKt, source}|null
+ * @param {function} [p.windProvider] - (lat, lon, ctx) => {directionDeg, speedKt, source}|null
+ *   `ctx` = { index, from, to } (waypoints du tronçon) — permet au provider
+ *   d'échantillonner à l'ALTITUDE saisie pour ce tronçon (Lot 1.0 tranche 3).
+ *   Rétro-compatible : les providers à 2 arguments l'ignorent.
  * @returns {null | {
  *   totalDistanceNM: number,
  *   totalTimeMin: number,            // corrigé du vent partout où c'est possible
@@ -67,7 +70,7 @@ export function computeRouteWindTimes({ waypoints, cruiseSpeedKt, windProvider }
     let windSource = 'none';
     if (typeof windProvider === 'function') {
       const mid = calculateMidpoint({ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon });
-      const wind = windProvider(mid.lat, mid.lon);
+      const wind = windProvider(mid.lat, mid.lon, { index: i, from: a, to: b });
       if (wind && wind.speedKt > 0) {
         const tri = solveWindTriangle(trueCourse, tas, wind.directionDeg, wind.speedKt);
         if (tri) {

@@ -60,3 +60,41 @@ describe('analyzeRunwayCompatibility — repli POH statique (ft)', () => {
     expect(r.compatible).toBe('unknown');
   });
 });
+
+// ⛔ Lot 1.0 (tranche 3, 25/08) : TODA/LDA STRICTES. Avant : la longueur
+// physique était prise pour distance déclarée (LDA offerte trop longue dès
+// qu'un seuil est décalé), sinon 0 — et une piste sans AUCUNE donnée sortait
+// « ✅ compatible ».
+describe('Lot 1.0 — distances non publiées : jamais un GO fabriqué', () => {
+  it('pas de toda/lda (seulement la longueur) → unknown, sans « marge » chiffrée', () => {
+    const r = analyzeRunwayCompatibility({ designation: '04/22', length: 800, surface: 'ASPH' }, AIRCRAFT, { takeoffM: 750, landingM: 650 });
+    expect(r.compatible).toBe('unknown');
+    expect(r.reasons.some(s => s.includes('non publiée'))).toBe(true);
+    expect(r.reasons.some(s => s.includes('marge'))).toBe(false);
+    expect(r.todaFeet).toBeNull();
+    expect(r.ldaFeet).toBeNull();
+  });
+
+  it('toda publiée mais pas la lda → unknown (une seule distance manquante suffit)', () => {
+    const r = analyzeRunwayCompatibility({ toda: 800, length: 800, surface: 'ASPH' }, AIRCRAFT, { takeoffM: 750, landingM: 650 });
+    expect(r.compatible).toBe('unknown');
+  });
+
+  it('piste sans AUCUNE donnée → surtout pas « compatible »', () => {
+    const r = analyzeRunwayCompatibility({ surface: 'ASPH' }, AIRCRAFT, null);
+    expect(r.compatible).toBe('unknown');
+    expect(r.reasons.some(s => s.includes('✅ Piste compatible'))).toBe(false);
+  });
+
+  it('NO-GO conservateur : longueur physique < requis (la LDA réelle est ≤ à la longueur)', () => {
+    const r = analyzeRunwayCompatibility({ length: 500, surface: 'ASPH' }, AIRCRAFT, { takeoffM: 750, landingM: 650 });
+    expect(r.compatible).toBe(false);
+    expect(r.reasons.some(s => s.includes('Longueur physique'))).toBe(true);
+  });
+
+  it('la comparaison porte sur la LDA déclarée (650), pas la longueur (720)', () => {
+    const r = analyzeRunwayCompatibility({ toda: 720, lda: 650, length: 720, surface: 'ASPH' }, AIRCRAFT, { takeoffM: 700, landingM: 700 });
+    expect(r.compatible).toBe(false);
+    expect(r.reasons.some(s => s.includes('LDA insuffisante') && s.includes('650'))).toBe(true);
+  });
+});

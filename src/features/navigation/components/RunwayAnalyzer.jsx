@@ -165,8 +165,10 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
                   sx.components.card.base,
                   sx.spacing.p(3),
                   {
-                    borderLeft: analysis 
-                      ? `4px solid ${analysis.compatible ? 'var(--text-primary)' : 'var(--color-red-critical)'}`
+                    // ⛔ Lot 1.0 : verdict à TROIS états — 'unknown' (chaîne
+                    // truthy !) s'affichait en style « compatible ».
+                    borderLeft: analysis
+                      ? `4px solid ${analysis.compatible === true ? 'var(--text-primary)' : analysis.compatible === false ? 'var(--color-red-critical)' : '#b45309'}`
                       : '4px solid var(--text-secondary)'
                   }
                 )}
@@ -188,10 +190,16 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
                     </div>
                     {analysis && (
                       <div style={sx.spacing.ml(3)}>
-                        {analysis.compatible ? (
+                        {analysis.compatible === true ? (
                           <CheckCircle size={20} color="var(--text-primary)" />
-                        ) : (
+                        ) : analysis.compatible === false ? (
                           <AlertTriangle size={20} color="var(--color-red-critical)" />
+                        ) : (
+                          // span porteur du title : l'attribut title sur un <svg>
+                          // inline (lucide) n'affiche pas d'infobulle navigateur
+                          <span title="Compatibilité non vérifiable (distances non publiées ou fiche avion incomplète)">
+                            <AlertTriangle size={20} color="#b45309" />
+                          </span>
                         )}
                       </div>
                     )}
@@ -201,17 +209,22 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
                   </div>
                 </div>
 
-                {/* Distances principales */}
+                {/* Distances principales — ⛔ Lot 1.0 : une distance NON PUBLIÉE
+                    se dit ; l'ancien affichage substituait la longueur physique
+                    sous l'étiquette TODA/LDA (70 m de piste offerts à LFON). */}
                 <div style={sx.combine(sx.text.sm, sx.spacing.mb(2))}>
                   <div style={sx.combine(sx.flex.row, sx.spacing.gap(4))}>
                     <div>
-                      <strong>TODA:</strong> {runway.toda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                      {runway.toda ? ` (${metersToFeet(runway.toda)} ft)` : ''}
+                      <strong>TODA:</strong> {Number.isFinite(runway.toda) ? `${runway.toda} m (${metersToFeet(runway.toda)} ft)` : 'non publiée'}
                     </div>
                     <div>
-                      <strong>LDA:</strong> {runway.lda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                      {runway.lda ? ` (${metersToFeet(runway.lda)} ft)` : ''}
+                      <strong>LDA:</strong> {Number.isFinite(runway.lda) ? `${runway.lda} m (${metersToFeet(runway.lda)} ft)` : 'non publiée'}
                     </div>
+                    {(Number.isFinite(runway.length) || Number.isFinite(runway.dimensions?.length)) && (
+                      <div style={{ color: 'var(--text-secondary)' }}>
+                        Longueur physique : {runway.length ?? runway.dimensions?.length} m
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -219,7 +232,11 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
                 {analysis && analysis.reasons.length > 0 && (
                   <div style={sx.combine(
                     sx.components.alert.base,
-                    analysis.compatible ? sx.components.alert.success : sx.components.alert.danger,
+                    analysis.compatible === true
+                      ? sx.components.alert.success
+                      : analysis.compatible === false
+                        ? sx.components.alert.danger
+                        : sx.components.alert.warning,
                     sx.spacing.mb(2)
                   )}>
                     {analysis.reasons.map((reason, idx) => (
@@ -234,24 +251,23 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
                     {/* Toutes les distances */}
                     <div style={sx.spacing.mb(3)}>
                       <h6 style={sx.combine(sx.text.sm, sx.text.bold, sx.spacing.mb(1))}>
-                        <Ruler size={14} /> Distances déclarées
+                        <Ruler size={14} /> Distances déclarées <span style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>(pire cas des deux sens)</span>
                       </h6>
+                      {/* ⛔ Lot 1.0 : sous le titre « Distances déclarées », on
+                          n'affiche QUE des distances déclarées — plus la
+                          longueur physique déguisée. */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                         <div style={sx.text.xs}>
-                          <strong>TORA:</strong> {runway.tora ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                          {runway.tora ? ` (${metersToFeet(runway.tora)} ft)` : ''}
+                          <strong>TORA:</strong> {Number.isFinite(runway.tora) ? `${runway.tora} m (${metersToFeet(runway.tora)} ft)` : 'non publiée'}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>TODA:</strong> {runway.toda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                          {runway.toda ? ` (${metersToFeet(runway.toda)} ft)` : ''}
+                          <strong>TODA:</strong> {Number.isFinite(runway.toda) ? `${runway.toda} m (${metersToFeet(runway.toda)} ft)` : 'non publiée'}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>ASDA:</strong> {runway.asda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                          {runway.asda ? ` (${metersToFeet(runway.asda)} ft)` : ''}
+                          <strong>ASDA:</strong> {Number.isFinite(runway.asda) ? `${runway.asda} m (${metersToFeet(runway.asda)} ft)` : 'non publiée'}
                         </div>
                         <div style={sx.text.xs}>
-                          <strong>LDA:</strong> {runway.lda ?? runway.length ?? runway.dimensions?.length ?? 'N/A'} m
-                          {runway.lda ? ` (${metersToFeet(runway.lda)} ft)` : ''}
+                          <strong>LDA:</strong> {Number.isFinite(runway.lda) ? `${runway.lda} m (${metersToFeet(runway.lda)} ft)` : 'non publiée'}
                         </div>
                       </div>
                     </div>
@@ -324,24 +340,31 @@ export const RunwayAnalyzer = ({ icao, perfDistances = null }) => {
         </div>
       )}
 
-      {/* Verdict agrégé GO / NO-GO */}
+      {/* Verdict agrégé GO / NO-GO.
+          ⛔ Lot 1.0 (tranche 3) : les 'unknown' (chaîne truthy !) étaient
+          comptés COMPATIBLES — une piste sans aucune donnée donnait un GO
+          vert. Trois états, comptés séparément ; 'unknown' seul ≠ GO. */}
       {selectedAircraft && runways.length > 0 && (() => {
         const analyses = runways.map(r => analyzeRunwayCompatibility(r, selectedAircraft, perfDistances));
-        const compatibleCount = analyses.filter(a => a.compatible).length;
+        const compatibleCount = analyses.filter(a => a.compatible === true).length;
+        const unknownCount = analyses.filter(a => a.compatible === 'unknown').length;
         const usedCalculated = analyses.some(a => a.usedCalculated);
         const go = compatibleCount > 0;
+        const allUnknown = !go && unknownCount > 0;
         return (
           <div style={sx.combine(
             sx.components.alert.base,
-            go ? sx.components.alert.success : sx.components.alert.danger,
+            go ? sx.components.alert.success : allUnknown ? sx.components.alert.warning : sx.components.alert.danger,
             sx.spacing.mt(4)
           )}>
             {go ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
             <div style={sx.text.sm}>
               <p style={sx.text.bold}>
                 {go
-                  ? `GO — ${compatibleCount} piste(s) compatible(s) sur ${runways.length}`
-                  : `NO-GO — aucune piste compatible sur ${runways.length} (avec ${usedCalculated ? 'les distances calculées du jour' : 'les distances POH statiques'})`}
+                  ? `GO — ${compatibleCount} piste(s) compatible(s)${unknownCount > 0 ? `, ${unknownCount} non vérifiable(s)` : ''} sur ${runways.length}`
+                  : allUnknown
+                    ? `VERDICT INDISPONIBLE — ${unknownCount} piste(s) aux distances non publiées sur ${runways.length} : vérifiez TODA/LDA sur la carte VAC`
+                    : `NO-GO — aucune piste compatible sur ${runways.length} (avec ${usedCalculated ? 'les distances calculées du jour' : 'les distances POH statiques'})`}
               </p>
               <p style={sx.combine(sx.text.xs, sx.text.secondary)}>
                 {usedCalculated

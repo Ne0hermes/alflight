@@ -8,6 +8,7 @@ import { useNavigation, useAircraft } from '@core/contexts';
 import { vfrPointsExtractor } from '@services/vfrPointsExtractor';
 import { getCruiseSpeedKt } from '@utils/aircraftPerf';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import { useNavigationStore } from '@core/stores/navigationStore';
 import DangerousZonesDetector from '@features/navigation/components/DangerousZonesDetector';
 import FuelStopAdvisor from '@features/navigation/components/FuelStopAdvisor';
 // SUPPRIMÉ: useUnits - plus nécessaire
@@ -79,8 +80,11 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
 
   // 🔧 FIX F : distance totale du trajet (NM) via le hook canonique, affichée DÈS la
   // définition du trajet (avant elle n'était visible qu'en synthèse, étape 7).
-  const flightType = flightPlan.generalInfo?.flightType || 'VFR';
-  const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
+  // ⛔ Lot 1.0 (tranche 3) : le type CANONIQUE du store (objet {period, rules,
+  // category}) — la chaîne 'VFR' de generalInfo était avalée par les `?.` du
+  // calculateur de réserve, figée à 30 min y compris de nuit et en IFR.
+  const canonicalFlightType = useNavigationStore((s) => s.flightType);
+  const navigationResults = useNavigationResults(waypoints, canonicalFlightType, selectedAircraft);
 
   // Points VFR chargés depuis AIXM
   const [vfrPoints, setVfrPoints] = useState([]);

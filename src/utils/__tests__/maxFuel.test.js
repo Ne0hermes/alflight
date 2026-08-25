@@ -69,6 +69,28 @@ describe('computeMaxFuel', () => {
     expect(r.litresMax * 0.72).toBeLessThanOrEqual(88.889);
   });
 
+  it('Lot 1.0 — réservoir coché à contenance INCONNUE : refus tankCapacity (le calcul partiel remplissait les autres)', () => {
+    const ac = { fuelType: 'AVGAS', maxTakeoffWeight: 1000, additionalFuelTanks: [
+      { id: 'M', capacity: 110 },
+      { id: 'X', name: 'Aux' } // aucune contenance saisie
+    ] };
+    const r = computeMaxFuel({ aircraft: ac, zfwKg: 800, activeTankIds: ['M', 'X'] });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('tankCapacity');
+    expect(r.tanks).toEqual(['Aux']);
+    // En ne cochant QUE le réservoir connu, le calcul redevient exact
+    const r2 = computeMaxFuel({ aircraft: ac, zfwKg: 800, activeTankIds: ['M'] });
+    expect(r2.ok).toBe(true);
+    expect(r2.litresMax).toBe(110);
+  });
+
+  it('Lot 1.0 — TOUS cochés sans contenance : tankCapacity, pas le faux diagnostic « aucun réservoir coché »', () => {
+    const ac = { fuelType: 'AVGAS', maxTakeoffWeight: 1000, additionalFuelTanks: [{ id: 'M' }, { id: 'X' }] };
+    const r = computeMaxFuel({ aircraft: ac, zfwKg: 800, activeTankIds: ['M', 'X'] });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe('tankCapacity');
+  });
+
   it('avion legacy sans réservoirs détaillés : capacité globale', () => {
     const legacy = { fuelType: 'AVGAS', maxTakeoffWeight: 1000, fuelCapacity: 120 };
     const r = computeMaxFuel({ aircraft: legacy, zfwKg: 800, activeTankIds: null });

@@ -316,14 +316,14 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
     || flightPlan?.performance?.arrival?.landing?.lda50ft || null;
 
   // Données pour le tableau de navigation VFR (provenant de l'étape 2)
-  const flightType = flightPlan.generalInfo.flightType || 'VFR';
-  const navigationResults = useNavigationResults(waypoints, flightType, selectedAircraft);
   // ⚠️ CORRECTIF CONFORMITÉ (16/08) : la réserve finale dépend du JOUR/NUIT
   // (et d'un supplément IFR), pas de « VFR ou IFR » comme l'affichait ce
-  // dossier. Un VFR de NUIT imprimait « 30min » alors que le calcul retenait
-  // 45 min : le document emporté contredisait le calcul. On lit désormais le
-  // type de vol canonique et la règle unique (core/flightType).
+  // dossier. On lit le type de vol canonique et la règle unique (core/flightType).
+  // ⛔ Lot 1.0 (tranche 3) : le type canonique passe AUSSI à useNavigationResults
+  // — la chaîne 'VFR' de generalInfo y figeait la réserve à 30 min, et l'objet
+  // navigationResults corrompu partait au FlightRecapTable.
   const canonicalFlightType = useNavigationStore((s) => s.flightType);
+  const navigationResults = useNavigationResults(waypoints, canonicalFlightType, selectedAircraft);
 
   // Calculer les vraies valeurs de carburant
   // 🔧 CRAN 3 — avec une escale avitaillement, le « requis » comparé au FOB
@@ -2074,7 +2074,7 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
           setSegmentAltitude={setSegmentAltitude}
           departureTimeTheoretical={departureTimeTheoretical}
           setDepartureTimeTheoretical={setDepartureTimeTheoretical}
-          flightType={flightType}
+          flightType={canonicalFlightType}
           descentRate={descentRate}
           setDescentRate={setDescentRate}
           targetAltitude={targetAltitude}

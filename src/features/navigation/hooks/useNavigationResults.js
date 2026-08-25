@@ -4,10 +4,10 @@ import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { computeRegulatoryReserveMinutes } from '@core/flightType';
 import { computeRouteWindTimes } from '@utils/routeWindTimes';
 import { useWindsAloftStore } from '@core/stores/windsAloftStore';
-
-// Altitude par défaut pour l'échantillonnage du vent quand l'altitude de
-// croisière n'est pas transmise (aligné sur plannedAltitude par défaut).
-const DEFAULT_WIND_ALT_FT = 3000;
+import { useNavigationStore } from '@core/stores/navigationStore';
+// ⛔ Lot 1.0 (tranche 3) : provider de vent partagé — altitude du TRONÇON
+// saisie au tableau de nav, plus jamais 3000 ft en dur.
+import { makeRouteWindProvider } from '../utils/windSampling';
 
 export const useNavigationResults = (waypoints, flightType, selectedAircraft) => {
   // 🔧 C2 : abonnement au store des vents — les résultats (temps, carburant)
@@ -15,6 +15,9 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
   // change. La priorité manuel > Open-Meteo > null est gérée par getWindAt.
   const windsProfiles = useWindsAloftStore((s) => s.profiles);
   const manualWind = useWindsAloftStore((s) => s.manualWind);
+  // Altitudes réelles du vol (par tronçon + globale) — le vent suit la saisie.
+  const segmentAltitudes = useNavigationStore((s) => s.segmentAltitudes);
+  const flightAltFt = useNavigationStore((s) => s.flightParams?.altitude);
 
   return useMemo(() => {
 
@@ -37,8 +40,7 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
     const windTimes = computeRouteWindTimes({
       waypoints: validWaypoints,
       cruiseSpeedKt: cruiseSpeed,
-      windProvider: (lat, lon) =>
-        useWindsAloftStore.getState().getWindAt(lat, lon, DEFAULT_WIND_ALT_FT, new Date())
+      windProvider: makeRouteWindProvider({ segmentAltitudes, defaultAltFt: flightAltFt })
     });
 
     const totalDistance = windTimes ? windTimes.totalDistanceNM : 0;
@@ -48,16 +50,25 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
 
     // 🔒 SSOT : réserve réglementaire via le calculateur canonique unique
     // (@core/flightType). Plus de règle 30/45/+15 dupliquée (conformité NCO.OP.125).
-    const regulationReserveMinutes = computeRegulatoryReserveMinutes(flightType);
+    // ⛔ Lot 1.0 (tranche 3) : un flightType de MAUVAISE FORME (la chaîne 'VFR'
+    // au lieu de l'objet canonique {period, rules, category}) était avalé par
+    // les `?.` — réserve figée à 30 min y compris de nuit et en IFR. Bruyant
+    // et fail-closed : réserve nulle, pas un plancher silencieux.
+    const flightTypeValid = flightType != null && typeof flightType === 'object';
+    if (flightType != null && !flightTypeValid) {
+      console.error('[useNavigationResults] flightType invalide (attendu : objet {period, rules, category}, reçu :', flightType, ') — réserve réglementaire non calculée. Passez le type canonique du navigationStore.');
+    }
+    const regulationReserveMinutes = flightTypeValid ? computeRegulatoryReserveMinutes(flightType) : null;
 
-    const regulationReserveLiters = fuelConsumption ? (regulationReserveMinutes / 60) * fuelConsumption : 0;
+    const regulationReserveLiters = (fuelConsumption && regulationReserveMinutes != null) ? (regulationReserveMinutes / 60) * fuelConsumption : null;
     
     const result = {
       totalDistance: Math.round(totalDistance * 10) / 10,
       totalTime,
       fuelRequired: Math.round(fuelRequired * 10) / 10, // Arrondir à 0.1L près
       regulationReserveMinutes,
-      regulationReserveLiters: Math.round(regulationReserveLiters * 10) / 10,
+      // null préservé (Math.round(null)→0 maquillerait l'absence)
+      regulationReserveLiters: regulationReserveLiters != null ? Math.round(regulationReserveLiters * 10) / 10 : null,
       // 🔧 C2 : vitesse sol moyenne pondérée (pour la chaîne carburant par
       // tronçon) + statut de correction ('full'|'partial'|'none') + segments
       // intenables (vent ≥ TAS) pour affichage.
@@ -71,5 +82,5 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
 
 
     return result;
-  }, [waypoints, flightType, selectedAircraft, windsProfiles, manualWind]);
+  }, [waypoints, flightType, selectedAircraft, windsProfiles, manualWind, segmentAltitudes, flightAltFt]);
 };

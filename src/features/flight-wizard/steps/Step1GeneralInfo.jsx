@@ -113,9 +113,14 @@ export const Step1GeneralInfo = ({ flightPlan, onUpdate }) => {
         registration: selectedAircraft.registration,
         type: selectedAircraft.aircraftType || selectedAircraft.type || '',
         model: selectedAircraft.model || '',
-        cruiseSpeed: selectedAircraft.cruiseSpeed || 0,
-        fuelConsumption: selectedAircraft.fuelConsumption || 0,
-        fuelCapacity: effectiveAircraft.fuelCapacity || 0,
+        // ⛔ Lot 1.0 (tranche 3, 25/08) : plus de miroirs à 0 fabriqué.
+        // `cruiseSpeed: 0` était un miroir MORT (la clé canonique cruiseSpeedKt
+        // survit au spread ; cruiseSpeed est undefined sur les 13 fiches) —
+        // ligne supprimée. Capacité/conso absentes → null, jamais 0 : le 0
+        // réinjectait par la porte de derrière la valeur bannie des écrivains
+        // (AircraftModule), des lecteurs (FuelModule) et du moteur.
+        fuelConsumption: selectedAircraft.fuelConsumption ?? null,
+        fuelCapacity: effectiveAircraft.fuelCapacity ?? null,
         emptyWeight: selectedAircraft.emptyWeight || 0,
         maxWeight: selectedAircraft.maxWeight || selectedAircraft.maxTakeoffWeight || 0,
       };

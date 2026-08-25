@@ -37,52 +37,83 @@ export const analyzeRunwayCompatibility = (runway, aircraft, perfDistances = nul
 
   const reasons = [];
   let compatible = true;
+  let unknownDistances = false;
   let usedCalculated = false;
 
-  // Forme de données SIA/AIXM actuelle : distances déclarées À PLAT (m) sur la
-  // piste (tora/toda/asda/lda), longueur en runway.length. Repli sur la
-  // longueur brute si la distance déclarée est absente.
-  const todaM = runway.toda ?? runway.length ?? runway.dimensions?.length ?? 0;
-  const ldaM = runway.lda ?? runway.length ?? runway.dimensions?.length ?? 0;
+  // ⛔ Lot 1.0 (tranche 3, 25/08) : TODA/LDA STRICTES — plus jamais la longueur
+  // physique prise pour une distance déclarée, plus jamais un 0 qui éteint le
+  // contrôle (une piste SANS AUCUNE donnée sortait « ✅ compatible »).
+  // La LDA est ≤ longueur dès qu'un seuil est décalé (LFON 22 : LDA 650 m pour
+  // 720 m de longueur) : substituer la longueur OFFRAIT de la piste inexistante.
+  // La longueur physique ne sert plus qu'à DÉCLENCHER un NO-GO conservateur
+  // (elle majore TODA-utilisable et LDA), jamais à valider un GO.
+  const todaM = Number.isFinite(runway.toda) ? runway.toda : null;
+  const ldaM = Number.isFinite(runway.lda) ? runway.lda : null;
+  const lengthM = Number.isFinite(runway.length)
+    ? runway.length
+    : (Number.isFinite(runway.dimensions?.length) ? runway.dimensions.length : null);
   const fLabel = perfDistances?.factorLabel ? `, facteur ${perfDistances.factorLabel}` : '';
 
   // 🛫 Vérification distance de décollage (TODA)
-  const todaFeet = metersToFeet(todaM);
-  if (typeof perfDistances?.takeoffM === 'number' && Number.isFinite(perfDistances.takeoffM) && todaM > 0) {
+  const todaFeet = todaM != null ? metersToFeet(todaM) : null;
+  const requiredTakeoffM = (typeof perfDistances?.takeoffM === 'number' && Number.isFinite(perfDistances.takeoffM))
+    ? perfDistances.takeoffM : null;
+  if (requiredTakeoffM != null && todaM != null) {
     usedCalculated = true;
-    if (todaM < perfDistances.takeoffM) {
+    if (todaM < requiredTakeoffM) {
       compatible = false;
-      reasons.push(`❌ TODA insuffisante: ${Math.round(todaM)} m < ${Math.round(perfDistances.takeoffM)} m requis (calculé, conditions du jour${fLabel})`);
+      reasons.push(`❌ TODA insuffisante: ${Math.round(todaM)} m < ${Math.round(requiredTakeoffM)} m requis (calculé, conditions du jour${fLabel})`);
     } else {
-      reasons.push(`✅ Décollage: TODA ${Math.round(todaM)} m ≥ ${Math.round(perfDistances.takeoffM)} m requis (calculé${fLabel}) — marge ${Math.round(todaM - perfDistances.takeoffM)} m`);
+      reasons.push(`✅ Décollage: TODA ${Math.round(todaM)} m ≥ ${Math.round(requiredTakeoffM)} m requis (calculé${fLabel}) — marge ${Math.round(todaM - requiredTakeoffM)} m`);
+    }
+  } else if (todaM != null) {
+    const requiredTakeoffDistance = aircraft.distances?.takeoffDistance50ft || aircraft.distances?.takeoffDistance15m;
+    if (requiredTakeoffDistance && todaFeet < requiredTakeoffDistance) {
+      compatible = false;
+      reasons.push(`❌ TODA insuffisante: ${todaFeet} ft < ${requiredTakeoffDistance} ft requis (POH statique)`);
+    } else if (!requiredTakeoffDistance) {
+      // ⛔ Revue 25/08 : le besoin AVION inconnu (ni calcul du jour, ni POH)
+      // sortait « ✅ compatible » sans qu'AUCUNE distance n'ait été comparée.
+      unknownDistances = true;
+      reasons.push('⚠️ Distance de décollage requise inconnue (fiche avion sans POH, performances non calculées) — compatibilité décollage NON VÉRIFIABLE');
     }
   } else {
-    const requiredTakeoffDistance = aircraft.distances?.takeoffDistance50ft || aircraft.distances?.takeoffDistance15m;
-    if (requiredTakeoffDistance && todaFeet > 0) {
-      if (todaFeet < requiredTakeoffDistance) {
-        compatible = false;
-        reasons.push(`❌ TODA insuffisante: ${todaFeet} ft < ${requiredTakeoffDistance} ft requis (POH statique)`);
-      }
+    unknownDistances = true;
+    reasons.push('⚠️ TODA non publiée pour cette piste — compatibilité décollage NON VÉRIFIABLE, consultez la carte VAC');
+    // NO-GO conservateur : la longueur physique majore la distance disponible.
+    if (requiredTakeoffM != null && lengthM != null && lengthM < requiredTakeoffM) {
+      compatible = false;
+      reasons.push(`❌ Longueur physique ${Math.round(lengthM)} m < ${Math.round(requiredTakeoffM)} m requis au décollage (TODA non publiée — hypothèse conservatrice, à vérifier sur la carte VAC)`);
     }
   }
 
   // 🛬 Vérification distance d'atterrissage (LDA)
-  const ldaFeet = metersToFeet(ldaM);
-  if (typeof perfDistances?.landingM === 'number' && Number.isFinite(perfDistances.landingM) && ldaM > 0) {
+  const ldaFeet = ldaM != null ? metersToFeet(ldaM) : null;
+  const requiredLandingM = (typeof perfDistances?.landingM === 'number' && Number.isFinite(perfDistances.landingM))
+    ? perfDistances.landingM : null;
+  if (requiredLandingM != null && ldaM != null) {
     usedCalculated = true;
-    if (ldaM < perfDistances.landingM) {
+    if (ldaM < requiredLandingM) {
       compatible = false;
-      reasons.push(`❌ LDA insuffisante: ${Math.round(ldaM)} m < ${Math.round(perfDistances.landingM)} m requis (calculé, conditions du jour${fLabel})`);
+      reasons.push(`❌ LDA insuffisante: ${Math.round(ldaM)} m < ${Math.round(requiredLandingM)} m requis (calculé, conditions du jour${fLabel})`);
     } else {
-      reasons.push(`✅ Atterrissage: LDA ${Math.round(ldaM)} m ≥ ${Math.round(perfDistances.landingM)} m requis (calculé${fLabel}) — marge ${Math.round(ldaM - perfDistances.landingM)} m`);
+      reasons.push(`✅ Atterrissage: LDA ${Math.round(ldaM)} m ≥ ${Math.round(requiredLandingM)} m requis (calculé${fLabel}) — marge ${Math.round(ldaM - requiredLandingM)} m`);
+    }
+  } else if (ldaM != null) {
+    const requiredLandingDistance = aircraft.distances?.landingDistance50ft || aircraft.distances?.landingDistance15m;
+    if (requiredLandingDistance && ldaFeet < requiredLandingDistance) {
+      compatible = false;
+      reasons.push(`❌ LDA insuffisante: ${ldaFeet} ft < ${requiredLandingDistance} ft requis (POH statique)`);
+    } else if (!requiredLandingDistance) {
+      unknownDistances = true;
+      reasons.push('⚠️ Distance d\'atterrissage requise inconnue (fiche avion sans POH, performances non calculées) — compatibilité atterrissage NON VÉRIFIABLE');
     }
   } else {
-    const requiredLandingDistance = aircraft.distances?.landingDistance50ft || aircraft.distances?.landingDistance15m;
-    if (requiredLandingDistance && ldaFeet > 0) {
-      if (ldaFeet < requiredLandingDistance) {
-        compatible = false;
-        reasons.push(`❌ LDA insuffisante: ${ldaFeet} ft < ${requiredLandingDistance} ft requis (POH statique)`);
-      }
+    unknownDistances = true;
+    reasons.push('⚠️ LDA non publiée pour cette piste — compatibilité atterrissage NON VÉRIFIABLE, consultez la carte VAC');
+    if (requiredLandingM != null && lengthM != null && lengthM < requiredLandingM) {
+      compatible = false;
+      reasons.push(`❌ Longueur physique ${Math.round(lengthM)} m < ${Math.round(requiredLandingM)} m requis à l'atterrissage (LDA non publiée — la LDA réelle est ≤ à la longueur)`);
     }
   }
 
@@ -108,16 +139,20 @@ export const analyzeRunwayCompatibility = (runway, aircraft, perfDistances = nul
     }
   }
 
-  // Message si compatible
-  if (compatible && reasons.length === 0) {
+  // ⛔ Verdict à TROIS états : false (démontré incompatible) prime ; sinon une
+  // distance non publiée = 'unknown' (jamais un GO sur une absence de donnée).
+  const verdict = compatible === false ? false : (unknownDistances ? 'unknown' : true);
+
+  // Message si compatible (verdict STRICTEMENT vrai — 'unknown' ne l'est pas)
+  if (verdict === true && reasons.length === 0) {
     reasons.push(`✅ Piste compatible avec ${aircraft.registration || 'l\'avion'}`);
   }
 
   return {
-    compatible,
+    compatible: verdict,
     reasons,
-    todaFeet,
-    ldaFeet,
+    todaFeet,   // null si TODA non publiée (plus jamais un 0 fabriqué)
+    ldaFeet,    // null si LDA non publiée
     usedCalculated,
     surface: surfaceInfo
   };

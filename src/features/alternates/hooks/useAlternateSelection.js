@@ -500,24 +500,27 @@ export const useAlternateSelection = () => {
   // Exemple: 10 gal / 7 gal/h × 120 kt × 0.5 = 85 NM
   // ========================================================================================
   const coneZoneParams = useMemo(() => {
-    if (!selectedAircraft || !fuelDataForRadius?.aircraft) return null;
+    // ⛔ Lot 1.0 (tranche 3, 25/08) : retours TYPÉS ({available:false, reason})
+    // — l'UI doit pouvoir dire POURQUOI les zones ne sont pas calculables.
+    // Avant : null indistinct pour trois causes différentes, et pire, un
+    // avion supposé PLEIN À RAS BORD quand le FOB n'était pas saisi.
+    if (!selectedAircraft || !fuelDataForRadius?.aircraft) return { available: false, reason: 'aircraft-missing' };
 
     const aircraft = fuelDataForRadius.aircraft;
-    // 🔧 FIX D-moteur : plus de 120 kt / 40 lph fabriqués. Avion incomplet → pas de cône (null).
+    // 🔧 FIX D-moteur : plus de 120 kt / 40 lph fabriqués. Avion incomplet → pas de cône.
     const cruiseSpeed = aircraft.cruiseSpeedKt;
     const consumption = aircraft.fuelConsumption;
-    if (!cruiseSpeed || !consumption) return null;
+    if (!cruiseSpeed || !consumption) return { available: false, reason: 'perf-missing' };
 
-    // FOB = Carburant confirmé au décollage (depuis fobFuel du contexte Fuel)
-    // IMPORTANT: Utiliser fobFuelStore EN PRIORITÉ (accès direct au store Zustand)
-    // puis fobFuel (contexte) comme fallback
+    // FOB = Carburant confirmé au décollage.
     // NE PAS utiliser aircraft.fuelCapacity comme fallback (c'est la capacité max, pas le FOB réel)
     let fobLiters = 0;
 
-    // 🔧 FIX: Vérifier TOUTES les sources de FOB dans l'ordre de priorité
-    // 1. fobFuelStore (accès direct au store Zustand - le plus fiable)
-    // 2. fobFuel (contexte React - peut avoir du délai)
-    const fobSource = fobFuelStore || fobFuel;
+    // ⛔ Lot 1.0 (Z3) : `fobFuelStore || fobFuel` était un faux choix — le store
+    // est initialisé à {gal:0, ltr:0}, TOUJOURS truthy : un FOB présent dans le
+    // seul contexte déclenchait quand même le chemin « FOB absent ». On utilise
+    // le fobFuel déjà RÉSOLU en tête de hook (store si non vide, sinon contexte).
+    const fobSource = fobFuel;
 
     // Même durcissement que fuelDataForRadius : ces valeurs peuvent arriver en
     // chaîne selon la source (store/contexte) — toFixed() plus bas planterait.
@@ -544,30 +547,16 @@ export const useAlternateSelection = () => {
       fobLitersCalculated: fobLiters,
       aircraftFuelCapacity: aircraft.fuelCapacity,
       consumption: consumption,
-      willUseFallback: fobLiters === 0
+      fobMissing: fobLiters === 0
     });
 
-    // Si pas de FOB défini, on ne peut pas calculer les rayons précis
+    // ⛔ Lot 1.0 (Z1) : FOB non saisi → zones NON CALCULABLES, dit à l'écran.
+    // L'ancien repli fabriquait un avion PLEIN À RAS BORD (FOB = capacité max,
+    // trip 0, réserve 0) avec l'ancienne formule « demi-autonomie » abandonnée
+    // — 40 lignes sous le commentaire qui interdisait exactement ça. Des
+    // déroutements présentés comme atteignables pouvaient ne pas l'être.
     if (fobLiters === 0) {
-      console.log('⚠️ [CONE ZONE PARAMS] FOB non défini, utilisation de la capacité max comme estimation');
-      // Fallback: utiliser la capacité max de l'avion
-      const maxCapacity = aircraft.fuelCapacity || 0;
-      if (maxCapacity === 0) return null;
-
-      // Autonomie max (sans réserve pour simplicité)
-      const maxEndurance = maxCapacity / consumption;
-      const maxRadius = cruiseSpeed * maxEndurance * 0.5;
-
-      return {
-        radiusAtDep: Math.max(10, Math.min(100, maxRadius)), // Plafonner à 100 NM si FOB inconnu
-        radiusAtArr: Math.max(5, Math.min(50, maxRadius * 0.5)),
-        fobLiters: maxCapacity,
-        tripFuel: 0,
-        finalReserve: 0,
-        enduranceAtDep: maxEndurance,
-        enduranceAtArr: maxEndurance,
-        isEstimate: true
-      };
+      return { available: false, reason: 'fob-missing' };
     }
 
     // Carburant consommé pendant le vol (si disponible)
@@ -606,8 +595,12 @@ export const useAlternateSelection = () => {
     });
 
     return {
-      radiusAtDep: Math.max(10, radiusAtDep), // Min 10 NM, pas de max (calcul exact)
-      radiusAtArr: Math.max(5, radiusAtArr),   // Min 5 NM, pas de max (calcul exact)
+      available: true,
+      // ⛔ Lot 1.0 (Z4) : plus de plancher Math.max(10/5) — un plancher de
+      // rayon promettait une portée qui peut ne pas exister. Le rayon est le
+      // rayon calculé, borné par le carburant réel, ou rien.
+      radiusAtDep,
+      radiusAtArr,
       fobLiters,
       tripFuel,
       finalReserve: 0, // Plus de réserve soustraite dans le calcul du rayon

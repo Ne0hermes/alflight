@@ -8,7 +8,6 @@ import { activeTankIdsFrom } from '@core/stores/fuelStore';
 import { useAlternatesStore } from '@core/stores/alternatesStore';
 import { sx } from '@shared/styles/styleSystem';
 import { useAlternatesForFuel } from '@features/alternates';
-import { useFuelSync } from '@hooks/useFuelSync';
 import { useUnits } from '@hooks/useUnits';
 import { useUnitsWatcher } from '@hooks/useUnitsWatcher';
 import { toUserUnit } from '@utils/unitsDisplay';
@@ -98,7 +97,9 @@ const FuelRow = memo(({ type, label, description, fuel, onChange, readonly = fal
 // bilan carburant garde uniquement la lecture de la config (bandeau capacité).
 
 export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
-  useFuelSync();
+  // ⛔ Lot 1.0 (tranche 3) : useFuelSync SUPPRIMÉ — hook mort (il appelait
+  // useNavigationResults sans arguments → null permanent, aucun effet) qui
+  // dupliquait la synchronisation vivante de core/contexts (FuelProvider).
   const { format, convert, getSymbol, toStorage, getUnit } = useUnits();
   const units = useUnitsWatcher(); // Force re-render on units change
 

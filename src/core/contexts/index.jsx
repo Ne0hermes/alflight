@@ -624,9 +624,13 @@ export const NavigationProvider = memo(({ children }) => {
   // Calculs mémorisés
   const navigationResults = useMemo(() => {
     if (!selectedAircraft || !waypoints.length) return null;
-    
+
     return getNavigationResults(selectedAircraft);
-  }, [selectedAircraft, waypoints, flightType, getNavigationResults]);
+    // ⛔ Lot 1.0 (tranche 3, revue) : le calcul dépend désormais des ALTITUDES
+    // (vent échantillonné par tronçon) — sans ces deps, éditer l'altitude d'un
+    // tronçon recalculait le tableau de nav mais laissait le trip fuel du
+    // contexte sur le vent des ANCIENNES altitudes.
+  }, [selectedAircraft, waypoints, flightType, getNavigationResults, segmentAltitudes, flightParams?.altitude]);
 
   const value = useMemo(() => ({
     waypoints,

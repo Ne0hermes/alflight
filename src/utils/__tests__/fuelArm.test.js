@@ -161,3 +161,34 @@ describe('activeTankIds — configuration réservoirs du vol', () => {
     expect(r.weight).toBeCloseTo(60 * D, 6);
   });
 });
+
+// ⛔ Lot 1.0 (tranche 3, 25/08) : un réservoir déclaré SANS contenance
+// disparaissait de tous les scénarios en silence — le « Pleins » paraissait
+// complet en l'ignorant. Refus explicite 'tankCapacity' désormais.
+describe('Lot 1.0 — contenance de réservoir inconnue', () => {
+  it('full : réservoir ACTIF sans contenance → refus tankCapacity', () => {
+    const ac = { additionalFuelTanks: [
+      { id: 'L', capacity: 60, arm: 2.0 },
+      { id: 'AUX', name: 'Auxiliaire', arm: 3.1 } // contenance jamais saisie
+    ] };
+    expect(computeScenarioFuel({ aircraft: ac, scenario: 'full', density: D }))
+      .toEqual({ ok: false, reason: 'tankCapacity' });
+    // Décoché, il ne bloque plus : le plein des réservoirs cochés reste exact
+    const r2 = computeScenarioFuel({ aircraft: ac, scenario: 'full', density: D, activeTankIds: ['L'] });
+    expect(r2.ok).toBe(true);
+    expect(r2.weight).toBeCloseTo(60 * D, 6);
+  });
+
+  it('fob : refus dès qu\'il y a du carburant à placer ; FOB 0 → vide légitime', () => {
+    const ac = { additionalFuelTanks: [{ id: 'L', capacity: 60, arm: 2.0 }, { id: 'AUX', arm: 3.1 }] };
+    expect(computeScenarioFuel({ aircraft: ac, scenario: 'fob', density: D, fobLiters: 40 }))
+      .toEqual({ ok: false, reason: 'tankCapacity' });
+    expect(computeScenarioFuel({ aircraft: ac, scenario: 'fob', density: D, fobLiters: 0 }).ok).toBe(true);
+  });
+
+  it('full legacy sans AUCUNE contenance connue → tankCapacity (plus un scénario vide déguisé en 0 L)', () => {
+    const legacy = { arms: { fuelMain: 1.1 } };
+    expect(computeScenarioFuel({ aircraft: legacy, scenario: 'full', density: D }))
+      .toEqual({ ok: false, reason: 'tankCapacity' });
+  });
+});

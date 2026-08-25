@@ -1080,23 +1080,36 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
               // la masse à vide pesée inclut déjà l'inutilisable, compter le
               // total le pèserait deux fois (+9,4 kg sur F-BXQT). Le volume
               // TOTAL (avitaillement) n'apparaît qu'en mention informative.
-              const fuelCapacityLtr = configEngaged
-                ? checkedTanks.reduce((s, { t }) => s + (tankUsableLtr(t) || 0), 0)
-                : (aircraft.fuelUsableCapacity || aircraft.fuelCapacity || 0);
-              const fuelTotalCapacityLtr = configEngaged
-                ? checkedTanks.reduce((s, { t }) => s + (tankTotalLtr(t) || 0), 0)
-                : (aircraft.fuelCapacity || 0);
+              // ⛔ Lot 1.0 (tranche 3) : contenance INCONNUE sur un réservoir
+              // considéré → on le DIT — l'ancien `|| 0` affichait
+              // « 0.000 L utilisables (0.000 kg) » à côté du scénario refusé
+              // par le moteur (computeScenarioFuel → 'tankCapacity').
+              const consideredTanks = configEngaged ? checkedTanks.map(({ t }) => t) : declaredTanks;
+              const unknownCapTanks = consideredTanks.filter((t) => tankUsableLtr(t) == null);
+              // Revue 25/08 : le repli capacité GLOBALE est réservé aux avions
+              // SANS réservoirs détaillés. Config engagée avec 0 coché = 0 L
+              // (comme le moteur — « SURTOUT PAS le repli legacy fuelCapacity »),
+              // pas la capacité de l'avion complet.
+              const fuelCapacityLtr = unknownCapTanks.length > 0
+                ? null
+                : (configEngaged || declaredTanks.length > 0
+                  ? consideredTanks.reduce((s, t) => s + (tankUsableLtr(t) ?? 0), 0)
+                  : (parseFloat(aircraft.fuelUsableCapacity ?? aircraft.fuelCapacity) || null));
+              const fuelTotalCapacityLtr = configEngaged || declaredTanks.length > 0
+                ? consideredTanks.reduce((s, t) => s + (tankTotalLtr(t) || 0), 0)
+                : (parseFloat(aircraft.fuelCapacity) || 0);
 
-              const fullTankKg = fuelCapacityLtr * fuelDensity;
+              const fullTankKg = fuelCapacityLtr != null ? fuelCapacityLtr * fuelDensity : null;
               // Moment : par réservoir quand la config fait foi (bras propre de
               // chaque réservoir coché), sinon bras unique historique.
-              const fullTankMoment = configEngaged
-                ? checkedTanks.reduce((s, { t }) => {
-                    const a = parseFloat(t.arm);
-                    return s + (tankUsableLtr(t) || 0) * fuelDensity * (Number.isFinite(a) ? a : 0);
-                  }, 0)
-                : fullTankKg * (arms.fuel || 0);
-              const fullTankInUserUnit = convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit);
+              const fullTankMoment = fullTankKg == null
+                ? null
+                : (configEngaged
+                  ? checkedTanks.reduce((s, { t }) => {
+                      const a = parseFloat(t.arm);
+                      return s + (tankUsableLtr(t) ?? 0) * fuelDensity * (Number.isFinite(a) ? a : 0);
+                    }, 0)
+                  : fullTankKg * (arms.fuel || 0));
 
               return (
                 <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--bg-overlay)' }}>
@@ -1104,14 +1117,20 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     <span style={{ fontSize: 'var(--fs-body)', fontWeight: '600' }}>
                       Full Tank{configEngaged ? ` (${checkedTanks.length} réservoir${checkedTanks.length > 1 ? 's' : ''} coché${checkedTanks.length > 1 ? 's' : ''})` : ''}
                     </span>
+                    {fuelCapacityLtr == null ? (
+                      <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)', fontWeight: 600 }}>
+                        contenance inconnue{unknownCapTanks.length > 0 ? ` (${unknownCapTanks.map((t, i) => t.name || `réservoir ${i + 1}`).join(', ')})` : ''} — complétez la fiche avion
+                      </span>
+                    ) : (
                     <span style={{ fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
-                      {fullTankInUserUnit.toFixed(3)} {fuelUnitSymbol} utilisables ({fullTankKg.toFixed(3)} kg)
+                      {convert(fuelCapacityLtr, 'fuel', 'ltr', userFuelUnit).toFixed(3)} {fuelUnitSymbol} utilisables ({fullTankKg.toFixed(3)} kg)
                       {/* Mention informative : volume physique ≠ utilisable — la
                           différence (inutilisable) ne se pèse ni ne se consomme. */}
                       {fuelTotalCapacityLtr > fuelCapacityLtr + 0.01
                         ? ` (capacité totale ${convert(fuelTotalCapacityLtr, 'fuel', 'ltr', userFuelUnit).toFixed(1)} ${fuelUnitSymbol})`
                         : ''}
                     </span>
+                    )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1120,7 +1139,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Moment:</span>
-                      <span>{configEngaged || arms.fuel !== null ? `${fullTankMoment.toFixed(3)} kg.m` : 'N/A'}</span>
+                      <span>{fullTankMoment != null && (configEngaged || arms.fuel !== null) ? `${fullTankMoment.toFixed(3)} kg.m` : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -1498,7 +1517,10 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         const msgs = {
           fuelDensity: 'type de carburant inconnu (densité indisponible)',
           weights: 'MTOW ou masse à vide manquante',
-          noTanks: 'aucun réservoir coché'
+          noTanks: 'aucun réservoir coché',
+          // ⛔ Lot 1.0 (tranche 3) : le calcul « partiel » remplissait les
+          // réservoirs connus et laissait l'inconnu intact — résultat faux.
+          tankCapacity: 'contenance inconnue sur un réservoir coché — renseignez la capacité utilisable (fiche avion)'
         };
         alert(`Volume Max impossible : ${msgs[result.error] || result.error}.`);
         return;
@@ -1554,7 +1576,11 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                 // 🎭 24/08/2026 — l'amovibilité découle du RÔLE tenu dans la
                 // configuration retenue pour ce vol. Repli sur le catalogue
                 // legacy tant que les rôles ne sont pas saisis.
-                const isOptional = isTankRemovable(selectedAircraft, selectedAircraft?._tankVariantId, tank, i);
+                // Revue 25/08 : `selectedAircraft` n'existait pas dans la portée
+                // de TankPlanningBlock (composant de niveau module) —
+                // ReferenceError au rendu pour tout avion à réservoirs. L'avion
+                // arrive par la prop `aircraft`. (Pré-existant, rôles du 24/08.)
+                const isOptional = isTankRemovable(aircraft, aircraft?._tankVariantId, tank, i);
                 return (
                   <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', cursor: 'pointer', margin: 0 }}>
                     <input
@@ -1573,7 +1599,7 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
                             la même information que « Fixe »). Rôle inconnu : on retombe
                             sur la seule chose sûre, amovible ou non. */}
                         {' '}· {(() => {
-                          const role = resolveTankRole(selectedAircraft, selectedAircraft?._tankVariantId, tank, i);
+                          const role = resolveTankRole(aircraft, aircraft?._tankVariantId, tank, i);
                           const label = TANK_ROLES.find(r => r.value === role)?.label;
                           return label || (isOptional ? 'Optionnel (amovible)' : 'Fixe');
                         })()} · Capacité {(tankUsableLtr(tank) ?? 0).toFixed(1)} L utilisables

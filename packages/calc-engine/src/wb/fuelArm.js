@@ -50,6 +50,19 @@ function usableTanks(aircraft, activeTankIds = null) {
     .filter((t) => activeSet == null || activeSet.has(String(t.id)));
 }
 
+/** ⛔ Lot 1.0 (tranche 3, 25/08) — réservoirs ACTIFS (cochés, ou tous si pas de
+ *  config) dont la contenance utilisable est INCONNUE (tankUsableLtr null).
+ *  usableTanks les FILTRE (cap ?? NaN puis cap > 0) : ils disparaissaient de
+ *  tous les scénarios en silence — le « Pleins » d'un avion dont un réservoir
+ *  n'a pas de contenance paraissait complet en l'ignorant. */
+function activeTanksWithUnknownCap(aircraft, activeTankIds = null) {
+  const list = Array.isArray(aircraft?.additionalFuelTanks) ? aircraft.additionalFuelTanks : [];
+  const activeSet = Array.isArray(activeTankIds) ? new Set(activeTankIds.map(String)) : null;
+  return list
+    .map((t, i) => ({ t, key: String(t?.id ?? i) }))
+    .filter(({ t, key }) => (activeSet == null || activeSet.has(key)) && tankUsableLtr(t) == null);
+}
+
 /** Bras legacy mono-réservoir (aucun additionalFuelTanks). null si absent/0. */
 function legacyArm(aircraft, wb) {
   const a = armToMeters(parseFloat(wb?.fuelArm ?? aircraft?.arms?.fuelMain ?? aircraft?.armLengths?.fuelArm));
@@ -94,12 +107,22 @@ export function singleFuelArm(aircraft, wb = aircraft?.weightBalance, activeTank
  * @param {string[]|null} [o.activeTankIds=null] réservoirs EMBARQUÉS (config du
  *   vol, clés String(id ?? index)) — null = pas de config → tous les réservoirs.
  * @returns {{ ok:true, rows:Array<{label,value,arm,moment}>, weight:number, moment:number }
- *          | { ok:false, reason:'fuelArm'|'distribution' }}
+ *          | { ok:false, reason:'fuelArm'|'distribution'|'tankCapacity' }}
  */
 export function computeScenarioFuel({ aircraft, scenario, density, fobLiters = 0, burnedLiters = 0, loads = {}, wb = aircraft?.weightBalance, activeTankIds = null }) {
   const declaredTanks = usableTanks(aircraft);
   const tanks = usableTanks(aircraft, activeTankIds);
   const empty = { ok: true, rows: [], weight: 0, moment: 0 };
+
+  // ⛔ Lot 1.0 (tranche 3) : un réservoir ACTIF à contenance inconnue ne
+  // disparaît plus en silence. « Pleins » est par nature incalculable ; en
+  // 'fob'/'landing', dès qu'il y a du carburant à placer, on refuse plutôt
+  // que de calculer sur une liste amputée du réservoir fantôme.
+  const unknownCap = activeTanksWithUnknownCap(aircraft, activeTankIds);
+  if (unknownCap.length > 0) {
+    const litersWanted = scenario === 'fob' ? fobLiters : Math.max(0, fobLiters - burnedLiters);
+    if (scenario === 'full' || litersWanted > 0) return { ok: false, reason: 'tankCapacity' };
+  }
 
   // Config engagée avec AUCUN réservoir coché : aucun carburant ne peut être à
   // bord — scénarios vides (0 L). SURTOUT PAS le repli legacy fuelCapacity
@@ -119,6 +142,10 @@ export function computeScenarioFuel({ aircraft, scenario, density, fobLiters = 0
   // ── Avion legacy mono-bras (aucun réservoir listé) ──
   if (tanks.length === 0) {
     const liters = totalForScenario();
+    // ⛔ Lot 1.0 : « Pleins » sans AUCUNE contenance connue (ni réservoirs
+    // détaillés, ni capacité globale) → refus explicite — l'ancien `empty`
+    // affichait une carte « Réservoirs pleins » à 0 L, identique au ZFW.
+    if (scenario === 'full' && liters <= 0) return { ok: false, reason: 'tankCapacity' };
     if (liters <= 0) return empty;
     const a = legacyArm(aircraft, wb);
     if (a == null) return { ok: false, reason: 'fuelArm' };

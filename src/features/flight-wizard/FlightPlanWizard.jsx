@@ -15,6 +15,7 @@ import { useWeatherStore } from '@core/stores/weatherStore';
 import { flightPlanSupabaseService } from '../../services/flightPlanSupabaseService';
 import { validatedPdfService } from '../../services/validatedPdfService';
 import { useNavigationResults } from '@features/navigation/hooks/useNavigationResults';
+import { useNavigationStore } from '@core/stores/navigationStore';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { computeLegFuelPlans } from '@features/fuel/utils/legFuelPlan';
 import { showNotification } from '@shared/components/Notification';
@@ -77,7 +78,11 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
     return plan?.isMultiLeg ? plan.legs[0].totalLtr : calculateTotal('ltr');
   };
   const { setWeatherData } = useWeather();
-  const navigationResults = useNavigationResults();
+  // ⛔ Lot 1.0 (tranche 3) : l'appel SANS ARGUMENTS renvoyait null en
+  // PERMANENCE (waypoints undefined → garde du hook) — la sauvegarde partait
+  // toujours sans temps ni distance. Les vrais arguments, type canonique inclus.
+  const canonicalFlightType = useNavigationStore((s) => s.flightType);
+  const navigationResults = useNavigationResults(waypoints, canonicalFlightType, selectedAircraft);
 
   // État principal : instance du modèle de données
   const [flightPlan] = useState(() => {

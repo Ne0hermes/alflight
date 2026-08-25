@@ -77,7 +77,11 @@ export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) =
             border: '1px solid var(--border-subtle)'
           }}>
             {aircraft.equipment && <span>Équipements SAR: {aircraft.equipment}</span>}
-            {aircraft.cruiseSpeed && <span>Vitesse de croisière: {aircraft.cruiseSpeed} kt</span>}
+            {/* Lot 1.0 (tranche 3) : la clé canonique est cruiseSpeedKt — la
+                ligne disparaissait en silence sur les fiches modernes. */}
+            {(aircraft.cruiseSpeedKt ?? aircraft.cruiseSpeed) > 0 && (
+              <span>Vitesse de croisière: {aircraft.cruiseSpeedKt ?? aircraft.cruiseSpeed} kt</span>
+            )}
           </div>
         )}
       </div>
@@ -132,6 +136,11 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
       fuelDensity: 'Densité carburant inconnue — renseignez le type de carburant',
       fuelArm: 'Bras de levier manquant sur un réservoir — renseignez le bras de chaque réservoir (fiche avion)',
       distribution: 'Réservoirs à bras différents — répartissez le carburant par réservoir ci-dessus',
+      // ⛔ Lot 1.0 (tranche 3) : contenance inconnue = refus du moteur, dit ici.
+      tankCapacity: 'Contenance inconnue sur un réservoir embarqué — renseignez la capacité utilisable (fiche avion)',
+      // La liste `manques` du moteur (bras/masses) est enfin AFFICHÉE — elle
+      // était construite avec soin et lue par personne.
+      masse: 'Donnée de masse ou de bras manquante — détail ci-dessous',
     };
     const message = REASONS[data?.unavailableReason] || 'Données en cours de calcul…';
     return (
@@ -142,6 +151,9 @@ const ScenarioCard = memo(({ colorKey, title, data, description }) => {
         </h5>
         <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
           <p>{message}</p>
+          {Array.isArray(data?.manques) && data.manques.length > 0 && (
+            <p style={{ marginTop: '4px' }}>Manque : {data.manques.join(' · ')}</p>
+          )}
         </div>
       </div>
     );

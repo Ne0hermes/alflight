@@ -136,19 +136,45 @@ export class GeoJSONProvider extends AeroDataProvider {
    * Convertit les pistes GeoJSON
    */
   convertRunways(features) {
-    return features.map(feature => ({
-      // Correspondance avec le format du fichier GeoJSON: aerodrome_icao est la propriété principale
-      airportId: feature.properties.aerodrome_icao || feature.properties.airport_icao || feature.properties.icao,
-      designation: feature.properties.designation,
-      identifier: feature.properties.designation,
-      length: feature.properties.length_m || feature.properties.length,
-      width: feature.properties.width_m || feature.properties.width,
-      dimensions: {
-        length: feature.properties.length_m || feature.properties.length || 0,
-        width: feature.properties.width_m || feature.properties.width || 0
-      },
-      surface: feature.properties.surface
-    }));
+    return features.map(feature => {
+      const props = feature.properties;
+      // ⛔ Lot 1.0 (tranche 3, 25/08) : les distances déclarées (Rdd) n'étaient
+      // PAS transportées par ce chemin — le SEUL écran de compatibilité de
+      // piste (RunwayAnalyzer, via getAirfields) recevait des pistes sans
+      // TODA/LDA alors que 766 pistes sur 1558 les publient, et l'ancien code
+      // y substituait la longueur physique. À plat : le PIRE CAS entre les
+      // directions (conservateur — sans logique de QFU on ignore quelle
+      // direction sera utilisée) ; le détail par direction reste dans
+      // declaredDistances.
+      const declaredDistances = props.declared_distances || null;
+      const worst = (key) => {
+        if (!declaredDistances) return null;
+        const vals = Object.values(declaredDistances).map((d) => parseFloat(d?.[key]));
+        // Revue 25/08 : une direction SANS la valeur → null (non vérifiable),
+        // pas un min sur les seules directions publiées — on ignorerait
+        // peut-être la direction la plus courte.
+        if (vals.length === 0 || vals.some((v) => !Number.isFinite(v))) return null;
+        return Math.min(...vals);
+      };
+      return {
+        // Correspondance avec le format du fichier GeoJSON: aerodrome_icao est la propriété principale
+        airportId: props.aerodrome_icao || props.airport_icao || props.icao,
+        designation: props.designation,
+        identifier: props.designation,
+        length: props.length_m || props.length,
+        width: props.width_m || props.width,
+        dimensions: {
+          length: props.length_m || props.length || 0,
+          width: props.width_m || props.width || 0
+        },
+        surface: props.surface,
+        tora: worst('TORA'),
+        toda: worst('TODA'),
+        asda: worst('ASDA'),
+        lda: worst('LDA'),
+        declaredDistances
+      };
+    });
   }
 
   /**

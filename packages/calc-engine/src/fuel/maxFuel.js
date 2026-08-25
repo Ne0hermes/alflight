@@ -21,7 +21,7 @@ const num = (v) => {
  *   (String(id ?? index)) ; null = config non engagée → tous les réservoirs
  * @returns {{ ok:true, litresMax:number, perTank:Array<{key:string, ltr:number}>,
  *            limitedBy:'mtow'|'capacity', massAvailableKg:number }
- *          | { ok:false, error:'fuelDensity'|'weights'|'noTanks' }}
+ *          | { ok:false, error:'fuelDensity'|'weights'|'noTanks'|'tankCapacity', tanks?:string[] }}
  */
 export function computeMaxFuel({ aircraft, zfwKg, activeTankIds = null }) {
   const density = getFuelDensity(aircraft?.fuelType);
@@ -41,10 +41,19 @@ export function computeMaxFuel({ aircraft, zfwKg, activeTankIds = null }) {
   // ⛽ Contenance UTILISABLE : « remplir au maximum » plafonne au carburant
   // consommable — remplir jusqu'au volume physique injecterait l'inutilisable
   // dans le bilan et le centrage.
-  const usable = tanks
-    .map((t, i) => ({ key: String(t?.id ?? i), cap: tankUsableLtr(t) ?? 0 }))
-    .filter(t => t.cap > 0)
+  // ⛔ Lot 1.0 (tranche 3, 25/08) : un réservoir RETENU (coché, ou tous si pas
+  // de config) dont la contenance est INCONNUE (tankUsableLtr null) faisait
+  // deux dégâts silencieux : cas partiel — les autres réservoirs se
+  // remplissaient et lui gardait sa valeur (résultat plausible et faux) ;
+  // cas total — diagnostic « aucun réservoir coché » alors qu'ils l'étaient.
+  const retained = tanks
+    .map((t, i) => ({ key: String(t?.id ?? i), cap: tankUsableLtr(t), name: t?.name }))
     .filter(t => activeSet == null || activeSet.has(t.key));
+  const unknownCap = retained.filter(t => t.cap == null);
+  if (unknownCap.length > 0) {
+    return { ok: false, error: 'tankCapacity', tanks: unknownCap.map(t => t.name || `réservoir ${t.key}`) };
+  }
+  const usable = retained.filter(t => t.cap > 0);
 
   // ⚠️ Le repli « capacité globale » n'existe QUE pour les avions legacy SANS
   // réservoirs détaillés. Des réservoirs déclarés mais aucun d'utilisable
@@ -54,8 +63,8 @@ export function computeMaxFuel({ aircraft, zfwKg, activeTankIds = null }) {
 
   const capacityLtr = usable.length > 0
     ? usable.reduce((s, t) => s + t.cap, 0)
-    : (num(aircraft?.fuelUsableCapacity) ?? num(aircraft?.fuelCapacity) ?? 0);
-  if (capacityLtr <= 0) return { ok: false, error: 'noTanks' };
+    : (num(aircraft?.fuelUsableCapacity) ?? num(aircraft?.fuelCapacity) ?? null);
+  if (!Number.isFinite(capacityLtr) || capacityLtr <= 0) return { ok: false, error: 'noTanks' };
 
   // Arrondi vers le BAS (0,1 L) : un arrondi au plus proche pouvait dépasser
   // la MTOW de quelques dizaines de grammes ou la capacité d'un réservoir de

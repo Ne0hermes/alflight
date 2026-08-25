@@ -1,29 +1,27 @@
 // src/features/navigation/utils/effectiveSpeed.js
-// 🔧 C2 (Lot 0.4) — Vitesse SOL moyenne corrigée du vent pour une route, en un
-// appel : combine l'utilitaire PUR routeWindTimes et le store des vents en
-// altitude (priorité manuel > Open-Meteo > null, via getWindAt).
-// À passer en `effectiveSpeedKt` à computeLegFuelPlans & co. — repli TAS géré
-// par le consommateur (null si pas de vent en cache : comportement d'avant).
-
+//
+// 🔧 C2 — vitesse sol moyenne de la route, corrigée du vent, pour la chaîne
+// carburant par tronçon (computeLegFuelPlans). null si aucune correction de
+// vent n'est possible (le repli TAS vit dans legFuelPlan, pas ici).
+//
+// ⛔ Lot 1.0 (tranche 3, 25/08/2026) : le vent était lu à 3000 ft EN DUR quelle
+// que soit l'altitude du vol — le carburant se calculait sur un autre vent que
+// celui affiché au tableau de navigation. Le provider partagé (windSampling)
+// échantillonne désormais à l'altitude saisie PAR TRONÇON, sinon l'altitude
+// globale du vol.
 import { computeRouteWindTimes } from '@utils/routeWindTimes';
-import { useWindsAloftStore } from '@core/stores/windsAloftStore';
+import { useNavigationStore } from '@core/stores/navigationStore';
+import { makeRouteWindProvider } from './windSampling';
 
-// Altitude d'échantillonnage par défaut (alignée sur plannedAltitude défaut).
-const DEFAULT_WIND_ALT_FT = 3000;
-
-/**
- * @param {Array} waypoints
- * @param {number|null} cruiseSpeedKt TAS (kt)
- * @returns {number|null} vitesse sol moyenne pondérée (kt), ou null si
- *   waypoints/TAS insuffisants OU aucun vent en cache (le consommateur
- *   retombe alors sur la TAS — jamais de valeur inventée ici).
- */
 export function getRouteEffectiveSpeedKt(waypoints, cruiseSpeedKt) {
+  const { segmentAltitudes, flightParams } = useNavigationStore.getState();
   const r = computeRouteWindTimes({
     waypoints,
     cruiseSpeedKt,
-    windProvider: (lat, lon) =>
-      useWindsAloftStore.getState().getWindAt(lat, lon, DEFAULT_WIND_ALT_FT, new Date())
+    windProvider: makeRouteWindProvider({
+      segmentAltitudes,
+      defaultAltFt: flightParams?.altitude
+    })
   });
   if (!r || r.windCorrected === 'none') return null;
   return Math.round(r.effectiveSpeedKt * 10) / 10;

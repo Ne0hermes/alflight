@@ -4,7 +4,7 @@
 
 import React, { memo, useMemo, useEffect, useState } from 'react';
 import AlternatesModule from '@features/alternates/AlternatesModule';
-import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { theme } from '../../../styles/theme';
 import { useNavigation, useAircraft, useFuel } from '@core/contexts';
 import { useUnits } from '@hooks/useUnits';
@@ -265,7 +265,7 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
 
   // Calculer le rayon de recherche pour affichage
   const searchRadius = useMemo(() => {
-    if (!coneZoneParams) {
+    if (!coneZoneParams?.available) {
       // Fallback vers l'ancien calcul si pas de données cône
       const totalFuel = flightPlan.fuel?.confirmed || 0;
       const fuelUsed = (flightPlan.fuel?.taxi || 0) +
@@ -379,6 +379,33 @@ export const Step7Alternates = memo(({ flightPlan, onUpdate }) => {
 
   return (
     <>
+      {/* ⛔ Lot 1.0 (tranche 3) : zones de déroutement non calculables — DIT à
+          l'écran. L'ancien code fabriquait en silence un avion plein à ras
+          bord (rayon surestimé) quand le FOB n'était pas saisi. */}
+      {coneZoneParams?.available === false && (
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '10px',
+          padding: '10px 14px', marginBottom: '16px',
+          backgroundColor: 'var(--bg-overlay)',
+          borderLeft: '3px solid #f59e0b', borderRadius: 'var(--radius-sm)',
+          fontSize: 'var(--fs-body)', color: 'var(--text-secondary)'
+        }}>
+          <AlertTriangle size={16} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
+          <span>
+            {coneZoneParams.reason === 'fob-missing' && (
+              <><strong>Rayons de déroutement non calculables : FOB non saisi.</strong>{' '}
+              Renseignez le carburant embarqué (étape Carburant) pour des rayons fondés sur le carburant réel.</>
+            )}
+            {coneZoneParams.reason === 'perf-missing' && (
+              <><strong>Rayons de déroutement non calculables :</strong> vitesse de croisière ou consommation manquante sur la fiche avion.</>
+            )}
+            {coneZoneParams.reason === 'aircraft-missing' && (
+              <><strong>Rayons de déroutement non calculables :</strong> aucun avion sélectionné.</>
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Filtres manuels */}
       <div style={{
         backgroundColor: 'var(--bg-overlay)',

@@ -6,10 +6,9 @@ import { persist } from 'zustand/middleware';
 import { getCruiseSpeedKt, getFuelConsumptionLph } from '@utils/aircraftPerf';
 import { computeRegulatoryReserveMinutes, DEFAULT_FLIGHT_TYPE } from '@core/flightType';
 import { computeRouteWindTimes } from '@utils/routeWindTimes';
-import { useWindsAloftStore } from '@core/stores/windsAloftStore';
-
-// 🔧 C2 : altitude par défaut d'échantillonnage du vent (cf. useNavigationResults)
-const DEFAULT_WIND_ALT_FT = 3000;
+// ⛔ Lot 1.0 (tranche 3) : provider de vent partagé — altitude du TRONÇON
+// saisie au tableau de nav, plus jamais 3000 ft en dur.
+import { makeRouteWindProvider } from '@features/navigation/utils/windSampling';
 
 // Réassigne les rôles départ/arrivée selon la POSITION après un déplacement :
 // premier = 'departure', dernier = 'arrival' ; un ancien départ/arrivée déplacé
@@ -81,8 +80,12 @@ const calculateNavigationResults = (waypoints, flightType, selectedAircraft) => 
     ? computeRouteWindTimes({
         waypoints: validWaypoints,
         cruiseSpeedKt: cruiseSpeed,
-        windProvider: (lat, lon) =>
-          useWindsAloftStore.getState().getWindAt(lat, lon, DEFAULT_WIND_ALT_FT, new Date())
+        // ⛔ Lot 1.0 (tranche 3) : vent à l'altitude SAISIE par tronçon —
+        // le même que le tableau de nav, plus jamais 3000 ft en dur.
+        windProvider: makeRouteWindProvider({
+          segmentAltitudes: useNavigationStore.getState().segmentAltitudes,
+          defaultAltFt: useNavigationStore.getState().flightParams?.altitude
+        })
       })
     : null;
   const totalTime = windTimes ? Math.round(windTimes.totalTimeMin) : null;
