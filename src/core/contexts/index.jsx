@@ -85,6 +85,52 @@ export const AircraftProvider = memo(({ children }) => {
   //   }
   // }, [isInitialized, loadFromSupabase]);
 
+  // 📣 MISES À JOUR DES AVIONS IMPORTÉS (demande César, 25/08/2026).
+  // Conséquence directe de la désactivation ci-dessus : les copies locales sont
+  // FIGÉES — quand l'admin corrige une fiche communautaire, l'utilisateur ne le
+  // voyait JAMAIS (il volait avec des données périmées). Ici : UNE requête
+  // légère (id, registration, version — pas les fiches) sur les presets dont
+  // une copie locale existe, et les copies en retard partent dans
+  // aircraftUpdatesStore ; la bannière du module Avions les affiche. AUCUNE
+  // écriture : le pilote choisit (mettre à jour / ignorer). Hors-ligne ou base
+  // injoignable : silence — l'app fonctionne comme avant.
+  const updatesCheckedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!isInitialized || updatesCheckedRef.current) return;
+    const copies = aircraftList.filter((a) => a.communityPresetId);
+    if (copies.length === 0) return;
+    updatesCheckedRef.current = true;
+    (async () => {
+      try {
+        const [{ useAircraftUpdatesStore }, { default: communityService }] = await Promise.all([
+          import('../stores/aircraftUpdatesStore'),
+          import('@services/communityService'),
+        ]);
+        const ids = [...new Set(copies.map((a) => a.communityPresetId))];
+        const distantes = await communityService.getPresetVersions(ids);
+        const parId = new Map(distantes.map((r) => [r.id, r]));
+        const enRetard = [];
+        for (const a of copies) {
+          const distante = parId.get(a.communityPresetId);
+          const localVersion = a.version || 1;
+          const remoteVersion = distante?.version || 1;
+          if (distante && remoteVersion > localVersion) {
+            enRetard.push({
+              id: a.communityPresetId,
+              localId: a.id,
+              registration: a.registration || distante.registration,
+              localVersion,
+              remoteVersion,
+            });
+          }
+        }
+        useAircraftUpdatesStore.getState().setUpdates(enRetard);
+      } catch (e) {
+        console.warn('[AircraftProvider] Vérification des mises à jour impossible (hors-ligne ?) :', e?.message);
+      }
+    })();
+  }, [isInitialized, aircraftList]);
+
   // 🔧 FIX: Charger les avions depuis IndexedDB au démarrage (pas localStorage - Out of Memory)
   React.useEffect(() => {
     if (!isInitialized) {

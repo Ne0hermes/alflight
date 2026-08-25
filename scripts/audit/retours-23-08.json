@@ -266,8 +266,8 @@
  },
  {
   "itid": "F-BXNG-15",
-  "status": "partiel",
-  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : vglide saisi (61 kt) — vr, vapp, initialClimb toujours vides."
+  "status": "fait",
+  "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : vglide saisi (61 kt) — vr, vapp, initialClimb toujours vides. ▸ vglide saisie (61 kt) et vérifiée en base. vr et vapp sont FACULTATIVES (décision pilote du 24/08 — le juge de complétude est conforme : vapp OPTIONAL, vr non exigée) ; initialClimb facultative. Plus rien d'obligatoire ne manque."
  },
  {
   "itid": "F-GIEA-09",
@@ -318,5 +318,115 @@
   "itid": "F-HDIM-10",
   "status": "fait",
   "note": "Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : capacités cohérentes (162/151)."
+ },
+ {
+  "itid": "F-BXNG-02",
+  "status": "fait",
+  "note": "Vérifié en base v3 (ré-enregistrement du 25/08 09:11, suprématie admin active) : les sièges arrière ont DISPARU de la base (arms.rearSeats vidé, weightBalance.rearLeft/RightSeatArm et seatLimits.rearSeats absents). Première suppression de l'histoire de l'app qui tient — le pilote l'avait faite deux fois, les gardes anti-perte l'annulaient en silence (corrigé le 25/08)."
+ },
+ {
+  "itid": "F-BXNG-04",
+  "status": "valide",
+  "note": "Rapport pilote 25/08 : « il n'y en a pas » — le manuel F150M ne publie pas de notes de vent arrière ni de vent de face au décollage. Fidèle au manuel : l'avion vole sans crédit ni malus de vent sur ces phases (fail-closed). Les règles présentes (herbe 7 %/20 %, vent de face atterrissage 10 %/4 kt, écart ISA +10 %/20 °C TO et +10 %/35 °C LDG) sont conformes à ce que le manuel donne."
+ },
+ {
+  "itid": "F-BXNG-05",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : la note du manuel EST 10 % par 4 kt, sans paliers ni plafond — la règle saisie est fidèle."
+ },
+ {
+  "itid": "F-BXNG-06",
+  "status": "fait",
+  "note": "Vérifié en base v3 (ré-enregistrement du 25/08 09:11, suprématie admin active) : Masse = 726 sur les 4 lignes de la table atterrissage-roulage, alignée sur MTOW/MLW et les 3 autres tables."
+ },
+ {
+  "itid": "F-BXNG-11",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n'était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l'app puis ré-enregistrer — ou me confirmer que rien n'est approuvé sur cet avion."
+ },
+ {
+  "itid": "F-BXQT-01",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : la grille du manuel EST la diagonale ISA (une température par palier) — saisie fidèle. Conséquence assumée : hors conditions ISA, les tables refusent ; les 2 règles « écart ISA » (+10 %/20 °C décollage, +10 %/35 °C atterrissage) présentes en base prennent le relais."
+ },
+ {
+  "itid": "F-BXQT-02",
+  "status": "fait",
+  "note": "Vérifié en base v3 (ré-enregistrement du 25/08 09:11, suprématie admin active) : sièges arrière supprimés de la base (biplace) — même vérification que F-BXNG-02."
+ },
+ {
+  "itid": "F-BXQT-03",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : vsTO 42 / vso 43 confirmés conformes au manuel — l'ordre inhabituel (décrochage volets décollage 1 kt sous pleins volets) est celui du constructeur. Le manuel fait foi."
+ },
+ {
+  "itid": "F-BXQT-04",
+  "status": "note",
+  "note": "Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider."
+ },
+ {
+  "itid": "F-BXQT-05",
+  "status": "valide",
+  "note": "vr et vapp sont FACULTATIVES (décision pilote 24/08, juge conforme). vglide a été CERTIFIÉE absente du manuel par le pilote (bypassedFields contient speeds.vglide en base v3) : elle reste affichée comme critique par conception (« contourné ≠ rempli »), c'est le comportement voulu."
+ },
+ {
+  "itid": "F-BXQT-06",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : le manuel ne publie pas de règles de vent au décollage ni de vent arrière — fidèle au manuel, fail-closed assumé."
+ },
+ {
+  "itid": "F-BXQT-07",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : la note du manuel EST 10 % par 3 kt sans plafond — règle fidèle."
+ },
+ {
+  "itid": "F-BXQT-08",
+  "status": "fait",
+  "note": "Vérifié en base v3 (ré-enregistrement du 25/08 09:11, suprématie admin active) : Masse = 726 sur les 4 lignes, alignée sur MTOW/MLW = 726 et sur les 3 autres tables."
+ },
+ {
+  "itid": "F-BXQT-09",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : aucune pesée plus récente que celle de 2015 n'existe — la fiche de pesée en vigueur est la bonne."
+ },
+ {
+  "itid": "F-GGZO-14",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ : vr et vapp sont FACULTATIVES depuis la décision pilote du 24/08 (le juge de complétude est conforme — vapp OPTIONAL, vr non exigée). Cet item ne réclamait que ces deux champs : sans objet."
+ },
+ {
+  "itid": "F-GIEA-17",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ : vr est FACULTATIVE (décision pilote 24/08). Sans objet."
+ },
+ {
+  "itid": "F-GUVV-12",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ : vr et vapp sont FACULTATIVES (décision pilote 24/08). Sans objet."
+ },
+ {
+  "itid": "F-HDIM-06",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ : vr et vapp sont FACULTATIVES (décision pilote 24/08). Sans objet."
+ },
+ {
+  "itid": "F-GNAM-22",
+  "status": "note",
+  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide (obligatoire — V finesse max) reste à saisir sur cet avion."
+ },
+ {
+  "itid": "F-GOFP-09",
+  "status": "note",
+  "note": "REQUALIFIÉ partiellement : vr et vapp sont FACULTATIVES (décision 24/08). Seule vglide reste à saisir."
+ },
+ {
+  "itid": "F-GBTU-06",
+  "status": "note",
+  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide reste à saisir."
+ },
+ {
+  "itid": "F-HSTR-17",
+  "status": "note",
+  "note": "vr, vx, vy et initialClimb sont FACULTATIVES — l'item ne subsiste que pour la coïncidence vr = vx = vy = initialClimb = 72 kt, à confirmer au manuel (aucune erreur démontrée)."
  }
 ]

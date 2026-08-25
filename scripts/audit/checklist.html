@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 212 points recensés depuis l’audit d’origine,
-  <b>57 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 25 août 2026 : la valeur fautive a réellement disparu). Il reste <b>155 points à
+  <b>74 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 25 août 2026 : la valeur fautive a réellement disparu). Il reste <b>138 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 11 critiques, 36 majeurs, 108 mineurs — dont 53 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 8 critiques, 27 majeurs, 103 mineurs — dont 46 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 25 août 2026.</p>
 </header>
 
@@ -157,57 +157,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 
 <details class="av" open>
 <summary><span class="reg">F-BXNG</span><span class="mdl">F 150M</span><span class="spacer"></span>
-<span class="pill p-critique">1 critique</span>
-<span class="pill p-majeur">4 majeurs</span>
-<span class="pill p-mineur">7 mineurs</span>
+<span class="pill p-majeur">1 majeur</span>
+<span class="pill p-mineur">6 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-BXNG" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXNG" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tableaux MANEX seuls, aucun abaque : performanceModels = null et performanceTables = null (sonde 23/08 : 0 modèle évalué), toute la performance repose sur advancedPerformance.tables — 4 tables réimportées d&#x27;Excel le 18/06, grille ISA diagonale (une seule case température par palier d&#x27;altitude). Masse &amp; centrage complet et cohérent (cgEnvelope 3 points avant + limite arrière constante, 2 compartiments bagages, 2 réservoirs et 2 variantes). Corrections de piste/vent créées le 21/08, encore incomplètes.</b> — Le carburant est sain et vérifié chiffre par chiffre (85 L utilisables → moment 65,48 = 85 × 0,72 × 1,07 ; Long Range 132,5 L → 102,08 ; les deux variantes pointent bien sur leur réservoir), et l&#x27;enveloppe de centrage est cohérente à la décimale près avec ses miroirs. Ce qui bloque, c&#x27;est la performance : la grille des 4 tables n&#x27;est remplie que sur la diagonale ISA, si bien qu&#x27;à 0 ft dès 16 °C — comme à 5 °C — le moteur refuse toute distance ; s&#x27;y ajoute l&#x27;absence des deux opérations de décollage volets décollage, qui fait basculer l&#x27;affichage sur les tables « Flaps UP ». Commencez par là : rouvrir l&#x27;atelier tableaux et saisir toutes les colonnes de température des pages 68 et 69 ; puis effacer les bras de sièges arrière (1,000 m, identiques aux sièges avant), qui font accepter aujourd&#x27;hui un poste de chargement fantôme sans le moindre avertissement.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 7 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it critique" data-sev="critique" data-itid="F-BXNG-02" data-clos="0" data-champ="aircraft_data.arms.rearSeats + weightBalance.rearLeftSeatArm + weightBalance.rearRightSeatArm" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-02</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.arms.rearSeats + weightBalance.rearLeftSeatArm + weightBalance.rearRightSeatArm</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">arms.rearSeats = 1 et arms.frontSeats = 1 ; weightBalance.frontLeftSeatArm = frontRightSeatArm = rearLeftSeatArm = rearRightSeatArm = 1 (les quatre postes au même bras de 1,000 m). additionalSeats = [].</dd>
-<dt>Attendu</dt><dd>Bras arrière VIDES si le poste n&#x27;existe pas (jamais 0, jamais recopié sur l&#x27;avant), ou le bras arrière réel du manuel s&#x27;il existe — il ne peut en aucun cas être égal au bras des sièges avant.</dd>
-<dt>En vol</dt><dd>Une masse saisie « siège arrière » est acceptée et pesée au bras des sièges avant : elle ne déplace pas le centre de gravité vers l&#x27;arrière et le verdict annonce « dans les limites » sans aucun avertissement. Le centrage affiché ne correspond pas au chargement réel.</dd>
-<dt>Action</dt><dd>Onglet Masse &amp; centrage : effacer arms.rearSeats et les deux bras rearLeft/rearRightSeatArm (les laisser vides, ne pas mettre 0).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution computeWeightBalance du 23/08 sur la fiche fraîche : 80 kg avant gauche + 40 kg siège ARRIÈRE gauche + 85 L → totalWeight 708,3 kg, cg 0,897 m, isWithinLimits = true, warnings = [] — poste fantôme accepté en silence. Contradiction interne : deux stations distinctes déclarées au même bras.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXNG-04" data-clos="0" data-champ="aircraft_data.performanceCorrections — règle de vent arrière (décollage et atterrissage) et vent de face au décollage" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-04</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceCorrections — règle de vent arrière (décollage et atterrissage) et vent de face au décollage</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">3 règles seulement : herbe +7 % au décollage (percent_fixed), vent de face 10 % par 4 kt à l&#x27;atterrissage (percent_per_step), herbe +20 % à l&#x27;atterrissage (percent_fixed). Aucune règle de type tailwind, et aucune règle de vent au décollage.</dd>
-<dt>Attendu</dt><dd>Au minimum une règle de vent arrière pour chaque phase (le vent arrière allonge la distance) et une règle de vent de face au décollage, tirées des notes du manuel.</dd>
-<dt>En vol</dt><dd>Un décollage ou un atterrissage vent arrière ne reçoit aucune majoration : la distance annoncée est plus courte que la réalité. Un vent de face au décollage n&#x27;est pas crédité non plus, mais c&#x27;est le seul écart conservateur des deux.</dd>
-<dt>Action</dt><dd>Onglet Performances → Facteurs correctifs : ajouter une règle « vent arrière » pour le décollage et pour l&#x27;atterrissage, et une règle « vent de face » au décollage, avec les valeurs du manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution applyPerformanceCorrections du 23/08 sur les 3 règles réelles, distance de référence 1000 m : décollage 10 kt de face → ×1,000 ; décollage 5 kt arrière → ×1,000 ; atterrissage 5 kt arrière → ×1,000. Aucune correction appliquée dans les trois cas. Herbe : décollage ×1,07 et atterrissage ×1,20, bien appliquées. La fiche n&#x27;ayant aucun abaque (performanceModels = null), l&#x27;exemption « panneau vent » du 21/08 ne s&#x27;applique pas ici.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-04) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXNG-05" data-clos="0" data-champ="aircraft_data.performanceCorrections[1] (corr-1787319148115-ke0fq, headwind / landing)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-05</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceCorrections[1] (corr-1787319148115-ke0fq, headwind / landing)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">mode percent_per_step, value 10, stepKt 4, appliesTo landing — soit 10 % de réduction par tranche de 4 kt, sans palier ni plafond.</dd>
-<dt>Attendu</dt><dd>Le tableau de vent du manuel saisi en paliers (le moteur sait lire plusieurs paliers dans une seule règle), avec un plafond au-delà duquel la réduction n&#x27;augmente plus.</dd>
-<dt>En vol</dt><dd>À 24 kt de face la distance d&#x27;atterrissage est ramenée à 40 % de la valeur brute ; puis à partir de 32 kt la règle décroche et rend ×1,00, c&#x27;est-à-dire aucune correction du tout. Un pilote qui compare deux jours de vent voit la distance passer de 400 m à 1000 m entre 24 et 32 kt.</dd>
-<dt>Action</dt><dd>Onglet Performances → Facteurs correctifs : ouvrir la règle « vent de face — atterrissage », vérifier le pas et le pourcentage au manuel, et la ressaisir en paliers plutôt qu&#x27;en pourcentage récurrent.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution applyPerformanceCorrections du 23/08 sur la règle réelle, distance de référence 1000 m : 4 kt → 900 m (×0,90) ; 8 kt → 800 m ; 16 kt → 600 m ; 24 kt → 400 m (×0,40) ; 32 kt → 1000 m (×1,00) ; 40 kt → 1000 m. Discontinuité démontrée entre 24 et 32 kt.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXNG-06" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[3].data[0..3].Masse (landing_ground_roll_flaps_landing)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-06</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[3].data[0..3].Masse (landing_ground_roll_flaps_landing)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Masse = 728 sur les 4 lignes, alors que les 3 autres tables portent 726 et que weights.mtow = weights.mlw = maxTakeoffWeight = maxLandingWeight = 726, et cgEnvelope.aftMaxWeight = 726.</dd>
-<dt>Attendu</dt><dd>726 kg, homogène avec les 3 autres tables et avec la masse maximale déclarée par la fiche elle-même.</dd>
-<dt>En vol</dt><dd>Toute préparation à la masse maxi sort un avertissement « masse hors plage » sur le roulage à l&#x27;atterrissage, et la valeur affichée est celle du tableau à 728 kg reprise telle quelle. L&#x27;avertissement est parasite et finit par être ignoré, ce qui masquerait un vrai dépassement.</dd>
-<dt>Action</dt><dd>Onglet Performances → atelier Tableaux → table « Landing Ground Roll - Flaps LANDING » : corriger 728 en 726 sur les 4 lignes.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe déclarée par la fiche (728 &gt; mlw 726). Exécution 23/08, conditions (726 kg, 0 ft, 15 °C) : COMPUTED 136 m assorti du warning « Masse 726 kg hors plage du tableau (min 728 kg) — extrapolation impossible : affichage de la valeur du TABLEAU LE PLUS PROCHE (masse 728 kg) ». Même warning à 2500 ft et 5000 ft. Les 3 autres tables ne le produisent pas.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-06) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 12 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-BXNG-11" data-clos="0" data-champ="aircraft_data.approvedOperations (32 clés) et aircraft_data.specialCapabilities" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -218,7 +173,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Au minimum vfrDay coché et l&#x27;ELT déclaré si la balise est à bord, ainsi que les équipements de survie réellement embarqués — un avion équipé VOR/DME/ILS/GNSS et exploité en club ne peut être approuvé pour aucune opération.</dd>
 <dt>En vol</dt><dd>Le plan de vol ne déclare aucun équipement de survie : la case ELT part vide alors que la balise est réglementairement à bord. En cas de recherche, l&#x27;information manque là où elle compte.</dd>
 <dt>Action</dt><dd>Onglet Équipements → Opérations approuvées : cocher vfrDay, l&#x27;ELT et les équipements de survie réellement présents dans l&#x27;avion.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence entre deux blocs voisins de la fiche : équipements de navigation IFR déclarés présents et aucune opération approuvée, pas même le VFR de jour. Effet tracé au 21/08 : Step7Summary ne déclare l&#x27;ELT au plan de vol que si approvedOperations.elt est true.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-11) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n&#x27;était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l&#x27;app puis ré-enregistrer — ou me confirmer que rien n&#x27;est approuvé sur cet avion.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-11) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXNG-13" data-clos="0" data-champ="aircraft_data.speeds.vne" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -241,17 +196,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Aucun blocage (les deux vitesses sont facultatives depuis le 23/08), mais la montée au meilleur angle et la montée au meilleur taux sont annoncées à la même vitesse : impossible de choisir la bonne pour franchir un obstacle.</dd>
 <dt>Action</dt><dd>Onglet Vitesses : relire la page 51 du manuel, vérifier la valeur ET l&#x27;unité (kt ou mph), puis corriger Vx et Vy.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Égalité stricte de deux vitesses qui ne peuvent l&#x27;être au niveau de la mer. L&#x27;égalité vient de l&#x27;extraction elle-même (les deux items page 51 portent 68), donc d&#x27;une lecture unique reportée sur les deux champs — la correction se tranche au manuel, pas en base.</dd>
 </dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-15" data-clos="0" data-champ="aircraft_data.speeds.vr, speeds.vapp, speeds.vglide, speeds.initialClimb" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-15</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vr, speeds.vapp, speeds.vglide, speeds.initialClimb</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les quatre champs valent la chaîne vide &quot;&quot;. Piste dans la fiche : l&#x27;item d&#x27;extraction VAPP est found = true, sourcePage 52, confidence 70, originalValue « 52 à 61 » kts, mais accepted = false (fourchette non convertible en valeur unique).</dd>
-<dt>Attendu</dt><dd>Vr, Vapp et la vitesse de plané du manuel. Ces trois vitesses ne font pas partie du minimum obligatoire (vs1, vsTO, vso) mais restent les repères de conduite du vol.</dd>
-<dt>En vol</dt><dd>Aucune vitesse de rotation, d&#x27;approche ni de plané n&#x27;est proposée dans la préparation : le pilote les rejoue de mémoire ou rouvre le manuel en vol.</dd>
-<dt>Action</dt><dd>Onglet Vitesses : saisir Vr, Vapp (page 52 du manuel donne une fourchette 52 à 61 kt — retenir la valeur de la configuration utilisée) et Vglide.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs vides lus tels quels sur la base fraîche du 23/08. L&#x27;extraction page 52 a bien trouvé VAPP mais ne l&#x27;a pas acceptée : la donnée existe au manuel et n&#x27;a jamais été reportée.</dd>
-</dl><div class="notefait">✎ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : vglide saisi (61 kt) — vr, vapp, initialClimb toujours vides.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-15) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXNG-16" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -299,46 +243,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-BXQT</span><span class="mdl">CESSNA F150 M</span><span class="spacer"></span>
-<span class="pill p-critique">2 critiques</span>
-<span class="pill p-majeur">7 majeurs</span>
+<span class="pill p-majeur">1 majeur</span>
 <span class="pill p-mineur">6 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-BXQT" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXQT" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Fiche v3.0.0 « tables MANEX seules » : aucun abaque (performanceModels = null, sonde models = []), 4 tables d&#x27;opérations réimportées d&#x27;Excel le 18/06 et réduites à la seule diagonale ISA ; masse-centrage complet (enveloppe cgEnvelope à 3 points avant + limite arrière fixe 0,951 m, 2 compartiments bagages bras 1,63 / 2,13 m, 2 variantes de réservoir 98 L / 144 L) ; extraction MANEX de 113 items dont 2 seulement issus du PDF (VX/VY, p.45).</b> — Le socle masse-centrage et carburant est sain et arithmétiquement cohérent (masse à vide × bras = moment au gramme près, enveloppe et miroirs cgLimits concordants, réservoirs et moments à plein exacts, couverture des 4 opérations obligatoires acquise par tables + certifications). Ce qui bloque est unique et total : les 4 tables de performance ne contiennent qu&#x27;une seule température par palier d&#x27;altitude, ce qui laisse 12 cases vides sur 16 dans la grille du moteur — à l&#x27;exécution du 23/08, 4 jeux de conditions sur 5 échouent, et aucune distance de décollage ni d&#x27;atterrissage n&#x27;est calculable ailleurs qu&#x27;au point exact (0 ft, 15 °C, 726 kg). Commencer par ré-importer les pages 68-69 avec toutes les colonnes de température du manuel ; enchaîner ensuite sur les bras de sièges arrière fantômes (1,000 m, identiques aux sièges avant, qui ouvrent deux postes de charge inexistants dans le bilan de centrage), puis sur le trio de vitesses vsTO/vso/vfeTO qui est inversé.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 2 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it critique" data-sev="critique" data-itid="F-BXQT-01" data-clos="0" data-champ="advancedPerformance.tables[0..3].data" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-01</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">advancedPerformance.tables[0..3].data</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 4 tables (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, landing_50ft_flaps_landing, landing_ground_roll_flaps_landing, pages 68-69, _reimportedFromExcel du 18/06) portent 4 lignes chacune, avec UNE seule température par palier d&#x27;altitude, exactement la ligne ISA : (0 ft, 15 °C), (2500 ft, 10 °C), (5000 ft, 5 °C), (7500 ft, 0 °C). Grille reconstruite par le moteur : 1 masse × 4 altitudes × 4 températures absolues [0, 5, 10, 15] = 16 cases, dont 12 VIDES.</dd>
-<dt>Attendu</dt><dd>Plusieurs températures par palier d&#x27;altitude (grille complète du manuel), ou des écarts ISA −20/0/+20 — la détection ISA-relative exige au moins deux écarts distincts pour s&#x27;activer.</dd>
-<dt>En vol</dt><dd>Aucune distance de décollage ni d&#x27;atterrissage n&#x27;est produite dans la vraie vie. Au départ de LFPE (217 ft) le calcul échoue même par temps ISA ; dès que l&#x27;OAT dépasse 15 °C le moteur refuse (règle anti-écrêtage optimiste du 21/08). Le pilote lit « — » à la place des 4 distances, pour les deux phases.</dd>
-<dt>Action</dt><dd>Atelier Performances &gt; tables pages 68-69 : ré-importer les tableaux avec TOUTES les colonnes de température du manuel (l&#x27;aller-retour Excel n&#x27;a conservé que la ligne ISA). Si le manuel n&#x27;exprime la température qu&#x27;en note de pourcentage, le signaler : le modèle actuel ne sait pas la représenter.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur tableaux (performanceTableGrouping.buildLookupForOperation + performanceTrilinearInterpolation.trilinearInterpolate + tableInterpolationAdapter) sur la fiche fraîche du 23/08, 4 operationId × 5 jeux de conditions. detectIsaRelativeTemperatures = false (garde-fou « au moins deux écarts distincts », performanceTableGrouping.js l.182-192, qui nomme F-BXQT). Résultats : (0 ft, 15 °C, 726 kg) → 224 / 422 / 328 / 136 m, nœud exact ; (217 ft LFPE, 15 °C, 726 kg) → ERROR « trou dans la grille, case absente » ; (0 ft, 20 °C, 726 kg) → ERROR « OAT 20 °C au-delà de la grille (max 15 °C) » ; (217 ft, 25 °C, 700 kg) → ERROR ; (1000 ft, 10 °C, 650 kg) → ERROR. Soit 4 échecs sur 5, sur les 4 tables.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-01) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it critique" data-sev="critique" data-itid="F-BXQT-02" data-clos="0" data-champ="arms.rearSeats + weightBalance.rearLeftSeatArm + weightBalance.rearRightSeatArm" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-02</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">arms.rearSeats + weightBalance.rearLeftSeatArm + weightBalance.rearRightSeatArm</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">arms.rearSeats = 1,000 m et weightBalance.rearLeftSeatArm = rearRightSeatArm = 1,000 m, valeurs IDENTIQUES à arms.frontSeats = 1,000 m et à frontLeftSeatArm = frontRightSeatArm = 1,000 m. additionalSeats = [].</dd>
-<dt>Attendu</dt><dd>Sur un biplace côte à côte, bras arrière EFFACÉS (null) — c&#x27;est l&#x27;état valide reconnu par le garde-fou biplace. À défaut, un bras arrière strictement supérieur au bras avant : deux rangées distinctes ne peuvent pas occuper la même station longitudinale.</dd>
-<dt>En vol</dt><dd>Le bilan de masse et centrage du vol affiche deux postes de charge « siège arrière » qui n&#x27;existent pas sur l&#x27;avion, et les compte au bras des sièges avant. Une charge saisie là est ajoutée à la masse totale avec un moment faux : le centrage calculé et le verdict « dans les limites » ne correspondent plus à l&#x27;avion réel.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Masse &amp; centrage : vider les bras des sièges arrière (arms.rearSeats, weightBalance.rearLeftSeatArm et rearRightSeatArm) pour que tout chargement arrière soit refusé (fail-closed).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : rangée arrière et rangée avant déclarées à la même station (1,000 m). Chaîne de lecture vérifiée dans le code : Step6WeightBalance.jsx l.803 construit arms.rearLeft = wb.rearLeftSeatArm = 1 (donc ≠ null, le garde-fou biplace « arms.rearLeft !== null » ne se déclenche pas) et computeWeightBalance.js l.280 calcule rearLeftMoment = charge × wb.rearLeftSeatArm = charge × 1,00.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-03" data-clos="0" data-champ="speeds.vsTO / speeds.vso" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-03</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">speeds.vsTO / speeds.vso</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vsTO = 42 kt, vso = 43 kt, vs1 = 49 kt. Le décrochage en configuration DÉCOLLAGE est annoncé 1 kt SOUS le décrochage pleins volets.</dd>
-<dt>Attendu</dt><dd>Ordre physique vso ≤ vsTO ≤ vs1 : plus de volets sortis, plus la vitesse de décrochage est basse. L&#x27;une des deux valeurs est fausse.</dd>
-<dt>En vol</dt><dd>Les arcs de vitesse et les marges de décrochage affichées au pilote sont incohérentes en approche et au décollage ; toute règle dérivée (1,3 Vso, vitesse de sécurité) part d&#x27;une base fausse d&#x27;au moins 1 kt.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Vitesses : relever VSO et VS T/O au manuel (même masse, 0° d&#x27;inclinaison) et corriger celle des deux qui est erronée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne entre deux champs voisins du même objet speeds, lue en base le 23/08 : vsTO (42) &lt; vso (43), alors que la configuration atterrissage sort plus de volets que la configuration décollage.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-03) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 10 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-BXQT-04" data-clos="0" data-champ="speeds.vfeTO" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -349,62 +259,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Soit la vraie VFE volets décollage du manuel, strictement supérieure à la vitesse de décrochage en configuration décollage ; soit un champ VIDE, cohérent avec la certification « absent du manuel » déjà posée.</dd>
 <dt>En vol</dt><dd>La plage d&#x27;utilisation des volets décollage affichée est nulle ou négative : la limite de sortie des volets présentée au pilote se situe sous la vitesse de décrochage correspondante, donc inutilisable telle quelle.</dd>
 <dt>Action</dt><dd>Fiche avion &gt; Vitesses : soit saisir la VFE volets décollage du manuel (si le manuel ne donne qu&#x27;une seule VFE, reporter vfeLdg = 87), soit vider le champ pour qu&#x27;il soit cohérent avec la certification déjà enregistrée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradictions internes lues en base : vfeTO (42) ≤ vsTO (42) et vfeTO (42) &lt; vso (43) — une vitesse maximale volets sortis ne peut pas être inférieure ou égale à la vitesse de décrochage de la même configuration. Second constat : bypassedFields contient « speeds.vfeTO » (champ certifié absent) alors que speeds.vfeTO = 42.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-04) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-05" data-clos="0" data-champ="speeds.vr / speeds.vapp / speeds.vglide" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-05</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">speeds.vr / speeds.vapp / speeds.vglide</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vr = &quot;&quot;, vapp = &quot;&quot;, vglide = &quot;&quot; (chaînes vides). Ce sont les trois seuls champs obligatoires encore vides de la fiche : toutes les vitesses de sévérité CRITICAL sont renseignées (vso 43, vsTO 42, vs1 49, vne 141, vno 104, vfeLdg 87).</dd>
-<dt>Attendu</dt><dd>VR (rotation), V approche et V de plané renseignées — les trois sont déclarées REQUIRED par le référentiel de complétude en vigueur.</dd>
-<dt>En vol</dt><dd>Le pilote ne dispose sur la fiche ni de la vitesse de rotation, ni de la vitesse d&#x27;approche, ni de la finesse max : trois repères à retrouver dans le manuel papier au moment où il en a besoin, en particulier la vitesse de plané en cas de panne moteur.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Vitesses : relever VR, VAPP et V finesse max au manuel de vol et les saisir.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs obligatoires vides. FIELD_DEFINITIONS (src/features/aircraft/utils/aircraftCompleteness.js l.167, 170, 171) classe speeds.vr, speeds.vapp et speeds.vglide en severity REQUIRED ; la base du 23/08 les porte à &quot;&quot;.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-06" data-clos="0" data-champ="performanceCorrections" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-06</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">performanceCorrections</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">3 règles seulement : [0] grass / takeoff / percent_fixed +7 % ; [1] headwind / landing / percent_per_step 10 % par 3 kt ; [2] grass / landing / percent_fixed +20 %. AUCUNE règle de vent pour la phase DÉCOLLAGE, et AUCUNE règle de vent ARRIÈRE pour aucune des deux phases.</dd>
-<dt>Attendu</dt><dd>Au moins une règle vent de face et une règle vent arrière par phase, reprises des notes du manuel de vol.</dd>
-<dt>En vol</dt><dd>Au décollage, le vent n&#x27;intervient nulle part dans la distance affichée : ni crédit de vent de face, ni pénalité de vent arrière. À l&#x27;atterrissage, un vent arrière n&#x27;est pas pénalisé. La distance annoncée par vent arrière est donc OPTIMISTE, dans le sens dangereux.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Corrections de performance : saisir les règles de vent du manuel pour le décollage (face et arrière) et la règle de vent arrière à l&#x27;atterrissage.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Lacune démontrée par la fiche et par le code. Fiche : les 3 règles ci-dessus sont la totalité de performanceCorrections ; les données des 4 tables ne portent que les clés Masse, Altitude, Temperature et value — aucun axe vent. Code : PerformanceModule.jsx l.609-619 applique les règles de vent à toute distance dont windIncluded n&#x27;est pas true, ce qui est le cas de toutes les distances issues d&#x27;un TABLEAU ; l&#x27;exonération du 21/08 ne vise que les abaques à panneau vent, or cet avion n&#x27;a aucun abaque (performanceModels = null). Reste à confirmer au manuel les valeurs exactes à saisir.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-06) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-07" data-clos="0" data-champ="performanceCorrections[1] (headwind, landing, percent_per_step, value 10, stepKt 3)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-07</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">performanceCorrections[1] (headwind, landing, percent_per_step, value 10, stepKt 3)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Crédit de vent de face à l&#x27;atterrissage : −10 % de distance par tranche de 3 kt, sans plafond de vent déclaré.</dd>
-<dt>Attendu</dt><dd>La note exacte de la page atterrissage du manuel (valeur du pourcentage et largeur de la tranche de vent). Rien dans la fiche ne permet de trancher.</dd>
-<dt>En vol</dt><dd>Le crédit accordé au vent de face est très rapide : 12 kt de face ramènent la distance à 60 % de sa valeur, 21 kt à 30 %. Si la tranche du manuel est plus large que 3 kt, la distance d&#x27;atterrissage affichée est trop courte dès qu&#x27;il y a du vent — donc optimiste.</dd>
-<dt>Action</dt><dd>Vérifier la note de correction de vent sur la page atterrissage du manuel et corriger stepKt et/ou value en conséquence dans Corrections de performance.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Arithmétique de la règle telle qu&#x27;elle est encodée, appliquée par le moteur (tranches complètes floor(vent/3), facteur borné à FACTOR_MIN = 0,3) : 12 kt → ×0,60 ; 21 kt → ×0,30 ; à partir de 24 kt la règle sort de ses bornes et n&#x27;est plus appliquée du tout. Le comportement est démontré, la valeur de référence ne l&#x27;est pas : à trancher au manuel.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-07) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-08" data-clos="0" data-champ="advancedPerformance.tables[3].data[0..3].Masse (landing_ground_roll_flaps_landing)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-08</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">advancedPerformance.tables[3].data[0..3].Masse (landing_ground_roll_flaps_landing)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Masse = 728 kg sur les 4 lignes de la table, alors que maxTakeoffWeight = maxLandingWeight = weights.mtow = weights.mlw = 726 kg et que les 3 autres tables sont toutes à 726 kg.</dd>
-<dt>Attendu</dt><dd>726 kg, aligné sur la masse maximale à l&#x27;atterrissage déclarée par la fiche et sur les 3 autres tables.</dd>
-<dt>En vol</dt><dd>La distance de roulement à l&#x27;atterrissage est lue sur une grille dont l&#x27;unique masse (728 kg) est au-dessus de la masse maximale d&#x27;atterrissage de l&#x27;avion. Toute masse réelle est écrêtée sur ce point : le pilote ne verra jamais d&#x27;alerte de cohérence, et la table reste désolidarisée des trois autres.</dd>
-<dt>Action</dt><dd>Atelier Performances &gt; table « Landing Ground Roll - Flaps LANDING » : corriger 728 → 726 sur les 4 lignes.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe déclarée par la fiche elle-même : 728 kg &gt; MLW 726 kg (maxLandingWeight et weights.mlw). Confirmé à l&#x27;exécution du 23/08 : la grille de cette opération sort avec masses = [728], contre masses = [726] pour les trois autres, et toute masse cible déclenche le repli « tableau le plus proche (masse 728 kg) ».</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-08) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-09" data-clos="0" data-champ="weighingReport.certificationDate" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-09</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">metadonnees</span><span class="path">weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">2015-09-25 — soit 10 ans et 11 mois au 23/08/2026 (PDF « Fiche de pesée QT.pdf », 95 746 octets, déposé le 2026-06-18).</dd>
-<dt>Attendu</dt><dd>Confirmation qu&#x27;aucune pesée plus récente n&#x27;existe, ou remplacement du PDF et de la date par ceux de la dernière pesée.</dd>
-<dt>En vol</dt><dd>La masse à vide (513,5 kg) et le bras à vide (0,813 m) qui fondent TOUS les centrages viennent d&#x27;un document au-delà du seuil d&#x27;alerte de l&#x27;application : si l&#x27;avion a été repeint, rééquipé ou repesé depuis, chaque bilan de centrage part d&#x27;une base périmée.</dd>
-<dt>Action</dt><dd>Demander au club la date de la dernière pesée ; mettre à jour le PDF et la date de certification dans Fiche avion &gt; Rapport de pesée si une pesée plus récente existe.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champ lu en base le 23/08 : certificationDate = 2015-09-25, soit 10,9 ans, au-delà du seuil WEIGHING_REPORT_WARN_YEARS = 10 utilisé par l&#x27;application (isOld = true). Seule une confirmation du club peut clore le point.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-09) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-04) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXQT-10" data-clos="0" data-champ="advancedPerformance.tables[1].table_name" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -546,7 +401,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>VR (rotation) et vitesse de finesse maximale (plané) relevées au manuel PA-28-161.</dd>
 <dt>En vol</dt><dd>Pas de vitesse de rotation affichée sur la fiche de préparation, et surtout aucune vitesse de plané disponible en cas de panne moteur — le pilote n&#x27;a pas le chiffre sous les yeux au moment où il en a besoin.</dd>
 <dt>Action</dt><dd>Étape Vitesses de la fiche avion : saisir VR et V plané depuis le manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs obligatoires vides : aircraftCompleteness.js:167 (speeds.vr, severity REQUIRED, poids 2) et :171 (speeds.vglide, severity REQUIRED, poids 1). manexExtraction : speeds.vr et speeds.vglide à value = null, accepted = false — le manuel n&#x27;a rien fourni automatiquement.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-06) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide reste à saisir.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-06) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GBTU-09" data-clos="0" data-champ="aircraft_data.performanceCorrections" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -639,11 +494,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <details class="av" open>
 <summary><span class="reg">F-GGZO</span><span class="mdl">Cessna 172N</span><span class="spacer"></span>
 <span class="pill p-majeur">3 majeurs</span>
-<span class="pill p-mineur">7 mineurs</span>
+<span class="pill p-mineur">6 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GGZO" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GGZO" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Avion 100 % TABLEAUX MANEX (performanceModels = null, performanceTables = null) : 8 tables réimportées d&#x27;Excel (analysisVersion 2.0, _reimportedFromExcel), les 4 opérations obligatoires couvertes, grille rectangulaire COMPLÈTE et absolue 9 altitudes (0→8000 ft) × 5 températures (0→40 °C) = 45 points par table, décollage à 3 masses (862/953/1043 kg, p.84-86), atterrissage à la seule masse maxi 1043 kg (p.96, repli « tableau le plus proche » conservateur en dessous). Sortie homogène en mètres sur les 8 tables, aucun doublon de clé, une seule rupture de monotonie sur 360 cellules. Enveloppe de centrage cgEnvelope à 3 points avant + segment arrière, arithmétiquement exacte. Aucun abaque : la sonde moteur (probe-F-GGZO.json, models: []) n&#x27;a donc RIEN exécuté sur cette fiche — la voie tableaux n&#x27;est pas couverte par la sonde.</b> — Le socle est sain : enveloppe de centrage exacte au centime (moment = masse × bras vérifié sur les 5 points), bras réels et cohérents pour sièges, carburant et compartiments bagages, 8 tables MANEX complètes et homogènes en mètres, et les 4 opérations obligatoires du 23/08 sont couvertes. Deux points faussent aujourd&#x27;hui une distance et doivent passer en premier : la règle vent arrière au DÉCOLLAGE est en mode « facteur » au lieu de « pourcentage » (le moteur applique ×10 à 1-2 kt, puis n&#x27;applique PLUS RIEN au-delà de 2 kt — direction non conservative), et la cellule 2000 ft / 20 °C de la table d&#x27;atterrissage 50 ft vaut 704 m au lieu de 407 m, ce qui gonfle jusqu&#x27;à +37 % toutes les distances d&#x27;atterrissage entre 1000 et 3000 ft et 10 et 30 °C. Commencez par ces deux-là (deux corrections de 30 secondes dans l&#x27;app), puis la vitesse vsTO absente et l&#x27;alignement des contenances carburant ; rien n&#x27;a été sauvegardé depuis le 19/08, donc aucun des points du ré-audit du 21/08 n&#x27;a encore été traité.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 5 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 6 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-GGZO-04" data-clos="0" data-champ="aircraft_data.fuelUsableCapacity (racine) et aircraft_data.additionalFuelTanks[0].usableCapacity" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -732,17 +587,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Le mode transpondeur réel n&#x27;est pas saisi là où l&#x27;application le relit ; le champ orphelin peut ressortir dans le plan de vol.</dd>
 <dt>Action</dt><dd>Vider ce champ ; saisir le mode réel dans l&#x27;étape Équipements, et déclarer la balise dans les opérations approuvées.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champ orphelin démontré : clé au singulier présente dans la fiche, clé au pluriel attendue par l&#x27;écran Équipements et absente. (Reprend F-GGZO-11, ouvert depuis l&#x27;audit initial, toujours vrai.)</dd>
 </dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GGZO-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GGZO-14" data-clos="0" data-champ="aircraft_data.speeds.vr et aircraft_data.speeds.vapp" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GGZO-14</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vr et aircraft_data.speeds.vapp</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vr = &quot;&quot; et vapp = &quot;&quot; (chaînes vides). Les autres vitesses sont renseignées et physiquement ordonnées : vso 33 &lt; vs1 44 &lt; vx 54 &lt; vglide 65 &lt; vy 73 &lt; vfeLdg 85 &lt; vfeTO 110 &lt; vno 127 &lt; vne 158.</dd>
-<dt>Attendu</dt><dd>Vr (rotation) et Vapp (approche) du manuel. Ce sont des champs RECOMMANDÉS, pas obligatoires au sens de la règle du 23/08 (qui ne rend obligatoires que vs1, vsTO et vso).</dd>
-<dt>En vol</dt><dd>Aucune vitesse de rotation ni d&#x27;approche affichée sur la fiche de préparation ; le pilote doit les retrouver au manuel en vol. Aucun calcul n&#x27;est faussé.</dd>
-<dt>Action</dt><dd>Étape Vitesses → saisir Vr et Vapp du manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs recommandés vides (poids REQUIRED 2 chacun dans aircraftCompleteness.js). Note : vfeTO 110, vx 54 et vy 73 sont bien renseignées et, étant facultatives depuis le 23/08, ne font l&#x27;objet d&#x27;aucune réserve. (Reprend F-GGZO-12, ouvert depuis l&#x27;audit initial, toujours vrai.)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GGZO-14) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GGZO-15" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (et cgEnvelope.aftMinWeight / forwardPoints[0].weight)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -759,11 +603,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <summary><span class="reg">F-GIEA</span><span class="mdl">PA 28 161</span><span class="spacer"></span>
 <span class="pill p-critique">2 critiques</span>
 <span class="pill p-majeur">4 majeurs</span>
-<span class="pill p-mineur">8 mineurs</span>
+<span class="pill p-mineur">7 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GIEA" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GIEA" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 uniquement — 4 planches Piper numérisées en cascade OAT → masse → vent (8 + 8/10 + 20/28 guides), aucune table MANEX (performanceTables = null, advancedPerformance absent) ; enveloppe de centrage à 3 points avant + segment arrière, arithmétiquement exacte ; extraction MANEX de juin 2026 (113 items, confiance 95 %) reprise partiellement à la main.</b> — Le cœur masse &amp; centrage est sain : masse à vide, bras, moments, réservoir et enveloppe se recoupent au centième près, et les 4 opérations de décollage tournent sur la sonde du 23/08. Deux choses bloquent : les vitesses de décrochage sont dans le désordre (VSO 63 &gt; VS1 50, alors que le 44 rangé dans VSTO est vraisemblablement la vraie VSO), et l&#x27;atterrissage ne calcule rien du tout — les deux opérations volets atterrissage, désormais obligatoires, sont certifiées « absentes du manuel » alors que ton propre retour signale l&#x27;abaque p50. Commence par ces deux points, puis par la règle « herbe » manquante et les 3 guides de vent non tagués du modèle « passage 15 m volets rentrés » ; le reste est de l&#x27;étiquetage et des miroirs inertes.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 3 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 4 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it critique" data-sev="critique" data-itid="F-GIEA-01" data-clos="0" data-champ="aircraft_data.speeds.vso / speeds.vs1 / speeds.vsTO" data-sevlbl="critique">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -907,17 +751,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Champ orphelin qui n&#x27;est plus lu par la synthèse de vol : le mode transpondeur n&#x27;est en réalité déclaré nulle part. C&#x27;est ce champ qui faisait autrefois apparaître une balise de détresse au plan de vol.</dd>
 <dt>Action</dt><dd>Vider le champ et cocher le ou les modes réels dans l&#x27;étape Équipements.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction de schéma dans la fiche : singulier présent, pluriel absent. Le singulier est posé en dur à l&#x27;initialisation (AircraftCreationWizard.jsx:403 : transponderMode: &#x27;C&#x27;), l&#x27;écran actuel écrit le pluriel (Step5Equipment.jsx:644), et la synthèse de vol a cessé de lire le singulier (Step7Summary.jsx:584).</dd>
 </dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GIEA-17" data-clos="0" data-champ="aircraft_data.speeds.vr" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-17</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vr</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">&quot;&quot; (chaîne vide). L&#x27;extraction MANEX ne l&#x27;a pas trouvée (items[29], found = false).</dd>
-<dt>Attendu</dt><dd>La VR du manuel. Le retour pilote propose 55 kt d&#x27;après les p21-22, valeur non saisie à ce jour.</dd>
-<dt>En vol</dt><dd>Pas de vitesse de rotation sur la fiche de vol : elle se prend de mémoire au décollage.</dd>
-<dt>Action</dt><dd>Fiche avion → Vitesses : saisir VR après relecture des p21-22.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champ vide sur la base fraîche ; référencé comme requis (poids 2) dans aircraftCompleteness.js. Classé à-confirmer parce que le 55 kt vient d&#x27;un retour et non d&#x27;une lecture directe du manuel.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-17) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GNAM</span><span class="mdl">PA-28-181</span><span class="spacer"></span>
@@ -1102,7 +935,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>VR (vitesse de rotation) et vitesse de plané (meilleure finesse) relevées au manuel de vol.</dd>
 <dt>En vol</dt><dd>Pas de VR affichée au briefing décollage et pas de vitesse de plané disponible en cas de panne moteur — deux repères de briefing qui manquent sur un avion utilisé en école.</dd>
 <dt>Action</dt><dd>Étape Vitesses → saisir VR et V plané d&#x27;après le manuel de vol AM.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs obligatoires vides selon le registre de l&#x27;application lui-même : src/features/aircraft/utils/aircraftCompleteness.js:167 (speeds.vr, severity REQUIRED, poids 2) et :171 (speeds.vglide, severity REQUIRED, poids 1) ; valeurs lues en base : chaînes vides.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-22) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide (obligatoire — V finesse max) reste à saisir sur cet avion.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-22) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOFP</span><span class="mdl">Cessna F152</span><span class="spacer"></span>
@@ -1143,7 +976,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>VR, vitesse d&#x27;approche et vitesse de finesse max du manuel ; pour initialClimb, l&#x27;extraction MANEX a trouvé 715 ft/min page 68 avec 95 % de confiance, item resté NON accepté</dd>
 <dt>En vol</dt><dd>Ni vitesse de rotation, ni vitesse d&#x27;approche, ni vitesse de plané dans la fiche de vol : le pilote doit aller les chercher au manuel à chaque préparation.</dd>
 <dt>Action</dt><dd>Fiche avion &gt; étape Vitesses : saisir VR / V approche / V plané, et accepter l&#x27;item d&#x27;extraction « initialClimb » (715 ft/min) après vérification page 68.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs obligatoires vides : les trois sont déclarés severity REQUIRED dans D:/Applicator/alflight/src/features/aircraft/utils/aircraftCompleteness.js:167-171 et valent la chaîne vide. À l&#x27;inverse, les trois vitesses de décrochage obligatoires sont bien renseignées (vs1 = 40, vsTO = 40, vso = 35), ainsi que vne, vno et vfeLdg — cet aspect-là de la fiche est sain.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-09) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ REQUALIFIÉ partiellement : vr et vapp sont FACULTATIVES (décision 24/08). Seule vglide reste à saisir.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-09) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GOFP-11" data-clos="0" data-champ="aircraft_data.speeds.vne" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1398,11 +1231,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <details class="av" open>
 <summary><span class="reg">F-GUVV</span><span class="mdl">DA40TDI</span><span class="spacer"></span>
 <span class="pill p-majeur">2 majeurs</span>
-<span class="pill p-mineur">10 mineurs</span>
+<span class="pill p-mineur">9 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GUVV" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GUVV" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 entièrement reconstruits le 23/08 (updated_at 12:39) : 4 modèles couvrant exactement les 4 opérations obligatoires, panneau d&#x27;entrée OAT primaire en famille pressure_altitude puis 2 panneaux de correction à guides numérotés (masse, vent), 1 cas de référence MANEX par modèle ; aucune table MANEX (performanceTables null, advancedPerformance null) ; masse-centrage sur cgEnvelope (3 points avant, 2 arrière, moments recalculés exacts), un seul réservoir principal ; équipements encore en forme legacy.</b> — La refonte du 23/08 a réglé l&#x27;essentiel : les 6 vieux modèles mal étiquetés ont laissé place à 4 abaques propres, le panneau OAT est bien l&#x27;entrée de chaîne, le vent de face raccourcit désormais les distances au décollage, le centrage et le carburant tournent sans faute (plein 147,6 L = 124,0 kg à 0,84, CG 2,530 m, enveloppe et miroir weightBalance cohérents). Ce qui bloque : les deux abaques d&#x27;atterrissage n&#x27;ont AUCUN guide de vent arrière, si bien que le moteur se rabat en silence sur le guide n°1 et renvoie 403 m (passage 15 m) et 157 m (roulage) quels que soient la température, l&#x27;altitude et la masse — 47 % trop court, alors que la fiche autorise 10 kt de vent arrière. Commencer par là : digitaliser les guides vent arrière des 2 charts d&#x27;atterrissage ; puis renommer le guide « HEADWIND » du décollage roulage (écarté du calcul) et refaire passer son cas de référence, qui échoue à 5,1 % ; le reste est de l&#x27;hygiène de fiche à trancher au manuel.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 4 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 5 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-GUVV-02" data-clos="0" data-champ="performanceModels[0].data.graphs[1].curves[10] — guide « HEADWIND » (panneau vent de « Distance sol décollage »)" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1480,17 +1313,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Aucun effet de calcul ; la table des VO affiche une tranche de masse que l&#x27;avion ne peut pas atteindre, ce qui sème le doute sur la VO à retenir à la MTOW.</dd>
 <dt>Action</dt><dd>Vérifier la tranche VO au MANEX et ramener la borne à 1150 kg si le manuel ne dit pas 1180.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe de masse déclarée par la fiche elle-même (1180 &gt; MTOW 1150, cohérente dans trois champs). Le libellé exact du manuel reste à vérifier.</dd>
 </dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-12" data-clos="0" data-champ="speeds.vr et speeds.vapp" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-12</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">speeds.vr et speeds.vapp</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vr = &#x27;&#x27; et vapp = &#x27;&#x27;. Les vitesses obligatoires sont bien renseignées (vs1 52, vsTO 51, vso 49) ainsi que vx 72, vy 72, vfeTO 108, vfeLdg 91, vno 129, vne 178, vglide 88, initialClimb 75.</dd>
-<dt>Attendu</dt><dd>VR et VAPP du manuel (facultatives depuis le 23/08, mais affichées dans le résumé du vol).</dd>
-<dt>En vol</dt><dd>Le résumé de préparation du vol n&#x27;affiche ni vitesse de rotation ni vitesse d&#x27;approche : le pilote doit les retrouver ailleurs au moment du briefing.</dd>
-<dt>Action</dt><dd>Saisir VR et VAPP du MANEX à l&#x27;étape Vitesses.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs vides en base, relevés sur l&#x27;extraction fraîche ; leurs valeurs ne sont pas déductibles de la fiche, à lire au manuel.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-12) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GUVV-13" data-clos="0" data-champ="manufacturer (aircraft_data.manufacturer, colonne racine manufacturer, search_vector)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1538,11 +1360,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HDIM</span><span class="mdl">Cessna Skyhawk 172P</span><span class="spacer"></span>
-<span class="pill p-mineur">9 mineurs</span>
+<span class="pill p-mineur">8 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-HDIM" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-HDIM" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tables numériques MANEX réimportées d&#x27;Excel le 21/08 (6 tables, p.90/91/101, unités homogènes en pieds, grille absolue 9 altitudes × 5 températures) ; aucun abaque d&#x27;atelier (performanceModels = null, d&#x27;où la liste vide du probe) ; enveloppe de centrage moderne à 3 points avant + limite arrière 1,20 m ; réservoirs à deux contenances avec 3 variantes (162/204/257 L). Dernière sauvegarde de la fiche : 2026-08-21T12:41:23 — base inchangée depuis le ré-audit du 21/08.</b> — La fiche est saine sur l&#x27;essentiel : les 4 opérations obligatoires de performance sont couvertes, les 6 tables sont monotones sur les trois axes, homogènes en pieds, sans aucune violation « passage 50 ft ≤ roulement » sur 354 cellules, et le moteur rend une distance dans 6 des 8 jeux de conditions testés ; le centrage est complet et cohérent (masse à vide 706,5 kg × bras 0,93 m = moment 657,045 déclaré, compartiment 54 kg × 2,41 m = 130,14, moments des 3 réservoirs exacts au litre). Ce qui reste bloquant : à 1089 kg le décollage est REFUSÉ à 7000 ft/40 °C et 8000 ft/30-40 °C (3 cases absentes), et aucune règle de vent arrière n&#x27;existe — 10 kt de vent arrière laissent la distance inchangée alors que 9 kt de face lui accordent -10 %. Commencer par ces deux points, puis par VS T/O (seule vitesse CRITIQUE absente, elle bloque l&#x27;enregistrement de la fiche) et par la vérification au POH de vs1/vso, dont le rapport à Va (99/44) implique un facteur de charge de 5 g impossible.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 7 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 8 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HDIM-05" data-clos="0" data-champ="aircraft_data.speeds.voRanges[0..2].minWeight / maxWeight" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1554,17 +1376,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>La borne haute (2400) vaut 2,2 fois la MTOW : à 1089 kg la fiche renvoie la PREMIÈRE tranche (82 kt) au lieu de la dernière (99 kt), soit une Va affichée trop faible. Portée limitée à l&#x27;affichage — voRanges n&#x27;est lu que par Step2Speeds et Step5Review, aucun calcul de préparation de vol ne le consomme.</dd>
 <dt>Action</dt><dd>Fiche avion → Étape Vitesses → tableau Va : convertir les 6 bornes de masse en kg.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : maxWeight 2400 &gt; maxTakeoffWeight 1089 (facteur 2,2) alors que l&#x27;unité de masse déclarée par la fiche elle-même (_metadata.units.weight) est le kg.</dd>
 </dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-06" data-clos="0" data-champ="aircraft_data.speeds.vr et aircraft_data.speeds.vapp" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-06</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vr et aircraft_data.speeds.vapp</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vr = &quot;&quot; et vapp = &quot;&quot; (speeds.initialClimb = &quot;&quot; également ; vglide = 65 est, elle, renseignée).</dd>
-<dt>Attendu</dt><dd>Vitesse de rotation et vitesse d&#x27;approche du POH 172P.</dd>
-<dt>En vol</dt><dd>Ni Vr ni Vapp n&#x27;apparaissent au briefing : le pilote n&#x27;a pas ses deux repères de rotation et de finale sur la fiche.</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Vitesses : renseigner VR et V approche.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution de evaluateAircraft(F-HDIM) : missing contient {speeds.vr, severity REQUIRED} et {speeds.vapp, severity REQUIRED}. vx et vy figurent aussi dans missing mais en severity OPTIONAL depuis le 21/08 : leur absence n&#x27;est plus un défaut et n&#x27;est pas retenue ici.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-06) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HDIM-07" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[3].data — cellule (Masse 995, Altitude 4000, Temperature 10)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1923,7 +1734,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Les valeurs propres du manuel pour Vx et Vy ; ou champs facultatifs vidés (vx et vy sont OPTIONNELS depuis le 23/08, vs1 66 / vsTO 65 / vso 60 — les trois obligatoires — étant bien renseignées et cohérentes entre elles).</dd>
 <dt>En vol</dt><dd>Vx égal à Vy prive le pilote de la vitesse de meilleure pente en cas d&#x27;obstacle au décollage. initialClimb est en outre déclaré en kt par l&#x27;écran Vitesses et en ft/min par le mapper d&#x27;extraction : sa valeur est ambiguë quel que soit son contenu.</dd>
 <dt>Action</dt><dd>Vérifier Vx et Vy à la section 5 du manuel : corriger si elles diffèrent, sinon vider les champs facultatifs plutôt que de laisser une valeur recopiée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Quatre champs distincts à la valeur identique 72 ; définitions contradictoires du même champ initialClimb entre Step2Speeds.jsx l.318 (kt) et manexExtractionMapper.js l.211 (ft/min).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-17) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ vr, vx, vy et initialClimb sont FACULTATIVES — l&#x27;item ne subsiste que pour la coïncidence vr = vx = vy = initialClimb = 72 kt, à confirmer au manuel (aucune erreur démontrée).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-17) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HSTR-18" data-clos="0" data-champ="aircraft_data.specialCapabilities" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">

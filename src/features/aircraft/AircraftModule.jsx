@@ -7,6 +7,7 @@ import { useAuth } from '../../core/contexts/AuthContext';
 import { isAdminUser } from '../../core/auth/roles';
 import SendManualRequestButton from './components/SendManualRequestButton';
 import AircraftRequestsPanel from './components/AircraftRequestsPanel';
+import AircraftUpdatesBanner from './components/AircraftUpdatesBanner';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
 import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
@@ -1721,6 +1722,11 @@ export const AircraftModule = memo(() => {
           notification « ajouté » ; admin : boîte de réception avec manuel PDF
           et actions Traitée/Refuser). Discret : rien à afficher = invisible. */}
       <AircraftRequestsPanel isAdmin={isAdmin} />
+
+      {/* 📣 Copies locales en retard sur la base communautaire (détection au
+          démarrage par AircraftProvider) : note de mise à jour de l'admin,
+          « Mettre à jour ma copie » / « Ignorer ». Rien en retard = invisible. */}
+      <AircraftUpdatesBanner />
 
       {/* ===== ALERTE CONFIGURATION INCOMPLÈTE (bannière sobre, pas cookie banner) ===== */}
       {showIncompleteDataAlert && incompleteAircraft.length > 0 && (
