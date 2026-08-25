@@ -19,39 +19,9 @@ import { RefreshCw, Eye, X, Loader2, Megaphone } from 'lucide-react';
 import { useAircraftUpdatesStore } from '../../../core/stores/aircraftUpdatesStore';
 import communityService from '@services/communityService';
 import dataBackupManager from '@utils/dataBackupManager';
-
-// Libellés français des champs top-level du journal de mise à jour ; un champ
-// inconnu est montré tel quel (mieux qu'un libellé inventé — fail-closed).
-const CHAMP_LABELS = {
-  weightBalance: 'masse et centrage',
-  weights: 'masses',
-  arms: 'bras de levier',
-  seatLimits: 'limites sièges',
-  speeds: 'vitesses',
-  performance: 'performances',
-  advancedPerformance: 'tables de performances',
-  performanceModels: 'modèles de performance (abaques)',
-  performanceCorrections: 'règles de correction',
-  tankVariants: 'configurations de réservoirs',
-  fuelTanks: 'réservoirs',
-  additionalFuelTanks: 'réservoirs additionnels',
-  fuelType: 'type de carburant',
-  approvedOperations: 'opérations approuvées',
-  equipment: 'équipements',
-  weighingReport: 'fiche de pesée',
-  compartments: 'compartiments',
-  photo: 'photo',
-  registration: 'immatriculation',
-  model: 'modèle',
-};
-// Champs techniques du journal, sans intérêt pour le pilote
-const CHAMPS_MASQUES = new Set(['version', '_updateHistory', '_metadata', 'updatedAt']);
-
-const libelleChamps = (champs) => {
-  const utiles = (champs || []).filter((c) => !CHAMPS_MASQUES.has(c));
-  if (utiles.length === 0) return null;
-  return utiles.map((c) => CHAMP_LABELS[c] || c).join(', ');
-};
+// Libellés français des champs du journal — partagés avec le journal des
+// mises à jour communautaire (CommunityChangelogDialog).
+import { libelleChamps } from '../utils/updateFieldLabels';
 
 const AircraftUpdatesBanner = () => {
   const updatesAvailable = useAircraftUpdatesStore((s) => s.updatesAvailable);

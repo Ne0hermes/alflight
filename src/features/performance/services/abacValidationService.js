@@ -273,43 +273,18 @@ class ABACValidationService {
   }
 
   // Interpolation multilinéaire (N dimensions)
-  multilinearInterpolation(abacData, inputs) {
-    const dimensions = abacData.grid.order_of_iteration;
-    const values = abacData.grid.values;
-    
-    // Construire le hypercube de points
-    const hypercube = this.findHypercube(values, inputs, dimensions);
-    
-    if (!hypercube) {
-      return this.handleOutOfBounds(abacData, values, inputs);
-    }
-
-    // Interpolation récursive sur chaque dimension
-    return this.recursiveInterpolate(hypercube, inputs, dimensions, 0);
-  }
-
-  // Interpolation récursive pour N dimensions
-  recursiveInterpolate(cube, inputs, dimensions, dimIndex) {
-    if (dimIndex >= dimensions.length) {
-      return cube.value;
-    }
-
-    const dim = dimensions[dimIndex];
-    const value = inputs[dim];
-    
-    // Trouver les deux hyperplans encadrants
-    const [lower, upper] = this.splitHypercube(cube, dim, value);
-    
-    if (!upper) {
-      return this.recursiveInterpolate(lower, inputs, dimensions, dimIndex + 1);
-    }
-
-    // Interpoler entre les deux hyperplans
-    const lowerValue = this.recursiveInterpolate(lower, inputs, dimensions, dimIndex + 1);
-    const upperValue = this.recursiveInterpolate(upper, inputs, dimensions, dimIndex + 1);
-    
-    const t = (value - lower[dim]) / (upper[dim] - lower[dim]);
-    return lowerValue * (1 - t) + upperValue * t;
+  // ⛔ Fail-closed 25/08/2026 : ce chemin appelait findHypercube et
+  // splitHypercube, deux méthodes qui n'ont JAMAIS existé — tout abaque
+  // déclarant method='multilinear' crashait en TypeError (même famille que le
+  // crash getRandomColor, invisible pour build et tests). Un refus EXPLICITE
+  // vaut mieux qu'une interpolation inventée sur des chiffres de performance :
+  // l'app ne sait calculer que bilinear (2D) et trilinear (3D).
+  multilinearInterpolation() {
+    throw new Error(
+      "Interpolation multilinéaire (N dimensions) non disponible : cet abaque déclare " +
+      "une méthode que l'application ne sait pas calculer. Méthodes supportées : " +
+      "bilinear (2D) et trilinear (3D)."
+    );
   }
 
   // Trouver les bornes pour interpolation 2D

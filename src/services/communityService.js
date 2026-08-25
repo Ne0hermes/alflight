@@ -285,6 +285,60 @@ class CommunityService {
     return data || [];
   }
 
+  /** 📜 JOURNAL DES MISES À JOUR de toute la base communautaire (demande
+   *  César, 25/08/2026) : agrège les _updateHistory de TOUS les avions en une
+   *  liste chronologique (la plus récente d'abord) — consultable par l'admin
+   *  comme par les pilotes. Requête LÉGÈRE : seul le sous-champ JSON
+   *  _updateHistory est extrait côté serveur (jamais les fiches complètes —
+   *  photos/tables restent sur Supabase). */
+  async getCommunityChangelog() {
+    const runQuery = () => supabase
+      .from('community_presets')
+      .select('id, registration, version, updateHistory:aircraft_data->_updateHistory')
+      .not('aircraft_data->_updateHistory', 'is', null);
+    let { data, error } = await runQuery();
+    // Même motif que getAllPresets : PGRST303 = « JWT expired » (app restée
+    // ouverte > 1h, le journal se consulte ponctuellement sans autre requête
+    // préalable) → refresh de session puis UN retry.
+    if (error && (error.code === 'PGRST303' || /jwt expired/i.test(error.message || ''))) {
+      console.warn('⚠️ JWT expiré sur le journal des mises à jour, refresh session puis retry…');
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (!refreshError) ({ data, error } = await runQuery());
+    }
+    if (error) throw error;
+    const entrees = [];
+    // Défense (revue 25/08) : une même entrée copiée dans plusieurs lignes ou
+    // répétée dans une ligne (historique hérité d'un ancien clone/variante,
+    // versions remises à 1 par le DEFAULT de la colonne) ne s'affiche qu'une
+    // fois pour une immatriculation donnée.
+    const dejaVues = new Set();
+    for (const row of data || []) {
+      const histo = Array.isArray(row.updateHistory) ? row.updateHistory : [];
+      histo.forEach((e, idx) => {
+        if (!e || typeof e !== 'object') return;
+        const champs = Array.isArray(e.champs) ? e.champs : [];
+        const empreinte = `${row.registration}|${e.version}|${e.date}|${e.note || ''}|${champs.join(',')}`;
+        if (dejaVues.has(empreinte)) return;
+        dejaVues.add(empreinte);
+        entrees.push({
+          cle: `${row.id}-${idx}`, // clé de rendu UNIQUE (une version héritée peut se répéter)
+          presetId: row.id,
+          registration: row.registration,
+          version: e.version,
+          date: e.date,
+          note: e.note || '',
+          champs,
+        });
+      });
+    }
+    // Chronologie inverse ; à date égale (rafale de saves), la version tranche.
+    entrees.sort((a, b) => {
+      const d = new Date(b.date || 0) - new Date(a.date || 0);
+      return d !== 0 ? d : (b.version || 0) - (a.version || 0);
+    });
+    return entrees;
+  }
+
   async getPresetById(presetId) {
     try {
       const { data, error } = await supabase
@@ -798,6 +852,12 @@ class CommunityService {
       delete cleanedData.hasPhoto;
       delete cleanedData.hasWeighingReport;
       delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
+      // 📜 25/08/2026 (revue) — le journal de mise à jour n'est JAMAIS pris du
+      // client : il appartient au serveur (updateCommunityPreset le reconstruit
+      // depuis la ligne actuelle ; une création/variante repart de zéro). Sans
+      // ce delete, une fiche créée depuis une copie importée héritait de
+      // l'historique du donneur, attribué à la MAUVAISE immatriculation.
+      delete cleanedData._updateHistory;
 
       // R20 — retire fitted.points des abaques (donnée dérivée régénérée à la
       // lecture) + R20/B externalise les gros blobs base64 (PDF de pesée,
@@ -1092,6 +1152,12 @@ class CommunityService {
       delete cleanedData.hasPhoto;
       delete cleanedData.hasWeighingReport;
       delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
+      // 📜 25/08/2026 (revue) — le journal de mise à jour n'est JAMAIS pris du
+      // client : il appartient au serveur (updateCommunityPreset le reconstruit
+      // depuis la ligne actuelle ; une création/variante repart de zéro). Sans
+      // ce delete, une fiche créée depuis une copie importée héritait de
+      // l'historique du donneur, attribué à la MAUVAISE immatriculation.
+      delete cleanedData._updateHistory;
 
       // ⚖️ 25/08/2026 — SUPRÉMATIE ADMIN (règle produit) : la fusion
       // « anti-écrasement » est SUPPRIMÉE. Elle restaurait en silence tout
@@ -1314,6 +1380,7 @@ class CommunityService {
     delete cleanedData.communityPresetId;
     delete cleanedData.submitted_by; // l'owner vit dans la COLONNE, pas dans le JSON
     delete cleanedData.manexDeleted; // marqueur transitoire (suppression MANEX) — pas une donnée avion
+    delete cleanedData._updateHistory; // 📜 le journal appartient à la fiche SOURCE (cf. submitPreset)
 
     const { data, error } = await supabase
       .from('community_presets')

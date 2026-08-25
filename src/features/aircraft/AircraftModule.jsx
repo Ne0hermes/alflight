@@ -8,9 +8,10 @@ import { isAdminUser } from '../../core/auth/roles';
 import SendManualRequestButton from './components/SendManualRequestButton';
 import AircraftRequestsPanel from './components/AircraftRequestsPanel';
 import AircraftUpdatesBanner from './components/AircraftUpdatesBanner';
+import CommunityChangelogDialog from './components/CommunityChangelogDialog';
 import { useAircraft } from '@core/contexts';
 import { useAircraftStore } from '@core/stores/aircraftStore';
-import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, Info, AlertTriangle, X, Plane, BookOpen, Scale, Download, ScrollText } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { sx } from '@shared/styles/styleSystem';
 import { tokens } from '@shared/styles/designSystem';
@@ -266,6 +267,8 @@ export const AircraftModule = memo(() => {
   // ─── Recherche dans la BASE COMMUNAUTAIRE (fusion visuelle avec le module) ───
   const [communitySearch, setCommunitySearch] = useState('');   // filtre live
   const [allPresets, setAllPresets] = useState([]);             // toute la base communautaire (métadonnées légères)
+  // 📜 Journal des mises à jour de la base (dialog) — ouvert depuis l'en-tête
+  const [showChangelog, setShowChangelog] = useState(false);
   const [presetsLoading, setPresetsLoading] = useState(false);
   const [communityError, setCommunityError] = useState(null);
   // Avion communautaire SÉLECTIONNÉ (métadonnées légères) → on affiche sa fiche
@@ -1728,6 +1731,9 @@ export const AircraftModule = memo(() => {
           « Mettre à jour ma copie » / « Ignorer ». Rien en retard = invisible. */}
       <AircraftUpdatesBanner />
 
+      {/* 📜 Journal des mises à jour de la base communautaire (dialog) */}
+      <CommunityChangelogDialog open={showChangelog} onClose={() => setShowChangelog(false)} />
+
       {/* ===== ALERTE CONFIGURATION INCOMPLÈTE (bannière sobre, pas cookie banner) ===== */}
       {showIncompleteDataAlert && incompleteAircraft.length > 0 && (
         <div
@@ -1831,8 +1837,30 @@ export const AircraftModule = memo(() => {
           borderRadius: 'var(--radius-sm)'
         }}
       >
-        <div style={{ fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: tokens.spacing[2] }}>
-          Base communautaire
+        {/* flexWrap + nowrap (revue 25/08) : sur mobile (~310 px utiles), titre +
+            bouton ne tiennent pas sur une ligne — sans wrap le libellé du bouton
+            se repliait sur 2-3 lignes. */}
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: tokens.spacing[3], marginBottom: tokens.spacing[2] }}>
+          <div style={{ fontSize: 'var(--fs-title)', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Base communautaire
+          </div>
+          <span style={{ flex: 1 }} />
+          {/* 📜 Journal des mises à jour (demande César 25/08) : consultable par
+              TOUS — l'admin comme les pilotes — pour constater les modifications
+              de données publiées sur chaque avion. */}
+          <button
+            type="button"
+            onClick={() => setShowChangelog(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '5px 10px', borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-surface)',
+              color: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 600, cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            <ScrollText size={14} /> Journal des mises à jour
+          </button>
         </div>
         <p style={{ margin: `0 0 ${tokens.spacing[3]}`, fontSize: 'var(--fs-body)', color: 'var(--text-secondary)' }}>
           Cherchez un avion partagé (immatriculation, modèle, constructeur) puis importez-le : vous entrez dans l'assistant pré-rempli, comme pour un nouvel avion.
