@@ -1013,7 +1013,12 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       // multi-source raté), affiche un champ vide, l'utilisateur ne saisit
       // pas la valeur et le save écrase la DB. Approche défensive.
       if (existingAircraft) {
-        const isEmpty = (v) => v === null || v === undefined || v === '';
+        // ⚖️ 25/08/2026 — null N'EST PLUS « vide » : c'est le marqueur de
+        // SUPPRESSION VOLONTAIRE (ex. retirer les sièges arrière d'un
+        // biplace). L'ancien isEmpty incluait null : le garde restaurait la
+        // valeur que le pilote venait d'effacer — ses deux suppressions du
+        // siège arrière de F-BXNG ont été annulées ainsi, en silence.
+        const isEmpty = (v) => v === undefined || v === '';
         const isObject = (v) => v && typeof v === 'object' && !Array.isArray(v);
         const isArray = Array.isArray;
 
@@ -1029,6 +1034,10 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
 
             const srcVal = source[key];
             const tgtVal = target[key];
+
+            // null = suppression voulue : on la LAISSE passer telle quelle
+            // (le service la propage en base) — surtout ne pas restaurer.
+            if (tgtVal === null) continue;
 
             if (isEmpty(tgtVal) && !isEmpty(srcVal)) {
               // Le wizard a un champ vide mais l'avion existant l'avait : on restaure

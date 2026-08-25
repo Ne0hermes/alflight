@@ -59,6 +59,11 @@ const isEmptyish = (v) => v === null || v === undefined || v === '' || (Array.is
 // absents du formulaire sont conservés.
 function deepMergeKeepExisting(base, incoming) {
   if (incoming === undefined) return base;
+  // ⚖️ 25/08/2026 — null ENTRANT = suppression VOLONTAIRE (ex. sièges
+  // arrière retirés d'un biplace) : on la respecte au lieu de garder
+  // l'existant. Les clés null sont ensuite retirées avant écriture
+  // (stripNullsDeep) : la base porte « absent », jamais « null ».
+  if (incoming === null) return null;
   if (incoming && typeof incoming === 'object' && !Array.isArray(incoming) &&
       base && typeof base === 'object' && !Array.isArray(base)) {
     const out = { ...base };
@@ -67,7 +72,8 @@ function deepMergeKeepExisting(base, incoming) {
     }
     return out;
   }
-  // vide entrant alors que l'existant est renseigné → garder l'existant
+  // vide entrant (''/undefined — PAS null) alors que l'existant est
+  // renseigné → garder l'existant (champ simplement non rechargé).
   if (isEmptyish(incoming) && !isEmptyish(base)) return base;
   // 0 entrant alors que l'existant est un nombre non nul → garder l'existant
   if ((incoming === 0 || incoming === '0') && !isEmptyish(base) &&
@@ -81,6 +87,18 @@ function deepMergeKeepExisting(base, incoming) {
 // réinjecté maxBaggageWeight=50 sur F-GGZO le 24/08 à 15h10, quelques heures
 // après la purge du matin. Ce strip s'applique aux TROIS chemins qui écrivent
 // aircraft_data (création, mise à jour fusionnée, mise à jour rapide).
+// Retire les clés null (suppressions volontaires) des OBJETS — les tableaux
+// sont laissés tels quels (leurs éléments ne portent pas ce contrat).
+function stripNullsDeep(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return d;
+  const out = {};
+  for (const [k, v] of Object.entries(d)) {
+    if (v === null) continue;
+    out[k] = (v && typeof v === 'object' && !Array.isArray(v)) ? stripNullsDeep(v) : v;
+  }
+  return out;
+}
+
 function stripBannedLegacyFields(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return d;
   const out = { ...d };
@@ -1056,7 +1074,7 @@ class CommunityService {
           .eq('id', presetId)
           .single();
         if (cur?.aircraft_data && typeof cur.aircraft_data === 'object') {
-          mergedAircraftData = stripBannedLegacyFields(deepMergeKeepExisting(stripBannedLegacyFields(cur.aircraft_data), cleanedData));
+          mergedAircraftData = stripNullsDeep(stripBannedLegacyFields(deepMergeKeepExisting(stripBannedLegacyFields(cur.aircraft_data), cleanedData)));
         }
       } catch (mergeErr) {
         console.warn('[updateCommunityPreset] Lecture aircraft_data actuelle impossible — écriture directe:', mergeErr?.message);

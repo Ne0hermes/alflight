@@ -798,7 +798,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
   const removeRearSeats = () => {
     // Bras : effacés, jamais 0 (0 = bras fabriqué qui fausserait le centrage).
-    updateData('arms.rearSeats', '');
+    updateData('arms.rearSeats', null); // null = suppression VOLONTAIRE (respectée par les gardes anti-perte)
     if (data.weightBalance) {
       // null = « absent » pour le moteur (computeWeightBalance) : les
       // requiredProps acceptent null mais REFUSENT undefined (calcul rejeté).
@@ -806,7 +806,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
       updateData('weightBalance.rearRightSeatArm', null);
     }
     if (data.seatLimits?.rearSeats) {
-      updateData('seatLimits.rearSeats', undefined);
+      updateData('seatLimits.rearSeats', null); // null (et non undefined) : sinon le garde anti-perte restaurerait les limites
     }
     // Formes LEGACY : sans cet effacement, pick()/fallbacks moteur feraient
     // RESSUSCITER le bras fantôme depuis armLengths à la prochaine édition.
