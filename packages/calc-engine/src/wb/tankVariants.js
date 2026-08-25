@@ -387,8 +387,11 @@ export const applyTankVariant = (aircraft, variantId) => {
   // plafonnement min(usable, somme des capacity) mélangeait les deux
   // sémantiques ; chaque somme suit désormais son propre champ, avec repli
   // sur l'ancien `capacity` pour les fiches non migrées.
-  const fuelCapacity = sumTotalLtr(filteredTanks) ?? 0;
-  const fuelUsableCapacity = sumUsableLtr(filteredTanks) ?? aircraft.fuelUsableCapacity;
+  // ⛔ Lot 1.0 (25/08) : contenances de la variante INCONNUES → champs ABSENTS
+  // (undefined), jamais 0 (« avion sans carburant » pour les moteurs) ni la
+  // capacité de l'avion COMPLET (fausse pour une variante filtrée).
+  const fuelCapacity = sumTotalLtr(filteredTanks) ?? undefined;
+  const fuelUsableCapacity = sumUsableLtr(filteredTanks) ?? undefined;
 
   return {
     ...aircraft,

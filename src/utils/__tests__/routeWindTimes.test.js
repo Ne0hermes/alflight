@@ -34,6 +34,28 @@ describe('computeRouteWindTimes', () => {
     expect(withWind.effectiveSpeedKt).toBeGreaterThan(TAS);
   });
 
+  it('Lot 1.0 — vent INCONNU (provider muet) : compté et exposé, jamais silencieux', () => {
+    const r = computeRouteWindTimes({ waypoints: [A, B], cruiseSpeedKt: TAS, windProvider: () => null });
+    expect(r.windCorrected).toBe('none');
+    expect(r.noWindSegments).toBe(1);
+    expect(r.windSegments).toBe(0);
+    expect(r.segmentCount).toBe(1);
+    expect(r.segments[0].windSource).toBe('none');
+    expect(r.effectiveSpeedKt).toBeCloseTo(TAS, 5); // temps air immobile, assumé et dit
+  });
+
+  it('Lot 1.0 — vent PARTIEL (2 tronçons, 1 renseigné) : partial + compteurs exacts', () => {
+    const C = { lat: 45, lon: 7.8284, name: 'C' };
+    // Milieu A-B ≈ lon 5,71 (< 6 → vent connu) ; milieu B-C ≈ lon 7,12 (→ null)
+    const provider = (lat, lon) => (lon < 6 ? { directionDeg: 90, speedKt: 20, source: 'test' } : null);
+    const r = computeRouteWindTimes({ waypoints: [A, B, C], cruiseSpeedKt: TAS, windProvider: provider });
+    expect(r.windCorrected).toBe('partial');
+    expect(r.windSegments).toBe(1);
+    expect(r.noWindSegments).toBe(1);
+    expect(r.untenableSegments).toBe(0);
+    expect(r.segmentCount).toBe(2);
+  });
+
   it('vent ≥ TAS : segment intenable SIGNALÉ, temps plancher TAS (jamais inventé)', () => {
     const r = computeRouteWindTimes({ waypoints: [A, B], cruiseSpeedKt: TAS, windProvider: storm });
     expect(r.untenableSegments).toBe(1);

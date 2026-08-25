@@ -1456,11 +1456,14 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
       aircraft
     });
     const totalRawLtr = (typeof calculateTotal === 'function' ? calculateTotal('ltr') : 0) || 0;
+    // ⛔ Lot 1.0 : totalLtr d'un tronçon peut être null (dégagement
+    // incalculable) — Math.ceil(null) affichait « 0 L requis », un mensonge.
     const requiredRawLtr = legPlan?.isMultiLeg ? legPlan.legs[0].totalLtr : totalRawLtr;
-    const requiredLtr = Math.ceil(requiredRawLtr);
-    const nextLegsMax = legPlan?.isMultiLeg
-      ? Math.ceil(Math.max(...legPlan.legs.slice(1).map(l => l.totalLtr)))
-      : null;
+    const requiredLtr = Number.isFinite(requiredRawLtr) ? Math.ceil(requiredRawLtr) : null;
+    const nextLegTotals = legPlan?.isMultiLeg
+      ? legPlan.legs.slice(1).map(l => l.totalLtr).filter(Number.isFinite)
+      : [];
+    const nextLegsMax = nextLegTotals.length > 0 ? Math.ceil(Math.max(...nextLegTotals)) : null;
 
     const distributed = shownTanks.reduce(
       (s, { tank, i }) => s + (parseFloat(loads[`fuel_${tank.id ?? i}`]) || 0), 0
@@ -1534,7 +1537,12 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
         <p style={{ margin: '0 0 12px', fontSize: 'var(--fs-body)', color: theme.colors.textSecondary }}>
           Cochez les réservoirs réellement embarqués puis saisissez les litres de
           chacun (chaque réservoir a son propre bras de levier). Besoin du bilan
-          carburant : <strong>{requiredLtr} L</strong> minimum.
+          carburant :{' '}
+          {/* ⛔ Lot 1.0 : requiredLtr null (dégagement incalculable) — React
+              rendait null comme vide : « Besoin du bilan carburant :  L minimum. » */}
+          {requiredLtr != null
+            ? <><strong>{requiredLtr} L</strong> minimum.</>
+            : <strong style={{ color: 'var(--color-red-critical)' }}>incalculable (dégagement manquant — voir l'étape Déroutements).</strong>}
         </p>
 
         {hasTanks ? (
@@ -1654,6 +1662,15 @@ export const Step6WeightBalance = memo(({ flightPlan, onUpdate }) => {
           </div>
         )}
 
+        {/* ⛔ Lot 1.0 : besoin incalculable — le verdict ne DISPARAÎT plus en
+            silence (null > 0 est faux), il se dit. */}
+        {requiredRawLtr === null && (
+          <div style={{ marginTop: '12px', padding: '10px 12px', backgroundColor: 'rgba(192, 69, 52, 0.12)', borderLeft: '3px solid var(--color-red-critical)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--fs-body)', color: 'var(--color-red-critical)', fontWeight: '600' }}>
+            ⚠️ Besoin en carburant du tronçon 1 INCALCULABLE — le supplément de
+            déroutement manque (position du déroutement ou données avion).
+            Corrigez à l'étape Déroutements : la validation de cette étape est bloquée.
+          </div>
+        )}
         {/* Verdict vs bilan carburant (déplacé du bilan — lot 9-C).
             Comparaison sur le total BRUT, même tolérance que le garde-fou du
             wizard — l'arrondi sup ne sert qu'à l'affichage (revue lot 9). */}

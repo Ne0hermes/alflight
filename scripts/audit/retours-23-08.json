@@ -428,5 +428,70 @@
   "itid": "F-HSTR-17",
   "status": "note",
   "note": "vr, vx, vy et initialClimb sont FACULTATIVES — l'item ne subsiste que pour la coïncidence vr = vx = vy = initialClimb = 72 kt, à confirmer au manuel (aucune erreur démontrée)."
+ },
+ {
+  "itid": "F-GIEA-01",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l'étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l'avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d'enregistrement à chasser)."
+ },
+ {
+  "itid": "F-GIEA-02",
+  "status": "valide",
+  "note": "Choix pilote acté : les 4 opérations atterrissage sont désormais CONTOURNÉES-CERTIFIÉES (bypassedFields : landing_ground_roll/50ft × flaps_landing/flaps_up) et performance.landing est vide. Conséquence assumée fail-closed : les calculs d'atterrissage resteront indisponibles sur cet avion tant que l'abaque p50 n'est pas numérisé."
+ },
+ {
+  "itid": "F-GIEA-03",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche de la base v3 (ré-enregistrement du 25/08 10:29) : plus AUCUNE courbe de vent sans windDirection sur les 4 modèles (h11, t2, t14 désormais typées comme les 25 autres)."
+ },
+ {
+  "itid": "F-GIEA-04",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche de la base v3 (ré-enregistrement du 25/08 10:29) : performanceCorrections existe avec 7 règles d'état de piste À VALEURS RÉELLES (herbe ×1,2 décollage, herbe mouillée, sol meuble, piste mouillée/herbe haute à l'atterrissage…). La clé était totalement absente."
+ },
+ {
+  "itid": "F-GIEA-07",
+  "status": "valide",
+  "note": "Coché par le pilote 25/08 : vno=126 kt CONFIRMÉE au manuel p32 — la valeur de la fiche était sa correction volontaire d'une lecture OCR fautive (l'extraction MANEX portait 111). La fiche fait foi, rien à changer."
+ },
+ {
+  "itid": "F-GIEA-08",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d'approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n'existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l'étape Équipements & Opérations a un problème d'enregistrement — à chasser en priorité."
+ },
+ {
+  "itid": "F-GIEA-10",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 4 axes masse plafonnent toujours à max=1050 kg (MTOW 1055) et le dernier guide tracé s'arrête à 1050 (1045,35 sur le modèle Flaps TAKEOFF sol). Atelier : porter l'axe à 1060 et prolonger les guides."
+ },
+ {
+  "itid": "F-GIEA-11",
+  "status": "note",
+  "note": "PARTIEL — vérifié en base v3 : le doublon « 7 » du panneau masse est réglé (guides 1→10 uniques ✓), mais le panneau vent du modèle « passage 15 m Flaps UP » porte ENCORE deux courbes « h6 ». Reste à renuméroter cette paire dans le gestionnaire de courbes."
+ },
+ {
+  "itid": "F-GIEA-12",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche de la base v3 (ré-enregistrement du 25/08 10:29) : les 4 bras fantômes à 0 ont disparu (arms.baggageFwd/Aft vidés, weightBalance.baggageArm/auxiliaryArm absents). Le compartiment saisi fait foi : 3,627 m / 23 kg / moment 83,42 exact."
+ },
+ {
+  "itid": "F-GIEA-13",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche de la base v3 (ré-enregistrement du 25/08 10:29) : la racine fantôme minTakeoffWeight=600 (empreinte de fabrication) a DISPARU ; 550 kg vit dans weights.minTakeoffWeight et cgEnvelope (550 aux deux points), et la racine est dérivée de weights à la lecture depuis le Lot 1.0."
+ },
+ {
+  "itid": "F-GIEA-14",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres."
+ },
+ {
+  "itid": "F-GIEA-15",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche de la base v3 (ré-enregistrement du 25/08 10:29) : le nom du modèle est désormais « Distance décollage — passage 15 m, Flaps UP (0°) » — le marqueur « ⚠ DOUBLON — préciser les volets » a disparu."
+ },
+ {
+  "itid": "F-GIEA-16",
+  "status": "ouvert",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : equipmentSurv.transponderMode=« C » (singulier, posé en dur à l'initialisation) est toujours là et transponderModes (pluriel, celui que l'écran Équipements écrit) n'existe toujours pas. Même étape que F-GIEA-08 — se règlera avec elle."
  }
 ]

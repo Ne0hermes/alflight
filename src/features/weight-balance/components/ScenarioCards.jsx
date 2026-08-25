@@ -1,7 +1,6 @@
 // src/features/weight-balance/components/ScenarioCards.jsx
 import React, { memo, useMemo } from 'react';
 import { sx } from '@shared/styles/styleSystem';
-import { getFuelDensity } from '@utils/fuelDensity';
 import { SCENARIO_COLORS } from '../scenarioColors';
 
 // Helper pour extraire les litres de fobFuel (peut être un nombre ou un objet {gal, ltr})
@@ -15,25 +14,9 @@ const getFuelLiters = (fobFuel) => {
 export const ScenarioCards = memo(({ scenarios, fobFuel, fuelData, aircraft }) => {
   const fobLiter = getFuelLiters(fobFuel);
 
-  // Calcul des infos carburant
-  const fuelInfo = useMemo(() => {
-    if (!aircraft) return null;
-
-    // 🔒 P0 (densité) : null si type inconnu — on n'affiche pas une densité/masse
-    // inventée, ni un « JET A-1 » par défaut.
-    const fuelDensity = getFuelDensity(aircraft.fuelType);
-
-    const fuelCapacityKg = fuelDensity == null ? null : (aircraft.fuelCapacity || 0) * fuelDensity;
-    const fuelArm = aircraft.weightBalance?.fuelArm || 0;
-
-    return {
-      fuelType: aircraft.fuelType || null,
-      density: fuelDensity,
-      capacity: aircraft.fuelCapacity || 0,
-      capacityKg: fuelCapacityKg,
-      arm: fuelArm
-    };
-  }, [aircraft]);
+  // ⛔ Lot 1.0 (25/08) : le calcul `fuelInfo` a été SUPPRIMÉ — il n'était
+  // consommé par AUCUN rendu et fabriquait des valeurs bannies (capacité
+  // racine « || 0 », bras carburant « || 0 »). Code mort porteur de fantômes.
 
   const cards = useMemo(() => {
     if (!scenarios) return [];

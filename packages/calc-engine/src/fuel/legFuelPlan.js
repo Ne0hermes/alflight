@@ -60,15 +60,35 @@ export function computeLegFuelPlans({ waypoints, cruiseSpeedKt, fuelConsumptionL
     const contingencyLtr = Math.max(GAL_LTR, tripLtr * 0.05); // 5 %, min 1 gal US
     const isLast = idx === rawLegs.length - 1;
     let legAlternateLtr;
+    let alternateStatus = null; // renseigné UNIQUEMENT quand le dégagement est incalculable
     if (perLegDiversion) {
       // Supplément de déroutement calculé sur CE tronçon (pied de
-      // perpendiculaire → fin du tronçon) — fail-closed : statuts d'erreur → 0
+      // perpendiculaire → fin du tronçon).
       const div = computeWorstDiversion({ alternates, waypoints: leg.waypoints, aircraft });
-      legAlternateLtr = div?.hasComputable ? Math.max(0, div.supplementLtr || 0) : 0;
+      if (div?.hasComputable) {
+        // Un 0 est LÉGITIME ici : déroutement vérifié suffisant (0 supplément).
+        legAlternateLtr = Math.max(0, div.supplementLtr || 0);
+        // Revue 25/08 : vérification PARTIELLE — au moins un déroutement
+        // sélectionné n'a pas pu être évalué (position manquante…) : le pire
+        // calculé peut ne pas être le pire réel. Signalé, jamais tu.
+        if (Array.isArray(div.errors) && div.errors.length > 0) {
+          alternateStatus = 'partial';
+        }
+      } else {
+        // ⛔ Lot 1.0 (25/08) : AUCUN déroutement calculable. L'ancien code
+        // écrivait 0 en se prétendant « fail-closed » — exactement l'inverse :
+        // le même 0 que « vérifié suffisant ». Le poste devient null, et le
+        // TOTAL du tronçon aussi : un bilan auquel il manque le dégagement
+        // n'a pas de total présentable.
+        legAlternateLtr = null;
+        alternateStatus = div?.errors?.[0]?.status || 'missing-data';
+      }
     } else {
       legAlternateLtr = isLast ? (alternateLtr || 0) : 0;
     }
-    const totalLtr = taxiLtr + tripLtr + contingencyLtr + finalReserveLtr + legAlternateLtr;
+    const totalLtr = legAlternateLtr === null
+      ? null
+      : taxiLtr + tripLtr + contingencyLtr + finalReserveLtr + legAlternateLtr;
     const from = leg.waypoints[0];
     const to = leg.waypoints[leg.waypoints.length - 1];
     return {
@@ -82,10 +102,23 @@ export function computeLegFuelPlans({ waypoints, cruiseSpeedKt, fuelConsumptionL
       taxiLtr,
       finalReserveLtr,
       alternateLtr: legAlternateLtr,
+      alternateStatus,
       totalLtr
     };
   });
 
-  const worstLeg = legs.reduce((a, b) => (a.totalLtr >= b.totalLtr ? a : b));
-  return { legs, worstLeg, isMultiLeg: legs.length > 1 };
+  // worstLeg : parmi les tronçons au total CALCULABLE uniquement (null >= x est
+  // toujours faux — l'ancien reduce aurait silencieusement élu un mauvais
+  // tronçon). Aucun total calculable → worstLeg null, verdict indisponible.
+  const computable = legs.filter((l) => Number.isFinite(l.totalLtr));
+  const worstLeg = computable.length > 0
+    ? computable.reduce((a, b) => (a.totalLtr >= b.totalLtr ? a : b))
+    : null;
+  return {
+    legs,
+    worstLeg,
+    isMultiLeg: legs.length > 1,
+    // Lot 1.0 : tronçons dont le dégagement (donc le total) est incalculable
+    incomputableLegs: legs.length - computable.length
+  };
 }

@@ -153,6 +153,14 @@ export const calculateScenarios = (aircraft, calculations, loads, fobFuel, fuelD
       });
     }
 
+    // ⛔ Lot 1.0 (25/08) — sièges additionnels déclarés sur la fiche : AUCUN
+    // moteur ne les pèse (pas de poste de charge, pas de champ de saisie).
+    // Même règle que computeWeightBalance : scénarios NON FIABLES, dit
+    // explicitement, plutôt qu'un devis amputé d'un occupant.
+    if (Array.isArray(aircraft.additionalSeats) && aircraft.additionalSeats.length > 0) {
+      manques.push(`${aircraft.additionalSeats.length} siège(s) additionnel(s) déclaré(s) mais non pris en compte par le calcul`);
+    }
+
     // Bagages (dynamiques ou par défaut)
     if (aircraft.baggageCompartments && aircraft.baggageCompartments.length > 0) {
       aircraft.baggageCompartments.forEach((compartment, index) => {

@@ -1217,8 +1217,9 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                     ? 'Carburant requis au décollage (tronçon 1 — plein à l\'escale):'
                     : 'Carburant total requis:'}
                 </span>
-                <strong style={{ fontSize: 'var(--fs-body)', color: 'var(--accent-primary)' }}>
-                  {format(fuelInfo.required, 'fuel', 1)}
+                <strong style={{ fontSize: 'var(--fs-body)', color: Number.isFinite(fuelInfo.required) ? 'var(--accent-primary)' : 'var(--color-red-critical)' }}>
+                  {/* ⛔ Lot 1.0 : total du tronçon 1 incalculable (dégagement manquant) → pas de faux chiffre */}
+                  {Number.isFinite(fuelInfo.required) ? format(fuelInfo.required, 'fuel', 1) : '— incalculable'}
                 </strong>
               </div>
             </div>
@@ -1233,7 +1234,11 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 {fuelInfo.legs.map((l, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--fs-caption)', color: theme.colors.textSecondary }}>
                     <span>{l.label} ({l.distanceNM.toFixed(0)} NM)</span>
-                    <strong style={{ color: 'var(--text-primary)' }}>{Math.ceil(l.totalLtr)} L</strong>
+                    {/* ⛔ Lot 1.0 : totalLtr null (dégagement incalculable) —
+                        Math.ceil(null) imprimait « 0 L » dans le dossier de vol */}
+                    <strong style={{ color: Number.isFinite(l.totalLtr) ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
+                      {Number.isFinite(l.totalLtr) ? `${Math.ceil(l.totalLtr)} L` : '— incalculable'}
+                    </strong>
                   </div>
                 ))}
               </div>
@@ -1247,7 +1252,8 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
                 </span>
                 <strong style={{
                   fontSize: 'var(--fs-body)',
-                  color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)'
+                  // Même garde que le verdict : requis incalculable → FOB en rouge aussi
+                  color: Number.isFinite(fuelInfo.required) && fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)'
                 }}>
                   {format(fuelInfo.confirmed, 'fuel', 1)}
                 </strong>
@@ -1339,16 +1345,20 @@ export const Step7Summary = ({ flightPlan, onUpdate }) => {
             </div>
 
             {/* Statut suffisance carburant */}
+            {/* ⛔ Lot 1.0 : required peut être null (dégagement incalculable) —
+                `confirmed >= null` était VRAI et affichait « ✓ suffisant » à tort. */}
             <div style={{
               padding: '10px 12px',
               borderRadius: 'var(--radius-sm)',
-              backgroundColor: fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--status-error-bg)',
-              border: `1px solid ${fuelInfo.confirmed >= fuelInfo.required ? 'var(--border-subtle)' : 'var(--color-red-critical)'}`
+              backgroundColor: Number.isFinite(fuelInfo.required) && fuelInfo.confirmed >= fuelInfo.required ? 'var(--bg-overlay)' : 'var(--status-error-bg)',
+              border: `1px solid ${Number.isFinite(fuelInfo.required) && fuelInfo.confirmed >= fuelInfo.required ? 'var(--border-subtle)' : 'var(--color-red-critical)'}`
             }}>
-              <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', textAlign: 'center', color: fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
-                {fuelInfo.confirmed >= fuelInfo.required ?
-                  `✓ Carburant suffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
-                  `✗ Carburant insuffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
+              <div style={{ fontSize: 'var(--fs-body)', fontWeight: '600', textAlign: 'center', color: Number.isFinite(fuelInfo.required) && fuelInfo.confirmed >= fuelInfo.required ? 'var(--text-primary)' : 'var(--color-red-critical)' }}>
+                {!Number.isFinite(fuelInfo.required)
+                  ? '✗ Carburant requis incalculable : le supplément de déroutement manque — corrigez à l\'étape Déroutements.'
+                  : fuelInfo.confirmed >= fuelInfo.required ?
+                    `✓ Carburant suffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (+${format(fuelInfo.confirmed - fuelInfo.required, 'fuel', 1)} de marge)` :
+                    `✗ Carburant insuffisant${fuelInfo.isMultiLeg ? ' au décollage — tronçon 1' : ''} (${format(fuelInfo.required - fuelInfo.confirmed, 'fuel', 1)} manquant)`
                 }
               </div>
             </div>

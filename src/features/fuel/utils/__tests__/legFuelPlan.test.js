@@ -49,6 +49,27 @@ describe('computeLegFuelPlans', () => {
     expect(r.worstLeg).toBe(l2); // à trip égal, le dégagement rend le 2 plus lourd
   });
 
+  it('Lot 1.0 — dégagement PAR TRONÇON incalculable → null (jamais un faux 0), total null, worstLeg indisponible', () => {
+    // alternates non vides + avion sans vitesse ni consommation :
+    // computeWorstDiversion renvoie hasComputable:false sur chaque tronçon.
+    // L'ancien code écrivait 0 L de dégagement — indistinguable d'un
+    // « vérifié suffisant » — et le verdict d'emport passait à tort.
+    const r = computeLegFuelPlans({
+      ...BASE,
+      waypoints: [A, STOP, B],
+      alternates: [{ icao: 'LFXX', name: 'Déroutement sans position' }],
+      aircraft: {}
+    });
+    expect(r.isMultiLeg).toBe(true);
+    for (const leg of r.legs) {
+      expect(leg.alternateLtr).toBeNull();
+      expect(leg.totalLtr).toBeNull();
+      expect(leg.alternateStatus).toBeTruthy();
+    }
+    expect(r.incomputableLegs).toBe(2);
+    expect(r.worstLeg).toBeNull();
+  });
+
   it('contingence : minimum 1 gal US même sur un tronçon très court', () => {
     const NEAR = { name: 'LFNN', lat: 47.0, lon: 0.15 }; // ~6 NM
     const r = computeLegFuelPlans({ ...BASE, waypoints: [A, NEAR] });

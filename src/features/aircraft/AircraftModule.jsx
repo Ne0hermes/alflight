@@ -865,13 +865,16 @@ export const AircraftModule = memo(() => {
         // 🔧 FIX audit QA (D9) : masses limites et capacité carburant RETIRÉES d'ici
         // (déjà affichées une seule fois en sections "MASSES STRUCTURALES" / "DIMENSIONS").
         // Cette section ne conserve que les données propres au CENTRAGE.
+        // ⛔ Lot 1.0 (25/08) : les bras sont stockés en MÈTRES (contrat
+        // _metadata.units.armLength='m', garde-fou armUnits, flotte 0,32-3,65 m)
+        // — le PDF imprimait « 0.854 mm ». Étiquettes corrigées m / kg·m.
         const massBalanceInfo = [
-          ['Bras à vide', fullAircraft.arms?.empty, 'mm'],
-          ['Moment à vide', fullAircraft.moments?.empty, 'kg·mm'],
+          ['Bras à vide', fullAircraft.arms?.empty, 'm'],
+          ['Moment à vide', fullAircraft.moments?.empty, 'kg·m'],
           ['Masse min vol', fullAircraft.weights?.minTakeoffWeight, 'kg'],
           // Sièges (bras seul — moment dépend du passager au chargement)
-          ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'mm'],
-          ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'mm']
+          ['Bras sièges avant', fullAircraft.arms?.frontSeats, 'm'],
+          ['Bras sièges arrière', fullAircraft.arms?.rearSeats, 'm']
         ];
 
         massBalanceInfo.forEach(([label, value, unit]) => {
@@ -900,7 +903,7 @@ export const AircraftModule = memo(() => {
               : (us !== null && tot !== null && us !== tot)
                 ? `${tot} L (dont ${us} L utilisables)`
                 : `${us ?? tot} L`;
-            addText(`  ${name}: ${vol}, bras ${tank.arm || '?'} mm, moment ${tank.momentAtFull || '?'} kg·mm`,
+            addText(`  ${name}: ${vol}, bras ${tank.arm || '?'} m, moment ${tank.momentAtFull || '?'} kg·m`,
               60, yPosition, { size: 10 });
             yPosition -= 16;
           });
@@ -915,7 +918,7 @@ export const AircraftModule = memo(() => {
           fullAircraft.additionalSeats.forEach((seat, idx) => {
             const name = seat.name || `Siège ${idx + 3}`;
             checkNewPage();
-            addText(`  ${name}: bras ${seat.arm || '?'} mm`, 60, yPosition, { size: 10 });
+            addText(`  ${name}: bras ${seat.arm || '?'} m`, 60, yPosition, { size: 10 });
             yPosition -= 16;
           });
         }
@@ -929,7 +932,7 @@ export const AircraftModule = memo(() => {
           fullAircraft.baggageCompartments.forEach((comp, idx) => {
             const name = comp.name || `Compartiment ${idx + 1}`;
             checkNewPage();
-            addText(`  ${name}: masse max ${comp.maxWeight || '?'} kg, bras ${comp.arm || '?'} mm, moment max ${comp.momentMax || '?'} kg·mm`,
+            addText(`  ${name}: masse max ${comp.maxWeight || '?'} kg, bras ${comp.arm || '?'} m, moment max ${comp.momentMax || '?'} kg·m`,
               60, yPosition, { size: 10 });
             yPosition -= 16;
           });
@@ -967,7 +970,7 @@ export const AircraftModule = memo(() => {
 
           if (fullAircraft.cgEnvelope.forwardPoints && fullAircraft.cgEnvelope.forwardPoints.length > 0) {
             const fwd = fullAircraft.cgEnvelope.forwardPoints[0].cg;
-            addText(`CG avant (min): ${fwd} mm${pctMac(fwd)}`, 70, yPosition, { size: 10 });
+            addText(`CG avant (min): ${fwd} m${pctMac(fwd)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
           // Arrière : 2 points indépendants (rétro-compat aftCG)
@@ -975,11 +978,11 @@ export const AircraftModule = memo(() => {
           const aftMinCG = fullAircraft.cgEnvelope.aftMinCG || legacyAftCG;
           const aftMaxCG = fullAircraft.cgEnvelope.aftMaxCG || legacyAftCG;
           if (aftMinCG) {
-            addText(`CG arrière à masse min (${fullAircraft.cgEnvelope.aftMinWeight || '?'} kg): ${aftMinCG} mm${pctMac(aftMinCG)}`, 70, yPosition, { size: 10 });
+            addText(`CG arrière à masse min (${fullAircraft.cgEnvelope.aftMinWeight || '?'} kg): ${aftMinCG} m${pctMac(aftMinCG)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
           if (aftMaxCG && aftMaxCG !== aftMinCG) {
-            addText(`CG arrière à masse max (${fullAircraft.cgEnvelope.aftMaxWeight || '?'} kg): ${aftMaxCG} mm${pctMac(aftMaxCG)}`, 70, yPosition, { size: 10 });
+            addText(`CG arrière à masse max (${fullAircraft.cgEnvelope.aftMaxWeight || '?'} kg): ${aftMaxCG} m${pctMac(aftMaxCG)}`, 70, yPosition, { size: 10 });
             yPosition -= 18;
           }
 
@@ -1051,7 +1054,7 @@ export const AircraftModule = memo(() => {
               // Label axe Y (vertical) - rotation simulée avec texte vertical
               const cgLabelX = chartX - 25;
               const cgLabelY = chartY + chartHeight / 2;
-              addText('CG (mm)', cgLabelX - 20, cgLabelY, { size: 10, bold: true });
+              addText('CG (m)', cgLabelX - 20, cgLabelY, { size: 10, bold: true });
 
               // Graduations et labels sur l'axe X (masse)
               const numXTicks = 5;
@@ -4152,7 +4155,11 @@ const AircraftForm = memo(({ aircraft, onSubmit, onCancel }) => {
 
     const processedData = {
       ...formData,
-      fuelCapacity: toValidNumber(formData.fuelCapacity, 0),
+      // ⛔ Lot 1.0 (25/08) : capacité absente → champ ABSENT, plus jamais un 0
+      // fabriqué (toValidNumber('') vaut 0 — Number('') === 0). Ce formulaire
+      // legacy est le SEUL écrivain de fuelCapacity racine non dérivé des
+      // réservoirs (le wizard, lui, recalcule ou supprime le champ).
+      fuelCapacity: numOrUndefined(formData.fuelCapacity),
       cruiseSpeed: toValidNumber(formData.cruiseSpeedKt, 0), // Ajouter cruiseSpeed pour compatibilité
       cruiseSpeedKt: toValidNumber(formData.cruiseSpeedKt, 0),
       baseFactor: formData.baseFactor || (formData.cruiseSpeedKt ? (60 / parseFloat(formData.cruiseSpeedKt)).toFixed(3) : ''),

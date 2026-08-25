@@ -553,7 +553,10 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
 
         if (plan?.isMultiLeg) {
           const cell = { padding: '6px 8px', border: '1px solid var(--border-subtle)', textAlign: 'center', fontSize: 'var(--fs-caption)' };
-          const anyOver = capacityRef && plan.legs.some(l => l.totalLtr > capacityRef);
+          // ⛔ Lot 1.0 : totalLtr peut être null (dégagement incalculable) —
+          // null > x est faux, un some() nu aurait rendu « ✓ tient » à tort.
+          const anyIncomputable = (plan.incomputableLegs || 0) > 0;
+          const anyOver = capacityRef && plan.legs.some(l => Number.isFinite(l.totalLtr) && l.totalLtr > capacityRef);
           return (
             <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
               <h3 style={sx.combine(sx.text.lg, sx.text.bold, sx.spacing.mb(2))}>
@@ -580,7 +583,7 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                   </thead>
                   <tbody>
                     {plan.legs.map(l => {
-                      const over = capacityRef && l.totalLtr > capacityRef;
+                      const over = capacityRef && Number.isFinite(l.totalLtr) && l.totalLtr > capacityRef;
                       return (
                         <tr key={l.index}>
                           <td style={{ ...cell, textAlign: 'left', fontWeight: 600 }}>{l.label}</td>
@@ -589,9 +592,18 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                           <td style={cell}>{l.contingencyLtr.toFixed(1)}</td>
                           <td style={cell}>{l.taxiLtr.toFixed(1)}</td>
                           <td style={cell}>{l.finalReserveLtr.toFixed(1)}</td>
-                          <td style={cell}>{l.alternateLtr > 0 ? l.alternateLtr.toFixed(1) : '—'}</td>
+                          <td style={cell}>
+                            {l.alternateLtr === null
+                              ? <span style={{ color: 'var(--color-red-critical)', fontWeight: 600 }} title="Dégagement incalculable sur ce tronçon (déroutement ou données avion manquants) — l'ancien affichage montrait un faux 0.">⚠ n/c</span>
+                              : <>
+                                  {l.alternateLtr > 0 ? l.alternateLtr.toFixed(1) : '—'}
+                                  {l.alternateStatus === 'partial' && (
+                                    <span style={{ color: 'var(--color-orange-warning, #b45309)', fontWeight: 600 }} title="Au moins un déroutement sélectionné n'a pas pu être vérifié (position manquante) — le supplément affiché peut sous-estimer le pire cas."> ⚠</span>
+                                  )}
+                                </>}
+                          </td>
                           <td style={{ ...cell, fontWeight: 700, color: over ? 'var(--color-red-critical)' : 'var(--text-primary)' }}>
-                            {Math.ceil(l.totalLtr)}{over ? ' ⚠' : ''}
+                            {Number.isFinite(l.totalLtr) ? <>{Math.ceil(l.totalLtr)}{over ? ' ⚠' : ''}</> : '—'}
                           </td>
                         </tr>
                       );
@@ -600,15 +612,19 @@ export const FuelModule = memo(({ wizardMode = false, config = {} }) => {
                 </table>
               </div>
               {capacityRef && (
-                <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', fontWeight: 600, color: anyOver ? 'var(--color-red-critical)' : 'var(--text-primary)' }}>
+                <p style={{ margin: '8px 0 0', fontSize: 'var(--fs-body)', fontWeight: 600, color: anyOver || anyIncomputable ? 'var(--color-red-critical)' : 'var(--text-primary)' }}>
                   {/* Revue cran 3 : distinguer « dépasse la capacité TOTALE de
                       l'avion » (→ escale) de « dépasse seulement les réservoirs
-                      cochés » (→ cocher plus de réservoirs, l'escale n'y peut rien) */}
-                  {anyOver
-                    ? (plan.worstLeg.totalLtr > (getFuelCapacityLtr(selectedAircraft) || Infinity)
-                      ? `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L embarquables — déplacez l'escale ou ajoutez-en une (étape Trajet).`
-                      : `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L des réservoirs cochés — cochez des réservoirs supplémentaires à l'étape Masse & Centrage (capacité totale avion : ${Math.round(getFuelCapacityLtr(selectedAircraft) || 0)} L).`)
-                    : `✓ Chaque tronçon tient dans les ${Math.round(capacityRef)} L embarquables${tankConfigAuthoritative ? ' (réservoirs cochés)' : ''} — tronçon le plus exigeant : ${Math.ceil(plan.worstLeg.totalLtr)} L.`}
+                      cochés » (→ cocher plus de réservoirs, l'escale n'y peut rien).
+                      ⛔ Lot 1.0 : dégagement incalculable → AUCUN verdict — un
+                      « ✓ tient » sur un total incomplet serait un mensonge. */}
+                  {anyIncomputable
+                    ? `⚠️ Dégagement incalculable sur ${plan.incomputableLegs} tronçon${plan.incomputableLegs > 1 ? 's' : ''} (déroutement ou données avion manquants — voir l'étape Déroutements) : verdict d'emport indisponible.`
+                    : anyOver
+                      ? (plan.worstLeg.totalLtr > (getFuelCapacityLtr(selectedAircraft) || Infinity)
+                        ? `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L embarquables — déplacez l'escale ou ajoutez-en une (étape Trajet).`
+                        : `⚠️ Un tronçon dépasse les ${Math.round(capacityRef)} L des réservoirs cochés — cochez des réservoirs supplémentaires à l'étape Masse & Centrage (capacité totale avion : ${Math.round(getFuelCapacityLtr(selectedAircraft) || 0)} L).`)
+                      : `✓ Chaque tronçon tient dans les ${Math.round(capacityRef)} L embarquables${tankConfigAuthoritative ? ' (réservoirs cochés)' : ''} — tronçon le plus exigeant : ${Math.ceil(plan.worstLeg.totalLtr)} L.`}
                 </p>
               )}
             </div>

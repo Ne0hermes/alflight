@@ -14,7 +14,9 @@
 //
 // RÈGLES DE SÛRETÉ :
 //  - Segment sans donnée de vent → temps à la TAS, et le résultat global est
-//    marqué windCorrected: 'partial' ou 'none' (jamais silencieux).
+//    marqué windCorrected: 'partial' ou 'none' ET compté (noWindSegments) —
+//    l'interface doit pouvoir dire « vent inconnu sur N tronçons », pas
+//    seulement « partiel » (Lot 1.0 : rien d'inventé, rien de silencieux).
 //  - Vent ≥ TAS (segment intenable) → temps à la TAS + compteur untenable
 //    (on n'invente pas une vitesse sol ; le pilote doit revoir son vol).
 //  - cruiseSpeedKt absent → null (fail-closed, comme aircraftPerf).
@@ -36,7 +38,10 @@ const validWp = (wp) => wp && typeof wp.lat === 'number' && typeof wp.lon === 'n
  *   totalTimeMin: number,            // corrigé du vent partout où c'est possible
  *   effectiveSpeedKt: number,        // vitesse sol moyenne pondérée par la distance
  *   windCorrected: 'full'|'partial'|'none',
+ *   windSegments: number,            // tronçons réellement corrigés du vent
+ *   noWindSegments: number,          // tronçons SANS donnée de vent (temps à la TAS)
  *   untenableSegments: number,
+ *   segmentCount: number,
  *   segments: Array<{distanceNM, trueCourse, gsKt, timeMin, windSource}>
  * }}
  */
@@ -99,7 +104,12 @@ export function computeRouteWindTimes({ waypoints, cruiseSpeedKt, windProvider }
     // carburant par tronçon (legFuelPlan, planificateur d'escales…).
     effectiveSpeedKt: totalDistanceNM / (totalTimeMin / 60),
     windCorrected,
+    windSegments,
+    // Tronçons sans AUCUNE donnée de vent (provider muet ou absent) : leur
+    // temps est celui de l'air immobile — l'UI doit le dire, pas le taire.
+    noWindSegments: segments.length - windSegments - untenableSegments,
     untenableSegments,
+    segmentCount: segments.length,
     segments
   };
 }

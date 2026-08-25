@@ -63,7 +63,10 @@ export const useNavigationResults = (waypoints, flightType, selectedAircraft) =>
       // intenables (vent ≥ TAS) pour affichage.
       effectiveSpeedKt: windTimes ? Math.round(windTimes.effectiveSpeedKt * 10) / 10 : null,
       windCorrected: windTimes ? windTimes.windCorrected : 'none',
-      untenableSegments: windTimes ? windTimes.untenableSegments : 0
+      untenableSegments: windTimes ? windTimes.untenableSegments : 0,
+      // Lot 1.0 — tronçons SANS donnée de vent (temps air immobile), à afficher
+      noWindSegments: windTimes ? windTimes.noWindSegments : 0,
+      segmentCount: windTimes ? windTimes.segmentCount : 0
     };
 
 

@@ -311,6 +311,18 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
       ].filter((x) => (parseFloat(x.w) || 0) > 0 && !Number.isFinite(parseFloat(x.a))).map((x) => x.label);
       if (baggageArmMissing) missingArms.push('bagages');
       if (fuelArmMissing) missingArms.push('carburant');
+      // ⛔ Lot 1.0 (25/08) — SIÈGES ADDITIONNELS : la fiche peut en déclarer
+      // (3 éditeurs le permettent, « configurations 6+ places ») mais AUCUN
+      // moteur ne les pèse — l'occupant du 5e siège n'existe pas pour ce devis.
+      // Tant que leur prise en compte n'est pas implémentée, un avion qui en
+      // déclare rend son devis NON FIABLE, explicitement (jamais un
+      // « dans les limites » silencieusement amputé d'un occupant).
+      const additionalSeatsDeclared = Array.isArray(aircraft.additionalSeats)
+        ? aircraft.additionalSeats.filter((s) => s != null)
+        : [];
+      if (additionalSeatsDeclared.length > 0) {
+        missingArms.push(`${additionalSeatsDeclared.length} siège(s) additionnel(s) déclaré(s) mais NON PRIS EN COMPTE par le calcul`);
+      }
       const cgReliable = missingArms.length === 0;
       if (!cgReliable) warnings.push(`Bras de levier manquant(s) : ${missingArms.join(', ')} — centrage non vérifiable`);
       // 🔒 P0 (densité) : carburant chargé (litres) mais type inconnu ⇒ masse non

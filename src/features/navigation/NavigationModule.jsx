@@ -429,6 +429,39 @@ const NavigationModule = ({ wizardMode = false, config = {} }) => {
                 Résultats de navigation
               </h3>
 
+              {/* ⛔ Lot 1.0 — HONNÊTETÉ DU VENT : ces compteurs existaient dans le
+                  moteur (computeRouteWindTimes) mais mouraient dans le store — un
+                  temps « corrigé du vent » qui ne l'est pas partout doit le dire. */}
+              {(navigationResults.untenableSegments > 0 || navigationResults.noWindSegments > 0) && (
+                <div style={sx.combine(
+                  sx.components.alert.base,
+                  navigationResults.untenableSegments > 0 ? sx.components.alert.danger : sx.components.alert.warning,
+                  sx.spacing.mb(4)
+                )}>
+                  <p style={sx.text.sm}>
+                    {navigationResults.untenableSegments > 0 && (
+                      <>
+                        <strong>⚠ {navigationResults.untenableSegments} tronçon{navigationResults.untenableSegments > 1 ? 's' : ''} au vent intenable</strong>
+                        {' '}(vent ≥ vitesse propre) : temps plancher calculé sans vent, non représentatif — revoyez le vol.{' '}
+                      </>
+                    )}
+                    {navigationResults.noWindSegments > 0 && (
+                      navigationResults.windCorrected === 'partial' ? (
+                        <>
+                          Vent inconnu sur <strong>{navigationResults.noWindSegments} tronçon{navigationResults.noWindSegments > 1 ? 's' : ''} sur {navigationResults.segmentCount}</strong> :
+                          {' '}ces tronçons sont chronométrés en air immobile (vitesse propre) — le temps total et le carburant sont optimistes par vent de face.
+                        </>
+                      ) : (
+                        <>
+                          Temps calculés <strong>sans correction de vent</strong> (aucune donnée de vent sur la route) :
+                          {' '}renseignez le vent (manuel ou météo) pour des temps et un carburant réalistes.
+                        </>
+                      )
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div style={sx.components.card.base}>
                   <ValueWithUnit

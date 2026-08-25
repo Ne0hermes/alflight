@@ -404,6 +404,10 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
       validate: () => {
         const fob = flightPlan.fuel.confirmed || 0;
         const totalRequired = requiredFobForValidation();
+        // ⛔ Lot 1.0 (25/08) : total du tronçon 1 INCALCULABLE (dégagement
+        // manquant) → null. `fob >= null - 0.01` était vrai : la validation
+        // passait sur un minimum inconnu. On bloque explicitement.
+        if (!Number.isFinite(totalRequired)) return false;
         return fob > 0 && fob >= totalRequired - 0.01;
       },
       errorMessage: () => {
@@ -411,6 +415,9 @@ export const FlightPlanWizard = ({ onComplete, onCancel }) => {
         const totalRequired = requiredFobForValidation();
         if (!fob) {
           return 'Veuillez saisir le carburant embarqué (FOB) — section « Carburant embarqué et répartition » ci-dessus.';
+        }
+        if (!Number.isFinite(totalRequired)) {
+          return 'Carburant minimum du tronçon 1 incalculable : le supplément de déroutement manque (position du déroutement ou données avion incomplètes). Corrigez à l\'étape Déroutements avant de valider.';
         }
         return `FOB insuffisant : ${Math.ceil(totalRequired)} L minimum requis au décollage, ${Math.round(fob)} L embarqués. Augmentez le carburant.`;
       }

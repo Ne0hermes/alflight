@@ -431,6 +431,26 @@ export const Step3Route = memo(({ flightPlan, onUpdate }) => {
         </div>
       )}
 
+      {/* ⛔ Lot 1.0 — vent inconnu ou intenable : signalé dès le trajet (la
+          section Résultats de navigation est masquée en mode wizard). */}
+      {navigationResults?.totalDistance > 0 &&
+        (navigationResults.untenableSegments > 0 ||
+          (navigationResults.noWindSegments > 0 && navigationResults.windCorrected === 'partial')) && (
+        <div style={{
+          padding: '8px 16px', marginTop: '8px',
+          backgroundColor: 'var(--bg-overlay)', borderRadius: 'var(--radius-sm)',
+          borderLeft: '4px solid #f59e0b',
+          fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)'
+        }}>
+          {navigationResults.untenableSegments > 0 && (
+            <>⚠ {navigationResults.untenableSegments} tronçon{navigationResults.untenableSegments > 1 ? 's' : ''} au vent intenable (vent ≥ vitesse propre) — temps plancher non représentatif. </>
+          )}
+          {navigationResults.noWindSegments > 0 && navigationResults.windCorrected === 'partial' && (
+            <>Vent inconnu sur {navigationResults.noWindSegments} tronçon{navigationResults.noWindSegments > 1 ? 's' : ''} sur {navigationResults.segmentCount} : temps calculés en air immobile sur ces tronçons.</>
+          )}
+        </div>
+      )}
+
       {/* 🔧 LOT 8 — alerte autonomie insuffisante + suggestions d'escale
           avitaillement (dès la création de la navigation, demande pilote) */}
       <FuelStopAdvisor

@@ -519,8 +519,13 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
   // 🔧 A5 — Composante vent signée sur la piste active. Direction INDÉTERMINÉE
   // (Variable/Calme, pas de piste) ⇒ 0 conservateur, JAMAIS un vent de face
   // supposé (qui sous-estimerait les distances). Voir utils/windComponent.
-  const takeoffWindComponent = resolveWindComponent(departureRunwayWind.headwindComponent).component;
-  const landingWindComponent = resolveWindComponent(arrivalRunwayWind.headwindComponent).component;
+  // ⛔ Lot 1.0 (25/08) : le drapeau `.unknown` est CONSERVÉ — il était jeté ici,
+  // et le bloc « Piste X : face N kt » étant gardé par bestRunway, le cas
+  // indéterminé n'apparaissait NULLE PART à l'écran (0 kt silencieux).
+  const takeoffWindResolved = resolveWindComponent(departureRunwayWind.headwindComponent);
+  const landingWindResolved = resolveWindComponent(arrivalRunwayWind.headwindComponent);
+  const takeoffWindComponent = takeoffWindResolved.component;
+  const landingWindComponent = landingWindResolved.component;
   // Vitesse brute du vent — AFFICHAGE seulement (jamais utilisée pour la perf).
   const takeoffWindSpeed = departureWeather?.metar?.decoded?.wind?.speed ?? 0;
   const landingWindSpeed = arrivalWeather?.metar?.decoded?.wind?.speed ?? 0;
@@ -1143,6 +1148,15 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                 )}
               </p>
             )}
+            {/* ⛔ Lot 1.0 : composante indéterminée = dit à l'écran (avant : rien).
+                Revue 25/08 : PAS en vent VARIABLE — là, le calcul fait la moyenne
+                face/arrière (note italique ci-dessus), pas un 0 kt. */}
+            {takeoffWindResolved.unknown && !takeoffWindVariable && (
+              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+                Composante de vent indéterminée (piste non identifiée) —
+                distances calculées avec 0 kt de vent, aucun crédit de vent de face.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -1248,6 +1262,15 @@ const PerformanceModule = ({ wizardMode = false, config = {} }) => {
                 {arrivalRunwayWind.crosswindComponent > 0 && (
                   <span style={{ color: 'var(--text-tertiary)' }}> · travers {arrivalRunwayWind.crosswindComponent.toFixed(1)} kt</span>
                 )}
+              </p>
+            )}
+            {/* ⛔ Lot 1.0 : composante indéterminée = dit à l'écran (avant : rien).
+                Revue 25/08 : PAS en vent VARIABLE — là, le calcul fait la moyenne
+                face/arrière (note italique ci-dessus), pas un 0 kt. */}
+            {landingWindResolved.unknown && !landingWindVariable && (
+              <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+                Composante de vent indéterminée (piste non identifiée) —
+                distances calculées avec 0 kt de vent, aucun crédit de vent de face.
               </p>
             )}
           </div>

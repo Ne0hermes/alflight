@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 212 points recensés depuis l’audit d’origine,
-  <b>74 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 25 août 2026 : la valeur fautive a réellement disparu). Il reste <b>138 points à
+  <b>81 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 25 août 2026 : la valeur fautive a réellement disparu). Il reste <b>131 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 8 critiques, 27 majeurs, 103 mineurs — dont 46 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 24 majeurs, 100 mineurs — dont 44 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 25 août 2026.</p>
 </header>
 
@@ -601,13 +601,13 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GIEA</span><span class="mdl">PA 28 161</span><span class="spacer"></span>
-<span class="pill p-critique">2 critiques</span>
-<span class="pill p-majeur">4 majeurs</span>
-<span class="pill p-mineur">7 mineurs</span>
+<span class="pill p-critique">1 critique</span>
+<span class="pill p-majeur">1 majeur</span>
+<span class="pill p-mineur">4 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GIEA" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GIEA" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 uniquement — 4 planches Piper numérisées en cascade OAT → masse → vent (8 + 8/10 + 20/28 guides), aucune table MANEX (performanceTables = null, advancedPerformance absent) ; enveloppe de centrage à 3 points avant + segment arrière, arithmétiquement exacte ; extraction MANEX de juin 2026 (113 items, confiance 95 %) reprise partiellement à la main.</b> — Le cœur masse &amp; centrage est sain : masse à vide, bras, moments, réservoir et enveloppe se recoupent au centième près, et les 4 opérations de décollage tournent sur la sonde du 23/08. Deux choses bloquent : les vitesses de décrochage sont dans le désordre (VSO 63 &gt; VS1 50, alors que le 44 rangé dans VSTO est vraisemblablement la vraie VSO), et l&#x27;atterrissage ne calcule rien du tout — les deux opérations volets atterrissage, désormais obligatoires, sont certifiées « absentes du manuel » alors que ton propre retour signale l&#x27;abaque p50. Commence par ces deux points, puis par la règle « herbe » manquante et les 3 guides de vent non tagués du modèle « passage 15 m volets rentrés » ; le reste est de l&#x27;étiquetage et des miroirs inertes.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 4 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 11 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it critique" data-sev="critique" data-itid="F-GIEA-01" data-clos="0" data-champ="aircraft_data.speeds.vso / speeds.vs1 / speeds.vsTO" data-sevlbl="critique">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -618,51 +618,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>vso ≤ vsTO ≤ vs1 (les volets sortis abaissent la vitesse de décrochage). Le retour pilote du 21/08 renvoie au manuel p31-32 : vso = 44, vsTO à vider (le PA 28 161 n&#x27;a pas de position volets décollage distincte)</dd>
 <dt>En vol</dt><dd>Le ruban de vitesses affiche un arc blanc inversé (il commencerait à 63 kt au lieu de 44). Toute marge de décrochage prise sur VSO en approche est fausse de +19 kt, et la VAPP de 70 kt n&#x27;a plus de rapport avec 1,3 × VSO. C&#x27;est la vitesse la plus proche du sol qui est fausse.</dd>
 <dt>Action</dt><dd>Fiche avion → étape Vitesses : recopier 44 dans VSO, vider VSTO, après relecture des p31-32 du manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne + règle codée dans l&#x27;app elle-même : Step2Speeds.jsx:435 « VS1 devrait être supérieure à VSO ». Ici vsTO(44) &lt; vs1(50) &lt; vso(63) : l&#x27;ordre est violé deux fois. L&#x27;extraction MANEX acceptée (manexExtraction.items[22], p.5, confiance 95) est la source du 63 ; l&#x27;item[23] « VS T/O » est accepté avec value = null, donc le 44 de vsTO a été saisi à la main.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-01) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it critique" data-sev="critique" data-itid="F-GIEA-02" data-clos="0" data-champ="performance.landing_ground_roll_flaps_landing / performance.landing_50ft_flaps_landing (via performanceModels et bypassedFields)" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-02</span><span class="pill p-critique">critique</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">performance.landing_ground_roll_flaps_landing / performance.landing_50ft_flaps_landing (via performanceModels et bypassedFields)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">0 donnée d&#x27;atterrissage : performanceModels = 4 modèles, tous takeoff_* ; performanceTables = null ; advancedPerformance absent ; performance.landing.groundRoll = &quot;&quot; et performance.landing.fiftyFeet = &quot;&quot;. bypassedFields certifie les 4 clés performance.landing_* « absentes du manuel ».</dd>
-<dt>Attendu</dt><dd>Les deux opérations volets atterrissage font partie du minimum obligatoire à quatre (les variantes volets rentrés, elles, sont bien optionnelles). Le retour pilote du 21/08 indique que l&#x27;abaque p50 (volets 40°) est numérisable pour ces deux opérations : la certification d&#x27;absence serait alors caduque.</dd>
-<dt>En vol</dt><dd>Aucune distance d&#x27;atterrissage ne sort de la préparation de vol, ni au terrain de destination ni au dégagement. La longueur de piste nécessaire à l&#x27;arrivée n&#x27;est pas vérifiable dans l&#x27;app.</dd>
-<dt>Action</dt><dd>Ouvrir le manuel à la p50. Si l&#x27;abaque volets 40° y est : lever le contournement des deux clés landing_ground_roll_flaps_landing et landing_50ft_flaps_landing dans l&#x27;étape Performances, puis numériser les deux planches à l&#x27;atelier. Si elle n&#x27;y est vraiment pas, laisser la certification et noter la source de repli utilisée en vol.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Lecture de la base fraîche (aucun modèle landing_*, aucune table) confrontée à la liste du minimum obligatoire codée dans packages/calc-engine/src/perf/abac/operationCatalog.ts:359-364, et au retour pilote consigné dans retours.json (F-GIEA-13, 21/08).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GIEA-03" data-clos="0" data-champ="performanceModels[model_1781595584584].data.graphs[2] — courbes h11, t2, t14 (panneau vent)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-03</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">performanceModels[model_1781595584584].data.graphs[2] — courbes h11, t2, t14 (panneau vent)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">3 courbes sur 28 sans windDirection : h11 (y 2801→3367), t2 (y 886→1097), t14 (y 3622→3978). Les 25 autres portent bien headwind ou tailwind.</dd>
-<dt>Attendu</dt><dd>windDirection = &#x27;headwind&#x27; sur h11, &#x27;tailwind&#x27; sur t2 et t14, comme les 25 autres guides du même panneau.</dd>
-<dt>En vol</dt><dd>Sur « Distance décollage — passage 15 m, volets rentrés », dès qu&#x27;une direction de vent est choisie, l&#x27;encadrement saute de h10 à h12 et de t1 à t3 : la correction de vent est interpolée sur un écart doublé dans ces deux bandes, sans le moindre avertissement à l&#x27;écran. La distance rendue est faussée d&#x27;un montant que rien ne borne.</dd>
-<dt>Action</dt><dd>Atelier → modèle « passage 15 m Flaps UP » → gestionnaire de courbes du Graphique 3 : renseigner la direction des 3 courbes.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne (25 courbes taguées / 3 non) + code : cascade.ts:476 retire du jeu toute courbe dont windType ≠ direction choisie ; leurs noms ne contiennent ni « headwind » ni « tailwind », donc le repli par le nom (cascade.ts:421-427) ne les rattrape pas ; et le garde-fou anti-suppression muette (cascade.ts:458) ne se déclenche que sur un paramètre non numérique — « h11 » donne 11, donc silence total.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GIEA-04" data-clos="0" data-champ="aircraft_data.performanceCorrections" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-04</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceCorrections</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Clé absente des 57 clés d&#x27;aircraft_data, alors que compatibleRunwaySurfaces = [ASPH, CONC, GRASS].</dd>
-<dt>Attendu</dt><dd>Au moins une règle d&#x27;état de piste (herbe) issue du manuel p34/p49. Les règles de vent ne sont plus concernées depuis le correctif du 21/08, les abaques portant déjà un panneau vent.</dd>
-<dt>En vol</dt><dd>Un décollage depuis une piste en herbe est calculé avec les distances de piste dure : aucune majoration n&#x27;est appliquée. Sur l&#x27;herbe humide ou haute, la marge disparaît complètement.</dd>
-<dt>Action</dt><dd>Fiche avion → Performances → éditeur de facteurs correctifs : saisir la règle herbe (et les autres états de piste du manuel).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne (la fiche déclare l&#x27;herbe compatible et ne fournit aucun facteur) + code : PerformanceModule.jsx:596 lit selectedAircraft?.performanceCorrections || [] → liste vide → applyPerformanceCorrections n&#x27;applique rien.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-04) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GIEA-07" data-clos="0" data-champ="aircraft_data.speeds.vno" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-07</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vno</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vno = 126 kt dans le champ vivant, alors que l&#x27;enregistrement d&#x27;extraction MANEX ACCEPTÉ porte 111 kt (manexExtraction.items[27], sourcePage 32, confiance 95, accepted = true). À noter : cruiseSpeedKt = 111 également.</dd>
-<dt>Attendu</dt><dd>Une seule valeur, celle de la page 32 du manuel. Les deux lectures sont plausibles : soit 126 est ta correction volontaire d&#x27;une lecture OCR fautive à 111 (auquel cas il n&#x27;y a rien à changer dans la fiche), soit le 111 de la p.32 est le bon et le 126 vient d&#x27;ailleurs.</dd>
-<dt>En vol</dt><dd>Si 126 est faux, l&#x27;arc jaune est décalé de 15 kt : on volerait au-dessus de la VNO en air turbulent en croyant rester dans le vert. Si 111 est faux, on s&#x27;interdit 15 kt de plage utilisable.</dd>
-<dt>Action</dt><dd>Relire la page 32 du manuel et trancher dans l&#x27;étape Vitesses. Aucun autre champ n&#x27;est concerné.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Divergence entre l&#x27;enregistrement d&#x27;extraction accepté et le champ vivant, relevée par comparaison systématique des 113 items de manexExtraction avec aircraft_data sur l&#x27;extraction du 23/08. Sur les 41 items acceptés, seules 4 lignes divergent, et c&#x27;est la seule qui porte une source de page et une confiance à 95.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-07) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l&#x27;étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l&#x27;avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d&#x27;enregistrement à chasser).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-01) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it majeur" data-sev="majeur" data-itid="F-GIEA-08" data-clos="0" data-champ="aircraft_data.approvedOperations (31 booléens) + aircraft_data.equipmentSurv.transponderModes" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -673,7 +629,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Au minimum vfrDay = true, elt = true (le retour pilote atteste la balise au manuel p16/p58/p70) et les modes transpondeur réellement embarqués.</dd>
 <dt>En vol</dt><dd>Le plan de vol part avec un avion déclaré approuvé pour aucune opération, sans balise de détresse et sans mode transpondeur. La case équipement est fausse au dépôt.</dd>
 <dt>Action</dt><dd>Passer une fois l&#x27;étape Équipements &amp; Opérations approuvées du wizard fiche avion et enregistrer.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Lecture directe de la base fraîche (31 false, clé transponderModes absente) + contradiction avec le retour pilote consigné (balise attestée). Le champ pluriel est bien celui qu&#x27;écrit l&#x27;écran actuel : Step5Equipment.jsx:644.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-08) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d&#x27;approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n&#x27;existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l&#x27;étape Équipements &amp; Opérations a un problème d&#x27;enregistrement — à chasser en priorité.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-08) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GIEA-10" data-clos="0" data-champ="performanceModels[*].data.graphs[1].axes.xAxis (les 4 panneaux masse)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -684,7 +640,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Axe et guides couvrant la MTOW, soit au moins 1055 kg (1060 pour la marge).</dd>
 <dt>En vol</dt><dd>À masse maxi, l&#x27;entrée du panneau se fait sur la ligne de référence 1050 kg puis chaque guide est prolongé par sa pente de bord jusqu&#x27;à 1055 : le résultat reste rendu, avec un avertissement de prolongement et une confiance dégradée. Les 4 cas de référence que tu as saisis restent reproduits à ±1 %, donc le prolongement est fidèle — c&#x27;est l&#x27;avertissement permanent qui reste à faire disparaître.</dd>
 <dt>Action</dt><dd>Atelier : porter le maximum de l&#x27;axe masse à 1060 kg sur les 4 abaques et prolonger le tracé des guides jusqu&#x27;à la MTOW.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe déclarée par la fiche elle-même (1055 &gt; max d&#x27;axe 1050) sur les 4 modèles. Mécanisme du prolongement : cascade.ts:574-577 (ligne de référence = bord d&#x27;axe, axe inversé ⇒ xMax) et cascade.ts:589-595 (guides prolongés signalés).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-10) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 4 axes masse plafonnent toujours à max=1050 kg (MTOW 1055) et le dernier guide tracé s&#x27;arrête à 1050 (1045,35 sur le modèle Flaps TAKEOFF sol). Atelier : porter l&#x27;axe à 1060 et prolonger les guides.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-10) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GIEA-11" data-clos="0" data-champ="performanceModels[model_1781595584584] — Graphique 2 courbes « 7 » ×2, Graphique 3 courbes « h6 » ×2" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -695,29 +651,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Un nom unique par guide numérisé, série continue.</dd>
 <dt>En vol</dt><dd>Effet calculatoire nul ou faible : l&#x27;encadrement se fait sur la valeur Y entrante, pas sur le numéro (les guides n&#x27;ont pas de sens physique). Mais la trace de calcul affiche « Entre h6 et h6 », illisible, et le risque est de renuméroter à l&#x27;envers lors d&#x27;une reprise.</dd>
 <dt>Action</dt><dd>Atelier → gestionnaire de courbes du modèle « passage 15 m Flaps UP » : renuméroter les guides (ne rien supprimer — les plages Y sont bien distinctes) et combler le t12 manquant.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Doublon de nom relevé sur la base fraîche, avec plages Y disjointes prouvant qu&#x27;il s&#x27;agit de deux guides différents.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GIEA-12" data-clos="0" data-champ="aircraft_data.arms.baggageAft / arms.baggageFwd / weightBalance.baggageArm / weightBalance.auxiliaryArm" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-12</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.arms.baggageAft / arms.baggageFwd / weightBalance.baggageArm / weightBalance.auxiliaryArm</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 4 bras sont à 0, alors que baggageCompartments[0] est à 3,627 m pour 23 kg (momentMax 83,42 = 23 × 3,627, exact).</dd>
-<dt>Attendu</dt><dd>3,627 m sur les bras soute (ou champs laissés vides), et aucun bras auxiliaire tant qu&#x27;aucun compartiment auxiliaire n&#x27;existe.</dd>
-<dt>En vol</dt><dd>Inerte tant que baggageCompartments est renseigné : l&#x27;écran de chargement bascule sur les compartiments. Le jour où cette liste se viderait, 23 kg de bagages seraient placés au bras 0 — centrage faux vers l&#x27;avant.</dd>
-<dt>Action</dt><dd>Repasser l&#x27;étape Masse &amp; centrage pour que les bras historiques soient re-dérivés depuis le compartiment.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Cas explicite « bras à 0 avec masse maxi &gt; 0 » : le compartiment porte un bras de 3,627 m et une masse de 23 kg, les miroirs portent 0. Bascule compartiments/legacy : WeightBalanceModule.jsx:231.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GIEA-13" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (racine)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-13</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.minTakeoffWeight (racine)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">racine = 600 kg, weights.minTakeoffWeight = 550 kg, cgEnvelope.aftMinWeight = 550 et cgEnvelope.forwardPoints[0].weight = 550.</dd>
-<dt>Attendu</dt><dd>550 kg aux deux emplacements.</dd>
-<dt>En vol</dt><dd>Sans conséquence pratique : la masse à vide est de 639,25 kg, donc toujours au-dessus des deux valeurs. Et le contrôle du wizard de vol lit weights.minTakeoffWeight (= 550), la racine ne servant que de repli. C&#x27;est de l&#x27;hygiène.</dd>
-<dt>Action</dt><dd>Fiche avion → Masse &amp; centrage : aligner la valeur racine sur 550.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction miroir ↔ enveloppe sur la base fraîche. Consommateurs réels : Step6WeightBalance.jsx:459 et WeightBalanceChart.jsx:194 (tous deux weights.minTakeoffWeight d&#x27;abord) ; repli à 600 en contexts/index.jsx:234. Correction d&#x27;un constat antérieur qui affirmait que le moteur ne lisait que la racine — ce n&#x27;est pas le cas.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-13) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ PARTIEL — vérifié en base v3 : le doublon « 7 » du panneau masse est réglé (guides 1→10 uniques ✓), mais le panneau vent du modèle « passage 15 m Flaps UP » porte ENCORE deux courbes « h6 ». Reste à renuméroter cette paire dans le gestionnaire de courbes.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-11) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GIEA-14" data-clos="0" data-champ="performanceModels[*].data.graphs[0].outputUnit et axes.yAxis.title" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -728,18 +662,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>outputUnit = &#x27;ft&#x27;, titres d&#x27;axe Y de type distance.</dd>
 <dt>En vol</dt><dd>Aucun effet : la sonde du 23/08 rend bien unit = &#x27;ft&#x27; sur les 4 modèles, l&#x27;axe Y du dernier graphe primant sur outputUnit. Piège d&#x27;étiquetage seulement — mais un piège qui deviendrait une erreur d&#x27;un facteur 3,28 si la résolution d&#x27;unité changeait un jour.</dd>
 <dt>Action</dt><dd>Atelier : corriger outputUnit en &#x27;ft&#x27; sur les 4 abaques et renommer les titres d&#x27;axe Y.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Unité incohérente avec le champ voisin dans le même objet graphe (outputUnit &#x27;m&#x27; vs axes.yAxis.unit &#x27;ft&#x27;), sur les 4 modèles ; unité rendue effectivement &#x27;ft&#x27; par les 20 exécutions de la sonde du 23/08.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GIEA-15" data-clos="0" data-champ="performanceModels[model_1781595584584].name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-15</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">performanceModels[model_1781595584584].name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets », alors que le champ classification du même modèle est propre et que les 4 operationId sont distincts : takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to.</dd>
-<dt>Attendu</dt><dd>Nom sans marqueur d&#x27;alerte, le doublon ayant été résolu.</dd>
-<dt>En vol</dt><dd>Un bandeau d&#x27;alerte périmé dans la liste des abaques, qui fait douter d&#x27;une planche pourtant correctement classée.</dd>
-<dt>Action</dt><dd>Atelier : renommer le modèle.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Aucun doublon d&#x27;operationId sur les 4 modèles de la base fraîche (liste vérifiée), le marqueur est donc contredit par la fiche elle-même.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-15) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d&#x27;axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-14) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GIEA-16" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -750,7 +673,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Champ singulier vidé, mode réel saisi dans transponderModes via l&#x27;étape Équipements.</dd>
 <dt>En vol</dt><dd>Champ orphelin qui n&#x27;est plus lu par la synthèse de vol : le mode transpondeur n&#x27;est en réalité déclaré nulle part. C&#x27;est ce champ qui faisait autrefois apparaître une balise de détresse au plan de vol.</dd>
 <dt>Action</dt><dd>Vider le champ et cocher le ou les modes réels dans l&#x27;étape Équipements.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction de schéma dans la fiche : singulier présent, pluriel absent. Le singulier est posé en dur à l&#x27;initialisation (AircraftCreationWizard.jsx:403 : transponderMode: &#x27;C&#x27;), l&#x27;écran actuel écrit le pluriel (Step5Equipment.jsx:644), et la synthèse de vol a cessé de lire le singulier (Step7Summary.jsx:584).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-16) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : equipmentSurv.transponderMode=« C » (singulier, posé en dur à l&#x27;initialisation) est toujours là et transponderModes (pluriel, celui que l&#x27;écran Équipements écrit) n&#x27;existe toujours pas. Même étape que F-GIEA-08 — se règlera avec elle.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-16) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GNAM</span><span class="mdl">PA-28-181</span><span class="spacer"></span>
