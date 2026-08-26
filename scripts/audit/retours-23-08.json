@@ -876,8 +876,8 @@
  },
  {
   "itid": "F-BXQT-18",
-  "status": "ouvert",
-  "note": "Coché « réglé », MAIS la base v5 porte toujours stallByBank.landing.b20 = 42 kt sous vso = 43 (un décrochage à 20° d'inclinaison SOUS le décrochage à plat est physiquement impossible). QUESTION : la table du manuel C150M donne-t-elle littéralement 42 à 20° ? Si oui je valide (le manuel fait foi), sinon corrigez la cellule (ou donnez-moi la ligne de la table et je scripte)."
+  "status": "valide",
+  "note": "Coché « réglé », MAIS la base v5 porte toujours stallByBank.landing.b20 = 42 kt sous vso = 43 (un décrochage à 20° d'inclinaison SOUS le décrochage à plat est physiquement impossible). QUESTION : la table du manuel C150M donne-t-elle littéralement 42 à 20° ? Si oui je valide (le manuel fait foi), sinon corrigez la cellule (ou donnez-moi la ligne de la table et je scripte). ▸ CLOS VALIDE — confirmation pilote 26/08 : la table du manuel C150M publie littéralement 42 kt à 20° d'inclinaison volets atterrissage (43 à plat). L'inversion apparente est celle du POH (probable effet d'arrondi/conditions de référence Cessna) — la saisie est FIDÈLE, le manuel fait foi. F-BXQT EST SOLDÉ."
  },
  {
   "itid": "F-BXQT-19",
