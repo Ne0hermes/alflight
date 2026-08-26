@@ -43,6 +43,24 @@ for (const reg of ['F-GIEA', 'F-GBTU']) {
       delete t0.capacity;
       changements.push('réservoir principal : usableCapacity=182 explicite, legacy capacity retirée');
     }
+    // 🛑 VITESSES DE DÉCROCHAGE — planche du manuel fournie par le pilote
+    // (26/08) : volets 0° → Vs 50 ; volets 40° (3e cran) → Vs 44. Aucune
+    // position volets décollage publiée → vsTO VIDÉ. La base portait
+    // vso=50/vsTO=44/vs1=63 (ordre impossible, 63 ne correspond à rien).
+    if (d.speeds) {
+      const av = { vso: d.speeds.vso, vs1: d.speeds.vs1, vsTO: d.speeds.vsTO };
+      d.speeds.vso = 44;
+      d.speeds.vs1 = 50;
+      d.speeds.vsTO = '';
+      changements.push(`vitesses : vso ${JSON.stringify(av.vso)}→44, vs1 ${JSON.stringify(av.vs1)}→50, vsTO ${JSON.stringify(av.vsTO)}→vidé (planche manuel)`);
+      // stallByBank est une DÉRIVATION des vitesses ci-dessus : s'il existe,
+      // il a été calculé sur les valeurs fausses — supprimé (l'app le
+      // redérivera au prochain enregistrement ; absent = fail-closed).
+      if (d.speeds.stallByBank != null) {
+        delete d.speeds.stallByBank;
+        changements.push('stallByBank dérivé des vitesses fausses : supprimé (re-dérivé au prochain save)');
+      }
+    }
   }
 
   for (const m of d.performanceModels || []) {
