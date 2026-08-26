@@ -431,8 +431,8 @@
  },
  {
   "itid": "F-GIEA-01",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l'étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l'avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d'enregistrement à chasser). ▸ 2e rapport 26/08 — les vitesses ont été PERMUTÉES mais l'ordre reste impossible : vso=50 / vsTO=44 / vs1=63 (un décrochage volets DÉCOLLAGE sous le volets SORTIS est physiquement exclu, et votre retour du 21/08 disait vso=44 au manuel p31-32). QUESTION PRÉCISE : le manuel donne quoi, exactement — vso=44 et vs1=50 (et vsTO à vider), ou d'autres valeurs ? Où va le 63 (une autre vitesse ?) ? ▸ RÉSOLU SUR PLANCHE — le pilote a fourni la table du manuel (26/08) : volets 0° → Vs 50 ; volets 40° → Vs 44 ; pas de position décollage publiée. Cible : vso=44, vs1=50, vsTO vidé (le 63 ne correspond à rien de la table). Intégré au script fix-giea-gbtu-titres.mjs (avec suppression du stallByBank dérivé des valeurs fausses) — clos après le --apply."
+  "status": "fait",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l'étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l'avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d'enregistrement à chasser). ▸ 2e rapport 26/08 — les vitesses ont été PERMUTÉES mais l'ordre reste impossible : vso=50 / vsTO=44 / vs1=63 (un décrochage volets DÉCOLLAGE sous le volets SORTIS est physiquement exclu, et votre retour du 21/08 disait vso=44 au manuel p31-32). QUESTION PRÉCISE : le manuel donne quoi, exactement — vso=44 et vs1=50 (et vsTO à vider), ou d'autres valeurs ? Où va le 63 (une autre vitesse ?) ? ▸ RÉSOLU SUR PLANCHE — le pilote a fourni la table du manuel (26/08) : volets 0° → Vs 50 ; volets 40° → Vs 44 ; pas de position décollage publiée. Cible : vso=44, vs1=50, vsTO vidé (le 63 ne correspond à rien de la table). Intégré au script fix-giea-gbtu-titres.mjs (avec suppression du stallByBank dérivé des valeurs fausses) — clos après le --apply. ▸ Vérifié sur extraction fraîche (fix-giea-gbtu-titres --apply lancé par Claude sur autorisation pilote, GIEA v8 / GBTU v6, sauvegardes backups/fix-titres-2026-08-26T12-01-19) : vso=44, vs1=50, vsTO vidé — conformes à la planche du manuel fournie par le pilote (volets 0° → 50, volets 40° → 44, pas de position décollage). stallByBank dérivé des anciennes valeurs supprimé. LE DERNIER CRITIQUE de F-GIEA est soldé."
  },
  {
   "itid": "F-GIEA-02",
@@ -481,8 +481,8 @@
  },
  {
   "itid": "F-GIEA-14",
-  "status": "note",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres. ▸ PARTIEL — Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles ✓. Restent les TITRES d'axe Y « altitude » sur 3 modèles (l'autre moitié de l'item) — à renommer dans l'atelier, ou dites-moi si le champ n'y est pas exposé et je scripte. ▸ outputUnit=ft ✓ (script du matin). Restent les titres « altitude » ×3 — réglage NON exposé par l'atelier : le script fix-giea-gbtu-titres.mjs les dérive du nom des modèles (passage 15 m → takeoff_distance_50ft, sol → takeoff_distance_ground). Clos après le --apply."
+  "status": "fait",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres. ▸ PARTIEL — Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles ✓. Restent les TITRES d'axe Y « altitude » sur 3 modèles (l'autre moitié de l'item) — à renommer dans l'atelier, ou dites-moi si le champ n'y est pas exposé et je scripte. ▸ outputUnit=ft ✓ (script du matin). Restent les titres « altitude » ×3 — réglage NON exposé par l'atelier : le script fix-giea-gbtu-titres.mjs les dérive du nom des modèles (passage 15 m → takeoff_distance_50ft, sol → takeoff_distance_ground). Clos après le --apply. ▸ Vérifié sur extraction fraîche (fix-giea-gbtu-titres --apply lancé par Claude sur autorisation pilote, GIEA v8 / GBTU v6, sauvegardes backups/fix-titres-2026-08-26T12-01-19) : les 3 titres « altitude » sont remplacés (takeoff_distance_50ft / takeoff_distance_ground) — l'item est entièrement soldé (outputUnit ft l'était déjà)."
  },
  {
   "itid": "F-GIEA-15",
@@ -646,8 +646,8 @@
  },
  {
   "itid": "F-GOVE-10",
-  "status": "ouvert",
-  "note": "Coché « fait », MAIS c'est un bug d'APP : la fiche v4 ré-enregistrée le 26/08 08:08 porte toujours lastModified 2026-06-18 — le wizard ne rafraîchit JAMAIS cet horodatage au save (row.updated_at, lui, est juste). Correctif du code mis en chip (même motif sur F-GNAM/F-GOFP/F-GUKQ) ; rien à faire côté pilote."
+  "status": "fait",
+  "note": "Coché « fait », MAIS c'est un bug d'APP : la fiche v4 ré-enregistrée le 26/08 08:08 porte toujours lastModified 2026-06-18 — le wizard ne rafraîchit JAMAIS cet horodatage au save (row.updated_at, lui, est juste). Correctif du code mis en chip (même motif sur F-GNAM/F-GOFP/F-GUKQ) ; rien à faire côté pilote. ▸ CLOS par la purge flotte des horodatages miroirs (26/08, 13/13 fiches, sauvegarde backups/purge-horodatages-miroirs-2026-08-26T12-02-16, relecture de contrôle ✓) : lastModified et _metadata.savedAt SUPPRIMÉS de la base — row.updated_at fait foi, et les écritures futures les strippent à la source (session dédiée, communityService)."
  },
  {
   "itid": "F-GOVE-11",
@@ -716,8 +716,8 @@
  },
  {
   "itid": "F-HSTR-21",
-  "status": "ouvert",
-  "note": "Coché « fait », MAIS c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 21/05). Correctif du code en chip, rien à faire côté pilote. ▸ Re-coché le 26/08 : rien à faire côté pilote, confirmé — lastModified (21/05) ne bouge pas malgré vos ré-enregistrements du jour, c'est le bug d'app en chip. Sera clos avec le correctif de code."
+  "status": "fait",
+  "note": "Coché « fait », MAIS c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 21/05). Correctif du code en chip, rien à faire côté pilote. ▸ Re-coché le 26/08 : rien à faire côté pilote, confirmé — lastModified (21/05) ne bouge pas malgré vos ré-enregistrements du jour, c'est le bug d'app en chip. Sera clos avec le correctif de code. ▸ CLOS par la purge flotte des horodatages miroirs (26/08, 13/13 fiches, sauvegarde backups/purge-horodatages-miroirs-2026-08-26T12-02-16, relecture de contrôle ✓) : lastModified et _metadata.savedAt SUPPRIMÉS de la base — row.updated_at fait foi, et les écritures futures les strippent à la source (session dédiée, communityService)."
  },
  {
   "itid": "F-HSTR-22",
@@ -806,8 +806,8 @@
  },
  {
   "itid": "F-GNAM-24",
-  "status": "ouvert",
-  "note": "Coché « ok », mais c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote. ▸ 2e rapport (« ok ») — reste le bug d'APP lastModified (chip) : rien côté pilote."
+  "status": "fait",
+  "note": "Coché « ok », mais c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote. ▸ 2e rapport (« ok ») — reste le bug d'APP lastModified (chip) : rien côté pilote. ▸ CLOS par la purge flotte des horodatages miroirs (26/08, 13/13 fiches, sauvegarde backups/purge-horodatages-miroirs-2026-08-26T12-02-16, relecture de contrôle ✓) : lastModified et _metadata.savedAt SUPPRIMÉS de la base — row.updated_at fait foi, et les écritures futures les strippent à la source (session dédiée, communityService)."
  },
  {
   "itid": "F-GNAM-25",
@@ -841,12 +841,17 @@
  },
  {
   "itid": "F-GIEA-18",
-  "status": "note",
-  "note": "Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : réservoir principal inchangé (capacity legacy 182 + total 189, usableCapacity absent) — non modifiable dans l'app : le script fix-giea-gbtu-titres.mjs pose usableCapacity=182 explicite et retire la legacy. Clos après le --apply."
+  "status": "fait",
+  "note": "Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : réservoir principal inchangé (capacity legacy 182 + total 189, usableCapacity absent) — non modifiable dans l'app : le script fix-giea-gbtu-titres.mjs pose usableCapacity=182 explicite et retire la legacy. Clos après le --apply. ▸ Vérifié sur extraction fraîche (fix-giea-gbtu-titres --apply lancé par Claude sur autorisation pilote, GIEA v8 / GBTU v6, sauvegardes backups/fix-titres-2026-08-26T12-01-19) : réservoir principal : usableCapacity=182 explicite, clé legacy capacity retirée (total 189 inchangé)."
  },
  {
   "itid": "F-GIEA-19",
   "status": "fait",
   "note": "Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : initialClimb est VIDÉ — la valeur ambiguë (63 = vx recopiée) a disparu, conforme au champ facultatif."
+ },
+ {
+  "itid": "F-GBTU-19",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche (fix-giea-gbtu-titres --apply lancé par Claude sur autorisation pilote, GIEA v8 / GBTU v6, sauvegardes backups/fix-titres-2026-08-26T12-01-19) : les 9 titres « altitude » des 3 modèles hérités sont remplacés — sharedY compris."
  }
 ]
