@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>168 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>75 points à
+  <b>174 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>69 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 12 majeurs, 57 mineurs — dont 30 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 12 majeurs, 51 mineurs — dont 29 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -158,11 +158,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <details class="av" open>
 <summary><span class="reg">F-BXNG</span><span class="mdl">F 150M</span><span class="spacer"></span>
 <span class="pill p-majeur">1 majeur</span>
-<span class="pill p-mineur">9 mineurs</span>
+<span class="pill p-mineur">8 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-BXNG" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXNG" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tableaux MANEX seuls, aucun abaque : performanceModels = null et performanceTables = null (sonde 23/08 : 0 modèle évalué), toute la performance repose sur advancedPerformance.tables — 4 tables réimportées d&#x27;Excel le 18/06, grille ISA diagonale (une seule case température par palier d&#x27;altitude). Masse &amp; centrage complet et cohérent (cgEnvelope 3 points avant + limite arrière constante, 2 compartiments bagages, 2 réservoirs et 2 variantes). Corrections de piste/vent créées le 21/08, encore incomplètes.</b> — Le carburant est sain et vérifié chiffre par chiffre (85 L utilisables → moment 65,48 = 85 × 0,72 × 1,07 ; Long Range 132,5 L → 102,08 ; les deux variantes pointent bien sur leur réservoir), et l&#x27;enveloppe de centrage est cohérente à la décimale près avec ses miroirs. Ce qui bloque, c&#x27;est la performance : la grille des 4 tables n&#x27;est remplie que sur la diagonale ISA, si bien qu&#x27;à 0 ft dès 16 °C — comme à 5 °C — le moteur refuse toute distance ; s&#x27;y ajoute l&#x27;absence des deux opérations de décollage volets décollage, qui fait basculer l&#x27;affichage sur les tables « Flaps UP ». Commencez par là : rouvrir l&#x27;atelier tableaux et saisir toutes les colonnes de température des pages 68 et 69 ; puis effacer les bras de sièges arrière (1,000 m, identiques aux sièges avant), qui font accepter aujourd&#x27;hui un poste de chargement fantôme sans le moindre avertissement.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 11 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 12 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-BXNG-11" data-clos="0" data-champ="aircraft_data.approvedOperations (32 clés) et aircraft_data.specialCapabilities" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -174,17 +174,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Le plan de vol ne déclare aucun équipement de survie : la case ELT part vide alors que la balise est réglementairement à bord. En cas de recherche, l&#x27;information manque là où elle compte.</dd>
 <dt>Action</dt><dd>Onglet Équipements → Opérations approuvées : cocher vfrDay, l&#x27;ELT et les équipements de survie réellement présents dans l&#x27;avion.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence entre deux blocs voisins de la fiche : équipements de navigation IFR déclarés présents et aucune opération approuvée, pas même le VFR de jour. Effet tracé au 21/08 : Step7Summary ne déclare l&#x27;ELT au plan de vol que si approvedOperations.elt est true.</dd>
 </dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n&#x27;était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l&#x27;app puis ré-enregistrer — ou me confirmer que rien n&#x27;est approuvé sur cet avion.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-12" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[1].table_name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-12</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.advancedPerformance.tables[1].table_name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Take-off Ground Roll - Flaps UP », strictement identique au table_name de tables[0], alors que operationId = takeoff_50ft_flaps_up et que les valeurs diffèrent (422/506/605/744 m contre 224/277/340/414 m).</dd>
-<dt>Attendu</dt><dd>Un intitulé de passage des 15 m, du type « Take-off Distance over 50 ft - Flaps UP », distinct de celui du roulage.</dd>
-<dt>En vol</dt><dd>Dans l&#x27;atelier tableaux, deux tables portent le même nom : au moment de corriger la grille des températures, le risque est de modifier la mauvaise.</dd>
-<dt>Action</dt><dd>Onglet Performances → atelier Tableaux : renommer la deuxième table pour qu&#x27;elle porte l&#x27;intitulé du passage des 15 m.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : deux tables de même nom pour deux operationId différents, avec des valeurs différentes ligne à ligne. Les 3 autres tables portent chacune un nom conforme à leur operationId.</dd>
-</dl><div class="notefait">✎ Rapport pilote 23/08 : classification vérifiée à l&#x27;écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l&#x27;operationId). ▸ ⚠️ RÉAPPARU (passe finale 26/08) : advancedPerformance.tables[1].table_name = « Take-off Ground Roll - Flaps UP », strictement identique au libellé de tables[0], alors que tables[1] porte operationId = classification = takeoff_50ft_flaps_up et des valeurs (422 / 506 / 605 / 744 m, pageNumber 68) qui sont bien celles du passage des 15 m — le roulage étant 224→340+ m dans tables[0]. La classification est correcte (motif de la clôture), mais le champ visé par l&#x27;itid — le libellé — porte toujours le nom du roulage. Même motif que F-BXQT-10.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-12) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXNG-13" data-clos="0" data-champ="aircraft_data.speeds.vne" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -277,11 +266,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <details class="av" open>
 <summary><span class="reg">F-BXQT</span><span class="mdl">CESSNA F150 M</span><span class="spacer"></span>
 <span class="pill p-majeur">1 majeur</span>
-<span class="pill p-mineur">6 mineurs</span>
+<span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-BXQT" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXQT" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Fiche v3.0.0 « tables MANEX seules » : aucun abaque (performanceModels = null, sonde models = []), 4 tables d&#x27;opérations réimportées d&#x27;Excel le 18/06 et réduites à la seule diagonale ISA ; masse-centrage complet (enveloppe cgEnvelope à 3 points avant + limite arrière fixe 0,951 m, 2 compartiments bagages bras 1,63 / 2,13 m, 2 variantes de réservoir 98 L / 144 L) ; extraction MANEX de 113 items dont 2 seulement issus du PDF (VX/VY, p.45).</b> — Le socle masse-centrage et carburant est sain et arithmétiquement cohérent (masse à vide × bras = moment au gramme près, enveloppe et miroirs cgLimits concordants, réservoirs et moments à plein exacts, couverture des 4 opérations obligatoires acquise par tables + certifications). Ce qui bloque est unique et total : les 4 tables de performance ne contiennent qu&#x27;une seule température par palier d&#x27;altitude, ce qui laisse 12 cases vides sur 16 dans la grille du moteur — à l&#x27;exécution du 23/08, 4 jeux de conditions sur 5 échouent, et aucune distance de décollage ni d&#x27;atterrissage n&#x27;est calculable ailleurs qu&#x27;au point exact (0 ft, 15 °C, 726 kg). Commencer par ré-importer les pages 68-69 avec toutes les colonnes de température du manuel ; enchaîner ensuite sur les bras de sièges arrière fantômes (1,000 m, identiques aux sièges avant, qui ouvrent deux postes de charge inexistants dans le bilan de centrage), puis sur le trio de vitesses vsTO/vso/vfeTO qui est inversé.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 12 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-BXQT-04" data-clos="0" data-champ="speeds.vfeTO" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -292,51 +281,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Soit la vraie VFE volets décollage du manuel, strictement supérieure à la vitesse de décrochage en configuration décollage ; soit un champ VIDE, cohérent avec la certification « absent du manuel » déjà posée.</dd>
 <dt>En vol</dt><dd>La plage d&#x27;utilisation des volets décollage affichée est nulle ou négative : la limite de sortie des volets présentée au pilote se situe sous la vitesse de décrochage correspondante, donc inutilisable telle quelle.</dd>
 <dt>Action</dt><dd>Fiche avion &gt; Vitesses : soit saisir la VFE volets décollage du manuel (si le manuel ne donne qu&#x27;une seule VFE, reporter vfeLdg = 87), soit vider le champ pour qu&#x27;il soit cohérent avec la certification déjà enregistrée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradictions internes lues en base : vfeTO (42) ≤ vsTO (42) et vfeTO (42) &lt; vso (43) — une vitesse maximale volets sortis ne peut pas être inférieure ou égale à la vitesse de décrochage de la même configuration. Second constat : bypassedFields contient « speeds.vfeTO » (champ certifié absent) alors que speeds.vfeTO = 42.</dd>
-</dl><div class="notefait">✎ Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-04) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXQT-10" data-clos="0" data-champ="advancedPerformance.tables[1].table_name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-10</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">advancedPerformance.tables[1].table_name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">table_name = « Take-off Ground Roll - Flaps UP », strictement identique au libellé de tables[0], alors que operationId et classification valent takeoff_50ft_flaps_up et que les valeurs (422 → 744 m) sont bien celles du passage des 15 m — le roulage étant 224 → 414 m dans tables[0].</dd>
-<dt>Attendu</dt><dd>Un libellé distinct, du type « Take-off Distance over 50 ft - Flaps UP ».</dd>
-<dt>En vol</dt><dd>Dans l&#x27;atelier et les exports, deux tables portent le même nom : le pilote qui vérifie ses chiffres contre le manuel ne peut pas distinguer le roulage du passage des 15 m autrement qu&#x27;en lisant les valeurs.</dd>
-<dt>Action</dt><dd>Atelier Performances &gt; table 2 : renommer en « Take-off Distance over 50 ft - Flaps UP ».</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne entre le libellé et l&#x27;opération portée par la même table : table_name annonce « Ground Roll » alors que operationId = takeoff_50ft_flaps_up, et les valeurs (422/506/605/744 m) sont supérieures ligne à ligne à celles du vrai roulage de tables[0] (224/277/340/414 m).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXQT-15" data-clos="0" data-champ="speeds.vx / speeds.vy" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-15</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">speeds.vx / speeds.vy</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vx = &quot;&quot; et vy = &quot;&quot; en base, alors que la fiche contient elle-même les valeurs extraites du manuel : manexExtraction.items VX = 61 kt et VY = 65 kt, confiance 95, accepted = false — les 2 seuls items sur 113 réellement issus du PDF (metadata.fieldsFound = 2).</dd>
-<dt>Attendu</dt><dd>vx = 61 et vy = 65, par acceptation de l&#x27;extraction déjà présente.</dd>
-<dt>En vol</dt><dd>Les vitesses de meilleure pente et de meilleur taux de montée ne sont pas affichées, alors que la fiche les détient : le pilote doit rouvrir le manuel pour un chiffre déjà extrait.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Vitesses : accepter les deux valeurs proposées par l&#x27;extraction MANEX (deux clics), après contrôle visuel de la page 45.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Divergence interne source/cible : manexExtraction porte VX = 61 et VY = 65 avec accepted = false tandis que speeds.vx et speeds.vy sont des chaînes vides. Champs classés OPTIONAL depuis le 23/08 : ce n&#x27;est pas un manque de complétude, seulement une donnée disponible et non reportée.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXQT-16" data-clos="0" data-champ="equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">transponderMode = « C » (champ au singulier) coexistant avec equipmentSurv.transponderModes = [&quot;c&quot;] (champ au pluriel, celui qu&#x27;écrit l&#x27;écran Équipements).</dd>
-<dt>Attendu</dt><dd>Le champ singulier vidé : le mode réel se saisit et se lit dans transponderModes.</dd>
-<dt>En vol</dt><dd>Impact résiduel limité à l&#x27;affichage : c&#x27;est ce champ orphelin qui alimente encore un libellé « Mode C » dans l&#x27;écran de revue. Le plan de vol ne le lit plus depuis le correctif du 17/08.</dd>
-<dt>Action</dt><dd>Vider aircraft_data.equipmentSurv.transponderMode (le mode se gère dans l&#x27;étape Équipements).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Doublon de champ constaté en base le 23/08 : deux clés distinctes de equipmentSurv portent la même information (« C » et [&quot;c&quot;]), l&#x27;une héritée d&#x27;une initialisation en dur, l&#x27;autre alimentée par l&#x27;écran actuel.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXQT-17" data-clos="0" data-champ="additionalFuelTanks[1].name / additionalFuelTanks[1].type" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-17</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">identite</span><span class="path">additionalFuelTanks[1].name / additionalFuelTanks[1].type</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">name = « Réservoir d&#x27;aile Etandu » (faute : « Étendu »), et le champ type est ABSENT sur ce réservoir alors que le réservoir jumeau additionalFuelTanks[0] porte type = « main ». Le reste du réservoir est cohérent : arm 1,07 m, totalCapacity 144 L, usableCapacity 132,5 L, momentAtFull 102,08 (= 132,5 × 0,72 × 1,07).</dd>
-<dt>Attendu</dt><dd>Libellé « Réservoir d&#x27;aile Étendu » et champ type renseigné comme sur le réservoir standard.</dd>
-<dt>En vol</dt><dd>Aucune conséquence de calcul (le bras et les contenances sont exacts, et le bras principal arms.fuelMain = 1,07 m est renseigné) : c&#x27;est le nom affiché au pilote lorsqu&#x27;il choisit la variante 144 L.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Carburant : corriger l&#x27;orthographe du nom du réservoir et renseigner son type, à l&#x27;occasion de la mise au propre.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Asymétrie interne démontrée entre deux entrées du même tableau : additionalFuelTanks[0] porte type = « main », additionalFuelTanks[1] n&#x27;a aucune clé type ; le nom contient « Etandu » là où les autres libellés de la fiche sont accentués correctement (« Réservoir d&#x27;aile Standard », « Aéro-club Melun-Villaroche »).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-17) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider. ▸ 2e coche sans commentaire, base INCHANGÉE : vfeTO = 42 kt subsiste (= vsTO, sous vso 43 — une VFE égale au décrochage rendrait les volets inutilisables). QUESTION : le C150M publie-t-il une VFE volets DÉCOLLAGE ? Si oui, laquelle ; si non, dites « à vider » et je le vide par script.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-04) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXQT-18" data-clos="0" data-champ="aircraft_data.speeds.stallByBank.landing.b20 (face à speeds.vso)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -347,18 +292,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Un décrochage à 20° d&#x27;inclinaison supérieur ou égal au décrochage à 0° dans la même configuration (facteur ≈ 1,03, soit ≈ 44 kt pour vso 43). À vérifier au manuel C150M : la table de décrochage par inclinaison est peut-être publiée en CAS alors que vso/vs1 sont en IAS, ce qui expliquerait l&#x27;écart sans erreur de saisie.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-18) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXQT-19" data-clos="0" data-champ="minTakeoffWeight (racine) / weights.minTakeoffWeight / cgEnvelope.aftMinWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-19</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">minTakeoffWeight (racine) / weights.minTakeoffWeight / cgEnvelope.aftMinWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">500 kg aux trois emplacements (plus cgEnvelope.forwardPoints[0].weight = 500), alors que emptyWeight = 513,5 kg : le plancher de l&#x27;enveloppe et la « masse mini au décollage » sont SOUS la masse à vide de l&#x27;avion. Les trois valeurs sont cohérentes entre elles et les moments de l&#x27;enveloppe sont justes (500 × 0,951 = 475,5 ; 500 × 0,798 = 399).</dd>
-<dt>Attendu</dt><dd>Confirmation que le centrogramme du manuel C150M est bien publié à partir de 500 kg (auquel cas la saisie est fidèle et seul le libellé « minTakeoffWeight » est trompeur) ; une masse au décollage inférieure à la masse à vide étant physiquement impossible, sinon plancher ≥ 513,5 kg. Même motif que F-GGZO-15 (600 kg vs 648 kg).</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-19) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « réglé », MAIS la base v5 porte toujours stallByBank.landing.b20 = 42 kt sous vso = 43 (un décrochage à 20° d&#x27;inclinaison SOUS le décrochage à plat est physiquement impossible). QUESTION : la table du manuel C150M donne-t-elle littéralement 42 à 20° ? Si oui je valide (le manuel fait foi), sinon corrigez la cellule (ou donnez-moi la ligne de la table et je scripte).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-18) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GBTU</span><span class="mdl">PA 28-161</span><span class="spacer"></span>

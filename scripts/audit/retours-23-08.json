@@ -21,8 +21,8 @@
  },
  {
   "itid": "F-BXNG-12",
-  "status": "ouvert",
-  "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId). ▸ ⚠️ RÉAPPARU (passe finale 26/08) : advancedPerformance.tables[1].table_name = « Take-off Ground Roll - Flaps UP », strictement identique au libellé de tables[0], alors que tables[1] porte operationId = classification = takeoff_50ft_flaps_up et des valeurs (422 / 506 / 605 / 744 m, pageNumber 68) qui sont bien celles du passage des 15 m — le roulage étant 224→340+ m dans tables[0]. La classification est correcte (motif de la clôture), mais le champ visé par l'itid — le libellé — porte toujours le nom du roulage. Même motif que F-BXQT-10."
+  "status": "fait",
+  "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId). ▸ ⚠️ RÉAPPARU (passe finale 26/08) : advancedPerformance.tables[1].table_name = « Take-off Ground Roll - Flaps UP », strictement identique au libellé de tables[0], alors que tables[1] porte operationId = classification = takeoff_50ft_flaps_up et des valeurs (422 / 506 / 605 / 744 m, pageNumber 68) qui sont bien celles du passage des 15 m — le roulage étant 224→340+ m dans tables[0]. La classification est correcte (motif de la clôture), mais le champ visé par l'itid — le libellé — porte toujours le nom du roulage. Même motif que F-BXQT-10. ▸ RE-CLOS — la réapparition est corrigée par le même script fix-noms-tables-50ft (v5 vérifiée : « Take-off Distance over 50 ft - Flaps UP » distinct du roulage)."
  },
  {
   "itid": "F-HSTR-01",
@@ -361,8 +361,8 @@
  },
  {
   "itid": "F-BXQT-04",
-  "status": "note",
-  "note": "Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider."
+  "status": "ouvert",
+  "note": "Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider. ▸ 2e coche sans commentaire, base INCHANGÉE : vfeTO = 42 kt subsiste (= vsTO, sous vso 43 — une VFE égale au décrochage rendrait les volets inutilisables). QUESTION : le C150M publie-t-il une VFE volets DÉCOLLAGE ? Si oui, laquelle ; si non, dites « à vider » et je le vide par script."
  },
  {
   "itid": "F-BXQT-05",
@@ -853,5 +853,35 @@
   "itid": "F-GBTU-19",
   "status": "fait",
   "note": "Vérifié sur extraction fraîche (fix-giea-gbtu-titres --apply lancé par Claude sur autorisation pilote, GIEA v8 / GBTU v6, sauvegardes backups/fix-titres-2026-08-26T12-01-19) : les 9 titres « altitude » des 3 modèles hérités sont remplacés — sharedY compris."
+ },
+ {
+  "itid": "F-BXQT-10",
+  "status": "fait",
+  "note": "Réponse pilote « c'est faux, toutes les tables ont une appellation différente » — À L'ÉCRAN oui (l'app affiche l'OPÉRATION, distincte ✓), mais le champ table_name EN BASE était bien identique sur les 2 premières tables (constaté v5). CORRIGÉ PAR SCRIPT (fix-noms-tables-50ft --apply, mandat pilote) : tables[1] renommée « Take-off Distance over 50 ft - Flaps UP » sur F-BXQT (v6) ET F-BXNG (v5, la réapparition 12 du même motif). Sera re-clos à la prochaine passe si tout tient — en pratique : CLOS. → statut rectifié : FAIT (vérifié en base v6, les 4 tables ont des noms distincts)."
+ },
+ {
+  "itid": "F-BXQT-15",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v5 fraîche (ré-enregistrement du 26/08 13:28) : vx = 61 et vy = 65 sont saisis — les valeurs de l'extraction MANEX sont acceptées dans la fiche."
+ },
+ {
+  "itid": "F-BXQT-16",
+  "status": "fait",
+  "note": "Clos par la migration flotte du transpondeur (26/08) : le singulier a disparu, le pluriel [\"a\",\"c\"] fait foi (le pilote y a ajouté le mode A à son save — écrit proprement par l'écran corrigé)."
+ },
+ {
+  "itid": "F-BXQT-17",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v5 fraîche (ré-enregistrement du 26/08 13:28) : nom corrigé « Réservoir d'aile Étendu » ✓. RÉPONSE à « le reste je ne le comprends pas » : le champ type est un vestige d'avant le système de rôles — votre réservoir porte role=\"fixed\" dans sa variante, c'est LUI qui fait foi ; type absent = normal (mêmes précédents F-HSTR-10/F-HDIM-19). Rien à faire, item clos."
+ },
+ {
+  "itid": "F-BXQT-18",
+  "status": "ouvert",
+  "note": "Coché « réglé », MAIS la base v5 porte toujours stallByBank.landing.b20 = 42 kt sous vso = 43 (un décrochage à 20° d'inclinaison SOUS le décrochage à plat est physiquement impossible). QUESTION : la table du manuel C150M donne-t-elle littéralement 42 à 20° ? Si oui je valide (le manuel fait foi), sinon corrigez la cellule (ou donnez-moi la ligne de la table et je scripte)."
+ },
+ {
+  "itid": "F-BXQT-19",
+  "status": "valide",
+  "note": "Choix pilote (rapport 26/08, même précédent que F-HDIM-18/F-GNAM-23/F-GGZO-15) : « correspond au visuel de la masse et centrage » — le centrogramme du C150M est publié à partir de 500 kg (sous la masse à vide, cas courant). Cohérent aux 3 emplacements. Documenté."
  }
 ]
