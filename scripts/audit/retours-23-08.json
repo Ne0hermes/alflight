@@ -481,8 +481,8 @@
  },
  {
   "itid": "F-GIEA-14",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres."
+  "status": "note",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres. ▸ PARTIEL — Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles ✓. Restent les TITRES d'axe Y « altitude » sur 3 modèles (l'autre moitié de l'item) — à renommer dans l'atelier, ou dites-moi si le champ n'y est pas exposé et je scripte."
  },
  {
   "itid": "F-GIEA-15",
@@ -586,8 +586,8 @@
  },
  {
   "itid": "F-HDIM-11",
-  "status": "ouvert",
-  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous). ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : transponderModes = [\"a\",\"c\"] — le tableau corrompu ([\"A\",\",\",\"C\",\"a\",\"c\"]) est réparé. Le bug d'app (éclatement de la chaîne héritée) reste à corriger via la chip. ▸ ⚠️ RÉGRESSION (26/08 10h) : le tableau corrompu [\"A\",\",\",\"C\",\"a\",\"c\"] est REVENU en base (v5, save app de 08:03 — la copie LOCALE portait encore la vieille valeur et l'écran l'a re-éclatée). CORRECTIF DE CODE déployé (écran Équipements normalise strictement + filet de sécurité à l'écriture serveur) ; le script purge-transponder étendu répare la donnée — re-clos après le --apply."
+  "status": "fait",
+  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous). ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : transponderModes = [\"a\",\"c\"] — le tableau corrompu ([\"A\",\",\",\"C\",\"a\",\"c\"]) est réparé. Le bug d'app (éclatement de la chaîne héritée) reste à corriger via la chip. ▸ ⚠️ RÉGRESSION (26/08 10h) : le tableau corrompu [\"A\",\",\",\"C\",\"a\",\"c\"] est REVENU en base (v5, save app de 08:03 — la copie LOCALE portait encore la vieille valeur et l'écran l'a re-éclatée). CORRECTIF DE CODE déployé (écran Équipements normalise strictement + filet de sécurité à l'écriture serveur) ; le script purge-transponder étendu répare la donnée — re-clos après le --apply. ▸ RE-CLOS — vérifié sur extraction fraîche (v6, purge-transponder étendu --apply, sauvegarde backups/purge-transponder-2026-08-26T10-21-21) : transponderModes = [\"a\",\"c\"], le tableau corrompu est réparé. Et cette fois la RECHUTE est impossible : l'écran Équipements normalise strictement en entrée et le chemin d'écriture serveur refuse tout transpondeur sale (commit 45a6d986)."
  },
  {
   "itid": "F-HDIM-12",
@@ -746,8 +746,8 @@
  },
  {
   "itid": "F-GNAM-06",
-  "status": "note",
-  "note": "Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l'atelier n'expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA). ▸ 2e rapport — outputUnit toujours « m » sur les 4 modèles : le réglage n'est pas exposé par l'atelier. Script FLOTTE fix-outputunit-flotte.mjs fourni (corrige aussi F-GBTU et F-GIEA-14) — sera clos après le --apply."
+  "status": "fait",
+  "note": "Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l'atelier n'expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA). ▸ 2e rapport — outputUnit toujours « m » sur les 4 modèles : le réglage n'est pas exposé par l'atelier. Script FLOTTE fix-outputunit-flotte.mjs fourni (corrige aussi F-GBTU et F-GIEA-14) — sera clos après le --apply. ▸ Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles visés (le « m » restant du modèle 1 est légitime : ses axes sont métriques)."
  },
  {
   "itid": "F-GNAM-07",
@@ -813,5 +813,10 @@
   "itid": "F-GNAM-25",
   "status": "fait",
   "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le panneau masse du modèle Flaps TAKEOFF porte désormais la série CONTINUE 0…10 — le guide « 4 » manquant est ajouté."
+ },
+ {
+  "itid": "F-GBTU-18",
+  "status": "fait",
+  "note": "Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles hérités de l'import F-GIEA."
  }
 ]
