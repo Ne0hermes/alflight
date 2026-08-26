@@ -626,7 +626,7 @@
  },
  {
   "itid": "F-HDIM-19",
-  "status": "note",
-  "note": "PARTIEL — vérifié v3 : le nom est corrigé (« Réservoir Long Range 204L » ✓), mais le champ type reste ABSENT sur les réservoirs 204L et 257L (seul le Standard porte type=\"main\"). L'écran réservoirs ne l'écrit probablement pas — à re-passer ou à traiter avec le chip transpondeur."
+  "status": "valide",
+  "note": "PARTIEL — vérifié v3 : le nom est corrigé (« Réservoir Long Range 204L » ✓), mais le champ type reste ABSENT sur les réservoirs 204L et 257L (seul le Standard porte type=\"main\"). L'écran réservoirs ne l'écrit probablement pas — à re-passer ou à traiter avec le chip transpondeur. ▸ REQUALIFIÉ (retour pilote 26/08) : le champ type legacy est SANS OBJET — les trois réservoirs portent chacun role=\"fixed\" dans leur variante (système de rôles du 24/08, source de vérité moderne : chacun est l'unique réservoir inamovible de sa configuration). Nom « Long Range » corrigé ✓. Clos."
  }
 ]
