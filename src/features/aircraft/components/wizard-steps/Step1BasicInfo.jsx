@@ -529,6 +529,24 @@ const Step1BasicInfo = ({ data, updateData, errors = {}, onNext, onPrevious }) =
               />
             </Box>
 
+            {/* 🆕 26/08 (demande pilote, rapport F-GNAM-21) : nom + modèle du
+                moteur — champ INFORMATIF facultatif, texte libre, réutilisable
+                tel quel dans l'app (fiche, PDF). Absent = absent (fail-closed). */}
+            <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
+              <StyledTextField
+                fullWidth
+                variant="outlined"
+                label="Moteur (nom et modèle)"
+                value={data.engineInfo ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updateData('engineInfo', v.trim() === '' ? undefined : v);
+                }}
+                placeholder="Ex: Lycoming O-360-A4M"
+                helperText="Facultatif — à titre informatif (affiché en texte dans l'app)"
+              />
+            </Box>
+
             <Box sx={{ width: '100%', maxWidth: 350, mx: 'auto' }}>
               <StyledFormControl fullWidth variant="outlined">
                 <InputLabel shrink id="category-label">Catégorie</InputLabel>

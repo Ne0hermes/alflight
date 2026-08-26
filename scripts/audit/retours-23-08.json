@@ -728,5 +728,90 @@
   "itid": "F-HSTR-23",
   "status": "valide",
   "note": "Rapport pilote 26/08 : « oui elles le sont » — le manuel DA40 NG publie bien les distances d'atterrissage jusqu'à 1310 kg (au-dessus de la MLW 1280, cas du retour immédiat après décollage). Le manuel fait foi."
+ },
+ {
+  "itid": "F-GNAM-02",
+  "status": "note",
+  "note": "PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l'atelier."
+ },
+ {
+  "itid": "F-GNAM-03",
+  "status": "valide",
+  "note": "Choix pilote (rapport 26/08) : « pas faisable, il faut créer une extrapolation » — la planche Piper s'arrête à 1150 kg, prolonger jusqu'à la MTOW 1157 serait une invention. Fail-closed assumé : l'avertissement « guide(s) prolongé(s) » du moteur reste affiché aux masses > 1150, c'est voulu."
+ },
+ {
+  "itid": "F-GNAM-04",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « c'est déjà juste » — le manuel s'arrête bien à +30 °C, l'abaque est fidèle. Hors domaine, le moteur refuse : comportement voulu."
+ },
+ {
+  "itid": "F-GNAM-06",
+  "status": "note",
+  "note": "Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l'atelier n'expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA)."
+ },
+ {
+  "itid": "F-GNAM-07",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : les 3 titres d'axe Y du modèle Flaps TAKEOFF disent désormais « takeoff_distance_ground » — l'étiquette d'ATTERRISSAGE copiée a disparu."
+ },
+ {
+  "itid": "F-GNAM-08",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le sharedY au titre « altitude » n'existe plus sur le modèle 2 — incohérence levée."
+ },
+ {
+  "itid": "F-GNAM-09",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : les DEUX modèles « passage 15 m » portent désormais un cas de référence (m0 : attendu 1900 ft ; m1 : attendu 567 m, 1089 kg / PA 2000 / 21 °C / 15 kt de face). L'écart de 15,8 % constaté est traité en réponse séparée (voir conversation) — le garde-fou fait exactement son travail."
+ },
+ {
+  "itid": "F-GNAM-10",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : initialClimb est VIDÉ — la vitesse Vy recopiée dans un champ de taux de montée a disparu."
+ },
+ {
+  "itid": "F-GNAM-11",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : vs1 corrigé à 58 kt : l'ordre vso 49 ≤ vsTO 55 ≤ vs1 58 est rétabli, l'égalité suspecte est levée."
+ },
+ {
+  "itid": "F-GNAM-12",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « c'est bon » — 29 lph / 110 kt confirmés comme régime de croisière retenu (baseFactor 0,545 cohérent). La lecture MANEX 32/125 était un autre régime."
+ },
+ {
+  "itid": "F-GNAM-17",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ : l'historique d'extraction MANEX est un INSTANTANÉ d'époque (VX/VY tels que lus alors, inversés depuis par correction) — la fiche fait foi (vx 64 / vy 76 ✓) et aucun écran ne réécrit cet historique. Archive, pas un défaut."
+ },
+ {
+  "itid": "F-GNAM-19",
+  "status": "note",
+  "note": "Le singulier transponderMode=« C » est toujours en base (aucun écran ne le retire) — le script FLOTTE purge-transponder-singulier.mjs migre les 9 avions concernés d'un coup (fusion vers le pluriel minuscule, zéro perte). Sera clos après le --apply."
+ },
+ {
+  "itid": "F-GNAM-20",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : approvedOperations porte désormais vfrDay, training, vfrNight, formation à true — l'avion-école est déclaré. (Le motif « coché mais pas monté » de F-BXNG/F-GIEA ne s'est PAS reproduit ici.)"
+ },
+ {
+  "itid": "F-GNAM-21",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : 182 ch confirmé juste (Archer II). Demande de nouveau champ « moteur (nom + modèle, informatif) » prise — en cours d'implémentation dans la fiche avion."
+ },
+ {
+  "itid": "F-GNAM-23",
+  "status": "valide",
+  "note": "Choix pilote (« ok », même motif que F-HDIM-18 « fait exprès ») : racine minTakeoffWeight = masse à vide 732,2, cosmétique pour coller au visuel de la fiche de pesée — la borne de CALCUL reste celle de l'enveloppe (700 kg). Documenté."
+ },
+ {
+  "itid": "F-GNAM-24",
+  "status": "ouvert",
+  "note": "Coché « ok », mais c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote."
+ },
+ {
+  "itid": "F-GNAM-25",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le panneau masse du modèle Flaps TAKEOFF porte désormais la série CONTINUE 0…10 — le guide « 4 » manquant est ajouté."
  }
 ]

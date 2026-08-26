@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>132 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>111 points à
+  <b>145 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>98 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 85 mineurs — dont 43 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 17 majeurs, 74 mineurs — dont 36 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -732,12 +732,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GNAM</span><span class="mdl">PA-28-181</span><span class="spacer"></span>
-<span class="pill p-majeur">3 majeurs</span>
-<span class="pill p-mineur">14 mineurs</span>
+<span class="pill p-majeur">1 majeur</span>
+<span class="pill p-mineur">3 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GNAM" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GNAM" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 : 6 modèles graphiques en cascade (panneau OAT → panneau masse → panneau vent intégré), aucune table MANEX (performanceTables = null, advancedPerformance = null) et aucune règle performanceCorrections. Masse &amp; centrage sur pesée du 2025-10-29 (PDF attaché), enveloppe cgEnvelope à 3 points avant et limite arrière constante 2,365 m, un compartiment bagages et un réservoir agrégé. L&#x27;extraction MANEX (2 champs trouvés sur 297 pages, juin 2026) n&#x27;est plus qu&#x27;un historique de saisie. Fiche non modifiée depuis le 21/08/2026 13:47 (updated_at) : tous les points clos le 21/08 sont vérifiés toujours corrigés en base.</b> — Le centrage est sain et exploitable : bras réels partout (vide 2,241 / carburant 2,413 / sièges 2,045 et 3,0 / soute 3,627), moments recalculés justes (732,2 × 2,241 = 1640,86 ; 182 L × 0,72 × 2,413 = 316,2) et enveloppe cohérente avec ses miroirs — tous les zéros bagages restants sont inertes tant qu&#x27;un compartiment existe. Ce qui bloque : la courbe « 0 ft » du panneau OAT de la distance de roulement au décollage volets T/O (opération obligatoire) ne commence qu&#x27;à +11,3 °C et le moteur échoue effectivement à 0 °C au niveau de la mer — un décollage matinal à Melun n&#x27;est pas calculable ; deux abaques volets UP ont le même défaut, et les six panneaux masse s&#x27;arrêtent à 1150 kg alors que la MTOW est 1157. Commencer par l&#x27;atelier abaques (prolonger les courbes 0 ft vers le froid, puis les guides masse jusqu&#x27;à 1157 kg), enchaîner sur capacity = 91 du réservoir unique qui fausse la capacité carburant dès que la config réservoirs est cochée, et passer le reste en lot de nettoyage.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap oui">Atterrissage : oui</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 8 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 21 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-GNAM-02" data-clos="0" data-champ="aircraft_data.performanceModels[0] et [2] — graphs[0].curves[0] (courbes « 0ft » de takeoff_50ft_flaps_up et takeoff_ground_roll_flaps_up)" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -748,29 +748,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Courbes 0 ft prolongées vers les OAT froides comme leurs voisines 1000 ft, qui démarrent respectivement à −6,29 °C et −3,58 °C.</dd>
 <dt>En vol</dt><dd>Les deux abaques volets rentrés renvoient une erreur au lieu d&#x27;une distance dès que l&#x27;OAT descend sous +2,7 °C (passage 15 m) ou +8,4 °C (roulement) au niveau de la mer. Variantes facultatives depuis le 23/08, mais si le pilote les sélectionne il n&#x27;obtient rien plutôt qu&#x27;un chiffre.</dd>
 <dt>Action</dt><dd>Atelier abaques → modèles « Distance décollage — passage 15 m, Flaps UP » et « Distance sol décollage — Flaps UP » → panneau 1 → prolonger la courbe « 0ft » vers les OAT froides (et densifier celle du modèle 2, qui n&#x27;a que 2 points).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur (probe-F-GNAM.json, modèles index 0 et 2, condition « 0 °C / 0 ft / vent 0 ») : error = « Impossible de calculer Y pour X=0 sur la courbe &quot;0ft&quot; » sur les deux. Premiers points lus en base : 2,7273 et 8,4201 contre xAxis.min = −40.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GNAM-03" data-clos="0" data-champ="aircraft_data.performanceModels[0..5].data.graphs[1].axes.xAxis.max (panneaux masse des 6 abaques)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-03</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0..5].data.graphs[1].axes.xAxis.max (panneaux masse des 6 abaques)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les six panneaux masse déclarent xAxis.max = 1150 kg (min 950 pour les modèles 0 et 1, min 900 pour les modèles 2 à 5), alors que la fiche déclare maxTakeoffWeight = weights.mtow = 1157 kg et maxLandingWeight = 1157 kg. Derniers points des guides mesurés sur cette même version de fiche : 1147,4 / 1145,9 / 1149,1 / 1155,8 / 1151,9 / 1149,8 kg — tous inférieurs à 1157.</dd>
-<dt>Attendu</dt><dd>Axe et guides masse tracés jusqu&#x27;à 1157 kg (2550 lb, ligne de référence du tracé Piper), pour que la masse maximale déclarée par la fiche tombe à l&#x27;intérieur du domaine tracé.</dd>
-<dt>En vol</dt><dd>Au décollage à pleine charge — exactement le cas dimensionnant — les six distances sont obtenues par prolongement hors du domaine déclaré de l&#x27;abaque, sans avertissement. Le moteur n&#x27;échoue pas (les 5 conditions de la sonde tournent à 1157 kg et aboutissent), mais la valeur affichée n&#x27;est plus une lecture du manuel.</dd>
-<dt>Action</dt><dd>Atelier abaques → pour chacun des 6 modèles, panneau 2 (masse) : porter xAxis.max à 1157 et prolonger le dernier point de chaque guide jusqu&#x27;à 1157 kg.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : axes.xAxis.max = 1150 (unit kg, title « mass ») lu sur les 6 panneaux, contre aircraft_data.maxTakeoffWeight = 1157 et weights.mtow = 1157 dans la même fiche.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GNAM-04" data-clos="0" data-champ="aircraft_data.performanceModels[0..5].data.graphs[0].axes.xAxis.max (borne chaude des 6 panneaux OAT)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-04</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0..5].data.graphs[0].axes.xAxis.max (borne chaude des 6 panneaux OAT)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 6 panneaux primaires déclarent xAxis.max = 30 °C et le dernier point de chaque courbe se situe entre 28,7 et 30,6 °C. Aucune des 6 opérations n&#x27;a de tracé au-delà de +30 °C.</dd>
-<dt>Attendu</dt><dd>À vérifier au manuel : si la planche Piper monte jusqu&#x27;à 100 °F (37,8 °C), les courbes doivent être prolongées jusqu&#x27;à cette borne ; si le manuel s&#x27;arrête réellement à +30 °C, l&#x27;abaque est fidèle et il n&#x27;y a rien à corriger.</dd>
-<dt>En vol</dt><dd>Aucune des 6 distances, décollage comme atterrissage, n&#x27;est calculable au-dessus de +30 °C : par après-midi d&#x27;été chaud la préparation de vol ne produit pas de distance. Le ré-audit du 21/08 avait déjà relevé une erreur sur les 6 opérations à 35 °C/1000 ft et 39 °C/0 ft sur cette même version de fiche.</dd>
-<dt>Action</dt><dd>Ouvrir le manuel AM au chapitre performances, relever la borne haute de l&#x27;axe température des planches décollage et atterrissage, puis prolonger les courbes dans l&#x27;atelier si le manuel va plus loin que 30 °C.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Fait lu en base (xAxis.max = 30 sur les 6 panneaux primaires) et exécution documentée au ré-audit 21/08 (retours.json, F-GNAM-07, statut « note », toujours ouvert). Classé a-confirmer : rien dans la fiche ne dit jusqu&#x27;où va le tracé papier.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-04) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l&#x27;atelier.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-02) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GNAM-06" data-clos="0" data-champ="aircraft_data.performanceModels[0,3,4,5].data.graphs[*].outputUnit" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -781,84 +759,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>outputUnit aligné sur l&#x27;unité réelle des axes Y, soit « ft » sur ces 4 modèles.</dd>
 <dt>En vol</dt><dd>Sans effet sur le calcul : la sonde renvoie bien « ft » sur ces 4 modèles, l&#x27;unité étant prise sur l&#x27;axe Y. Le risque est un affichage ou un export qui lirait outputUnit et présenterait 1598 ft comme 1598 m, soit une marge de piste surestimée d&#x27;un facteur 3,28.</dd>
 <dt>Action</dt><dd>Atelier abaques → sur chacun des 4 modèles, corriger l&#x27;unité de sortie déclarée en « ft ».</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction d&#x27;unité avec le champ voisin : outputUnit « m » contre axes.yAxis.unit « ft » sur les 3 panneaux et sharedY.unit « ft » des mêmes modèles ; exécution du moteur qui retourne unit « ft » pour ces 4 modèles et « m » pour le seul modèle 1.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-06) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-07" data-clos="0" data-champ="aircraft_data.performanceModels[3].data.graphs[0..2].axes.yAxis.title et data.metadata.sharedY.title" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-07</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.performanceModels[3].data.graphs[0..2].axes.yAxis.title et data.metadata.sharedY.title</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le modèle « Distance sol décollage — Flaps TAKEOFF » (systemType et classificationValue = takeoff_ground_roll_flaps_to) porte le titre d&#x27;axe Y « landing_distance_ground » sur ses 3 panneaux ainsi que sur sharedY.</dd>
-<dt>Attendu</dt><dd>Titre d&#x27;axe Y « takeoff_ground_roll », comme le modèle 2 (roulement volets UP) : l&#x27;étiquette a été copiée depuis un modèle d&#x27;atterrissage.</dd>
-<dt>En vol</dt><dd>Aucune valeur fausse : les données du modèle sont bien distinctes de celles de l&#x27;atterrissage (973,6 ft contre 936,5 ft à 15 °C / 500 ft / vent 0) et c&#x27;est l&#x27;operationId qui pilote le calcul. Seul le détail de cascade affiché annonce une « distance d&#x27;atterrissage » là où le pilote lit une distance de décollage.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèle « Distance sol décollage — Flaps TAKEOFF » → renommer le titre de l&#x27;axe Y sur les 3 panneaux.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : axes.yAxis.title = « landing_distance_ground » sur les 3 panneaux et sur metadata.sharedY, contre operationId / systemType / classificationValue = « takeoff_ground_roll_flaps_to » du même modèle.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-07) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-08" data-clos="0" data-champ="aircraft_data.performanceModels[2].data.metadata.sharedY.title" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-08</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.performanceModels[2].data.metadata.sharedY.title</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le modèle « Distance sol décollage — Flaps UP » déclare sharedY = {min 400, max 2400, step 200, unit « ft », title « altitude »} alors que ses trois panneaux titrent leur axe Y « takeoff_ground_roll » sur exactement la même plage 400–2400 ft.</dd>
-<dt>Attendu</dt><dd>sharedY.title = « takeoff_ground_roll », identique aux axes Y du modèle.</dd>
-<dt>En vol</dt><dd>Aucun effet de calcul ; l&#x27;axe partagé de l&#x27;abaque est présenté comme une altitude alors qu&#x27;il porte une distance de roulement.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèle « Distance sol décollage — Flaps UP » → corriger le titre de l&#x27;axe Y partagé.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : metadata.sharedY.title = « altitude » contre les 3 axes.yAxis.title = « takeoff_ground_roll » du même modèle, même unité et même plage 400–2400 ft.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-08) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-09" data-clos="0" data-champ="aircraft_data.performanceModels[0] et [1] — data.metadata.referenceCases" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-09</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0] et [1] — data.metadata.referenceCases</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Aucun cas de référence sur les deux modèles « passage 15 m » (flaps UP et flaps TAKEOFF). Les quatre autres en ont un chacun : ex1 = 1100 (modèle 2), ex1 = 950 (modèle 3), « 1 » = 1290 (modèle 4), « 1 » = 825 (modèle 5), tous à inputValue 21 °C.</dd>
-<dt>Attendu</dt><dd>Au moins un cas du manuel rejoué par abaque, comme sur les 4 autres modèles — c&#x27;est le seul garde-fou contre une numérisation décalée.</dd>
-<dt>En vol</dt><dd>Les deux distances de franchissement des 15 m, dont takeoff_50ft_flaps_to qui est obligatoire, ne sont vérifiées par aucun point de contrôle : une erreur de calage des axes passerait inaperçue.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèles « Distance décollage — passage 15 m » (UP et TAKEOFF) → ajouter un cas de référence relevé sur la planche du manuel (une condition et le résultat attendu).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur (probe-F-GNAM.json) : referenceCases = 0 pour les modèles index 0 et 1, = 1 pour les index 2 à 5 ; confirmé en base, data.metadata des modèles 0 et 1 ne contient pas de clé referenceCases.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-09) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-10" data-clos="0" data-champ="aircraft_data.speeds.initialClimb" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-10</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.initialClimb</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">initialClimb = 76, valeur strictement identique à speeds.vy = 76 kt. L&#x27;item d&#x27;extraction correspondant est étiqueté « Taux montée initial », targetUnit « ft/min », description « Vitesse verticale (ft/min) au décollage à MTOW, conditions ISA », accepté avec une confiance de 0.</dd>
-<dt>Attendu</dt><dd>Le taux de montée initial du manuel, en ft/min — ou champ vidé si le manuel ne le publie pas. La valeur actuelle est vraisemblablement la VITESSE de montée (Vy en kt) recopiée dans un champ qui attend un taux.</dd>
-<dt>En vol</dt><dd>Aucun calcul obligatoire ne consomme ce champ, mais le briefing et l&#x27;affichage annoncent un taux de montée initial de 76 ft/min pour un avion dont l&#x27;abaque donne un franchissement des 15 m en 535 m : chiffre inexploitable pour un calcul de franchissement d&#x27;obstacle.</dd>
-<dt>Action</dt><dd>Relever le taux de montée initial (ft/min) au manuel de vol AM et le saisir à l&#x27;étape Vitesses, ou vider le champ si le manuel n&#x27;en publie pas.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence d&#x27;unité avec le champ déclaré : valeur 76 dans un champ dont l&#x27;unité déclarée est ft/min, strictement égale à speeds.vy = 76 kt de la même fiche. Non tranchable sans le manuel, donc a-confirmer.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-11" data-clos="0" data-champ="aircraft_data.speeds.vsTO et aircraft_data.speeds.vs1" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-11</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vsTO et aircraft_data.speeds.vs1</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vsTO = 55 kt et vs1 = 55 kt, valeurs strictement identiques (vso = 49 kt). L&#x27;extraction MANEX n&#x27;avait trouvé ni VS1 ni VS T/O (found = false, accepted = false pour les deux) : les deux 55 sont des saisies manuelles identiques.</dd>
-<dt>Attendu</dt><dd>Si le manuel publie une vitesse de décrochage volets décollage distincte, VS T/O doit se situer entre VS1 et VSO ; sinon l&#x27;égalité est légitime et il n&#x27;y a rien à corriger.</dd>
-<dt>En vol</dt><dd>Aucun calcul ne dépend aujourd&#x27;hui de vsTO. Les repères de décrochage volets décollage affichés sont ceux de la configuration lisse : marge optimiste si la vraie valeur est plus basse.</dd>
-<dt>Action</dt><dd>Relever au manuel AM la vitesse de décrochage volets 10°/25° et corriger vsTO, ou conserver 55 en connaissance de cause.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Fait lu en base : vs1 = vsTO = 55 avec les deux items d&#x27;extraction correspondants à found = false. Aucune contradiction stricte, l&#x27;égalité restant possible → a-confirmer. Les 3 vitesses obligatoires du 23/08 (vs1, vsTO, vso) sont bien renseignées.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-12" data-clos="0" data-champ="aircraft_data.fuelConsumption et aircraft_data.cruiseSpeedKt" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-12</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">carburant</span><span class="path">aircraft_data.fuelConsumption et aircraft_data.cruiseSpeedKt</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">En base : fuelConsumption = 29 lph et cruiseSpeedKt = 110 kt, avec baseFactor = « 0.545 » = 60/110 — la fiche est donc cohérente avec elle-même. L&#x27;extraction MANEX acceptée dit, elle, 32 lph (« Conso croisière ») et 125 kt (« Vitesse de croisière (75% puissance) »), les deux à confiance 0.</dd>
-<dt>Attendu</dt><dd>Confirmation par le pilote du régime de croisière retenu. Si 32 lph / 125 kt étaient les bonnes valeurs, le bilan carburant sous-estimerait la consommation horaire d&#x27;environ 10 %.</dd>
-<dt>En vol</dt><dd>Bilan carburant établi à 29 lph et temps de vol calculés à 110 kt (0,545 min/NM). Sur 3 h de vol, un écart de 3 lph représente 9 L, soit environ 6 % de l&#x27;emport utilisable.</dd>
-<dt>Action</dt><dd>Confirmer avec le pilote 29 lph / 110 kt comme régime de référence et ne rien modifier tant que ce n&#x27;est pas tranché. En cas de correction, changer cruiseSpeedKt à l&#x27;étape Vitesses fera se recalculer baseFactor.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Divergence base ↔ extraction acceptée (29/110 contre 32/125). Aucune contradiction interne : baseFactor 0,545 confirme que 110 kt est la valeur en vigueur (src/features/aircraft/AircraftModule.jsx:3972, baseFactor = 60/cruiseSpeedKt) → a-confirmer, pas erreur.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-17" data-clos="0" data-champ="aircraft_data.manexExtraction.items (« VX » et « VY ») face à aircraft_data.speeds.vx / speeds.vy" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-17</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.manexExtraction.items (« VX » et « VY ») face à aircraft_data.speeds.vx / speeds.vy</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">L&#x27;historique d&#x27;extraction porte toujours VX = 76 et VY = 64, tous deux accepted = true, alors que la fiche a été corrigée : speeds.vx = 64 et speeds.vy = 76. Les deux couples sont donc inversés l&#x27;un par rapport à l&#x27;autre.</dd>
-<dt>Attendu</dt><dd>Instantané d&#x27;extraction resynchronisé sur les valeurs en vigueur (64/76), ou clairement purgé comme historique périmé.</dd>
-<dt>En vol</dt><dd>Aucun : le moteur et les écrans lisent speeds.*, désormais corrects (Vx 64 &lt; Vy 76). Le risque est de rejouer un jour l&#x27;extraction acceptée et de ré-inverser les deux vitesses — c&#x27;est le scénario qui a produit l&#x27;anomalie d&#x27;origine.</dd>
-<dt>Action</dt><dd>Ne rien changer aux vitesses. Si l&#x27;écran d&#x27;extraction MANEX est rouvert, ne pas ré-appliquer les items VX/VY ; à purger avec le lot de nettoyage des historiques.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Miroir ≠ source lu dans la même fiche : manexExtraction.items VX = 76 / VY = 64 (accepted) contre speeds.vx = 64 / speeds.vy = 76. Le point F-GNAM-01/-10 est clos « fait » : la correction des vitesses est vérifiée toujours en place en base ce jour, seul l&#x27;instantané d&#x27;extraction reste périmé.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-17) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l&#x27;atelier n&#x27;expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-06) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GNAM-19" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -869,40 +770,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Champ singulier vidé, le mode réel étant saisi à l&#x27;étape Équipements dans transponderModes.</dd>
 <dt>En vol</dt><dd>Champ orphelin posé en dur à l&#x27;initialisation de toute fiche ; c&#x27;est lui qui faisait autrefois déclarer une balise au plan de vol (corrigé côté code depuis). Il reste une donnée d&#x27;équipement qu&#x27;aucun écran n&#x27;alimente plus.</dd>
 <dt>Action</dt><dd>Étape Équipements → cocher le ou les modes transpondeur réels (A/C/S), ce qui alimentera transponderModes ; le champ singulier est à purger par script.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction de schéma vérifiée dans le code toujours en place : src/features/aircraft/components/wizard-steps/Step5Equipment.jsx:632-644 écrit « transponderModes », tandis que src/features/aircraft/AircraftModule.jsx:3640 et AircraftCreationWizard.jsx:403 posent « transponderMode: C » par défaut.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-19) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-20" data-clos="0" data-champ="aircraft_data.approvedOperations (31 booléens)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-20</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.approvedOperations (31 booléens)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 31 booléens sont à false, y compris vfrDay, training, elt, lifeVests et les trois extincteurs. Aucun item d&#x27;extraction correspondant n&#x27;a été trouvé ni accepté (found = false, accepted = false sur toute la série) : le formulaire n&#x27;a jamais été rempli.</dd>
-<dt>Attendu</dt><dd>Au minimum les opérations réellement approuvées de cet avion-école (vfrDay, training…) et les équipements de survie effectivement à bord.</dd>
-<dt>En vol</dt><dd>Rien dans la fiche ne déclare ce que l&#x27;avion est autorisé à faire ni ce qu&#x27;il embarque comme équipement de secours : tout affichage ou contrôle s&#x27;appuyant sur ces cases considère l&#x27;avion comme approuvé pour aucune opération.</dd>
-<dt>Action</dt><dd>Étape Équipements → cocher les opérations approuvées et les équipements de survie réellement présents, d&#x27;après le manuel de vol et la fiche de pesée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champs jamais renseignés (0 sur 31 à true, 0 item d&#x27;extraction accepté). Classé a-confirmer : formulaire vierge et non contradiction interne — seuls le pilote et le manuel peuvent dire ce qui est approuvé.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-20) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-21" data-clos="0" data-champ="aircraft_data.horsepower" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-21</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">identite</span><span class="path">aircraft_data.horsepower</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">horsepower = 182 CV. L&#x27;item d&#x27;extraction correspondant (« Puissance moteur (CV) ») porte la même valeur 182 avec une confiance de 0, c&#x27;est-à-dire une saisie manuelle et non une lecture du manuel.</dd>
-<dt>Attendu</dt><dd>La puissance de la plaque moteur relevée au manuel de vol.</dd>
-<dt>En vol</dt><dd>Aucun calcul n&#x27;utilise ce champ ; il n&#x27;apparaît que dans l&#x27;identité de l&#x27;avion et les exports.</dd>
-<dt>Action</dt><dd>Vérifier la puissance sur la plaque moteur ou le manuel AM et corriger si nécessaire à l&#x27;étape Informations générales.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Aucune contradiction interne démontrable — la coïncidence avec fuelUsableCapacity = 182 n&#x27;en est pas une. Classé a-confirmer : seule la plaque moteur ou le manuel tranche.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-21) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-23" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (racine) vs aircraft_data.weights.minTakeoffWeight vs aircraft_data.cgEnvelope.aftMinWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-23</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.minTakeoffWeight (racine) vs aircraft_data.weights.minTakeoffWeight vs aircraft_data.cgEnvelope.aftMinWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Racine minTakeoffWeight = 732,2 kg, strictement égale à emptyWeight = 732,2 — motif « plancher = masse à vide » fabriqué — alors que le miroir weights.minTakeoffWeight = «» (vide) et que l&#x27;enveloppe de centrage démarre à 700 kg (aftMinWeight = « 700 », forwardPoints[0].weight = « 700 », moment 1459,5 = 700 × 2,085). Trois bornes basses divergentes : 732,2 / vide / 700. Même motif que F-BXNG-19, F-GOFP-08 et F-GBTU-11 sur les autres avions.</dd>
-<dt>Attendu</dt><dd>Une seule borne basse — 700 kg si c&#x27;est bien le début du centrogramme du manuel — ou champ vide/absent partout ; jamais une recopie de la masse à vide.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-23) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Le singulier transponderMode=« C » est toujours en base (aucun écran ne le retire) — le script FLOTTE purge-transponder-singulier.mjs migre les 9 avions concernés d&#x27;un coup (fusion vers le pluriel minuscule, zéro perte). Sera clos après le --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-19) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GNAM-24" data-clos="0" data-champ="aircraft_data.lastModified" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -913,18 +781,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Horodatage de dernière modification au moins égal à la plus récente modification interne de l&#x27;objet (15/06/2026) — même motif que F-GOVE-10.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-24) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GNAM-25" data-clos="0" data-champ="aircraft_data.performanceModels[1].data.graphs[1].curves[].name (panneau masse de takeoff_50ft_flaps_to)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-25</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.performanceModels[1].data.graphs[1].curves[].name (panneau masse de takeoff_50ft_flaps_to)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Série de guides masse DISCONTINUE : noms « 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11 » — le guide « 4 » manque entre « 3 » (x 955,6→1145,6) et « 5 » (x 954,5→1145,9), alors que les panneaux masse des 5 autres modèles portent des séries continues (« courbe 0 »–« courbe 8 », 0–7, 1–8, 1–6, 1–6).</dd>
-<dt>Attendu</dt><dd>Série continue de guides — vérifier sur la planche du manuel si un guide a réellement été omis à la numérisation (trou d&#x27;interpolation dans l&#x27;éventail) ou s&#x27;il s&#x27;agit d&#x27;un simple saut de numérotation sans tracé manquant.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-25) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « ok », mais c&#x27;est le bug d&#x27;APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-24) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOFP</span><span class="mdl">Cessna F152</span><span class="spacer"></span>
