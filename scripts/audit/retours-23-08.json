@@ -426,8 +426,8 @@
  },
  {
   "itid": "F-HSTR-17",
-  "status": "note",
-  "note": "vr, vx, vy et initialClimb sont FACULTATIVES — l'item ne subsiste que pour la coïncidence vr = vx = vy = initialClimb = 72 kt, à confirmer au manuel (aucune erreur démontrée)."
+  "status": "fait",
+  "note": "vr, vx, vy et initialClimb sont FACULTATIVES — l'item ne subsiste que pour la coïncidence vr = vx = vy = initialClimb = 72 kt, à confirmer au manuel (aucune erreur démontrée). ▸ Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le ménage est fait : vy et initialClimb VIDÉS, vr=72 et vx=72 conservés (facultatifs, valeurs assumées). La coïncidence 72×4 est levée."
  },
  {
   "itid": "F-GIEA-01",
@@ -658,5 +658,75 @@
   "itid": "F-GOVE-12",
   "status": "fait",
   "note": "Coché « transpondeur S ajouté », MAIS la base v4 porte [\"S\",\"s\"] — l'écran Équipements a fusionné la chaîne héritée « S » avec votre sélection (MÊME bug que F-HDIM, 2e cas confirmé — le correctif du code est en chip). Le script fix-gove-26-08.mjs normalise en [\"s\"] — sera clos après le --apply. ▸ Vérifié sur extraction fraîche (v5, fix-gove --apply exécuté par le pilote, sauvegarde backups/fix-gove-2026-08-26T08-11-43) : transponderModes = [\"s\"] — le doublon hérité est normalisé. Le correctif du bug d'app (écran Équipements) reste en chip."
+ },
+ {
+  "itid": "F-HSTR-03",
+  "status": "note",
+  "note": "RÉPONSE : vous avez raison, 940 kg est bien dans les masses limites (weights et enveloppe ✓) — le problème est un MIROIR CACHÉ : la racine minTakeoffWeight porte encore 650 (< masse à vide !), et aucun écran ne l'affiche ni ne la corrige. Le script fix-hstr-26-08.mjs la supprime (la borne 940 fait foi, l'app la dérive au chargement). Sera clos après votre --apply."
+ },
+ {
+  "itid": "F-HSTR-10",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ (réponse à votre question « pourquoi tu demandes ça ? ») : l'item date d'AVANT le système de rôles du 24/08. Votre réservoir porte role=\"fixed\" dans la Configuration standard par défaut — c'est la sémantique qui fait foi, le champ type=\"wing\" legacy est sans objet. Rien à faire, item retiré."
+ },
+ {
+  "itid": "F-HSTR-11",
+  "status": "note",
+  "note": "PARTIEL — les tables de montée non monotones ont été SUPPRIMÉES (vérifié : plus aucune opération climb/go_around, 24 tables restantes) ✓. Reste la paire ATTERRISSAGE 50 ft volets UP à 4000 ft / 10 °C : 1280 kg = 920 m contre 1310 kg = 910 m, toujours non monotone en base — à confirmer au manuel (effet d'arrondi possible) ou à corriger."
+ },
+ {
+  "itid": "F-HSTR-12",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : les 3 cellules corrigées sont en base — 695 (décollage roulage 1200 kg/8000 ft/20 °C), 345 (atterrissage LDG 1100 kg/7000 ft/0 °C), 565 (atterrissage volets UP 1100 kg/7000 ft/30 °C — le manuel disait 565, pas le 555 supposé par l'audit) — et la table 34 est retirée."
+ },
+ {
+  "itid": "F-HSTR-13",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : plus AUCUNE ligne Temperature=\"ISA\" en chaîne : les tables go_around_climb concernées ont été retirées (choix pilote : inutilisées pour le moment)."
+ },
+ {
+  "itid": "F-HSTR-14",
+  "status": "fait",
+  "note": "RÉPONSE à votre question « dis-moi exactement quoi faire » : RIEN — en supprimant les tables de montée et la table 34, les 4 noms décalés ont disparu avec elles. Vérifié sur la fiche fraîche : zéro décalage nom/masse restant sur les 24 tables."
+ },
+ {
+  "itid": "F-HSTR-15",
+  "status": "note",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : windLimits.limits[] est bien rempli (traversier 20, traversier mouillé 15, arrière 10) ✓ — MAIS divergence interne : l'ancien champ plat maxCrosswindWet porte 12 kt et le nouveau format 15 kt. Laquelle est la valeur du manuel DA40 NG — 12 ou 15 ? Je corrigerai le miroir sur votre réponse."
+ },
+ {
+  "itid": "F-HSTR-16",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : la tranche manquante 1180-1310 kg → 129 kt est ajoutée aux voRanges (couverture jusqu'à la MTOW ✓)."
+ },
+ {
+  "itid": "F-HSTR-18",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : rvsm=false et catIIIa=false — les capacités fantaisistes d'un monomoteur sont retirées."
+ },
+ {
+  "itid": "F-HSTR-19",
+  "status": "valide",
+  "note": "Choix pilote (rapport 26/08) : « laisse tel quel » — lpv=false avec rnpTypes « APCH (LPV), 1.0 » documenté tel quel, l'équipement décrit est celui du dossier de l'avion. Acté."
+ },
+ {
+  "itid": "F-HSTR-20",
+  "status": "note",
+  "note": "Coché, mais le champ singulier transponderMode=\"S\" est toujours en base (aucun écran ne le retire — miroir hérité). Le script fix-hstr-26-08.mjs le supprime, le pluriel [\"s\",\"c\"] fait foi. Sera clos après votre --apply."
+ },
+ {
+  "itid": "F-HSTR-21",
+  "status": "ouvert",
+  "note": "Coché « fait », MAIS c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 21/05). Correctif du code en chip, rien à faire côté pilote."
+ },
+ {
+  "itid": "F-HSTR-22",
+  "status": "valide",
+  "note": "Choix pilote (rapport 26/08) : « laisse comme ça » — la pesée du 25/03/2019 est la plus récente (7 ans, sous le seuil d'alerte de 10 ans). Acté."
+ },
+ {
+  "itid": "F-HSTR-23",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « oui elles le sont » — le manuel DA40 NG publie bien les distances d'atterrissage jusqu'à 1310 kg (au-dessus de la MLW 1280, cas du retour immédiat après décollage). Le manuel fait foi."
  }
 ]
