@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>113 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>130 points à
+  <b>116 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>127 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 21 majeurs, 102 mineurs — dont 54 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 101 mineurs — dont 51 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -1014,45 +1014,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOVE</span><span class="mdl">DR400</span><span class="spacer"></span>
-<span class="pill p-majeur">2 majeurs</span>
-<span class="pill p-mineur">4 mineurs</span>
+<span class="pill p-mineur">3 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GOVE" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GOVE" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Avion 100 % TABLEAUX (performanceModels = null, aucun abaque — le probe ne retourne aucun modèle, c&#x27;est normal) : 8 tables MANEX ré-importées d&#x27;Excel le 21/08 (2 masses 700/900 kg × 3 paliers 0/4000/8000 ft × 3 températures), les 4 opérations obligatoires du 23/08 sont toutes couvertes (missingPerformanceTables = []) ; grille ISA diagonale correcte à l&#x27;atterrissage (p.40), cassée au seul palier 0 ft du décollage (p.33). Masse &amp; centrage moderne : enveloppe cgEnvelope à 3 points avant + segment arrière, 2 réservoirs à bras distincts, 1 compartiment bagages dynamique, 6 règles de correction de performance (vent + herbe) opérationnelles. Fiche inchangée depuis le 21/08 12:10 (updated_at), donc identique à celle du dernier ré-audit.</b> — Le centrage et l&#x27;atterrissage sont sains et se calculent de bout en bout : enveloppe interpolée à la masse (verdicts obtenus sur 6 chargements, MTOW/MLW et plafond de soute 40 kg qui déclenchent), 5 conditions sur 5 calculées à l&#x27;atterrissage, corrections vent et herbe correctement appliquées (×0,78 à 12 kt de face, ×1,15 sur herbe, cumul ×1,495 sans double comptage). Ce qui bloque, c&#x27;est le DÉCOLLAGE : une seule température fausse au niveau de la mer (5 °C au lieu de −5) casse la grille ISA des 4 tables et fait échouer 4 conditions sur 5 en « Calcul impossible » — la contre-épreuve en mémoire prouve que corriger cette seule case rétablit 5/5. Commencez par là (p.33), enchaînez p.29 pour VS T/O (seul champ obligatoire vide de la fiche) et Vs1 ; le reste — 1 litre d&#x27;écart sur l&#x27;utilisable, pesée de 1992 à confirmer au club, et quatre miroirs legacy inertes — se traite ensuite sans urgence.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap non">Décollage : non</span><span class="cap oui">Atterrissage : oui</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 6 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GOVE-03" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[0].data — Masse 900, Altitude 0, colonne froide (value 225)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOVE-03</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[0].data — Masse 900, Altitude 0, colonne froide (value 225)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Table « Takeoff Ground Roll Distance - 900 kg », palier 0 ft : 225 / 235 / 285 m, soit +10 puis +50 m pour deux intervalles de température ÉGAUX (20 °C). Dans la même table, 4000 ft donne 305 / 345 / 390 (+40 / +45) et 8000 ft 425 / 475 / 535 (+50 / +60). Les 3 autres tables décollage sont régulières au palier 0 ft (700 kg : 130/145/165 ; 50 ft 900 kg : 480/535/590 ; 50 ft 700 kg : 285/315/345).</dd>
-<dt>Attendu</dt><dd>La valeur de la colonne froide du palier 0 ft relue p.33 : soit 225 m est bien la valeur du manuel, soit c&#x27;est une erreur de recopie (la régularité des autres paliers ferait plutôt attendre ~195-200 m).</dd>
-<dt>En vol</dt><dd>Une fois l&#x27;item n°1 corrigé, cette case devient la borne froide de toute interpolation au niveau de la mer : c&#x27;est elle qui donnera le roulement au décollage à MTOW par temps froid. Un 225 m trop élevé serait conservateur (distance surestimée), un 225 m trop faible serait dangereux — impossible de trancher sans la page.</dd>
-<dt>Action</dt><dd>Relire p.33 EN MÊME TEMPS que la correction des températures, et confirmer ou corriger la valeur froide de la table « Takeoff Ground Roll - 900 kg » au palier Altitude 0.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Irrégularité arithmétique interne à la fiche, pas un ordre de grandeur mémorisé : +10 / +50 m pour deux pas de température identiques au palier 0 ft, contre +40 / +45 (4000 ft) et +50 / +60 (8000 ft) dans la MÊME table. Non démontrable sans le manuel → à trancher p.33.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GOVE-05" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOVE-05</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">1992-09-01 — 33 ans révolus au 23/08/2026. PDF « F-GOVE - pesée.pdf » (221 211 octets) déposé le 2026-06-02, hasData = true. Le rapport ne porte aucune donnée numérique dans la fiche : rien ne peut donc être recoupé automatiquement.</dd>
-<dt>Attendu</dt><dd>Confirmation par le club qu&#x27;aucune pesée plus récente n&#x27;existe, ou import de la dernière fiche de pesée avec sa masse à vide et son bras.</dd>
-<dt>En vol</dt><dd>Toute la masse &amp; centrage repose sur cette pesée : masse à vide 574 kg, bras à vide 0,3798 m, moment 218 kg·m. getWeighingReportAge rend isOld = true (seuil 10 ans, WEIGHING_REPORT_WARN_YEARS) → rappel CdB non bloquant affiché à chaque devis de masse. Les calculs restent exploitables, mais sur une base de 1992.</dd>
-<dt>Action</dt><dd>Demander au club la dernière fiche de pesée de F-GOVE. Si elle est plus récente : remplacer le PDF, la date, la masse à vide et le bras à vide dans l&#x27;étape Masse &amp; centrage — les moments se recalculent.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Aucune donnée de la fiche ne peut trancher : seul le club sait s&#x27;il existe une pesée postérieure. Date lue en base ; âge calculé par getWeighingReportAge (src/utils/weighingReportAge.js) → 33 ans, isOld = true.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOVE-09" data-clos="0" data-champ="aircraft_data.speeds.vs1" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOVE-09</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vs1</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">51 kt stocké, alors que manexExtraction.items[19] « VS1 (stall clean) » porte originalValue 67 avec originalUnit KIAS (page 29, confiance 95, accepted = true). Aucune conversion d&#x27;unité n&#x27;explique l&#x27;écart 67 → 51.</dd>
-<dt>Attendu</dt><dd>Vs1 confirmée p.29, en même temps que la saisie de VS T/O (même tableau de décrochage).</dd>
-<dt>En vol</dt><dd>Ordre interne cohérent avec 51 : vso 45 &lt; vs1 51 &lt; vr 54 &lt; vx 70 &lt; vy 78 &lt; vapp 81 &lt; vfeLdg 92 &lt; vfeTO 97 &lt; vno 140 &lt; vne 166. À 67 kt, Vr 54 passerait SOUS Vs1, ce qui serait absurde — 51 est donc probablement la correction manuelle juste. Aucun calcul de la préparation de vol ne consomme vs1 aujourd&#x27;hui : l&#x27;enjeu est l&#x27;affichage de la marge au décrochage.</dd>
-<dt>Action</dt><dd>Relire p.29 et confirmer (ou corriger) Vs1 — un seul geste avec la saisie de VS T/O.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Divergence interne entre la valeur stockée (51) et l&#x27;originalValue de l&#x27;item d&#x27;extraction ACCEPTÉ (67 KIAS) sur le même chemin speeds.vs1. Non tranchable sans le manuel.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-09) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 9 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GOVE-10" data-clos="0" data-champ="aircraft_data.lastModified (et _metadata.savedAt)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1063,7 +1029,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Horodatage de dernière modification au moins égal à la plus récente modification enregistrée à l&#x27;intérieur du même objet (21/08).</dd>
 <dt>En vol</dt><dd>Aucun effet sur les calculs. Deux conséquences mineures : la fiche s&#x27;affiche comme modifiée le 18/06 alors qu&#x27;elle l&#x27;a été le 21/08 ; et lastModified sert d&#x27;arbitre d&#x27;ancienneté dans la résolution des doublons d&#x27;avion (core/contexts/index.jsx:304-312, recordTime), donc une copie locale plus récente l&#x27;emporterait sur cet enregistrement en cas de doublon d&#x27;import. Le décalage signale surtout que les corrections du 21/08 (ré-import Excel, règles de vent) n&#x27;ont pas transité par l&#x27;application.</dd>
 <dt>Action</dt><dd>Rien à saisir : rouvrir puis re-valider la fiche dans l&#x27;application une fois les corrections ci-dessus faites — la sauvegarde rafraîchira lastModified et _metadata.savedAt.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne d&#x27;horodatage : lastModified (2026-06-18) antérieur à extractionMetadata.lastModified (2026-08-21T12:00:04) et à _metadata.exportedAt (2026-08-21T12:10:56) portés par le même objet aircraft_data.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-10) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait », MAIS c&#x27;est un bug d&#x27;APP : la fiche v4 ré-enregistrée le 26/08 08:08 porte toujours lastModified 2026-06-18 — le wizard ne rafraîchit JAMAIS cet horodatage au save (row.updated_at, lui, est juste). Correctif du code mis en chip (même motif sur F-GNAM/F-GOFP/F-GUKQ) ; rien à faire côté pilote.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-10) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GOVE-11" data-clos="0" data-champ="aircraft_data.speeds.vsTO + aircraft_data.bypassedFields" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1074,7 +1040,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Un seul état : la valeur 48 conservée et l&#x27;entrée « speeds.vsTO » retirée de bypassedFields (cas attendu, F-GOVE-02 ayant été corrigé en base par saisie de la valeur), ou le champ vidé si la certification d&#x27;absence est le vrai choix pilote.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-11) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Rapport pilote 26/08 : « revérifié, tout est juste » — les VALEURS le sont (vso 45 ≤ vsTO 48 ≤ vs1 51 confirmées). Reste l&#x27;état contradictoire en base : bypassedFields contient encore speeds.vsTO à côté de la valeur saisie (aucun écran ne retire un contournement hérité). Le script fix-gove-26-08.mjs le retire — sera clos après le --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-11) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GOVE-12" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderModes" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1085,7 +1051,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Tableau [&quot;s&quot;] (les modes réellement à bord, confirmés par le pilote), pour que l&#x27;écran Équipements relise et réécrive le champ sans le perdre.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-12) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « transpondeur S ajouté », MAIS la base v4 porte [&quot;S&quot;,&quot;s&quot;] — l&#x27;écran Équipements a fusionné la chaîne héritée « S » avec votre sélection (MÊME bug que F-HDIM, 2e cas confirmé — le correctif du code est en chip). Le script fix-gove-26-08.mjs normalise en [&quot;s&quot;] — sera clos après le --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-12) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUKQ</span><span class="mdl">DR 400/120</span><span class="spacer"></span>
