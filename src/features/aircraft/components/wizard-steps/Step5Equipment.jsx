@@ -627,9 +627,22 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                   Mode transpondeur (sélection multiple)
                 </Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
-                  {['Mode A', 'Mode C', 'Mode S'].map(mode => {
+                  {(() => {
+                    // ⛔ 26/08/2026 — NORMALISATION STRICTE. La valeur héritée
+                    // peut être une CHAÎNE (« A,C ») : l'ancien spread
+                    // [...transponderModes] l'éclatait CARACTÈRE PAR CARACTÈRE
+                    // (une virgule devenait un mode — corruption constatée en
+                    // base sur F-HDIM et F-GOVE, deux fois chacune). Chaîne →
+                    // split(','), tout → minuscules, filtré aux modes réels,
+                    // dédoublonné. Ce qui repart d'ici est toujours propre.
+                    const brut = equipmentSurv.transponderModes;
+                    const transponderModes = (Array.isArray(brut)
+                      ? brut
+                      : typeof brut === 'string' ? brut.split(',') : [])
+                      .map((m) => String(m).trim().toLowerCase())
+                      .filter((m, i, arr) => ['a', 'c', 's'].includes(m) && arr.indexOf(m) === i);
+                    return ['Mode A', 'Mode C', 'Mode S'].map(mode => {
                     const modeKey = mode.toLowerCase().replace('mode ', '');
-                    const transponderModes = equipmentSurv.transponderModes || [];
 
                     return (
                       <FormControlLabel
@@ -653,7 +666,8 @@ const Step5Equipment = ({ data, updateData, errors = {}, onNext, onPrevious }) =
                         }
                       />
                     );
-                  })}
+                  });
+                  })()}
                 </Box>
 
                 {/* ADS-B Out - Checkbox séparé */}

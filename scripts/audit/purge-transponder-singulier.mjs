@@ -29,7 +29,13 @@ let modifies = 0;
 for (const row of rows) {
   const d = JSON.parse(JSON.stringify(row.aircraft_data));
   const surv = d.equipmentSurv;
-  if (!surv || surv.transponderMode == null) continue;
+  if (!surv) continue;
+  // 26/08 (2e passe) : traiter AUSSI les pluriels corrompus/chaîne sans
+  // singulier (F-HDIM re-corrompu par une copie locale re-sauvegardée).
+  const plurielSale = typeof surv.transponderModes === 'string'
+    || (Array.isArray(surv.transponderModes)
+      && surv.transponderModes.some((m) => !MODES_VALIDES.has(String(m).trim().toLowerCase()) || m !== String(m).trim().toLowerCase()));
+  if (surv.transponderMode == null && !plurielSale) continue;
 
   const singulier = String(surv.transponderMode);
   const herites = singulier.split(',').map((m) => m.trim().toLowerCase()).filter((m) => MODES_VALIDES.has(m));

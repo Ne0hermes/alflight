@@ -491,8 +491,8 @@
  },
  {
   "itid": "F-GIEA-16",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : equipmentSurv.transponderMode=« C » (singulier, posé en dur à l'initialisation) est toujours là et transponderModes (pluriel, celui que l'écran Équipements écrit) n'existe toujours pas. Même étape que F-GIEA-08 — se règlera avec elle."
+  "status": "fait",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : equipmentSurv.transponderMode=« C » (singulier, posé en dur à l'initialisation) est toujours là et transponderModes (pluriel, celui que l'écran Équipements écrit) n'existe toujours pas. Même étape que F-GIEA-08 — se règlera avec elle. ▸ Vérifié sur extraction fraîche (migration flotte purge-transponder --apply du 26/08, sauvegardes backups/purge-transponder-2026-08-26T10-10-32) : le singulier « C » de F-GIEA est migré en transponderModes [\"c\"] et supprimé — clos par la migration flotte."
  },
  {
   "itid": "F-BXQT-11",
@@ -586,8 +586,8 @@
  },
  {
   "itid": "F-HDIM-11",
-  "status": "fait",
-  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous). ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : transponderModes = [\"a\",\"c\"] — le tableau corrompu ([\"A\",\",\",\"C\",\"a\",\"c\"]) est réparé. Le bug d'app (éclatement de la chaîne héritée) reste à corriger via la chip."
+  "status": "ouvert",
+  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous). ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : transponderModes = [\"a\",\"c\"] — le tableau corrompu ([\"A\",\",\",\"C\",\"a\",\"c\"]) est réparé. Le bug d'app (éclatement de la chaîne héritée) reste à corriger via la chip. ▸ ⚠️ RÉGRESSION (26/08 10h) : le tableau corrompu [\"A\",\",\",\"C\",\"a\",\"c\"] est REVENU en base (v5, save app de 08:03 — la copie LOCALE portait encore la vieille valeur et l'écran l'a re-éclatée). CORRECTIF DE CODE déployé (écran Équipements normalise strictement + filet de sécurité à l'écriture serveur) ; le script purge-transponder étendu répare la donnée — re-clos après le --apply."
  },
  {
   "itid": "F-HDIM-12",
@@ -732,7 +732,7 @@
  {
   "itid": "F-GNAM-02",
   "status": "note",
-  "note": "PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l'atelier."
+  "note": "PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l'atelier. ▸ 2e rapport 26/08 (« c'est fait ») — MAIS la base v4 est inchangée : la courbe 0ft du modèle 0 (passage 15 m Flaps UP) démarre toujours à +2,7 °C. Si vous l'avez prolongée dans l'atelier, la fiche n'a PAS été ré-enregistrée ensuite (dernier save 10:01) : re-passez par Enregistrer. Le modèle 2 reste ✓ (−18,2 °C)."
  },
  {
   "itid": "F-GNAM-03",
@@ -747,7 +747,7 @@
  {
   "itid": "F-GNAM-06",
   "status": "note",
-  "note": "Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l'atelier n'expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA)."
+  "note": "Coché, MAIS Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : outputUnit vaut toujours « m » sur les 4 modèles visés (0, 3, 4, 5 — seuls les axes disent « ft »). Si l'atelier n'expose pas ce réglage, dites-le-moi : je le corrigerai par script (même motif que F-GBTU/F-GIEA). ▸ 2e rapport — outputUnit toujours « m » sur les 4 modèles : le réglage n'est pas exposé par l'atelier. Script FLOTTE fix-outputunit-flotte.mjs fourni (corrige aussi F-GBTU et F-GIEA-14) — sera clos après le --apply."
  },
  {
   "itid": "F-GNAM-07",
@@ -786,8 +786,8 @@
  },
  {
   "itid": "F-GNAM-19",
-  "status": "note",
-  "note": "Le singulier transponderMode=« C » est toujours en base (aucun écran ne le retire) — le script FLOTTE purge-transponder-singulier.mjs migre les 9 avions concernés d'un coup (fusion vers le pluriel minuscule, zéro perte). Sera clos après le --apply."
+  "status": "fait",
+  "note": "Le singulier transponderMode=« C » est toujours en base (aucun écran ne le retire) — le script FLOTTE purge-transponder-singulier.mjs migre les 9 avions concernés d'un coup (fusion vers le pluriel minuscule, zéro perte). Sera clos après le --apply. ▸ Vérifié sur extraction fraîche (migration flotte purge-transponder --apply du 26/08, sauvegardes backups/purge-transponder-2026-08-26T10-10-32) : le singulier a disparu de TOUTE la flotte (9 avions migrés) — transponderModes [\"c\"] fait foi."
  },
  {
   "itid": "F-GNAM-20",
@@ -807,7 +807,7 @@
  {
   "itid": "F-GNAM-24",
   "status": "ouvert",
-  "note": "Coché « ok », mais c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote."
+  "note": "Coché « ok », mais c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 12/06). Correctif du code en chip, rien à faire côté pilote. ▸ 2e rapport (« ok ») — reste le bug d'APP lastModified (chip) : rien côté pilote."
  },
  {
   "itid": "F-GNAM-25",

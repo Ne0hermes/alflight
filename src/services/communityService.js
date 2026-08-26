@@ -109,6 +109,24 @@ function stripBannedLegacyFields(d) {
     out.weightBalance = { ...out.weightBalance };
     delete out.weightBalance.cgLimits;
   }
+  // 🛰️ 26/08/2026 — TRANSPONDEUR : filet de sécurité à l'ÉCRITURE. Le champ
+  // singulier hérité est migré vers le pluriel normalisé puis supprimé, et une
+  // chaîne « A,C » (ou un tableau corrompu caractère-par-caractère) ne repart
+  // JAMAIS en base : l'écran Équipements éclatait la chaîne ([...str] — une
+  // virgule devenait un mode), corruption revenue via des copies locales
+  // re-sauvegardées APRÈS réparation de la base (F-HDIM ×2, F-GOVE).
+  if (out.equipmentSurv && typeof out.equipmentSurv === 'object') {
+    const surv = { ...out.equipmentSurv };
+    if (surv.transponderMode != null || surv.transponderModes != null) {
+      const sources = [];
+      if (typeof surv.transponderMode === 'string') sources.push(...surv.transponderMode.split(','));
+      if (Array.isArray(surv.transponderModes)) sources.push(...surv.transponderModes);
+      else if (typeof surv.transponderModes === 'string') sources.push(...surv.transponderModes.split(','));
+      surv.transponderModes = [...new Set(sources.map((m) => String(m).trim().toLowerCase()).filter((m) => ['a', 'c', 's'].includes(m)))].sort();
+      delete surv.transponderMode;
+      out.equipmentSurv = surv;
+    }
+  }
   // ⚖️ 25/08/2026 — un BRAS À ZÉRO est impossible par nature (aucun poste
   // n'est au point de référence) : c'est toujours le zéro fabriqué que les
   // purges ont retiré. Un cache local antérieur aux purges peut encore
