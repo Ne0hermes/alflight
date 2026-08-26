@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>116 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>127 points à
+  <b>118 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>125 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 101 mineurs — dont 51 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 99 mineurs — dont 50 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -1014,11 +1014,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOVE</span><span class="mdl">DR400</span><span class="spacer"></span>
-<span class="pill p-mineur">3 mineurs</span>
+<span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GOVE" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GOVE" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Avion 100 % TABLEAUX (performanceModels = null, aucun abaque — le probe ne retourne aucun modèle, c&#x27;est normal) : 8 tables MANEX ré-importées d&#x27;Excel le 21/08 (2 masses 700/900 kg × 3 paliers 0/4000/8000 ft × 3 températures), les 4 opérations obligatoires du 23/08 sont toutes couvertes (missingPerformanceTables = []) ; grille ISA diagonale correcte à l&#x27;atterrissage (p.40), cassée au seul palier 0 ft du décollage (p.33). Masse &amp; centrage moderne : enveloppe cgEnvelope à 3 points avant + segment arrière, 2 réservoirs à bras distincts, 1 compartiment bagages dynamique, 6 règles de correction de performance (vent + herbe) opérationnelles. Fiche inchangée depuis le 21/08 12:10 (updated_at), donc identique à celle du dernier ré-audit.</b> — Le centrage et l&#x27;atterrissage sont sains et se calculent de bout en bout : enveloppe interpolée à la masse (verdicts obtenus sur 6 chargements, MTOW/MLW et plafond de soute 40 kg qui déclenchent), 5 conditions sur 5 calculées à l&#x27;atterrissage, corrections vent et herbe correctement appliquées (×0,78 à 12 kt de face, ×1,15 sur herbe, cumul ×1,495 sans double comptage). Ce qui bloque, c&#x27;est le DÉCOLLAGE : une seule température fausse au niveau de la mer (5 °C au lieu de −5) casse la grille ISA des 4 tables et fait échouer 4 conditions sur 5 en « Calcul impossible » — la contre-épreuve en mémoire prouve que corriger cette seule case rétablit 5/5. Commencez par là (p.33), enchaînez p.29 pour VS T/O (seul champ obligatoire vide de la fiche) et Vs1 ; le reste — 1 litre d&#x27;écart sur l&#x27;utilisable, pesée de 1992 à confirmer au club, et quatre miroirs legacy inertes — se traite ensuite sans urgence.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap non">Décollage : non</span><span class="cap oui">Atterrissage : oui</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 9 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 11 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GOVE-10" data-clos="0" data-champ="aircraft_data.lastModified (et _metadata.savedAt)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1030,28 +1030,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Aucun effet sur les calculs. Deux conséquences mineures : la fiche s&#x27;affiche comme modifiée le 18/06 alors qu&#x27;elle l&#x27;a été le 21/08 ; et lastModified sert d&#x27;arbitre d&#x27;ancienneté dans la résolution des doublons d&#x27;avion (core/contexts/index.jsx:304-312, recordTime), donc une copie locale plus récente l&#x27;emporterait sur cet enregistrement en cas de doublon d&#x27;import. Le décalage signale surtout que les corrections du 21/08 (ré-import Excel, règles de vent) n&#x27;ont pas transité par l&#x27;application.</dd>
 <dt>Action</dt><dd>Rien à saisir : rouvrir puis re-valider la fiche dans l&#x27;application une fois les corrections ci-dessus faites — la sauvegarde rafraîchira lastModified et _metadata.savedAt.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne d&#x27;horodatage : lastModified (2026-06-18) antérieur à extractionMetadata.lastModified (2026-08-21T12:00:04) et à _metadata.exportedAt (2026-08-21T12:10:56) portés par le même objet aircraft_data.</dd>
 </dl><div class="notefait">✎ Coché « fait », MAIS c&#x27;est un bug d&#x27;APP : la fiche v4 ré-enregistrée le 26/08 08:08 porte toujours lastModified 2026-06-18 — le wizard ne rafraîchit JAMAIS cet horodatage au save (row.updated_at, lui, est juste). Correctif du code mis en chip (même motif sur F-GNAM/F-GOFP/F-GUKQ) ; rien à faire côté pilote.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOVE-11" data-clos="0" data-champ="aircraft_data.speeds.vsTO + aircraft_data.bypassedFields" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOVE-11</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.speeds.vsTO + aircraft_data.bypassedFields</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">speeds.vsTO = 48 kt (valeur plausible et bien ordonnée : vso 45 ≤ vsTO 48 ≤ vs1 51) ET bypassedFields = [&quot;speeds.vsTO&quot;] — le champ est simultanément renseigné et certifié « absent du manuel ». Même motif que F-BXQT-04 (bypass + valeur).</dd>
-<dt>Attendu</dt><dd>Un seul état : la valeur 48 conservée et l&#x27;entrée « speeds.vsTO » retirée de bypassedFields (cas attendu, F-GOVE-02 ayant été corrigé en base par saisie de la valeur), ou le champ vidé si la certification d&#x27;absence est le vrai choix pilote.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><div class="notefait">✎ Rapport pilote 26/08 : « revérifié, tout est juste » — les VALEURS le sont (vso 45 ≤ vsTO 48 ≤ vs1 51 confirmées). Reste l&#x27;état contradictoire en base : bypassedFields contient encore speeds.vsTO à côté de la valeur saisie (aucun écran ne retire un contournement hérité). Le script fix-gove-26-08.mjs le retire — sera clos après le --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOVE-12" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderModes" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOVE-12</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.equipmentSurv.transponderModes</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">transponderModes = « S » — chaîne de caractères en majuscule, issue de l&#x27;item d&#x27;extraction « Modes transpondeur (A/C/S) » accepté (value « S », sourcePage 16, confidence 95). Les fiches passées par l&#x27;écran Équipements stockent un tableau en minuscules (F-BXQT : [&quot;c&quot;], F-HSTR : [&quot;s&quot;]). Aucune clé singulière transponderMode (c&#x27;est conforme) et pas de contradiction interne — uniquement un format hétérodoxe.</dd>
-<dt>Attendu</dt><dd>Tableau [&quot;s&quot;] (les modes réellement à bord, confirmés par le pilote), pour que l&#x27;écran Équipements relise et réécrive le champ sans le perdre.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><div class="notefait">✎ Coché « transpondeur S ajouté », MAIS la base v4 porte [&quot;S&quot;,&quot;s&quot;] — l&#x27;écran Équipements a fusionné la chaîne héritée « S » avec votre sélection (MÊME bug que F-HDIM, 2e cas confirmé — le correctif du code est en chip). Le script fix-gove-26-08.mjs normalise en [&quot;s&quot;] — sera clos après le --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOVE-12) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUKQ</span><span class="mdl">DR 400/120</span><span class="spacer"></span>
