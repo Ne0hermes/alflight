@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>166 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>77 points à
+  <b>167 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>76 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 14 majeurs, 57 mineurs — dont 30 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 13 majeurs, 57 mineurs — dont 30 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -535,22 +535,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GIEA</span><span class="mdl">PA 28 161</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-GIEA" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GIEA" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 uniquement — 4 planches Piper numérisées en cascade OAT → masse → vent (8 + 8/10 + 20/28 guides), aucune table MANEX (performanceTables = null, advancedPerformance absent) ; enveloppe de centrage à 3 points avant + segment arrière, arithmétiquement exacte ; extraction MANEX de juin 2026 (113 items, confiance 95 %) reprise partiellement à la main.</b> — Le cœur masse &amp; centrage est sain : masse à vide, bras, moments, réservoir et enveloppe se recoupent au centième près, et les 4 opérations de décollage tournent sur la sonde du 23/08. Deux choses bloquent : les vitesses de décrochage sont dans le désordre (VSO 63 &gt; VS1 50, alors que le 44 rangé dans VSTO est vraisemblablement la vraie VSO), et l&#x27;atterrissage ne calcule rien du tout — les deux opérations volets atterrissage, désormais obligatoires, sont certifiées « absentes du manuel » alors que ton propre retour signale l&#x27;abaque p50. Commence par ces deux points, puis par la règle « herbe » manquante et les 3 guides de vent non tagués du modèle « passage 15 m volets rentrés » ; le reste est de l&#x27;étiquetage et des miroirs inertes.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 18 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GIEA-08" data-clos="0" data-champ="aircraft_data.approvedOperations (31 booléens) + aircraft_data.equipmentSurv.transponderModes" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GIEA-08</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.approvedOperations (31 booléens) + aircraft_data.equipmentSurv.transponderModes</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 31 booléens d&#x27;approvedOperations sont à false, vfrDay et elt compris. equipmentSurv ne porte pas la clé transponderModes. equipmentCom et equipmentNav sont, eux, correctement renseignés (VHF ×2, VOR, DME, ILS, GNSS).</dd>
-<dt>Attendu</dt><dd>Au minimum vfrDay = true, elt = true (le retour pilote atteste la balise au manuel p16/p58/p70) et les modes transpondeur réellement embarqués.</dd>
-<dt>En vol</dt><dd>Le plan de vol part avec un avion déclaré approuvé pour aucune opération, sans balise de détresse et sans mode transpondeur. La case équipement est fausse au dépôt.</dd>
-<dt>Action</dt><dd>Passer une fois l&#x27;étape Équipements &amp; Opérations approuvées du wizard fiche avion et enregistrer.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Lecture directe de la base fraîche (31 false, clé transponderModes absente) + contradiction avec le retour pilote consigné (balise attestée). Le champ pluriel est bien celui qu&#x27;écrit l&#x27;écran actuel : Step5Equipment.jsx:644.</dd>
-</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d&#x27;approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n&#x27;existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l&#x27;étape Équipements &amp; Opérations a un problème d&#x27;enregistrement — à chasser en priorité. ▸ PROGRÈS — Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : elt=true est monté ✓. Mais vfrDay/training restent à false : un avion exploité doit au minimum déclarer VFR jour. Re-passez les régimes dans l&#x27;étape Équipements &amp; Opérations.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GIEA-08) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 19 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-GIEA-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GNAM</span><span class="mdl">PA-28-181</span><span class="spacer"></span>

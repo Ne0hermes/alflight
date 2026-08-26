@@ -456,8 +456,8 @@
  },
  {
   "itid": "F-GIEA-08",
-  "status": "note",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d'approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n'existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l'étape Équipements & Opérations a un problème d'enregistrement — à chasser en priorité. ▸ PROGRÈS — Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : elt=true est monté ✓. Mais vfrDay/training restent à false : un avion exploité doit au minimum déclarer VFR jour. Re-passez les régimes dans l'étape Équipements & Opérations."
+  "status": "fait",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d'approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n'existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l'étape Équipements & Opérations a un problème d'enregistrement — à chasser en priorité. ▸ PROGRÈS — Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : elt=true est monté ✓. Mais vfrDay/training restent à false : un avion exploité doit au minimum déclarer VFR jour. Re-passez les régimes dans l'étape Équipements & Opérations. ▸ CLOS — vérifié sur extraction fraîche (v8, save pilote 11:59) : approvedOperations porte elt ET vfrDay à true, transponderModes [\"a\",\"c\"] — le minimum exigé par l'item (vfrDay + elt + modes réels) est atteint. F-GIEA EST SOLDÉ."
  },
  {
   "itid": "F-GIEA-10",
