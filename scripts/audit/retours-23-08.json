@@ -432,7 +432,7 @@
  {
   "itid": "F-GIEA-01",
   "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l'étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l'avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d'enregistrement à chasser)."
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : vso=63, vs1=50, vsTO=44 — toujours dans le mauvais ordre (attendu manuel p31-32 : vso=44, vsTO à vider). Une seule occurrence de chaque clé dans toute la fiche, contre-vérifié sur le JSON brut. Repasser l'étape Vitesses puis ré-enregistrer — ou me dire si vous pensez l'avoir fait (2 avions présentent ce motif « coché mais pas monté », il y a peut-être un bug d'enregistrement à chasser). ▸ 2e rapport 26/08 — les vitesses ont été PERMUTÉES mais l'ordre reste impossible : vso=50 / vsTO=44 / vs1=63 (un décrochage volets DÉCOLLAGE sous le volets SORTIS est physiquement exclu, et votre retour du 21/08 disait vso=44 au manuel p31-32). QUESTION PRÉCISE : le manuel donne quoi, exactement — vso=44 et vs1=50 (et vsTO à vider), ou d'autres valeurs ? Où va le 63 (une autre vitesse ?) ?"
  },
  {
   "itid": "F-GIEA-02",
@@ -456,18 +456,18 @@
  },
  {
   "itid": "F-GIEA-08",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d'approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n'existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l'étape Équipements & Opérations a un problème d'enregistrement — à chasser en priorité."
+  "status": "note",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 31 booléens d'approvedOperations sont TOUJOURS tous à false (vfrDay et elt compris) et equipmentSurv.transponderModes n'existe toujours pas. ⚠️ 2e occurrence du motif F-BXNG-11 (BXQT, lui, était bien monté) : si vous avez réellement coché les opérations sur ces avions, l'étape Équipements & Opérations a un problème d'enregistrement — à chasser en priorité. ▸ PROGRÈS — Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : elt=true est monté ✓. Mais vfrDay/training restent à false : un avion exploité doit au minimum déclarer VFR jour. Re-passez les régimes dans l'étape Équipements & Opérations."
  },
  {
   "itid": "F-GIEA-10",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 4 axes masse plafonnent toujours à max=1050 kg (MTOW 1055) et le dernier guide tracé s'arrête à 1050 (1045,35 sur le modèle Flaps TAKEOFF sol). Atelier : porter l'axe à 1060 et prolonger les guides."
+  "status": "valide",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : les 4 axes masse plafonnent toujours à max=1050 kg (MTOW 1055) et le dernier guide tracé s'arrête à 1050 (1045,35 sur le modèle Flaps TAKEOFF sol). Atelier : porter l'axe à 1060 et prolonger les guides. ▸ Choix pilote (rapport 26/08) : « pas possible » — même position que F-GNAM-03 : la planche s'arrête à 1050, prolonger jusqu'à la MTOW 1055 serait une extrapolation inventée. Fail-closed assumé : l'avertissement « guide(s) prolongé(s) » du moteur reste, c'est voulu."
  },
  {
   "itid": "F-GIEA-11",
-  "status": "note",
-  "note": "PARTIEL — vérifié en base v3 : le doublon « 7 » du panneau masse est réglé (guides 1→10 uniques ✓), mais le panneau vent du modèle « passage 15 m Flaps UP » porte ENCORE deux courbes « h6 ». Reste à renuméroter cette paire dans le gestionnaire de courbes."
+  "status": "fait",
+  "note": "PARTIEL — vérifié en base v3 : le doublon « 7 » du panneau masse est réglé (guides 1→10 uniques ✓), mais le panneau vent du modèle « passage 15 m Flaps UP » porte ENCORE deux courbes « h6 ». Reste à renuméroter cette paire dans le gestionnaire de courbes. ▸ Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : le doublon « h6 » du panneau vent a disparu — plus aucun nom de courbe en double sur le modèle passage 15 m Flaps UP."
  },
  {
   "itid": "F-GIEA-12",
@@ -482,7 +482,7 @@
  {
   "itid": "F-GIEA-14",
   "status": "note",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres. ▸ PARTIEL — Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles ✓. Restent les TITRES d'axe Y « altitude » sur 3 modèles (l'autre moitié de l'item) — à renommer dans l'atelier, ou dites-moi si le champ n'y est pas exposé et je scripte."
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : outputUnit est toujours « m » sur les 4 graphes primaires (yAxis.unit=ft partout) et les titres d'axe Y sont toujours « altitude » sur 3 modèles. Atelier : outputUnit → ft et renommer les titres. ▸ PARTIEL — Vérifié sur extraction fraîche (fix-outputunit --apply, v5, sauvegardes backups/fix-outputunit-2026-08-26T10-21-32) : outputUnit = ft sur les 4 modèles ✓. Restent les TITRES d'axe Y « altitude » sur 3 modèles (l'autre moitié de l'item) — à renommer dans l'atelier, ou dites-moi si le champ n'y est pas exposé et je scripte. ▸ outputUnit=ft ✓ (script du matin). Restent les titres « altitude » ×3 — réglage NON exposé par l'atelier : le script fix-giea-gbtu-titres.mjs les dérive du nom des modèles (passage 15 m → takeoff_distance_50ft, sol → takeoff_distance_ground). Clos après le --apply."
  },
  {
   "itid": "F-GIEA-15",
@@ -838,5 +838,15 @@
   "itid": "F-GGZO-16",
   "status": "fait",
   "note": "Rapport pilote 26/08 : « faux, il est en inamovible » — confirmé par le système de rôles (role=\"fixed\" dans la Variante 204L). Le champ legacy type=\"optional\" est MENSONGER : le script fix-ggzo-26-08.mjs le supprime (le rôle fait foi). Clos après le --apply. ▸ Vérifié sur extraction fraîche (v6, fix-ggzo --apply, sauvegarde backups/fix-ggzo-2026-08-26T11-40-27) : le champ legacy type=\"optional\" mensonger a disparu du Long Range — le rôle \"fixed\" (inamovible, confirmé pilote) fait foi."
+ },
+ {
+  "itid": "F-GIEA-18",
+  "status": "note",
+  "note": "Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : réservoir principal inchangé (capacity legacy 182 + total 189, usableCapacity absent) — non modifiable dans l'app : le script fix-giea-gbtu-titres.mjs pose usableCapacity=182 explicite et retire la legacy. Clos après le --apply."
+ },
+ {
+  "itid": "F-GIEA-19",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v6 fraîche (ré-enregistrement du 26/08 11:49) : initialClimb est VIDÉ — la valeur ambiguë (63 = vx recopiée) a disparu, conforme au champ facultatif."
  }
 ]
