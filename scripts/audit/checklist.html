@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>174 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>69 points à
+  <b>175 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>68 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 12 majeurs, 51 mineurs — dont 29 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 11 majeurs, 51 mineurs — dont 29 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -265,23 +265,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-BXQT</span><span class="mdl">CESSNA F150 M</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
 <span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-BXQT" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXQT" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Fiche v3.0.0 « tables MANEX seules » : aucun abaque (performanceModels = null, sonde models = []), 4 tables d&#x27;opérations réimportées d&#x27;Excel le 18/06 et réduites à la seule diagonale ISA ; masse-centrage complet (enveloppe cgEnvelope à 3 points avant + limite arrière fixe 0,951 m, 2 compartiments bagages bras 1,63 / 2,13 m, 2 variantes de réservoir 98 L / 144 L) ; extraction MANEX de 113 items dont 2 seulement issus du PDF (VX/VY, p.45).</b> — Le socle masse-centrage et carburant est sain et arithmétiquement cohérent (masse à vide × bras = moment au gramme près, enveloppe et miroirs cgLimits concordants, réservoirs et moments à plein exacts, couverture des 4 opérations obligatoires acquise par tables + certifications). Ce qui bloque est unique et total : les 4 tables de performance ne contiennent qu&#x27;une seule température par palier d&#x27;altitude, ce qui laisse 12 cases vides sur 16 dans la grille du moteur — à l&#x27;exécution du 23/08, 4 jeux de conditions sur 5 échouent, et aucune distance de décollage ni d&#x27;atterrissage n&#x27;est calculable ailleurs qu&#x27;au point exact (0 ft, 15 °C, 726 kg). Commencer par ré-importer les pages 68-69 avec toutes les colonnes de température du manuel ; enchaîner ensuite sur les bras de sièges arrière fantômes (1,000 m, identiques aux sièges avant, qui ouvrent deux postes de charge inexistants dans le bilan de centrage), puis sur le trio de vitesses vsTO/vso/vfeTO qui est inversé.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-04" data-clos="0" data-champ="speeds.vfeTO" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-04</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">speeds.vfeTO</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vfeTO = 42 kt, soit ÉGAL à vsTO (42) et INFÉRIEUR à vso (43) ; vfeLdg = 87 kt. Le champ figure par ailleurs dans bypassedFields (« speeds.vfeTO », certifié absent du manuel) tout en portant une valeur.</dd>
-<dt>Attendu</dt><dd>Soit la vraie VFE volets décollage du manuel, strictement supérieure à la vitesse de décrochage en configuration décollage ; soit un champ VIDE, cohérent avec la certification « absent du manuel » déjà posée.</dd>
-<dt>En vol</dt><dd>La plage d&#x27;utilisation des volets décollage affichée est nulle ou négative : la limite de sortie des volets présentée au pilote se situe sous la vitesse de décrochage correspondante, donc inutilisable telle quelle.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; Vitesses : soit saisir la VFE volets décollage du manuel (si le manuel ne donne qu&#x27;une seule VFE, reporter vfeLdg = 87), soit vider le champ pour qu&#x27;il soit cohérent avec la certification déjà enregistrée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradictions internes lues en base : vfeTO (42) ≤ vsTO (42) et vfeTO (42) &lt; vso (43) — une vitesse maximale volets sortis ne peut pas être inférieure ou égale à la vitesse de décrochage de la même configuration. Second constat : bypassedFields contient « speeds.vfeTO » (champ certifié absent) alors que speeds.vfeTO = 42.</dd>
-</dl><div class="notefait">✎ Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider. ▸ 2e coche sans commentaire, base INCHANGÉE : vfeTO = 42 kt subsiste (= vsTO, sous vso 43 — une VFE égale au décrochage rendrait les volets inutilisables). QUESTION : le C150M publie-t-il une VFE volets DÉCOLLAGE ? Si oui, laquelle ; si non, dites « à vider » et je le vide par script.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-04) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 18 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-BXQT-18" data-clos="0" data-champ="aircraft_data.speeds.stallByBank.landing.b20 (face à speeds.vso)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">

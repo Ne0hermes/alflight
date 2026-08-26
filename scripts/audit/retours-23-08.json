@@ -361,8 +361,8 @@
  },
  {
   "itid": "F-BXQT-04",
-  "status": "ouvert",
-  "note": "Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider. ▸ 2e coche sans commentaire, base INCHANGÉE : vfeTO = 42 kt subsiste (= vsTO, sous vso 43 — une VFE égale au décrochage rendrait les volets inutilisables). QUESTION : le C150M publie-t-il une VFE volets DÉCOLLAGE ? Si oui, laquelle ; si non, dites « à vider » et je le vide par script."
+  "status": "fait",
+  "note": "Base v3 : le bypass de vfeTO a été retiré, mais la valeur 42 kt subsiste — une VFE égale à la vitesse de décrochage volets décollage rendrait les volets inutilisables en pratique. À reconfirmer au manuel : vraie VFE T/O, ou champ à vider. ▸ 2e coche sans commentaire, base INCHANGÉE : vfeTO = 42 kt subsiste (= vsTO, sous vso 43 — une VFE égale au décrochage rendrait les volets inutilisables). QUESTION : le C150M publie-t-il une VFE volets DÉCOLLAGE ? Si oui, laquelle ; si non, dites « à vider » et je le vide par script. ▸ CLOS — réponse pilote 26/08 : le C150M ne publie PAS de VFE volets décollage → champ VIDÉ par script (v7 vérifiée, sauvegarde backups/fix-bxqt-vfeto-2026-08-26T13-52-24). Le faux 42 (= décrochage) a disparu ; vfeLdg 87 kt inchangée."
  },
  {
   "itid": "F-BXQT-05",
