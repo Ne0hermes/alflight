@@ -731,8 +731,8 @@
  },
  {
   "itid": "F-GNAM-02",
-  "status": "note",
-  "note": "PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l'atelier. ▸ 2e rapport 26/08 (« c'est fait ») — MAIS la base v4 est inchangée : la courbe 0ft du modèle 0 (passage 15 m Flaps UP) démarre toujours à +2,7 °C. Si vous l'avez prolongée dans l'atelier, la fiche n'a PAS été ré-enregistrée ensuite (dernier save 10:01) : re-passez par Enregistrer. Le modèle 2 reste ✓ (−18,2 °C)."
+  "status": "valide",
+  "note": "PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l'atelier. ▸ 2e rapport 26/08 (« c'est fait ») — MAIS la base v4 est inchangée : la courbe 0ft du modèle 0 (passage 15 m Flaps UP) démarre toujours à +2,7 °C. Si vous l'avez prolongée dans l'atelier, la fiche n'a PAS été ré-enregistrée ensuite (dernier save 10:01) : re-passez par Enregistrer. Le modèle 2 reste ✓ (−18,2 °C). ▸ CLOS VALIDE (rapport pilote 26/08, planche vérifiée) : « les abaques ne descendent pas — les courbes commencent littéralement au niveau de l'axe X, je ne peux pas descendre plus bas ». La courbe 0 ft du modèle passage 15 m est FIDÈLE à la planche du manuel (le tracé Piper démarre à +2,7 °C sur ce panneau) ; la prolonger serait une extrapolation inventée. Fail-closed assumé : hors du domaine tracé, le moteur refuse — comportement voulu. F-GNAM EST SOLDÉ."
  },
  {
   "itid": "F-GNAM-03",

@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>167 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>76 points à
+  <b>168 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>75 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 13 majeurs, 57 mineurs — dont 30 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 12 majeurs, 57 mineurs — dont 30 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -544,22 +544,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GNAM</span><span class="mdl">PA-28-181</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-GNAM" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GNAM" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 : 6 modèles graphiques en cascade (panneau OAT → panneau masse → panneau vent intégré), aucune table MANEX (performanceTables = null, advancedPerformance = null) et aucune règle performanceCorrections. Masse &amp; centrage sur pesée du 2025-10-29 (PDF attaché), enveloppe cgEnvelope à 3 points avant et limite arrière constante 2,365 m, un compartiment bagages et un réservoir agrégé. L&#x27;extraction MANEX (2 champs trouvés sur 297 pages, juin 2026) n&#x27;est plus qu&#x27;un historique de saisie. Fiche non modifiée depuis le 21/08/2026 13:47 (updated_at) : tous les points clos le 21/08 sont vérifiés toujours corrigés en base.</b> — Le centrage est sain et exploitable : bras réels partout (vide 2,241 / carburant 2,413 / sièges 2,045 et 3,0 / soute 3,627), moments recalculés justes (732,2 × 2,241 = 1640,86 ; 182 L × 0,72 × 2,413 = 316,2) et enveloppe cohérente avec ses miroirs — tous les zéros bagages restants sont inertes tant qu&#x27;un compartiment existe. Ce qui bloque : la courbe « 0 ft » du panneau OAT de la distance de roulement au décollage volets T/O (opération obligatoire) ne commence qu&#x27;à +11,3 °C et le moteur échoue effectivement à 0 °C au niveau de la mer — un décollage matinal à Melun n&#x27;est pas calculable ; deux abaques volets UP ont le même défaut, et les six panneaux masse s&#x27;arrêtent à 1150 kg alors que la MTOW est 1157. Commencer par l&#x27;atelier abaques (prolonger les courbes 0 ft vers le froid, puis les guides masse jusqu&#x27;à 1157 kg), enchaîner sur capacity = 91 du réservoir unique qui fausse la capacité carburant dès que la config réservoirs est cochée, et passer le reste en lot de nettoyage.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap oui">Atterrissage : oui</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 24 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GNAM-02" data-clos="0" data-champ="aircraft_data.performanceModels[0] et [2] — graphs[0].curves[0] (courbes « 0ft » de takeoff_50ft_flaps_up et takeoff_ground_roll_flaps_up)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GNAM-02</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0] et [2] — graphs[0].curves[0] (courbes « 0ft » de takeoff_50ft_flaps_up et takeoff_ground_roll_flaps_up)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Modèle 0 (passage 15 m, flaps UP) : courbe « 0ft » = 5 points, de x = 2,7272727272727257 °C à x = 28,697005242436724 °C. Modèle 2 (roulement, flaps UP) : courbe « 0ft » = 2 points seulement, x = 8,420115158567228 °C et x = 30,639212634230617 °C. Les deux panneaux déclarent xAxis.min = −40 °C.</dd>
-<dt>Attendu</dt><dd>Courbes 0 ft prolongées vers les OAT froides comme leurs voisines 1000 ft, qui démarrent respectivement à −6,29 °C et −3,58 °C.</dd>
-<dt>En vol</dt><dd>Les deux abaques volets rentrés renvoient une erreur au lieu d&#x27;une distance dès que l&#x27;OAT descend sous +2,7 °C (passage 15 m) ou +8,4 °C (roulement) au niveau de la mer. Variantes facultatives depuis le 23/08, mais si le pilote les sélectionne il n&#x27;obtient rien plutôt qu&#x27;un chiffre.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèles « Distance décollage — passage 15 m, Flaps UP » et « Distance sol décollage — Flaps UP » → panneau 1 → prolonger la courbe « 0ft » vers les OAT froides (et densifier celle du modèle 2, qui n&#x27;a que 2 points).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur (probe-F-GNAM.json, modèles index 0 et 2, condition « 0 °C / 0 ft / vent 0 ») : error = « Impossible de calculer Y pour X=0 sur la courbe &quot;0ft&quot; » sur les deux. Premiers points lus en base : 2,7273 et 8,4201 contre xAxis.min = −40.</dd>
-</dl><div class="notefait">✎ PARTIEL — Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : le modèle 2 (roulement Flaps UP) est prolongé vers le froid (courbe 0ft dès −18,2 °C ✓), MAIS le modèle 0 (passage 15 m Flaps UP) est INCHANGÉ : sa courbe 0ft démarre toujours à +2,7 °C alors que sa voisine 1000 ft descend à −6,3 °C. Reste ce seul modèle à prolonger dans l&#x27;atelier. ▸ 2e rapport 26/08 (« c&#x27;est fait ») — MAIS la base v4 est inchangée : la courbe 0ft du modèle 0 (passage 15 m Flaps UP) démarre toujours à +2,7 °C. Si vous l&#x27;avez prolongée dans l&#x27;atelier, la fiche n&#x27;a PAS été ré-enregistrée ensuite (dernier save 10:01) : re-passez par Enregistrer. Le modèle 2 reste ✓ (−18,2 °C).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GNAM-02) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 25 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-GNAM-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOFP</span><span class="mdl">Cessna F152</span><span class="spacer"></span>
