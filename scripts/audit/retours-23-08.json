@@ -231,8 +231,8 @@
  },
  {
   "itid": "F-GGZO-04",
-  "status": "note",
-  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). MOITIÉ FAITE : la racine fuelUsableCapacity est passée de 141 L à 152 L, alignée sur la variante par défaut — l'écart inexpliqué a disparu. RESTE : le réservoir « Reservoir d'aile Standard » ne porte TOUJOURS PAS de usableCapacity explicite. Ses 152 L utilisables viennent du champ legacy `capacity`, lu par défaut comme l'utilisable. C'est l'un des 11 réservoirs que la purge du 24/08 a délibérément épargnés, justement parce que ce champ y est le seul volume connu. Il faut saisir dans la fiche l'utilisable ET le total du manuel (163 L total est déjà là) pour que ce réservoir cesse de dépendre d'un champ obsolète. ▸ PARTIEL — le pilote corrige l'audit : les deux configs sont 163/152 et 204/189 (le 141 de l'audit était la valeur erronée d'import, disparue). Vérifié sur la fiche v5 fraîche (ré-enregistrement du 26/08 11:37) : racine = 163/152 ✓, réservoir Long Range = 204/189 ✓. Reste le réservoir Standard : usableCapacity absent (l'accesseur retombe sur la clé legacy capacity=152) — le script fix-ggzo-26-08.mjs pose 152 explicite et retire la legacy. Clos après le --apply."
+  "status": "fait",
+  "note": "Vérifié en base le 24/08 à 13:27 (extraction fraîche). MOITIÉ FAITE : la racine fuelUsableCapacity est passée de 141 L à 152 L, alignée sur la variante par défaut — l'écart inexpliqué a disparu. RESTE : le réservoir « Reservoir d'aile Standard » ne porte TOUJOURS PAS de usableCapacity explicite. Ses 152 L utilisables viennent du champ legacy `capacity`, lu par défaut comme l'utilisable. C'est l'un des 11 réservoirs que la purge du 24/08 a délibérément épargnés, justement parce que ce champ y est le seul volume connu. Il faut saisir dans la fiche l'utilisable ET le total du manuel (163 L total est déjà là) pour que ce réservoir cesse de dépendre d'un champ obsolète. ▸ PARTIEL — le pilote corrige l'audit : les deux configs sont 163/152 et 204/189 (le 141 de l'audit était la valeur erronée d'import, disparue). Vérifié sur la fiche v5 fraîche (ré-enregistrement du 26/08 11:37) : racine = 163/152 ✓, réservoir Long Range = 204/189 ✓. Reste le réservoir Standard : usableCapacity absent (l'accesseur retombe sur la clé legacy capacity=152) — le script fix-ggzo-26-08.mjs pose 152 explicite et retire la legacy. Clos après le --apply. ▸ Vérifié sur extraction fraîche (v6, fix-ggzo --apply, sauvegarde backups/fix-ggzo-2026-08-26T11-40-27) : le réservoir Standard porte usableCapacity=152 EXPLICITE et la clé legacy capacity a disparu — les deux configs sont désormais complètes au schéma moderne (163/152 et 204/189). Point entièrement soldé."
  },
  {
   "itid": "F-GGZO-06",
@@ -836,7 +836,7 @@
  },
  {
   "itid": "F-GGZO-16",
-  "status": "note",
-  "note": "Rapport pilote 26/08 : « faux, il est en inamovible » — confirmé par le système de rôles (role=\"fixed\" dans la Variante 204L). Le champ legacy type=\"optional\" est MENSONGER : le script fix-ggzo-26-08.mjs le supprime (le rôle fait foi). Clos après le --apply."
+  "status": "fait",
+  "note": "Rapport pilote 26/08 : « faux, il est en inamovible » — confirmé par le système de rôles (role=\"fixed\" dans la Variante 204L). Le champ legacy type=\"optional\" est MENSONGER : le script fix-ggzo-26-08.mjs le supprime (le rôle fait foi). Clos après le --apply. ▸ Vérifié sur extraction fraîche (v6, fix-ggzo --apply, sauvegarde backups/fix-ggzo-2026-08-26T11-40-27) : le champ legacy type=\"optional\" mensonger a disparu du Long Range — le rôle \"fixed\" (inamovible, confirmé pilote) fait foi."
  }
 ]
