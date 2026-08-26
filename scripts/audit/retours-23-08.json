@@ -672,7 +672,7 @@
  {
   "itid": "F-HSTR-11",
   "status": "note",
-  "note": "PARTIEL — les tables de montée non monotones ont été SUPPRIMÉES (vérifié : plus aucune opération climb/go_around, 24 tables restantes) ✓. Reste la paire ATTERRISSAGE 50 ft volets UP à 4000 ft / 10 °C : 1280 kg = 920 m contre 1310 kg = 910 m, toujours non monotone en base — à confirmer au manuel (effet d'arrondi possible) ou à corriger."
+  "note": "PARTIEL — les tables de montée non monotones ont été SUPPRIMÉES (vérifié : plus aucune opération climb/go_around, 24 tables restantes) ✓. Reste la paire ATTERRISSAGE 50 ft volets UP à 4000 ft / 10 °C : 1280 kg = 920 m contre 1310 kg = 910 m, toujours non monotone en base — à confirmer au manuel (effet d'arrondi possible) ou à corriger. ▸ Rapport 26/08 (2e) : re-coché avec le même commentaire — les tables de MONTÉE supprimées sont bien actées ✓. IL NE RESTE QU'UNE QUESTION, dans une table d'ATTERRISSAGE toujours en base (« Landing Distance 50 ft volets UP ») : à 4000 ft / 10 °C, le manuel publie-t-il bien 910 m à 1310 kg alors qu'il publie 920 m à 1280 kg (distance qui DIMINUE quand la masse augmente) ? Si oui (arrondi du POH) → je clos « valide » ; si non → corriger la cellule 910."
  },
  {
   "itid": "F-HSTR-12",
@@ -717,7 +717,7 @@
  {
   "itid": "F-HSTR-21",
   "status": "ouvert",
-  "note": "Coché « fait », MAIS c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 21/05). Correctif du code en chip, rien à faire côté pilote."
+  "note": "Coché « fait », MAIS c'est le bug d'APP lastModified (jamais rafraîchi au save — fiche du 26/08 encore datée du 21/05). Correctif du code en chip, rien à faire côté pilote. ▸ Re-coché le 26/08 : rien à faire côté pilote, confirmé — lastModified (21/05) ne bouge pas malgré vos ré-enregistrements du jour, c'est le bug d'app en chip. Sera clos avec le correctif de code."
  },
  {
   "itid": "F-HSTR-22",
