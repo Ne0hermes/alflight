@@ -57,9 +57,10 @@ const CAP_CLASS = { oui: 'oui', partiel: 'partiel', non: 'non' };
 function renderItem(reg, item, n) {
   const itid = `${reg}-${String(n).padStart(2, '0')}`;
   const sev = item.gravite;
-  const classePill = item.classe === 'a-confirmer'
+  const classePill = (item.classe === 'a-confirmer'
     ? '<span class="pill a-manuel">À confirmer au manuel</span>'
-    : '<span class="pill a-bloque">Erreur démontrée</span>';
+    : '<span class="pill a-bloque">Erreur démontrée</span>')
+    + (item.ajout ? '<span class="pill a-manuel">Nouveau 26/08</span>' : '');
   const r = retours[itid];
   const clos = r && CLOS.has(r.status);
   const noteHtml = r ? `<div class="notefait">${clos ? '✓' : '✎'} ${esc(r.note)}</div>` : '';
@@ -86,8 +87,13 @@ function renderAvion(a) {
   // ⚠️ NUMÉROTATION HISTORIQUE : tri par gravité PUIS numérotation — c'est
   // ainsi que les itids ont été assignés à l'origine, et ils sont FIGÉS
   // (tous les rapports du pilote les référencent). Ne jamais changer.
-  const tous = [...(a.items || [])]
-    .sort((x, y) => (SEV_ORDER[x.gravite] ?? 3) - (SEV_ORDER[y.gravite] ?? 3))
+  // Les items AJOUTÉS après coup (flag `ajout`, ex. passe finale du 26/08)
+  // sont numérotés APRÈS tous les items historiques — jamais intercalés,
+  // sinon la numérotation figée casserait.
+  const anciens = (a.items || []).filter((it) => !it.ajout);
+  const ajouts = (a.items || []).filter((it) => it.ajout);
+  const tri = (x, y) => (SEV_ORDER[x.gravite] ?? 3) - (SEV_ORDER[y.gravite] ?? 3);
+  const tous = [...[...anciens].sort(tri), ...[...ajouts].sort(tri)]
     .map((it, i) => ({ it, n: i + 1 }));
   // ✂️ ÉDITION CONSOLIDÉE (demande pilote 25/08) : les points réglés ET
   // vérifiés en base sont RETIRÉS de la page — elle ne montre que ce qui

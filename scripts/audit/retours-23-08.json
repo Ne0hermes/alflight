@@ -21,8 +21,8 @@
  },
  {
   "itid": "F-BXNG-12",
-  "status": "fait",
-  "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId)."
+  "status": "ouvert",
+  "note": "Rapport pilote 23/08 : classification vérifiée à l'écran — les 4 tables sont bien classées (décollage roulage volets UP, décollage 15 m volets UP, atterrissage 15 m LDG, atterrissage roulage LDG). Seul le LIBELLÉ de la 2e table est resté « Take-off Ground Roll » : à renommer, sans effet sur les calculs (le moteur lit l'operationId). ▸ ⚠️ RÉAPPARU (passe finale 26/08) : advancedPerformance.tables[1].table_name = « Take-off Ground Roll - Flaps UP », strictement identique au libellé de tables[0], alors que tables[1] porte operationId = classification = takeoff_50ft_flaps_up et des valeurs (422 / 506 / 605 / 744 m, pageNumber 68) qui sont bien celles du passage des 15 m — le roulage étant 224→340+ m dans tables[0]. La classification est correcte (motif de la clôture), mais le champ visé par l'itid — le libellé — porte toujours le nom du roulage. Même motif que F-BXQT-10."
  },
  {
   "itid": "F-HSTR-01",
@@ -111,13 +111,13 @@
  },
  {
   "itid": "F-GGZO-09",
-  "status": "ouvert",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxBaggageWeight = 50 est REVENU en base (updated_at 24/08 15h10 : réinjection par le cache local via deepMergeKeepExisting, entre la purge de 12h30 et les correctifs du soir). Purge complémentaire préparée (purge-complements.mjs)."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxBaggageWeight = 50 est REVENU en base (updated_at 24/08 15h10 : réinjection par le cache local via deepMergeKeepExisting, entre la purge de 12h30 et les correctifs du soir). Purge complémentaire préparée (purge-complements.mjs). ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La clé maxBaggageWeight n'apparaît plus nulle part dans la fiche (0 occurrence sur tout le JSON). Les limites vivent dans baggageCompartments[0] « Compartiment Principale » : maxWeight 54, arm 2,415, momentMax 130,41 = 54 × 2,415 — la purge du 24/08 tient."
  },
  {
   "itid": "F-GGZO-10",
-  "status": "ouvert",
-  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxAuxiliaryWeight = 20 revenu, même mécanisme et même remède que F-GGZO-09."
+  "status": "fait",
+  "note": "PURGE EFFECTUÉE le 24/08/2026 (commit 365636dc). Les champs maxBaggageWeight = 50 et maxAuxiliaryWeight = 20 ont été retirés des 13 fiches — ils étaient identiques partout, jamais saisis par le pilote, et les vraies limites vivent dans baggageCompartments + maxBaggageTotalMass (renseignés sur les 13 avions). Sauvegarde intégrale des 13 lignes prise avant écriture, relecture après : aucun autre champ n'a bougé. Avant d'écrire, une vérification adverse (15 agents, 5 angles) a fermé trois voies de résurrection : AircraftModule réécrivait encore maxBaggageWeight à chaque enregistrement, CentrogramReader créait encore un champ réservoir legacy, et isAircraftDataComplete exigeait les deux champs purgés. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : RÉOUVERT — maxAuxiliaryWeight = 20 revenu, même mécanisme et même remède que F-GGZO-09. ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La clé maxAuxiliaryWeight n'apparaît plus nulle part dans la fiche (0 occurrence). baggageCompartments[1] « Compartiment Secondaire » fait foi : maxWeight 23, arm 3,12, momentMax 71,76 = 23 × 3,12 — la purge du 24/08 tient."
  },
  {
   "itid": "F-GIEA-05",
@@ -206,8 +206,8 @@
  },
  {
   "itid": "F-HSTR-09",
-  "status": "ouvert",
-  "note": "Le champ legacy capacity = 155,2 du réservoir a été purgé le 24/08 (il ne servait plus : totalCapacity = 155 et usableCapacity = 147 étaient déjà là). L'ÉCART SIGNALÉ RESTE : la racine porte fuelCapacity = 155,2 et fuelUsableCapacity = 147,5, le réservoir porte 155 et 147. Le manuel donne 155,2 / 147,5 — ce sont les valeurs du réservoir qu'il faut corriger, pas la racine. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : REQUALIFIÉ ouvert — le réservoir porte désormais 155/147 mais la racine dit 155,2/147,5 (valeurs du manuel selon l'audit initial) : trancher 155,2/147,5 vs 155/147 au manuel, puis aligner réservoir OU racine. S'ajoute : weightBalance.cgLimits.aft = 2,59 contredit l'enveloppe (2,53) — purge complémentaire préparée."
+  "status": "fait",
+  "note": "Le champ legacy capacity = 155,2 du réservoir a été purgé le 24/08 (il ne servait plus : totalCapacity = 155 et usableCapacity = 147 étaient déjà là). L'ÉCART SIGNALÉ RESTE : la racine porte fuelCapacity = 155,2 et fuelUsableCapacity = 147,5, le réservoir porte 155 et 147. Le manuel donne 155,2 / 147,5 — ce sont les valeurs du réservoir qu'il faut corriger, pas la racine. ▸ Check-up final du 25/08 (13 vérificateurs sur extraction fraîche) : REQUALIFIÉ ouvert — le réservoir porte désormais 155/147 mais la racine dit 155,2/147,5 (valeurs du manuel selon l'audit initial) : trancher 155,2/147,5 vs 155/147 au manuel, puis aligner réservoir OU racine. S'ajoute : weightBalance.cgLimits.aft = 2,59 contredit l'enveloppe (2,53) — purge complémentaire préparée. ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Les deux côtés portent désormais les MÊMES chiffres : racine fuelCapacity = 155 et fuelUsableCapacity = 147 ; réservoir « Réservoir aile 1 » totalCapacity = 155, usableCapacity = 147 (clés : id, arm, name, type, momentAtFull, totalCapacity, usableCapacity — le legacy capacity 155,2 est purgé). Résolution à 155/147 et non 155,2/147,5 comme le suggérait l'attendu, mais l'écart signalé a disparu ; momentAtFull 324,75 = 147 × 0,84 × 2,63 cohérent, et 155 = somme de la config par défaut (tankVariants[0] « Configuration standard », isDefault true, réservoir unique)."
  },
  {
   "itid": "F-GGZO-01",
@@ -411,18 +411,18 @@
  },
  {
   "itid": "F-GNAM-22",
-  "status": "note",
-  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide (obligatoire — V finesse max) reste à saisir sur cet avion."
+  "status": "fait",
+  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide (obligatoire — V finesse max) reste à saisir sur cet avion. ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : bypassedFields = [« speeds.vglide »] : vglide (toujours chaîne vide) est désormais CERTIFIÉE absente du manuel par le pilote — conforme à la doctrine (vglide obligatoire SAUF si bypassée ; le contournement est un choix certifié, pas un défaut). vr = «» reste facultative (décision 24/08)."
  },
  {
   "itid": "F-GOFP-09",
-  "status": "note",
-  "note": "REQUALIFIÉ partiellement : vr et vapp sont FACULTATIVES (décision 24/08). Seule vglide reste à saisir."
+  "status": "fait",
+  "note": "REQUALIFIÉ partiellement : vr et vapp sont FACULTATIVES (décision 24/08). Seule vglide reste à saisir. ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : bypassedFields = [\"speeds.vglide\"] : vglide (toujours \"\") est désormais CERTIFIÉE absente du manuel — choix pilote, pas un défaut, cohérent avec l'item d'extraction « V finesse » found = false / accepted = false. vr = \"\", vapp = \"\" et initialClimb = \"\" restent vides mais sont FACULTATIVES (décision 24/08) ; l'item « Taux montée initial » 715 ft/min (p.68, confiance 95) reste non accepté, ce qui est conforme pour un champ facultatif. Le seul reliquat de l'item (« seule vglide reste à saisir ») est donc soldé par contournement certifié."
  },
  {
   "itid": "F-GBTU-06",
-  "status": "note",
-  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide reste à saisir."
+  "status": "fait",
+  "note": "REQUALIFIÉ partiellement : vr est FACULTATIVE (décision 24/08). Seule vglide reste à saisir. ▸ PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : vglide = \"\" MAIS bypassedFields = [\"speeds.vglide\"] (lignes 227-229) : certifiée absente du manuel par le pilote — conforme à la doctrine (vglide obligatoire SAUF bypassée). vr reste \"\" et est facultative (décision 24/08)."
  },
  {
   "itid": "F-HSTR-17",
@@ -493,5 +493,85 @@
   "itid": "F-GIEA-16",
   "status": "ouvert",
   "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 (10:29) est INCHANGÉE : equipmentSurv.transponderMode=« C » (singulier, posé en dur à l'initialisation) est toujours là et transponderModes (pluriel, celui que l'écran Équipements écrit) n'existe toujours pas. Même étape que F-GIEA-08 — se règlera avec elle."
+ },
+ {
+  "itid": "F-BXQT-11",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : fuelCapacity racine = 98 L désormais (était 85), conforme à l'attendu : la variante par défaut « Variante Réservoir 98L » (isDefault = true) contient le seul réservoir « Réservoir d'aile Standard » dont totalCapacity = 98 et usableCapacity = 85 ; fuelUsableCapacity racine = 85 L inchangé. Contenance physique et volume utilisable désormais distincts et cohérents."
+ },
+ {
+  "itid": "F-BXQT-14",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Les quatre bras à 0 ont disparu : weightBalance ne contient plus que fuelArm 1,07 / emptyWeightArm 0,813 / frontLeftSeatArm 1 / frontRightSeatArm 1 (baggageArm et auxiliaryArm ABSENTS), et arms.baggageAft = \"\" / arms.baggageFwd = \"\" (vidés). Aucun bras à 0 dans toute la fiche (vérifié par recherche exhaustive). Conforme à l'option « champs vidés » de l'attendu ; les compartiments dynamiques portent 1,63 m et 2,13 m."
+ },
+ {
+  "itid": "F-GBTU-03",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : speeds.vsTO = 48 kt désormais présent (ligne 32), correctement encadré : vso 44 ≤ vsTO 48 ≤ vs1 50."
+ },
+ {
+  "itid": "F-GBTU-04",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : additionalFuelTanks[0] : totalCapacity = 189, usableCapacity = 182 (aligné sur la racine fuelUsableCapacity = 182), momentAtFull = 316,2 = 182 × 0,72 × 2,413 — exactement l'attendu (316,20). La clé legacy capacity a en outre disparu du réservoir."
+ },
+ {
+  "itid": "F-GGZO-12",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La clé cgLimits (miroir plat racine, ex-0,89) n'existe plus : 0 occurrence de « cgLimits » dans toute la fiche, et weightBalance ne contient que 6 bras (fuelArm, emptyWeightArm, 4 sièges) sans cgLimits. La limite avant variable vit uniquement dans cgEnvelope.forwardPoints : 0,89 à 600 kg, 0,89 à 885 kg, 0,98 à 1043 kg (moments 534 / 787,65 / 1022,14, tous = masse × cg). Conforme à l'attendu « laissé vide »."
+ },
+ {
+  "itid": "F-GNAM-16",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Les 3 bras legacy à 0 ont DISPARU : arms ne contient plus que {empty 2,241, fuelMain 2,413, rearSeats 3, frontSeats 2,045} (plus de baggageFwd/baggageAft) et weightBalance ne contient plus que {fuelArm 2,413, emptyWeightArm 2,241, rearLeftSeatArm 3, frontLeftSeatArm 2,045, rearRightSeatArm 3, frontRightSeatArm 2,045} (plus de baggageArm). La source baggageCompartments[0] est intacte : arm 3,627 m, maxWeight 91, momentMax 330,06 (= 91 × 3,627)."
+ },
+ {
+  "itid": "F-GOFP-07",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Purge complète constatée (option prévue par l'attendu) : la clé cgLimits n'existe plus NULLE PART dans la fiche (recherche exhaustive : 0 occurrence de « cgLimits ») et weightBalance ne contient plus que {fuelArm: 1.08, emptyWeightArm: 0.765, frontLeftSeatArm: 0.9416, frontRightSeatArm: 0.9416} — plus de weightBalance.cgLimits ni de forwardVariable. L'enveloppe vit dans cgEnvelope, conforme à l'attendu : avant 0.79 @500 kg (moment 395), 0.79 @612 kg (483.48), 0.8349 @758 kg (632.85) ; arrière 0.93 constant (aftMaxMoment 704.94 = 758×0.93, aftMinMoment 465 = 500×0.93)."
+ },
+ {
+  "itid": "F-GOFP-13",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Les trois champs à 0 ont DISPARU : arms = {empty: 0.765, fuelMain: 1.08, frontSeats: 0.9416} — plus de clé rearSeats ; weightBalance = {fuelArm: 1.08, emptyWeightArm: 0.765, frontLeftSeatArm: 0.9416, frontRightSeatArm: 0.9416} — plus de rearLeftSeatArm ni rearRightSeatArm (recherche exhaustive « rearSeat / rearLeftSeatArm / rearRightSeatArm » : 0 occurrence). additionalSeats = [], cohérent avec le biplace."
+ },
+ {
+  "itid": "F-GOVE-08",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : L'attendu « vidés » est satisfait : arms.baggageFwd = \"\" et arms.baggageAft = \"\" (chaînes vides, plus aucun 0), et weightBalance = {fuelArm 1.1027, emptyWeightArm 0.3798, rearLeftSeatArm 1.1455, frontLeftSeatArm 0.394, rearRightSeatArm 1.1455, frontRightSeatArm 0.394} ne contient plus ni baggageArm ni auxiliaryArm (recherche sur toute la fiche : zéro occurrence). Le compartiment réel reste cohérent : arm 1.2651 m, maxWeight 40 kg, momentMax 50.6 = 40 × 1.2651."
+ },
+ {
+  "itid": "F-GUKQ-04",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La table cruise_speed a été retirée : advancedPerformance ne contient plus que 4 tables (landing_ground_roll_flaps_landing, landing_50ft_flaps_landing, takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to), aucun operationId cruise dans la fiche, extractionMetadata.totalTables = 4 (lastModified 2026-08-25T10:21:48). cruiseSpeedKt = 108 conservé, cohérent avec baseFactor \"0.556\" (= 60/108). L'attendu offrait explicitement l'alternative « retrait pur et simple de la table » : satisfaite."
+ },
+ {
+  "itid": "F-GUVV-08",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La clé cgLimits a DISPARU de toute la fiche : grep « cgLimits » = 0 occurrence (ni racine, ni weightBalance, qui ne contient plus que fuelArm 2,63, emptyWeightArm 2,515 et les 4 bras sièges). L'attendu offrait « 2,40 / 2,59, ou champ vidé » : la branche « champ vidé » est satisfaite. cgEnvelope reste seule et cohérente : forward 2,40 (940/980 kg) → 2,46 (1150 kg), aft 2,59 constant, moments 2256/2352/2829 exacts."
+ },
+ {
+  "itid": "F-HFGI-09",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : Les trois bras nuls ont DISPARU : arms ne contient plus que { empty: 0.3226, fuelMain: 0.82268, rearSeats: 1.1875, frontSeats: 0.4037 } (aucune clé baggageAft / baggageFwd) et weightBalance ne contient plus que { fuelArm 0.82268, emptyWeightArm 0.3226, rearLeftSeatArm 1.1875, frontLeftSeatArm 0.4037, rearRightSeatArm 1.1875, frontRightSeatArm 0.4037 } (aucune clé baggageArm). L'attendu offrait « 1,4652 m, ou champs vides » : champs supprimés = conforme. baggageCompartments[0].arm = 1.4652 reste la source."
+ },
+ {
+  "itid": "F-HFGI-12",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : La copie divergente n'existe plus : « cgLimits » (et donc weightBalance.cgLimits.forwardVariable) a 0 occurrence dans toute la fiche fraîche. Il ne reste que la source de vérité cgEnvelope.forwardPoints (cg 0.45 / moment 472.5 à 1050 kg, id 1779264246929.7803). Suppression du miroir = conforme à la doctrine (champ absent plutôt que copie fausse)."
+ },
+ {
+  "itid": "F-HSTR-04",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : 0 occurrence de « cgLimits » dans toute la fiche fraîche : les miroirs cgLimits.aft et weightBalance.cgLimits.aft à 2,59 ont été supprimés. Seule subsiste cgEnvelope, cohérente : aftCG = aftMinCG = aftMaxCG = 2,53 ; aftPoints [940→2,53 ; 1310→2,53] ; aftMinMoment 2378,2 = 940×2,53 ; aftMaxMoment 3314,3 = 1310×2,53. La contradiction 2,59/2,53 a disparu par suppression des miroirs (la valeur 2,53 elle-même reste sous réserve du manuel)."
+ },
+ {
+  "itid": "F-HSTR-05",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : weightBalance ne contient plus que 6 clés de bras (fuelArm 2,63, emptyWeightArm 2,4231, rearLeftSeatArm 3,25, frontLeftSeatArm 2,3, rearRightSeatArm 3,25, frontRightSeatArm 2,3) — weightBalance.cgLimits.forwardVariable a disparu. La source cgEnvelope.forwardPoints[2] (même id 1761751405175.8425) porte bien {weight \"1310\", cg 2,469, moment 3234,39} : le miroir divergent 1300/3209,7 n'existe plus."
+ },
+ {
+  "itid": "F-HSTR-08",
+  "status": "fait",
+  "note": "PASSE FINALE 26/08 — constaté CORRIGÉ EN BASE (ré-enregistrements du 25/08, sans rapport coché) : arms = {empty 2,4231, fuelMain 2,63, rearSeats 3,25, frontSeats 2,3} : baggageAft et baggageFwd ABSENTS ; weightBalance ne porte plus aucune clé baggageArm ; scan complet arms.* et weightBalance.* : aucun bras à 0. Les compartiments font foi : baggageCompartments = [3,65 m / 30 kg / momentMax 109,5 ; 4,32 m / 5 kg / momentMax 21,6]."
  }
 ]

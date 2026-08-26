@@ -219,6 +219,30 @@
     "enVol": "Aucun effet sur les calculs : le moteur lit la racine et _metadata. Mais un écran de revue qui lirait le bloc weights afficherait des soutes sans limite et une masse mini absente, et l'horodatage annoncé au pilote a deux mois de retard sur la dernière modification réelle.",
     "action": "À la prochaine ouverture de la fiche, enregistrer une fois depuis l'onglet Masse & centrage pour resynchroniser les miroirs, et vérifier que l'horodatage affiché suit.",
     "demontrePar": "Miroirs vides face à des sources renseignées, relevés sur la base fraîche du 23/08 : racine minTakeoffWeight 527,1 vs weights.minTakeoffWeight \"\" ; baggageCompartments [54 ; 18] vs weights.maxBaggageAft/Fwd \"\" ; _metadata.units complet vs units {} ; lastModified 2026-06-23 vs updated_at 2026-08-21. Chaîne de lecture confirmée dans computeWeightBalance.js:47-51, qui lit aircraft.minTakeoffWeight à la racine."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[1].type",
+    "trouve": "Le réservoir « Réservoir d'aile Long Range » (id 1787318931632.6404, arm 1,07, totalCapacity 144, usableCapacity 132,5, momentAtFull 102,08 = 132,5 × 0,72 × 1,07) ne porte AUCUNE clé type, alors que le réservoir jumeau additionalFuelTanks[0] « Réservoir d'aile Standard » porte type = « main ». Il porte en revanche une clé optional = false absente du jumeau.",
+    "attendu": "Champ type renseigné comme sur le réservoir standard (même motif que F-BXQT-17 sur le réservoir Étendu) — l'asymétrie de structure entre deux réservoirs de même nature est visible dans la fiche seule.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.cruiseSpeedKt vs aircraft_data.speeds.vno",
+    "trouve": "cruiseSpeedKt = 105 kt, soit 1 kt AU-DESSUS de speeds.vno = 104 kt (sommet de l'arc vert). La valeur 105 vient de l'extraction acceptée « Vitesse de croisière (75% puissance) » = 105 (sourcePage 51, confidence 95) et baseFactor « 0.571 » = 60/105 est cohérent avec elle : la fiche est fidèle à son extraction, mais croisière > VNO.",
+    "attendu": "Confirmation au manuel : si 105 kt est une vitesse vraie (TAS) de croisière en altitude face à une VNO en vitesse indiquée, il n'y a rien à corriger ; si les deux sont des vitesses indiquées, la croisière déclarée dépasse l'arc vert et doit être revue.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -420,6 +444,30 @@
     "enVol": "Aucune conséquence de calcul (le bras et les contenances sont exacts, et le bras principal arms.fuelMain = 1,07 m est renseigné) : c'est le nom affiché au pilote lorsqu'il choisit la variante 144 L.",
     "action": "Fiche avion > Carburant : corriger l'orthographe du nom du réservoir et renseigner son type, à l'occasion de la mise au propre.",
     "demontrePar": "Asymétrie interne démontrée entre deux entrées du même tableau : additionalFuelTanks[0] porte type = « main », additionalFuelTanks[1] n'a aucune clé type ; le nom contient « Etandu » là où les autres libellés de la fiche sont accentués correctement (« Réservoir d'aile Standard », « Aéro-club Melun-Villaroche »)."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.speeds.stallByBank.landing.b20 (face à speeds.vso)",
+    "trouve": "stallByBank.landing.b20 = 42 kt, INFÉRIEUR à vso = 43 kt (décrochage à 0° d'inclinaison, même configuration volets atterrissage). Par ailleurs stallByBank.clean.b20 = 49 = vs1 = 49 (aucune majoration à 20°), alors que stallByBank.takeoff.b20 = 44 > vsTO = 42 suit bien la physique.",
+    "attendu": "Un décrochage à 20° d'inclinaison supérieur ou égal au décrochage à 0° dans la même configuration (facteur ≈ 1,03, soit ≈ 44 kt pour vso 43). À vérifier au manuel C150M : la table de décrochage par inclinaison est peut-être publiée en CAS alors que vso/vs1 sont en IAS, ce qui expliquerait l'écart sans erreur de saisie.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "minTakeoffWeight (racine) / weights.minTakeoffWeight / cgEnvelope.aftMinWeight",
+    "trouve": "500 kg aux trois emplacements (plus cgEnvelope.forwardPoints[0].weight = 500), alors que emptyWeight = 513,5 kg : le plancher de l'enveloppe et la « masse mini au décollage » sont SOUS la masse à vide de l'avion. Les trois valeurs sont cohérentes entre elles et les moments de l'enveloppe sont justes (500 × 0,951 = 475,5 ; 500 × 0,798 = 399).",
+    "attendu": "Confirmation que le centrogramme du manuel C150M est bien publié à partir de 500 kg (auquel cas la saisie est fidèle et seul le libellé « minTakeoffWeight » est trompeur) ; une masse au décollage inférieure à la masse à vide étant physiquement impossible, sinon plancher ≥ 513,5 kg. Même motif que F-GGZO-15 (600 kg vs 648 kg).",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -610,6 +658,66 @@
     "enVol": "Aucune conséquence immédiate ; si une pesée plus récente existe, la masse à vide et le bras utilisés pour tous les centrages sont périmés.",
     "action": "Demander au club la dernière fiche de pesée et, si elle est postérieure, remplacer le PDF et les valeurs de masse à vide et de bras.",
     "demontrePar": "Point de vérification externe, non démontrable sur les données : la fiche est interne cohérente (690 × 2,198 = 1516,62) et l'échéance d'alerte n'est pas atteinte. Seul le club peut dire si une pesée plus récente existe."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "performanceModels[0..3].data.graphs[1].axes.xAxis.max (les 4 panneaux masse)",
+    "trouve": "xAxis = {min 750, max 1050, step 100, unit kg, reversed} sur les 4 panneaux masse (lignes 2433, 3729, 5205, 6419), alors que la fiche déclare maxTakeoffWeight = 1055 et weights.mtow = 1055 : la MTOW tombe HORS du domaine tracé.",
+    "attendu": "Axe et guides masse couvrant au moins 1055 kg — même défaut que F-GIEA-10, rapporté par l'import du preset F-GIEA du 25/08.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "performanceModels[0..3].data.graphs[0].outputUnit",
+    "trouve": "outputUnit = \"m\" sur les 4 graphes primaires (lignes 2425, 3721, 5197, 6411 ; outputKind \"distance\") alors que TOUS les yAxis et sharedY de la fiche sont en unit \"ft\" (échelles 0-2400 et 500-4000).",
+    "attendu": "outputUnit = \"ft\", aligné sur l'unité réelle des axes Y — même défaut que F-GIEA-14, hérité de l'import.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "performanceModels[1..3].data.graphs[*].axes.yAxis.title et data.metadata.sharedY.title",
+    "trouve": "Titre d'axe Y = \"altitude\" sur les 3 panneaux ET le sharedY des modèles 1, 2 et 3 (lignes 3478, 3741, 4127, 4907, 4964, 5217, 5479, 6121, 6178, 6431, 6725, 7439) pour des axes de DISTANCE ; seul le modèle 0 porte \"takeoff_distance_ground\".",
+    "attendu": "Titres d'axe Y de type distance (takeoff_distance_ground / takeoff_50ft) — même défaut que F-GIEA-14, hérité de l'import.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "performanceModels[0..3].importedPerformanceFrom / data.metadata.aircraftModel",
+    "trouve": "Les 4 modèles portent importedPerformanceFrom = {registration \"F-GIEA\", presetId 8a95f8d8, date 2026-08-25T10:14} et aircraftModel/modelName = \"PA 28 Cadet\", alors que la fiche est model = \"PA 28-161\" (F-GBTU). Les referenceCases (ex. modèle 0 : expected 1150 à 27 °C, masse 1055, vent 15 kt) proviennent du manuel du Cadet.",
+    "attendu": "Confirmation pilote que les abaques du manuel du PA 28 Cadet F-GIEA sont bien identiques à celles du manuel du F-GBTU — sinon toutes les distances de décollage calculées seraient celles d'un autre appareil.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "utilityCategory.mtow / utilityCategory.mlw",
+    "trouve": "mtow = 885 et mlw = 885 (enabled = false, lignes 2149-2152), valeur exactement égale au point de cassure 885 kg de l'enveloppe avant (forwardPoints[1].weight = 885) — évoque une recopie.",
+    "attendu": "À confirmer au manuel (catégorie utilitaire d'un PA-28-161 : 2020 lb ≈ 916 kg) ; champ inerte tant que enabled = false.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -789,6 +897,18 @@
     "enVol": "Aucune conséquence de calcul : la bande 600-648 kg est simplement inatteignable, et la limite avant y est constante (0,89 m) comme juste au-dessus. Le seul effet est un diagramme de centrage qui s'étend sous une masse que l'avion ne peut pas atteindre.",
     "action": "Étape Masse & centrage → vérifier au manuel la masse minimale du diagramme de centrage et, si besoin, remonter le plancher à la masse à vide.",
     "demontrePar": "Relation numérique interne à la fiche : minTakeoffWeight 600 < emptyWeight 648. Classé a-confirmer car un plancher d'enveloppe sous la masse à vide n'est pas en soi une erreur — il faut le diagramme du manuel pour trancher. Point NOUVEAU au 23/08, jamais listé auparavant."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[1].type / additionalFuelTanks[1].optional",
+    "trouve": "Sur le réservoir « Reservoir d'aile Long Range » : type = \"optional\" alors que le booléen optional = false sur le même objet ; le réservoir jumeau [0] « Standard » porte type = \"main\" avec optional = false. Le reste du réservoir est cohérent (totalCapacity 204, usableCapacity 189, arm 1,222, momentAtFull 166,29 = 189 × 0,72 × 1,222) et il est bien porté par la variante non-défaut « Variante 204L ».",
+    "attendu": "Une sémantique unique : soit type reflète la catégorie du réservoir et le booléen optional doit être aligné (ou retiré comme legacy), soit type doit valoir « main » comme sur le jumeau — deux clés du même objet ne peuvent pas dire à la fois « optionnel » et « non optionnel ».",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -990,6 +1110,30 @@
     "enVol": "Pas de vitesse de rotation sur la fiche de vol : elle se prend de mémoire au décollage.",
     "action": "Fiche avion → Vitesses : saisir VR après relecture des p21-22.",
     "demontrePar": "Champ vide sur la base fraîche ; référencé comme requis (poids 2) dans aircraftCompleteness.js. Classé à-confirmer parce que le 55 kt vient d'un retour et non d'une lecture directe du manuel."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[0] (« Réservoir principal ») — usableCapacity absent / capacity legacy discordant",
+    "trouve": "Le réservoir unique porte capacity = 182, totalCapacity = 189 et AUCUNE clé usableCapacity. Deux contenances différentes coexistent donc sur le même réservoir sans champ « utilisable » explicite : le legacy capacity (historiquement la contenance totale) porte ici la valeur UTILISABLE — preuve interne : racine fuelUsableCapacity = 182 et momentAtFull = 316,20 = 182 × 0,72 × 2,413 (aligné sur 182, pas sur 189). L'accesseur (usableCapacity ?? capacity) ne tombe juste que par accident de valeur.",
+    "attendu": "usableCapacity = 182 explicite sur le réservoir (totalCapacity = 189 est cohérent avec la racine fuelCapacity = 189, somme de la configuration par défaut « Configuration standard » à réservoir unique), et le legacy capacity retiré ou réaligné sur la contenance totale — même reste à faire que sur F-GGZO-04.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.speeds.initialClimb",
+    "trouve": "initialClimb = 63, strictement identique à speeds.vx = 63 kt. L'item d'extraction du même champ (label « Taux montée initial », aircraftPath speeds.initialClimb) déclare pourtant targetUnit = « ft/min », value 63, confidence 0, accepted = true — 63 ft/min serait absurde pour un PA-28-161 de 160 ch, et l'égalité exacte avec Vx évoque une recopie de la case voisine (même motif que F-GNAM-10).",
+    "attendu": "Champ facultatif : soit la vitesse de montée initiale du manuel si le champ est bien une vitesse en kt (63 = Vx est alors plausible mais à confirmer), soit le champ vidé ; l'ambiguïté d'unité (kt vs ft/min) ne peut être tranchée qu'au manuel de vol.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -1246,6 +1390,42 @@
     "enVol": "Pas de VR affichée au briefing décollage et pas de vitesse de plané disponible en cas de panne moteur — deux repères de briefing qui manquent sur un avion utilisé en école.",
     "action": "Étape Vitesses → saisir VR et V plané d'après le manuel de vol AM.",
     "demontrePar": "Champs obligatoires vides selon le registre de l'application lui-même : src/features/aircraft/utils/aircraftCompleteness.js:167 (speeds.vr, severity REQUIRED, poids 2) et :171 (speeds.vglide, severity REQUIRED, poids 1) ; valeurs lues en base : chaînes vides."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.minTakeoffWeight (racine) vs aircraft_data.weights.minTakeoffWeight vs aircraft_data.cgEnvelope.aftMinWeight",
+    "trouve": "Racine minTakeoffWeight = 732,2 kg, strictement égale à emptyWeight = 732,2 — motif « plancher = masse à vide » fabriqué — alors que le miroir weights.minTakeoffWeight = «» (vide) et que l'enveloppe de centrage démarre à 700 kg (aftMinWeight = « 700 », forwardPoints[0].weight = « 700 », moment 1459,5 = 700 × 2,085). Trois bornes basses divergentes : 732,2 / vide / 700. Même motif que F-BXNG-19, F-GOFP-08 et F-GBTU-11 sur les autres avions.",
+    "attendu": "Une seule borne basse — 700 kg si c'est bien le début du centrogramme du manuel — ou champ vide/absent partout ; jamais une recopie de la masse à vide.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.lastModified",
+    "trouve": "lastModified = 2026-06-12T02:51:44.774Z alors que la même fiche contient des objets créés APRÈS cette date : performanceModels[3].createdAt = 2026-06-15T07:14:25.202Z, [4] = 2026-06-15T07:27:30.896Z, [5] = 2026-06-15T07:43:04.867Z ; et la ligne porte updated_at = 2026-08-24T15:11:37.883 (_metadata.exportedAt = 2026-08-24T15:11:37.710Z). L'horodatage interne est antérieur de 3 jours aux créations qu'il est censé couvrir.",
+    "attendu": "Horodatage de dernière modification au moins égal à la plus récente modification interne de l'objet (15/06/2026) — même motif que F-GOVE-10.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.performanceModels[1].data.graphs[1].curves[].name (panneau masse de takeoff_50ft_flaps_to)",
+    "trouve": "Série de guides masse DISCONTINUE : noms « 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11 » — le guide « 4 » manque entre « 3 » (x 955,6→1145,6) et « 5 » (x 954,5→1145,9), alors que les panneaux masse des 5 autres modèles portent des séries continues (« courbe 0 »–« courbe 8 », 0–7, 1–8, 1–6, 1–6).",
+    "attendu": "Série continue de guides — vérifier sur la planche du manuel si un guide a réellement été omis à la numérisation (trou d'interpolation dans l'éventail) ou s'il s'agit d'un simple saut de numérotation sans tracé manquant.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -1414,6 +1594,42 @@
     "enVol": "Aucun : c'est bien LFOB qui est utilisé. La trace MANEX contredit néanmoins la fiche et rejouer l'extraction écraserait la base d'attache.",
     "action": "Écran d'extraction MANEX : corriger ou dé-accepter l'item « homeBase » pour qu'il porte LFOB.",
     "demontrePar": "Comparaison item par item des 19 items d'extraction acceptés avec la valeur stockée : 16 concordent exactement (manufacturer, model, registration, engineType, horsepower, wakeTurbulenceCategory, fuelType, fuelUsableCapacity 93, fuelConsumption 20, cruiseSpeedKt 106, maxBaggageTotalMass 54, compatibleRunwaySurfaces, vfeLdg 85, vno 111…), trois divergent : homeBase (LFGT ≠ LFOB), fuelCapacity (98 ≠ 235, cf. item carburant) et vne (171 ≠ 149, cf. item vitesses). L'item accepté LFGT porte une confiance de 0 et aucune page source."
+   },
+   {
+    "gravite": "majeur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.approvedOperations (32 booléens)",
+    "trouve": "Les 32 booléens sont TOUS à false, y compris vfrDay, training, elt, firstAidKit et les 3 extincteurs — alors que la même fiche déclare equipmentCom.vhf1 = true, vhf2 = true et equipmentNav vor/dme/ils/gnss = true, hasManex = true, avion de club en service. (specialCapabilities est aussi intégralement à false, plausible pour un F152.)",
+    "attendu": "Au minimum vfrDay = true, plus l'ELT et les équipements de survie réellement embarqués — même motif que F-BXNG-11 / F-GBTU-10 / F-GGZO-08, jamais couvert par un point F-GOFP.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.lastModified",
+    "trouve": "lastModified = 2026-06-10T14:34:15.830Z, alors que la même fiche porte advancedPerformance.extractionMetadata.lastModified = 2026-08-23T14:38:58.219Z, _metadata.exportedAt = 2026-08-24T15:12:13.473Z et que la row porte updated_at = 2026-08-24T15:12:13.714 : l'horodatage de dernière modification est antérieur de 2 mois et demi à une modification enregistrée À L'INTÉRIEUR du même objet.",
+    "attendu": "lastModified au moins égal à la plus récente modification interne (23-24/08) — même motif que F-GOVE-10, contradiction interne à la fiche.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.speeds.vsTO et aircraft_data.speeds.vs1",
+    "trouve": "vsTO = 40 kt et vs1 = 40 kt, strictement identiques (vso = 35 kt — l'ordre vso ≤ vsTO ≤ vs1 est respecté). Les items d'extraction « VS T/O » et « VS1 » portent tous deux found = false / accepted = false : les deux 40 sont des saisies manuelles identiques, sans source d'extraction.",
+    "attendu": "Si le manuel F152 publie une vitesse de décrochage volets décollage distincte, vsTO doit se situer entre vso (35) et vs1 (40) ; sinon l'égalité est légitime (même motif que F-GNAM-11) — à trancher au manuel.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -1538,6 +1754,30 @@
     "enVol": "Aucun effet sur les calculs. Deux conséquences mineures : la fiche s'affiche comme modifiée le 18/06 alors qu'elle l'a été le 21/08 ; et lastModified sert d'arbitre d'ancienneté dans la résolution des doublons d'avion (core/contexts/index.jsx:304-312, recordTime), donc une copie locale plus récente l'emporterait sur cet enregistrement en cas de doublon d'import. Le décalage signale surtout que les corrections du 21/08 (ré-import Excel, règles de vent) n'ont pas transité par l'application.",
     "action": "Rien à saisir : rouvrir puis re-valider la fiche dans l'application une fois les corrections ci-dessus faites — la sauvegarde rafraîchira lastModified et _metadata.savedAt.",
     "demontrePar": "Contradiction interne d'horodatage : lastModified (2026-06-18) antérieur à extractionMetadata.lastModified (2026-08-21T12:00:04) et à _metadata.exportedAt (2026-08-21T12:10:56) portés par le même objet aircraft_data."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.speeds.vsTO + aircraft_data.bypassedFields",
+    "trouve": "speeds.vsTO = 48 kt (valeur plausible et bien ordonnée : vso 45 ≤ vsTO 48 ≤ vs1 51) ET bypassedFields = [\"speeds.vsTO\"] — le champ est simultanément renseigné et certifié « absent du manuel ». Même motif que F-BXQT-04 (bypass + valeur).",
+    "attendu": "Un seul état : la valeur 48 conservée et l'entrée « speeds.vsTO » retirée de bypassedFields (cas attendu, F-GOVE-02 ayant été corrigé en base par saisie de la valeur), ou le champ vidé si la certification d'absence est le vrai choix pilote.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.equipmentSurv.transponderModes",
+    "trouve": "transponderModes = « S » — chaîne de caractères en majuscule, issue de l'item d'extraction « Modes transpondeur (A/C/S) » accepté (value « S », sourcePage 16, confidence 95). Les fiches passées par l'écran Équipements stockent un tableau en minuscules (F-BXQT : [\"c\"], F-HSTR : [\"s\"]). Aucune clé singulière transponderMode (c'est conforme) et pas de contradiction interne — uniquement un format hétérodoxe.",
+    "attendu": "Tableau [\"s\"] (les modes réellement à bord, confirmés par le pilote), pour que l'écran Équipements relise et réécrive le champ sans le perdre.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -1706,6 +1946,18 @@
     "enVol": "Ambiguïté d'affichage seulement : le champ est saisi et présenté comme une vitesse par le wizard, donc lu en kt par le pilote. Le risque est celui d'une future reprise du champ par le mapper, qui le considère comme un taux de montée.",
     "action": "Carte avion > Vitesses : confirmer que 65 désigne bien des nœuds, et faire trancher le schéma d'extraction côté projet.",
     "demontrePar": "Conflit de schéma interne au projet, inchangé en base : Step2Speeds.jsx définit initialClimb comme « V Montée initiale » en unité de vitesse, tandis que manexExtractionMapper.js l.211 déclare le même chemin « Taux montée initial » en ft/min — l'item d'extraction correspondant porte d'ailleurs 570 (originalValue 1200 « tr/min »), accepté mais non reporté."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.version et aircraft_data.lastModified",
+    "trouve": "aircraft_data.version = 2 et aircraft_data.lastModified = \"2026-08-16T13:27:39.350Z\", alors que la même fiche porte row version = 3, updated_at = \"2026-08-25T10:22:13.687\", _metadata.exportedAt = \"2026-08-25T10:22:13.350Z\" et un _updateHistory enregistrant l'écriture du 25/08 (9 groupes de champs, \"version\": 3).",
+    "attendu": "Miroirs alignés sur la dernière écriture (version 3, 25/08) ou supprimés au profit des champs de la row — un version/lastModified interne périmé contredit l'historique que la fiche porte elle-même.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -1896,6 +2148,42 @@
     "enVol": "Aucun effet sur le calcul (le moteur utilise la valeur de famille 1 à 8 pour l'ordre des guides). Mais en atelier, « 1 kg » se lit comme une courbe à 1 kg dans un panneau gradué en centaines de kilos.",
     "action": "Renommer les 8 guides en « 1 » à « 8 » dans le gestionnaire de courbes du panneau masse.",
     "demontrePar": "Unité incohérente avec le champ voisin : suffixe « kg » sur des guides dont la valeur de famille (1 à 8) est sans rapport avec l'axe des masses 850–1150 kg du même panneau ; nommage divergent des 3 autres modèles de la même fiche."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.speeds.vx / aircraft_data.speeds.vy",
+    "trouve": "vx = 72 kt et vy = 72 kt (lignes 22-23), strictement égales — Vx et Vy ne convergent qu'au plafond de propulsion, jamais au niveau de la mer. Champs facultatifs mais saisis. Coïncidence supplémentaire : même valeur 72 que le quadruplet vr=vx=vy=initialClimb du F-HSTR (autre DA40).",
+    "attendu": "Les Vx et Vy propres du manuel DA40 TDI (Vx strictement inférieure à Vy), ou champs facultatifs vidés.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "majeur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.weighingReport.certificationDate",
+    "trouve": "« 2012-06-20 », soit 14 ans et 2 mois au 26/08/2026 — AU-DELÀ du seuil d'alerte de 10 ans de l'application (seul avion de la flotte dans ce cas). PDF joint : « fiche de pesee guvv.pdf », 670 478 octets, uploadé le 21/05/2026, hasData = true. C'est cette pesée qui fonde emptyWeight 796,5 kg et arms.empty 2,515 m (moment 2003,198 = 796,5 × 2,515, cohérent).",
+    "attendu": "La date de la dernière pesée en vigueur — confirmer qu'aucune pesée plus récente que 2012 n'existe au club, ou corriger la date si le champ porte autre chose que la date de pesée.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.horsepower",
+    "trouve": "horsepower = 178, valeur strictement identique à speeds.vne = 178 kt (lignes 128 et 27) — motif de recopie de champ voisin. Un DA40 TDI développe 135 ch (Thielert/CD-135) ou 168 ch (DA40 NG / AE300), pas 178.",
+    "attendu": "La puissance réelle du moteur au manuel (vraisemblablement 135 ch pour un DA40 TDI), la VNE 178 kt restant inchangée.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -2086,6 +2374,42 @@
     "enVol": "Aucune sur les calculs, mais le contrôle d'immatriculation reste marqué « passé outre » sur un avion dont l'immatriculation est parfaitement renseignée.",
     "action": "Vérifier qu'aucun doublon F-HDIM ne subsiste dans la flotte, puis retirer la clé « registration » du tableau.",
     "demontrePar": "Contradiction interne : registration = \"F-HDIM\" est renseignée et non vide à la racine comme dans aircraft_data ; le contournement enregistré n'a plus d'objet."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[0] (« Réservoir Standard 162L ») — capacity vs usableCapacity",
+    "trouve": "Le réservoir de la variante PAR DÉFAUT porte capacity = 151 (clé legacy) + totalCapacity = 162 mais AUCUNE clé usableCapacity, alors que ses deux jumeaux portent le schéma moderne complet : « Réservoir Long Rang 204L » totalCapacity 204 / usableCapacity 189 et « Réservoir Integral Tank 257L » totalCapacity 257 / usableCapacity 234, sans capacity. La racine fuelUsableCapacity = 151 ne tient que par l'accesseur legacy (usableCapacity ?? capacity). momentAtFull 132,64 = 151 × 0,72 × 1,22, cohérent avec 151.",
+    "attendu": "usableCapacity = 151 explicite sur le réservoir standard et clé legacy capacity retirée — même motif résiduel que F-GGZO-04 (le motif banni strict « capacity + totalCapacity + usableCapacity ensemble » n'est pas constitué, usableCapacity manquant).",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.minTakeoffWeight (racine) vs weights.minTakeoffWeight vs cgEnvelope.aftMinWeight",
+    "trouve": "Trois bornes basses divergentes dans la même fiche : minTakeoffWeight racine = 706,5 (exactement égal à emptyWeight 706,5 — miroir fabriqué, motif F-BXNG-19), weights.minTakeoffWeight = \"\" (vide), cgEnvelope.aftMinWeight = \"600\" avec forwardPoints[2].weight = \"600\" / cg 0,89 / moment 534 (= 600 × 0,89). Le plancher d'enveloppe 600 kg est en outre INFÉRIEUR à la masse à vide 706,5 kg.",
+    "attendu": "Une seule borne basse (celle du diagramme du POH si publiée, sinon champs vides) — le miroir racine 706,5 recopié de la masse à vide doit disparaître ; le départ du centrogramme à 600 kg (sous la masse à vide) reste à confirmer au POH.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[1].name / additionalFuelTanks[1..2].type",
+    "trouve": "name = « Réservoir Long Rang 204L » (faute : « Long Range ») ; et le champ type est ABSENT sur les réservoirs [1] (204L) et [2] (257L) alors que le réservoir [0] porte type = \"main\" — chacun étant pourtant l'unique réservoir de sa variante (tankVariants « Variante 204L » et « Variante 257L »).",
+    "attendu": "Libellé « Réservoir Long Range 204L » et champ type renseigné sur les trois réservoirs, comme sur le standard — même motif que F-BXQT-17.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -2254,6 +2578,42 @@
     "enVol": "Aucun : la table n'est pas consommable par le moteur, la croisière reste servie par cruiseSpeedKt = 120 et fuelConsumption = 35 l/h.",
     "action": "Carte avion > Performances : retirer la table croisière, ou la reformater si un support croisière arrive.",
     "demontrePar": "Doublon de clé (Regime 65 / 10500 ft) à valeurs différentes ; conversion Nm ↔ km incohérente sur 2 lignes alors qu'elle est exacte sur les 9 autres ; colonnes du schéma des tables de performance absentes."
+   },
+   {
+    "gravite": "majeur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.windLimits.limits (absence de maxCrosswind, entrée maxHeadwind)",
+    "trouve": "windLimits.limits = [{ type \"maxTailwind\", value 5 }, { type \"maxHeadwind\", value 15 }] ; aucune entrée maxCrosswind et champs plats maxCrosswind = \"\" / maxCrosswindWet = \"\". En regard, performanceCorrections déclare deux règles headwind en factor_table avec brackets fromKt 10 / 20 / 30 (facteurs 0,85 / 0,65 / 0,55) au décollage ET à l'atterrissage — des paliers de vent de face à 20 et 30 kt inutilisables si le vent de face était réellement « limité » à 15 kt.",
+    "attendu": "La limite de vent traversier max démontré du manuel DR401 dans windLimits.limits (type maxCrosswind). Une « limite de vent de face » n'est pas une limitation publiée par un manuel de vol (le vent de face est favorable) : l'entrée maxHeadwind 15 kt est vraisemblablement la valeur de traversier démontré saisie sous le mauvais type — à trancher au manuel.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[2].optional",
+    "trouve": "Le réservoir « réservoir Optionnel » (type \"optional\", role \"removable\" dans tankVariants, arm 1.1484, totalCapacity 50) est le SEUL des trois réservoirs à ne PAS porter la clé booléenne « optional » — les réservoirs [0] et [1] portent tous deux « optional »: false. Un accesseur lisant tank.optional obtient undefined (falsy) sur le seul réservoir réellement optionnel.",
+    "attendu": "optional: true sur le réservoir amovible, ou clé retirée uniformément des trois réservoirs — jamais la clé présente à false sur les fixes et absente sur l'amovible.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
+   },
+   {
+    "gravite": "mineur",
+    "classe": "demontree",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.additionalFuelTanks[0].name",
+    "trouve": "name = « Reservoir principle » — double faute (« principle » pour « principal », accent manquant), incohérent avec les libellés voisins « Réservoir Aile » et « réservoir Optionnel » (casse également hétérogène entre les trois).",
+    "attendu": "« Réservoir principal ». Même famille de défaut que F-BXQT-17 (« Etandu ») déjà actée sur un autre avion.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  },
@@ -2510,6 +2870,18 @@
     "enVol": "La masse à vide 900 kg et le bras 2,4231 m — qui donnent le moment 2180,79 utilisé à chaque centrage — datent de 2019 : toute modification de cellule ou d'équipement depuis n'est pas prise en compte.",
     "action": "Demander au club s'il existe une pesée plus récente et la déposer le cas échéant ; sinon rien à faire.",
     "demontrePar": "Date de certification lue dans la fiche, comparée à la date du jour ; masse et bras à vide inchangés et auto-cohérents (900 × 2,4231 = 2180,79)."
+   },
+   {
+    "gravite": "mineur",
+    "classe": "a-confirmer",
+    "categorie": "Passe finale 26/08",
+    "champ": "aircraft_data.advancedPerformance.tables[12], [16], [20], [24] — data.Masse = 1310 sur les 4 opérations d'atterrissage",
+    "trouve": "Chacune des 4 opérations d'atterrissage (landing_ground_roll_flaps_landing, landing_50ft_flaps_landing, landing_ground_roll_flaps_up, landing_50ft_flaps_up) comporte une table à Masse = 1310 kg (ex. table 12 « Landing Distance - Ground Roll - Flaps LDG - 1310 kg / 2888 lb »), alors que la fiche déclare maxLandingWeight = 1280 et weights.mlw = \"1280\".",
+    "attendu": "Confirmation au manuel DA40 NG que les distances d'atterrissage sont bien publiées jusqu'à 1310 kg (au-dessus de la MLW, cas d'un retour immédiat après décollage) — sinon, tables d'atterrissage limitées à 1280 kg.",
+    "enVol": "",
+    "action": "",
+    "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
+    "ajout": "2026-08-26"
    }
   ]
  }
