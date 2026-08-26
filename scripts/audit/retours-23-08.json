@@ -586,8 +586,8 @@
  },
  {
   "itid": "F-HDIM-11",
-  "status": "ouvert",
-  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous)."
+  "status": "fait",
+  "note": "Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [\"A\", \",\", \"C\", \"a\", \"c\"] — l'écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d'app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [\"a\",\"c\"] (commande ci-dessous). ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : transponderModes = [\"a\",\"c\"] — le tableau corrompu ([\"A\",\",\",\"C\",\"a\",\"c\"]) est réparé. Le bug d'app (éclatement de la chaîne héritée) reste à corriger via la chip."
  },
  {
   "itid": "F-HDIM-12",
@@ -611,8 +611,8 @@
  },
  {
   "itid": "F-HDIM-16",
-  "status": "note",
-  "note": "RÉPONSE à votre question « que dois-je faire ? » : rien dans l'application — le contournement « registration » date du conflit d'immatriculation réglé, et aucun écran ne permet de retirer un bypass hérité. Le script purge-scories-26-08.mjs le retire proprement (sauvegarde préalable) — commande fournie dans la conversation. Sera clos à la prochaine extraction après votre --apply."
+  "status": "fait",
+  "note": "RÉPONSE à votre question « que dois-je faire ? » : rien dans l'application — le contournement « registration » date du conflit d'immatriculation réglé, et aucun écran ne permet de retirer un bypass hérité. Le script purge-scories-26-08.mjs le retire proprement (sauvegarde préalable) — commande fournie dans la conversation. Sera clos à la prochaine extraction après votre --apply. ▸ Vérifié sur extraction fraîche (v4 du 26/08, purge-scories --apply exécutée par le pilote, sauvegarde backups/purge-scories-2026-08-26T08-01-35) : bypassedFields = [] — le contournement « registration » hérité du conflit d'immatriculation est retiré. F-GUKQ nettoyé au passage (weighingReport/fuelTankArms retirés, les 4 bypass performance.* légitimes préservés)."
  },
  {
   "itid": "F-HDIM-17",

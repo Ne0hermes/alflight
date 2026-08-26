@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>111 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>132 points à
+  <b>113 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>130 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 21 majeurs, 104 mineurs — dont 54 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 21 majeurs, 102 mineurs — dont 54 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -1383,33 +1383,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HDIM</span><span class="mdl">Cessna Skyhawk 172P</span><span class="spacer"></span>
-<span class="pill p-mineur">2 mineurs</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-HDIM" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-HDIM" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tables numériques MANEX réimportées d&#x27;Excel le 21/08 (6 tables, p.90/91/101, unités homogènes en pieds, grille absolue 9 altitudes × 5 températures) ; aucun abaque d&#x27;atelier (performanceModels = null, d&#x27;où la liste vide du probe) ; enveloppe de centrage moderne à 3 points avant + limite arrière 1,20 m ; réservoirs à deux contenances avec 3 variantes (162/204/257 L). Dernière sauvegarde de la fiche : 2026-08-21T12:41:23 — base inchangée depuis le ré-audit du 21/08.</b> — La fiche est saine sur l&#x27;essentiel : les 4 opérations obligatoires de performance sont couvertes, les 6 tables sont monotones sur les trois axes, homogènes en pieds, sans aucune violation « passage 50 ft ≤ roulement » sur 354 cellules, et le moteur rend une distance dans 6 des 8 jeux de conditions testés ; le centrage est complet et cohérent (masse à vide 706,5 kg × bras 0,93 m = moment 657,045 déclaré, compartiment 54 kg × 2,41 m = 130,14, moments des 3 réservoirs exacts au litre). Ce qui reste bloquant : à 1089 kg le décollage est REFUSÉ à 7000 ft/40 °C et 8000 ft/30-40 °C (3 cases absentes), et aucune règle de vent arrière n&#x27;existe — 10 kt de vent arrière laissent la distance inchangée alors que 9 kt de face lui accordent -10 %. Commencer par ces deux points, puis par VS T/O (seule vitesse CRITIQUE absente, elle bloque l&#x27;enregistrement de la fiche) et par la vérification au POH de vs1/vso, dont le rapport à Va (99/44) implique un facteur de charge de 5 g impossible.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-11" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderModes" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-11</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderModes</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Chaîne de caractères &quot;A,C&quot; en majuscules, alors que les fiches modernes de la flotte stockent un tableau en minuscules (F-BXQT : [&quot;c&quot;], F-HSTR : [&quot;s&quot;]).</dd>
-<dt>Attendu</dt><dd>Tableau [&quot;a&quot;,&quot;c&quot;] (les modes réellement à bord).</dd>
-<dt>En vol</dt><dd>Dans l&#x27;étape Équipements, les trois cases Mode A / Mode C / Mode S s&#x27;affichent DÉCOCHÉES alors que la fiche déclare A et C : le pilote croit n&#x27;avoir aucun mode renseigné. Et cocher une case réécrit le champ en [&#x27;A&#x27;, &#x27;,&#x27;, &#x27;C&#x27;, &#x27;a&#x27;].</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Équipements → Mode transpondeur : cocher les modes réellement à bord et enregistrer, pour que le champ soit réécrit au format tableau.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Step5Equipment.jsx l.630-645 : modeKey = mode.toLowerCase() (&#x27;a&#x27;/&#x27;c&#x27;/&#x27;s&#x27;), test transponderModes.includes(modeKey) — &quot;A,C&quot;.includes(&#x27;a&#x27;) vaut false, &quot;A,C&quot;.includes(&#x27;c&#x27;) vaut false —, puis écriture [...transponderModes, modeKey], qui sur une chaîne produit un tableau de caractères.</dd>
-</dl><div class="notefait">✎ Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [&quot;A&quot;, &quot;,&quot;, &quot;C&quot;, &quot;a&quot;, &quot;c&quot;] — l&#x27;écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d&#x27;app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [&quot;a&quot;,&quot;c&quot;] (commande ci-dessous).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-16" data-clos="0" data-champ="aircraft_data.bypassedFields" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">identite</span><span class="path">aircraft_data.bypassedFields</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">[&quot;registration&quot;] — une seule entrée, aucun contournement performance.&lt;opId&gt;.</dd>
-<dt>Attendu</dt><dd>Tableau vide : plus aucune validation contournée une fois le conflit d&#x27;origine réglé.</dd>
-<dt>En vol</dt><dd>Aucune sur les calculs, mais le contrôle d&#x27;immatriculation reste marqué « passé outre » sur un avion dont l&#x27;immatriculation est parfaitement renseignée.</dd>
-<dt>Action</dt><dd>Vérifier qu&#x27;aucun doublon F-HDIM ne subsiste dans la flotte, puis retirer la clé « registration » du tableau.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : registration = &quot;F-HDIM&quot; est renseignée et non vide à la racine comme dans aircraft_data ; le contournement enregistré n&#x27;a plus d&#x27;objet.</dd>
-</dl><div class="notefait">✎ RÉPONSE à votre question « que dois-je faire ? » : rien dans l&#x27;application — le contournement « registration » date du conflit d&#x27;immatriculation réglé, et aucun écran ne permet de retirer un bypass hérité. Le script purge-scories-26-08.mjs le retire proprement (sauvegarde préalable) — commande fournie dans la conversation. Sera clos à la prochaine extraction après votre --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-16) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 19 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-HDIM-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HFGI</span><span class="mdl">DR401</span><span class="spacer"></span>
