@@ -661,8 +661,8 @@
  },
  {
   "itid": "F-HSTR-03",
-  "status": "note",
-  "note": "RÉPONSE : vous avez raison, 940 kg est bien dans les masses limites (weights et enveloppe ✓) — le problème est un MIROIR CACHÉ : la racine minTakeoffWeight porte encore 650 (< masse à vide !), et aucun écran ne l'affiche ni ne la corrige. Le script fix-hstr-26-08.mjs la supprime (la borne 940 fait foi, l'app la dérive au chargement). Sera clos après votre --apply."
+  "status": "fait",
+  "note": "RÉPONSE : vous avez raison, 940 kg est bien dans les masses limites (weights et enveloppe ✓) — le problème est un MIROIR CACHÉ : la racine minTakeoffWeight porte encore 650 (< masse à vide !), et aucun écran ne l'affiche ni ne la corrige. Le script fix-hstr-26-08.mjs la supprime (la borne 940 fait foi, l'app la dérive au chargement). Sera clos après votre --apply. ▸ Vérifié sur extraction fraîche (v4, fix-hstr --apply, sauvegarde backups/fix-hstr-2026-08-26T08-36-35) : la racine fantôme minTakeoffWeight=650 est SUPPRIMÉE — weights.minTakeoffWeight=940 (= enveloppe) fait foi, dérivée au chargement."
  },
  {
   "itid": "F-HSTR-10",
@@ -691,8 +691,8 @@
  },
  {
   "itid": "F-HSTR-15",
-  "status": "note",
-  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : windLimits.limits[] est bien rempli (traversier 20, traversier mouillé 15, arrière 10) ✓ — MAIS divergence interne : l'ancien champ plat maxCrosswindWet porte 12 kt et le nouveau format 15 kt. Laquelle est la valeur du manuel DA40 NG — 12 ou 15 ? Je corrigerai le miroir sur votre réponse."
+  "status": "fait",
+  "note": "Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : windLimits.limits[] est bien rempli (traversier 20, traversier mouillé 15, arrière 10) ✓ — MAIS divergence interne : l'ancien champ plat maxCrosswindWet porte 12 kt et le nouveau format 15 kt. Laquelle est la valeur du manuel DA40 NG — 12 ou 15 ? Je corrigerai le miroir sur votre réponse. ▸ Vérifié sur extraction fraîche (v5, relance fix-hstr --apply, sauvegarde backups/fix-hstr-2026-08-26T08-44-12) : le miroir plat maxCrosswindWet est aligné à 15 kt — valeur du manuel confirmée par le pilote, cohérente avec limits[] (traversier 20 / mouillé 15 / arrière 10). Divergence levée."
  },
  {
   "itid": "F-HSTR-16",
@@ -711,8 +711,8 @@
  },
  {
   "itid": "F-HSTR-20",
-  "status": "note",
-  "note": "Coché, mais le champ singulier transponderMode=\"S\" est toujours en base (aucun écran ne le retire — miroir hérité). Le script fix-hstr-26-08.mjs le supprime, le pluriel [\"s\",\"c\"] fait foi. Sera clos après votre --apply."
+  "status": "fait",
+  "note": "Coché, mais le champ singulier transponderMode=\"S\" est toujours en base (aucun écran ne le retire — miroir hérité). Le script fix-hstr-26-08.mjs le supprime, le pluriel [\"s\",\"c\"] fait foi. Sera clos après votre --apply. ▸ Vérifié sur extraction fraîche (v4, fix-hstr --apply, sauvegarde backups/fix-hstr-2026-08-26T08-36-35) : le singulier transponderMode=\"S\" est SUPPRIMÉ — le pluriel [\"s\",\"c\"] fait foi."
  },
  {
   "itid": "F-HSTR-21",

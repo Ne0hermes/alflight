@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>128 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>115 points à
+  <b>131 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>112 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 89 mineurs — dont 44 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 19 majeurs, 86 mineurs — dont 44 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -1478,22 +1478,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HSTR</span><span class="mdl">DA40NG</span><span class="spacer"></span>
-<span class="pill p-mineur">5 mineurs</span>
+<span class="pill p-mineur">2 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-HSTR" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-HSTR" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Fiche 100 % tableaux MANEX : 36 tables réimportées d&#x27;Excel (9 opérations × 4 masses 1310/1280/1200/1100 kg, pages 177 à 202 du manuel), aucun abaque d&#x27;atelier (performanceModels = [] — la sonde du 23/08 n&#x27;a donc aucun modèle à exécuter) ; axe de température ABSOLU correctement détecté (pas de grille ISA-relative), enveloppe de centrage à 3 points avant + limite arrière constante, 11 règles de correction vent et états de piste.</b> — Le cœur de la fiche est sain : les quatre opérations obligatoires (décollage roulage et 15 m, atterrissage roulage et 15 m) sont couvertes sur les 4 masses, grille 0-10 000 ft × 0-50 °C, et les 13 cellules corrigées le 21/08 sont bien en place sur l&#x27;extraction du 23/08 — le balayage complet des 36 tables ne trouve plus aucune valeur aberrante, aucune inversion en altitude ni en température, et jamais une distance à 15 m inférieure au roulage correspondant. Plus aucun défaut critique : rien n&#x27;empêche un calcul, et l&#x27;enveloppe de centrage est complète et auto-cohérente (moments recalculés exacts). Commencez par les deux points « surface de piste » : les correctifs d&#x27;atterrissage n&#x27;ont ni herbe mouillée ni sol mou alors que le décollage les porte, et la fiche ne déclare que des pistes revêtues tout en embarquant huit correctifs herbe/sol mou ; le reste (miroirs de centrage, volumes du réservoir, champs legacy, noms de tables) se traite en une seule session d&#x27;hygiène.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap oui">Décollage : oui</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 18 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HSTR-03" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (racine)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HSTR-03</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.minTakeoffWeight (racine)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">650 kg, contre weights.minTakeoffWeight = « 940 », cgEnvelope.aftMinWeight = « 940 » et cgEnvelope.forwardPoints[0].weight = « 940 ». 650 kg est en outre INFÉRIEUR à la masse à vide de l&#x27;avion (900 kg).</dd>
-<dt>Attendu</dt><dd>940 kg partout — la borne basse de l&#x27;enveloppe déclarée par la fiche elle-même.</dd>
-<dt>En vol</dt><dd>Une masse de décollage entre 650 et 940 kg serait acceptée par tout contrôle lisant la racine, alors qu&#x27;elle est hors enveloppe de centrage et même physiquement impossible (sous la masse à vide).</dd>
-<dt>Action</dt><dd>Étape Masses : remettre la masse minimale de décollage à 940 kg.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Trois sources internes concordantes à 940 (weights.minTakeoffWeight, cgEnvelope.aftMinWeight, forwardPoints[0].weight) contre 650 à la racine ; et 650 &lt; emptyWeight = 900.</dd>
-</dl><div class="notefait">✎ RÉPONSE : vous avez raison, 940 kg est bien dans les masses limites (weights et enveloppe ✓) — le problème est un MIROIR CACHÉ : la racine minTakeoffWeight porte encore 650 (&lt; masse à vide !), et aucun écran ne l&#x27;affiche ni ne la corrige. Le script fix-hstr-26-08.mjs la supprime (la borne 940 fait foi, l&#x27;app la dérive au chargement). Sera clos après votre --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-03) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 21 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HSTR-11" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[4]/[5] (4000 ft, 30 °C) et tables[24]/[25] (4000 ft, 10 °C)" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1505,28 +1494,6 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>En vol</dt><dd>Sur ces deux points de grille seulement, l&#x27;avion plus lourd paraît monter mieux et atterrir plus court. Aucune des deux ne touche les quatre opérations obligatoires (montée décollage et atterrissage volets rentrés sont facultatifs).</dd>
 <dt>Action</dt><dd>Relire ces 4 cellules aux pages 182-183 et 196-197 du manuel, en même temps que les autres relectures.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Balayage exhaustif des 36 tables : exactement 2 inversions inter-masse, 0 inversion en température, 0 inversion en altitude, et 0 cas où une distance à 15 m serait inférieure ou égale au roulage de la même masse et de la même cellule.</dd>
 </dl><div class="notefait">✎ PARTIEL — les tables de montée non monotones ont été SUPPRIMÉES (vérifié : plus aucune opération climb/go_around, 24 tables restantes) ✓. Reste la paire ATTERRISSAGE 50 ft volets UP à 4000 ft / 10 °C : 1280 kg = 920 m contre 1310 kg = 910 m, toujours non monotone en base — à confirmer au manuel (effet d&#x27;arrondi possible) ou à corriger.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HSTR-15" data-clos="0" data-champ="aircraft_data.windLimits" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HSTR-15</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.windLimits</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Ancien format seul : maxCrosswind 20 kt, maxCrosswindWet 12 kt, maxTailwind 10 kt. La clé windLimits.limits[] est absente.</dd>
-<dt>Attendu</dt><dd>Les trois limites également présentes dans windLimits.limits[], le format courant.</dd>
-<dt>En vol</dt><dd>L&#x27;étape Vitesses de la fiche affiche « 0 limite ». Aucun consommateur en préparation de vol (seuls la fiche, le mapper d&#x27;extraction et la normalisation lisent ces champs) : les limites de vent traversier ne sont vérifiées automatiquement nulle part, le pilote doit les tenir de tête.</dd>
-<dt>Action</dt><dd>Étape Vitesses : ressaisir les trois limites dans la liste. Le correctif du 23/08 (src/features/aircraft/utils/windLimits.js) empêche désormais leur PERTE à l&#x27;enregistrement, mais ne migre pas l&#x27;ancien format vers limits[].</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">windLimits ne contient que les trois clés historiques ; windLimits.js l.36 n&#x27;initialise limits que si c&#x27;est déjà un tableau, donc rien ne le crée.</dd>
-</dl><div class="notefait">✎ Vérifié sur la fiche v3 fraîche (ré-enregistrement du 26/08) : windLimits.limits[] est bien rempli (traversier 20, traversier mouillé 15, arrière 10) ✓ — MAIS divergence interne : l&#x27;ancien champ plat maxCrosswindWet porte 12 kt et le nouveau format 15 kt. Laquelle est la valeur du manuel DA40 NG — 12 ou 15 ? Je corrigerai le miroir sur votre réponse.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HSTR-20" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HSTR-20</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« S » (singulier) toujours présent, à côté de equipmentSurv.transponderModes = [&quot;s&quot;] (pluriel), qui est le champ réellement écrit par l&#x27;étape Équipements.</dd>
-<dt>Attendu</dt><dd>Champ singulier vidé ; le pluriel fait foi.</dd>
-<dt>En vol</dt><dd>Nul depuis le correctif du plan de vol (Step7Summary.jsx l.584-593 lit approvedOperations.elt pour la balise de détresse). Champ orphelin, à l&#x27;origine de la déclaration de balise erronée constatée auparavant.</dd>
-<dt>Action</dt><dd>Vider le champ singulier. À surveiller après enregistrement : AircraftModule.jsx l.3643 le réinjecte encore à « C » par défaut.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Doublon singulier/pluriel du même renseignement dans le même objet equipmentSurv.</dd>
-</dl><div class="notefait">✎ Coché, mais le champ singulier transponderMode=&quot;S&quot; est toujours en base (aucun écran ne le retire — miroir hérité). Le script fix-hstr-26-08.mjs le supprime, le pluriel [&quot;s&quot;,&quot;c&quot;] fait foi. Sera clos après votre --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HSTR-20) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HSTR-21" data-clos="0" data-champ="aircraft_data.lastModified" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">

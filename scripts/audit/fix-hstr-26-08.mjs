@@ -6,6 +6,9 @@
 //    940 fait foi. (Réponse au point F-HSTR-03 du pilote.)
 // 2. equipmentSurv.transponderMode « S » (singulier legacy) supprimé — le
 //    pluriel transponderModes ["s","c"] écrit par l'écran Équipements fait foi.
+// 3. windLimits.maxCrosswindWet (miroir plat) 12 → 15 kt : aligné sur la
+//    valeur du manuel confirmée par le pilote (26/08) et déjà saisie dans le
+//    format courant windLimits.limits[].
 // Sauvegarde complète de la fiche avant écriture (backups/).
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,10 +31,11 @@ if (!Array.isArray(rows) || rows.length !== 1) { console.error(`F-HSTR : ${rows?
 const row = rows[0];
 const d = JSON.parse(JSON.stringify(row.aircraft_data));
 
-const avant = { minTakeoffWeight: d.minTakeoffWeight, transponderMode: d.equipmentSurv?.transponderMode };
+const avant = { minTakeoffWeight: d.minTakeoffWeight, transponderMode: d.equipmentSurv?.transponderMode, maxCrosswindWet: d.windLimits?.maxCrosswindWet };
 delete d.minTakeoffWeight;
 if (d.equipmentSurv) delete d.equipmentSurv.transponderMode;
-const apres = { minTakeoffWeight: d.minTakeoffWeight, transponderMode: d.equipmentSurv?.transponderMode };
+if (d.windLimits) d.windLimits.maxCrosswindWet = 15;
+const apres = { minTakeoffWeight: d.minTakeoffWeight, transponderMode: d.equipmentSurv?.transponderMode, maxCrosswindWet: d.windLimits?.maxCrosswindWet };
 
 console.log(`F-HSTR (v${row.version})`);
 console.log('  avant :', JSON.stringify(avant));
