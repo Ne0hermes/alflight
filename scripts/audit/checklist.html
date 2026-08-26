@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>102 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>141 points à
+  <b>110 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>133 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 21 majeurs, 113 mineurs — dont 58 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 7 critiques, 21 majeurs, 105 mineurs — dont 54 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -1383,33 +1383,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HDIM</span><span class="mdl">Cessna Skyhawk 172P</span><span class="spacer"></span>
-<span class="pill p-mineur">11 mineurs</span>
+<span class="pill p-mineur">3 mineurs</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-HDIM" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-HDIM" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tables numériques MANEX réimportées d&#x27;Excel le 21/08 (6 tables, p.90/91/101, unités homogènes en pieds, grille absolue 9 altitudes × 5 températures) ; aucun abaque d&#x27;atelier (performanceModels = null, d&#x27;où la liste vide du probe) ; enveloppe de centrage moderne à 3 points avant + limite arrière 1,20 m ; réservoirs à deux contenances avec 3 variantes (162/204/257 L). Dernière sauvegarde de la fiche : 2026-08-21T12:41:23 — base inchangée depuis le ré-audit du 21/08.</b> — La fiche est saine sur l&#x27;essentiel : les 4 opérations obligatoires de performance sont couvertes, les 6 tables sont monotones sur les trois axes, homogènes en pieds, sans aucune violation « passage 50 ft ≤ roulement » sur 354 cellules, et le moteur rend une distance dans 6 des 8 jeux de conditions testés ; le centrage est complet et cohérent (masse à vide 706,5 kg × bras 0,93 m = moment 657,045 déclaré, compartiment 54 kg × 2,41 m = 130,14, moments des 3 réservoirs exacts au litre). Ce qui reste bloquant : à 1089 kg le décollage est REFUSÉ à 7000 ft/40 °C et 8000 ft/30-40 °C (3 cases absentes), et aucune règle de vent arrière n&#x27;existe — 10 kt de vent arrière laissent la distance inchangée alors que 9 kt de face lui accordent -10 %. Commencer par ces deux points, puis par VS T/O (seule vitesse CRITIQUE absente, elle bloque l&#x27;enregistrement de la fiche) et par la vérification au POH de vs1/vso, dont le rapport à Va (99/44) implique un facteur de charge de 5 g impossible.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 8 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-05" data-clos="0" data-champ="aircraft_data.speeds.voRanges[0..2].minWeight / maxWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-05</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">unites</span><span class="path">aircraft_data.speeds.voRanges[0..2].minWeight / maxWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Tranches 0–1600 → 82 kt, 1600–2000 → 92 kt, 2000–2400 → 99 kt, alors que aircraft_data._metadata.units.weight = &quot;kg&quot; et maxTakeoffWeight = 1089 kg.</dd>
-<dt>Attendu</dt><dd>Bornes exprimées en kg : ≈ 726 / 907 / 1089 (2400, 2000 et 1600 lb converties) ; les vitesses 82/92/99 kt restent inchangées.</dd>
-<dt>En vol</dt><dd>La borne haute (2400) vaut 2,2 fois la MTOW : à 1089 kg la fiche renvoie la PREMIÈRE tranche (82 kt) au lieu de la dernière (99 kt), soit une Va affichée trop faible. Portée limitée à l&#x27;affichage — voRanges n&#x27;est lu que par Step2Speeds et Step5Review, aucun calcul de préparation de vol ne le consomme.</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Vitesses → tableau Va : convertir les 6 bornes de masse en kg.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : maxWeight 2400 &gt; maxTakeoffWeight 1089 (facteur 2,2) alors que l&#x27;unité de masse déclarée par la fiche elle-même (_metadata.units.weight) est le kg.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-07" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[3].data — cellule (Masse 995, Altitude 4000, Temperature 10)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-07</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[3].data — cellule (Masse 995, Altitude 4000, Temperature 10)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">1002 ft (Takeoff Ground Roll, p.91).</dd>
-<dt>Attendu</dt><dd>La valeur publiée p.91 du POH pour (2200 lb, 4000 ft, 10 °C) — vraisemblablement 1020, par transposition de chiffres 1020 → 1002.</dd>
-<dt>En vol</dt><dd>Roulement au décollage sous-estimé d&#x27;environ 18 ft à 995 kg et 4000 ft : sans effet pratique, mais c&#x27;est le seul chiffre douteux des 354 cellules.</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Performances → table p.91 (masses 995/900) : vérifier la case (2200 lb, 4000 ft, 10 °C) au manuel et corriger si nécessaire.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Sur les 354 cellules des 6 tables, c&#x27;est la SEULE valeur qui ne soit pas un multiple de 5. Aucune contradiction stricte : elle reste monotone, encadrée par 945 (0 °C) et 1100 (20 °C) sur l&#x27;axe température, 925 (3000 ft) et 1125 (5000 ft) sur l&#x27;axe altitude.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-07) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 16 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HDIM-11" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderModes" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1420,51 +1398,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Tableau [&quot;a&quot;,&quot;c&quot;] (les modes réellement à bord).</dd>
 <dt>En vol</dt><dd>Dans l&#x27;étape Équipements, les trois cases Mode A / Mode C / Mode S s&#x27;affichent DÉCOCHÉES alors que la fiche déclare A et C : le pilote croit n&#x27;avoir aucun mode renseigné. Et cocher une case réécrit le champ en [&#x27;A&#x27;, &#x27;,&#x27;, &#x27;C&#x27;, &#x27;a&#x27;].</dd>
 <dt>Action</dt><dd>Fiche avion → Étape Équipements → Mode transpondeur : cocher les modes réellement à bord et enregistrer, pour que le champ soit réécrit au format tableau.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Step5Equipment.jsx l.630-645 : modeKey = mode.toLowerCase() (&#x27;a&#x27;/&#x27;c&#x27;/&#x27;s&#x27;), test transponderModes.includes(modeKey) — &quot;A,C&quot;.includes(&#x27;a&#x27;) vaut false, &quot;A,C&quot;.includes(&#x27;c&#x27;) vaut false —, puis écriture [...transponderModes, modeKey], qui sur une chaîne produit un tableau de caractères.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-12" data-clos="0" data-champ="aircraft_data.windLimits" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-12</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.windLimits</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">windLimits = {maxTailwind: &quot;&quot;, maxCrosswind: &quot;&quot;, maxCrosswindWet: &quot;&quot;} — forme héritée entièrement vide ; le tableau moderne windLimits.limits[] est absent.</dd>
-<dt>Attendu</dt><dd>Au minimum le vent traversier maximal démontré publié par le POH.</dd>
-<dt>En vol</dt><dd>Aucune limite de vent n&#x27;est enregistrée : rien ne peut alerter le pilote quand la composante de travers d&#x27;une piste dépasse le maximum démontré de l&#x27;avion.</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Vitesses → limites de vent : saisir le vent traversier max démontré (et le vent arrière max si le manuel en publie un).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Les trois champs sont des chaînes vides et limits[] n&#x27;existe pas : aucune valeur à comparer, donc aucun avertissement possible. La valeur elle-même doit être relevée au manuel — la fiche ne permet pas de la deviner.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-13" data-clos="0" data-champ="aircraft_data.equipmentCom.hf" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-13</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentCom.hf</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">hf = true (vhf1 = true, vhf2 = true).</dd>
-<dt>Attendu</dt><dd>L&#x27;équipement de radiocommunication réellement installé à bord.</dd>
-<dt>En vol</dt><dd>La case HF part cochée dans le bloc équipement du plan de vol OACI, ce qui déclare une capacité que l&#x27;avion n&#x27;a peut-être pas.</dd>
-<dt>Action</dt><dd>Fiche avion → Étape Équipements : confirmer la présence d&#x27;une radio HF à bord, sinon décocher.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Aucune contradiction interne ne permet de trancher — la fiche ne contient rien qui infirme ou confirme la présence d&#x27;une HF ; seul le pilote peut le dire.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-14" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-14</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">2020-06-12, soit 6 ans et 2 mois au 23/08/2026 (uploadDate 2026-05-21, fileName « Fiche de pesée IM.pdf », hasData true).</dd>
-<dt>Attendu</dt><dd>La date de la pesée la plus récente de l&#x27;avion (le seuil d&#x27;avertissement de l&#x27;application est à 10 ans : il n&#x27;est pas atteint).</dd>
-<dt>En vol</dt><dd>La masse à vide (706,5 kg) et le bras à vide (0,93 m) qui servent à tout centrage proviennent d&#x27;une pesée de 2020.</dd>
-<dt>Action</dt><dd>Vérifier auprès du club qu&#x27;aucune pesée postérieure à 2020 n&#x27;existe ; si oui, remplacer le PDF, la masse à vide et le bras dans la fiche.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Non tranchable depuis la fiche : la date est cohérente avec elle-même, la réponse dépend des archives du club.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-15" data-clos="0" data-champ="aircraft_data.weighingReport.pdfUrl" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-15</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.weighingReport.pdfUrl</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">https://…/storage/v1/object/public/weighing-reports/H-HDIM/H-HDIM%20-%20pesee.pdf — dossier et nom de fichier en « H-HDIM ».</dd>
-<dt>Attendu</dt><dd>Chemin de stockage cohérent avec l&#x27;immatriculation F-HDIM.</dd>
-<dt>En vol</dt><dd>Aucune : le PDF s&#x27;ouvre normalement. Gêne seulement le classement et le rapprochement fiche/document.</dd>
-<dt>Action</dt><dd>Optionnel — re-téléverser la fiche de pesée depuis la fiche avion pour régénérer le chemin sous F-HDIM, ou laisser tel quel si l&#x27;URL est stable.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : la fiche déclare registration = &quot;F-HDIM&quot; à la racine ET dans aircraft_data, mais l&#x27;URL du rapport de pesée porte « H-HDIM ».</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-15) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché « fait », MAIS la base v3 porte un tableau CORROMPU : [&quot;A&quot;, &quot;,&quot;, &quot;C&quot;, &quot;a&quot;, &quot;c&quot;] — l&#x27;écran Équipements a éclaté la chaîne héritée « A,C » caractère par caractère (une VIRGULE est devenue un mode !) puis fusionné avec votre nouvelle sélection. Bug d&#x27;app mis en chip ; en attendant, le script purge-scories-26-08.mjs répare la valeur en [&quot;a&quot;,&quot;c&quot;] (commande ci-dessous).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-11) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HDIM-16" data-clos="0" data-champ="aircraft_data.bypassedFields" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1475,29 +1409,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Tableau vide : plus aucune validation contournée une fois le conflit d&#x27;origine réglé.</dd>
 <dt>En vol</dt><dd>Aucune sur les calculs, mais le contrôle d&#x27;immatriculation reste marqué « passé outre » sur un avion dont l&#x27;immatriculation est parfaitement renseignée.</dd>
 <dt>Action</dt><dd>Vérifier qu&#x27;aucun doublon F-HDIM ne subsiste dans la flotte, puis retirer la clé « registration » du tableau.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : registration = &quot;F-HDIM&quot; est renseignée et non vide à la racine comme dans aircraft_data ; le contournement enregistré n&#x27;a plus d&#x27;objet.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-17" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[0] (« Réservoir Standard 162L ») — capacity vs usableCapacity" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-17</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.additionalFuelTanks[0] (« Réservoir Standard 162L ») — capacity vs usableCapacity</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le réservoir de la variante PAR DÉFAUT porte capacity = 151 (clé legacy) + totalCapacity = 162 mais AUCUNE clé usableCapacity, alors que ses deux jumeaux portent le schéma moderne complet : « Réservoir Long Rang 204L » totalCapacity 204 / usableCapacity 189 et « Réservoir Integral Tank 257L » totalCapacity 257 / usableCapacity 234, sans capacity. La racine fuelUsableCapacity = 151 ne tient que par l&#x27;accesseur legacy (usableCapacity ?? capacity). momentAtFull 132,64 = 151 × 0,72 × 1,22, cohérent avec 151.</dd>
-<dt>Attendu</dt><dd>usableCapacity = 151 explicite sur le réservoir standard et clé legacy capacity retirée — même motif résiduel que F-GGZO-04 (le motif banni strict « capacity + totalCapacity + usableCapacity ensemble » n&#x27;est pas constitué, usableCapacity manquant).</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-17) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HDIM-18" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (racine) vs weights.minTakeoffWeight vs cgEnvelope.aftMinWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HDIM-18</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.minTakeoffWeight (racine) vs weights.minTakeoffWeight vs cgEnvelope.aftMinWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Trois bornes basses divergentes dans la même fiche : minTakeoffWeight racine = 706,5 (exactement égal à emptyWeight 706,5 — miroir fabriqué, motif F-BXNG-19), weights.minTakeoffWeight = &quot;&quot; (vide), cgEnvelope.aftMinWeight = &quot;600&quot; avec forwardPoints[2].weight = &quot;600&quot; / cg 0,89 / moment 534 (= 600 × 0,89). Le plancher d&#x27;enveloppe 600 kg est en outre INFÉRIEUR à la masse à vide 706,5 kg.</dd>
-<dt>Attendu</dt><dd>Une seule borne basse (celle du diagramme du POH si publiée, sinon champs vides) — le miroir racine 706,5 recopié de la masse à vide doit disparaître ; le départ du centrogramme à 600 kg (sous la masse à vide) reste à confirmer au POH.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-18) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ RÉPONSE à votre question « que dois-je faire ? » : rien dans l&#x27;application — le contournement « registration » date du conflit d&#x27;immatriculation réglé, et aucun écran ne permet de retirer un bypass hérité. Le script purge-scories-26-08.mjs le retire proprement (sauvegarde préalable) — commande fournie dans la conversation. Sera clos à la prochaine extraction après votre --apply.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-16) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-HDIM-19" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[1].name / additionalFuelTanks[1..2].type" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -1508,7 +1420,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Libellé « Réservoir Long Range 204L » et champ type renseigné sur les trois réservoirs, comme sur le standard — même motif que F-BXQT-17.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-19) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ PARTIEL — vérifié v3 : le nom est corrigé (« Réservoir Long Range 204L » ✓), mais le champ type reste ABSENT sur les réservoirs 204L et 257L (seul le Standard porte type=&quot;main&quot;). L&#x27;écran réservoirs ne l&#x27;écrit probablement pas — à re-passer ou à traiter avec le chip transpondeur.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HDIM-19) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HFGI</span><span class="mdl">DR401</span><span class="spacer"></span>
