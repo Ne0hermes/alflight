@@ -611,6 +611,18 @@ export const useAircraftStore = create(
     },
 
     // Mettre à jour un avion (soumettre à Supabase)
+    // 🔄 26/08/2026 (retour pilote) — remplacement LOCAL et EN PLACE d'une
+    // fiche de la liste (mise à jour d'une copie communautaire depuis la
+    // bannière). AUCUNE écriture serveur, AUCUNE validation : le record vient
+    // de la base communautaire et a déjà été passé en version légère
+    // (toLightAircraftRecord). REMPLACE (pas de fusion) : les champs supprimés
+    // côté serveur doivent disparaître de la copie locale (suprématie admin).
+    replaceAircraftLocal: (aircraftId, lightRecord) => {
+      set((state) => ({
+        aircraftList: state.aircraftList.map((a) => (a.id === aircraftId ? lightRecord : a)),
+      }));
+    },
+
     updateAircraft: async (aircraftData) => {
       set({ isLoading: true, error: null });
 

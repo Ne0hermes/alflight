@@ -59,6 +59,19 @@ const AircraftUpdatesBanner = () => {
     setBusyId(u.id);
     setErreur(null);
     try {
+      const [{ toLightAircraftRecord }, { useAircraftStore }] = await Promise.all([
+        import('../../../core/stores/lightAircraftRecord'),
+        import('../../../core/stores/aircraftStore'),
+      ]);
+      // ⛔ Revue 26/08 : avion retiré de la liste depuis l'affichage de la
+      // bannière → on n'écrit PAS (l'ancien code ressuscitait l'avion supprimé
+      // dans IndexedDB, invisible jusqu'au prochain démarrage).
+      if (!useAircraftStore.getState().aircraftList.some((a) => a.id === u.localId)) {
+        remove(u.id);
+        setBusyId(null);
+        setErreur(`${u.registration} n'est plus dans votre liste — mise à jour annulée.`);
+        return;
+      }
       const fiche = await communityService.getPresetById(u.id);
       // La copie locale GARDE son identité : ID local (la fiche communautaire
       // n'est jamais écrasée) et propriétaire du compte (cloisonnement 16/08).
@@ -70,10 +83,33 @@ const AircraftUpdatesBanner = () => {
       const copie = { ...fiche, id: u.localId, aircraftId: u.localId };
       if (ownerAccountId) copie.ownerAccountId = ownerAccountId;
       await dataBackupManager.saveAircraftData(copie);
+      // 🔄 26/08 (retour pilote) : plus de window.location.reload() — le
+      // rechargement complet ÉJECTAIT du module Avions. La carte est
+      // remplacée EN PLACE : version LÉGÈRE (même stripping anti-OOM que le
+      // chargement initial) posée dans le store, la carte se rafraîchit,
+      // la page ne bouge pas. IndexedDB porte déjà la copie COMPLÈTE.
+      const light = toLightAircraftRecord(copie);
+      const store = useAircraftStore.getState();
+      store.replaceAircraftLocal(u.localId, light);
+      // ⛔ Revue 26/08 — l'ancien reload remettait AUSSI l'état dérivé à zéro.
+      // Si c'est l'avion SÉLECTIONNÉ, on réconcilie ce que la fiche fraîche
+      // peut avoir invalidé :
+      if (store.selectedAircraftId === u.localId) {
+        // (a) variante réservoirs choisie disparue/renommée → retour à la
+        // configuration par défaut (jamais le catalogue brut silencieux).
+        const variantes = Array.isArray(light.tankVariants) ? light.tankVariants : [];
+        if (store.selectedTankVariantId != null && !variantes.some((v) => v.id === store.selectedTankVariantId)) {
+          store.setSelectedTankVariant(null);
+        }
+        // (b) config réservoirs du vol : les ids de réservoirs peuvent avoir
+        // changé — sans reset, le FOB dérivé retombait à 0 EN SILENCE (litres
+        // du pilote perdus). Config redevenue vierge = non engagée, le fobFuel
+        // persisté est conservé.
+        const { useFuelStore } = await import('../../../core/stores/fuelStore');
+        useFuelStore.getState().resetTankConfig();
+      }
       remove(u.id);
-      // Rechargement : la liste, les stores dérivés et les caches repartent
-      // tous de la copie fraîche — pas de demi-état.
-      window.location.reload();
+      setBusyId(null);
     } catch (e) {
       console.error('[AircraftUpdatesBanner] Mise à jour de la copie impossible :', e);
       setErreur(`Mise à jour de ${u.registration} impossible : ${e?.message || 'erreur inconnue'}`);
@@ -95,6 +131,12 @@ const AircraftUpdatesBanner = () => {
       borderLeft: '3px solid var(--accent-primary)',
       backgroundColor: 'var(--bg-overlay)'
     }}>
+      {/* Animations locales : la barre de progression de la ligne et le spin
+          du loader (la classe « animate-spin » n'existe pas dans ce projet). */}
+      <style>{`
+        @keyframes alfMajBarre { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+        @keyframes alfMajSpin { to { transform: rotate(360deg); } }
+      `}</style>
       <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--fs-body)', fontWeight: 700, marginBottom: '10px' }}>
         <Megaphone size={16} />
         {updatesAvailable.length > 1
@@ -132,21 +174,33 @@ const AircraftUpdatesBanner = () => {
                 <button
                   type="button"
                   style={{ ...btn, borderColor: 'var(--accent-primary)' }}
-                  disabled={busyId === u.id}
+                  // Revue 26/08 : UNE mise à jour à la fois — busyId est
+                  // mono-valeur, un 2e clic ailleurs brouillait les indicateurs
+                  // et permettait un double téléchargement.
+                  disabled={busyId != null}
                   onClick={() => mettreAJour(u)}
                 >
                   {busyId === u.id
-                    ? <Loader2 size={13} className="animate-spin" />
-                    : <RefreshCw size={13} />} Mettre à jour ma copie
+                    ? <Loader2 size={13} style={{ animation: 'alfMajSpin 1s linear infinite' }} />
+                    : <RefreshCw size={13} />} {busyId === u.id ? 'Mise à jour…' : 'Mettre à jour ma copie'}
                 </button>
                 <button
                   type="button" style={btn} title="Ignorer cette version"
                   aria-label={`Ignorer la mise à jour de ${u.registration}`}
+                  disabled={busyId === u.id}
                   onClick={() => dismiss(u.id)}
                 >
                   <X size={13} />
                 </button>
               </div>
+
+              {/* 🔄 Barre de chargement SUR LA LIGNE pendant le téléchargement
+                  de la fiche fraîche (retour pilote 26/08). */}
+              {busyId === u.id && (
+                <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', overflow: 'hidden', backgroundColor: 'var(--border-subtle)' }}>
+                  <div style={{ height: '100%', width: '35%', borderRadius: '2px', backgroundColor: 'var(--accent-primary)', animation: 'alfMajBarre 1.1s linear infinite' }} />
+                </div>
+              )}
 
               {expandedId === u.id && (
                 <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)', fontSize: 'var(--fs-caption)' }}>

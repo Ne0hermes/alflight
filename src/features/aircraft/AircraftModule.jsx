@@ -385,6 +385,19 @@ export const AircraftModule = memo(() => {
 
     let cancelled = false;
 
+    // 🔄 Revue 26/08 — PURGE par id : une mise à jour EN PLACE peut RETIRER la
+    // photo d'un avion (hasPhoto passe à false) ; le cache n'était vidé que si
+    // la liste devenait vide, l'ancienne photo restait affichée toute la
+    // session (l'ancien reload reconstruisait le cache de zéro).
+    setAircraftPhotos((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const a of aircraftList) {
+        if (!a.photo && !a.hasPhoto && next[a.id]) { delete next[a.id]; changed = true; }
+      }
+      return changed ? next : prev;
+    });
+
     // Pass 1 — photos inline, sans I/O, synchrone.
     const inlineMap = {};
     for (const a of aircraftList) {
