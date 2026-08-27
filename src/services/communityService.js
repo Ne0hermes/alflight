@@ -102,6 +102,19 @@ function stripNullsDeep(d) {
 function stripBannedLegacyFields(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return d;
   const out = { ...d };
+  // 🕐 26/08/2026 — HORODATAGES MIROIRS : lastModified et _metadata.savedAt
+  // sont des estampilles LOCALES (posées par dataBackupManager/aircraftStore
+  // à chaque écriture IndexedDB). Embarquées dans aircraft_data, elles
+  // dataient de l'import initial et contredisaient row.updated_at — la vérité
+  // serveur (audit 26/08 : F-GOVE, F-GNAM, F-GOFP, F-GUKQ, F-HSTR
+  // « lastModified périmé »). Aucun lecteur applicatif ne les lit côté
+  // serveur → purgées de TOUTE écriture, fail-closed : la row fait foi.
+  // Base assainie par scripts/audit/purge-horodatages-miroirs.mjs.
+  delete out.lastModified;
+  if (out._metadata && typeof out._metadata === 'object' && !Array.isArray(out._metadata)) {
+    out._metadata = { ...out._metadata };
+    delete out._metadata.savedAt;
+  }
   delete out.maxBaggageWeight;   // limites de soute : baggageCompartments fait foi
   delete out.maxAuxiliaryWeight;
   delete out.cgLimits;           // enveloppe : cgEnvelope fait foi (miroirs purgés)
@@ -1204,7 +1217,9 @@ class CommunityService {
         const avant = curRow?.aircraft_data || {};
         const champsModifies = [];
         for (const k of new Set([...Object.keys(avant), ...Object.keys(mergedAircraftData)])) {
-          if (k === '_updateHistory' || k === '_metadata') continue;
+          // lastModified : miroir purgé des écritures (26/08) — son retrait des
+          // fiches pas encore assainies ne doit pas polluer le journal visible.
+          if (k === '_updateHistory' || k === '_metadata' || k === 'lastModified') continue;
           if (JSON.stringify(avant[k]) !== JSON.stringify(mergedAircraftData[k])) champsModifies.push(k);
           if (champsModifies.length >= 25) break;
         }
