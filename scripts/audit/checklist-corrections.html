@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>217 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>26 points à
+  <b>230 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>13 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 4 majeurs, 17 mineurs — dont 9 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 4 critiques, 3 majeurs, 6 mineurs — dont 2 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -175,24 +175,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GBTU</span><span class="mdl">PA 28-161</span><span class="spacer"></span>
-<span class="pill p-critique">2 critiques</span>
-<span class="pill p-majeur">1 majeur</span>
-<span class="pill p-mineur">11 mineurs</span>
+<span class="pill p-critique">1 critique</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GBTU" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GBTU" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier réimportés d&#x27;Excel le 18/06 (4 modèles décollage réduits à des nuages de points sans axes ni chaînage), aucun tableau MANEX (advancedPerformance = null, performanceTables = null), masse et centrage complets et cohérents (enveloppe à 3 points avant + limite arrière fixe 2,361 m, pesée 2018 jointe, extraction MANEX à 95 % de confiance sur 43 pages).</b> — Le bloc masse et centrage est le point solide de la fiche : enveloppe à trois points avant, moments recalculés justes (690 × 2,198 = 1516,62 ; 91 × 3,627 = 330,06 ; 1055 × 2,361 = 2490,86), pesée 2018 jointe et cohérente. Ce qui bloque, c&#x27;est toute la performance : les 4 abaques de décollage échouent 20 fois sur 20 à l&#x27;exécution (aucun axe, aucune famille, aucun chaînage n&#x27;a survécu à l&#x27;aller-retour Excel du 18/06) et l&#x27;atterrissage n&#x27;existe nulle part — ni abaque, ni tableau, ni certification d&#x27;absence — donc aucune distance n&#x27;est calculable aujourd&#x27;hui, ni au décollage ni à l&#x27;atterrissage. Commencez par reconstruire les 4 abaques dans l&#x27;atelier puis saisir les 2 opérations d&#x27;atterrissage obligatoires ; ensuite, trois corrections rapides et sans ambiguïté : VS T/O absente, l&#x27;utilisable réservoir à 188 l qui contredit les 182 l du manuel, et Vx/Vy manifestement interverties.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 7 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it critique" data-sev="critique" data-itid="F-GBTU-01" data-clos="0" data-champ="performanceModels[0..3].data.graphs[*] (axes, familyAxisVariable, familyValue, linkedTo/cascadeOrder, isWindRelated/windDirection)" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-01</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">performanceModels[0..3].data.graphs[*] (axes, familyAxisVariable, familyValue, linkedTo/cascadeOrder, isWindRelated/windDirection)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 12 graphes des 4 modèles ne portent que {id, name, role, curves[].points, operationId} (+ data.metadata.systemType au niveau du modèle). Recherche exhaustive sur la fiche des clés axes / xAxis / yAxis / familyValue / familyAxisVariable / linkedTo / cascadeOrder / isWindRelated / windDirection / readoutAxis / referenceCases / fitted : 0 occurrence. Les 4 modèles portent _reimportedFromExcel = true et updatedAt = 2026-06-18T09:36:35 (inchangé depuis le 18/06). Au passage, sur performanceModels[1] (« passage 15 m, Flaps UP ») : Graphique 2 contient deux courbes nommées « 7 » et Graphique 3 deux courbes nommées « h6 ».</dd>
-<dt>Attendu</dt><dd>Chaque panneau muni de ses axes {min, max, unit, title} avec un titre X mappable (OAT / altitude / masse / vent), de sa famille (familyAxisVariable + familyValue par courbe), de son chaînage linkedTo/cascadeOrder, et windDirection sur le panneau vent (courbes h*/t*). Identifiants de courbes uniques à l&#x27;intérieur d&#x27;un même panneau.</dd>
-<dt>En vol</dt><dd>Aucune distance de décollage n&#x27;est calculable, quelles que soient les conditions : la préparation de vol s&#x27;arrête sur « entrée de panneau manquante » avant même d&#x27;entrer dans le premier abaque. Cela inclut les 2 opérations obligatoires volets décollage (takeoff_ground_roll_flaps_to et takeoff_50ft_flaps_to), donc aucun contrôle de longueur de piste au départ.</dd>
-<dt>Action</dt><dd>Rouvrir les 4 modèles dans l&#x27;atelier d&#x27;abaques et reconstruire la structure : axes de chaque panneau, variable de famille et valeur de chaque courbe, ordre de cascade, sens du vent sur le panneau h*/t*. Renommer au passage les courbes « 7 » et « h6 » dupliquées du modèle « passage 15 m, Flaps UP ». La cause racine est l&#x27;aller-retour Excel (performanceExcelImport.js ne transporte que id/name/role/operationId/points) : ne pas ré-exporter/ré-importer ces modèles après réparation.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur (probe-F-GBTU.json, 23/08) : 20/20 exécutions (4 modèles × 5 jeux de conditions, masse 1055 kg) rendent value = null, unit = null, chaîne évaluée vide, erreur « Entrée(s) de panneau manquante(s) : paramètre de « Graphique 2 », paramètre de « Graphique 3 » », missing = [paramètre de Graphique 2, paramètre de Graphique 3]. Confirmé par inspection de la fiche : aucune clé de structure présente sur aucun des 12 graphes.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-01) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 20 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it critique" data-sev="critique" data-itid="F-GBTU-02" data-clos="0" data-champ="performance atterrissage : landing_ground_roll_flaps_landing et landing_50ft_flaps_landing" data-sevlbl="critique">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -203,139 +190,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Les 2 opérations d&#x27;atterrissage du minimum obligatoire (landing_ground_roll_flaps_landing et landing_50ft_flaps_landing), sous forme d&#x27;abaque ou de tableau — ou, à défaut, leur certification « absente du manuel » dans bypassedFields (clés performance.landing_ground_roll_flaps_landing et performance.landing_50ft_flaps_landing).</dd>
 <dt>En vol</dt><dd>Aucune distance d&#x27;atterrissage n&#x27;est disponible, ni calculée ni statique : le pilote n&#x27;a aucun chiffre pour vérifier qu&#x27;une piste est suffisante à l&#x27;arrivée ou sur un dégagement.</dd>
 <dt>Action</dt><dd>Saisir les abaques ou tableaux d&#x27;atterrissage du manuel PA-28-161 dans l&#x27;atelier (roulement au sol et passage 15 m, volets atterrissage). En filet immédiat, renseigner performance.landing.groundRoll et performance.landing.fiftyFeet avec les valeurs POH statiques.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction avec le minimum obligatoire du moteur lui-même : packages/calc-engine/src/perf/abac/operationCatalog.ts:359-364 fixe MINIMUM_EXPECTED_OPERATION_IDS = [takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to, landing_ground_roll_flaps_landing, landing_50ft_flaps_landing]. getPresentOperationIds ne trouve dans la fiche que les 4 systemType takeoff_*, et bypassedFields = [] (ligne 230) : les deux opérations d&#x27;atterrissage ne sont ni couvertes, ni certifiées absentes.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GBTU-05" data-clos="0" data-champ="aircraft_data.speeds.vx et aircraft_data.speeds.vy" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-05</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vx et aircraft_data.speeds.vy</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">speeds.vx = 79 kt et speeds.vy = 63 kt (et speeds.vapp = 63 kt, valeur identique au vy actuel).</dd>
-<dt>Attendu</dt><dd>Vx strictement inférieure à Vy — très probablement l&#x27;interversion des deux valeurs saisies (vx = 63, vy = 79), à valider au manuel PA-28-161. Contrôler dans la même passe que vapp = 63 n&#x27;est pas une recopie de la case voisine.</dd>
-<dt>En vol</dt><dd>La vitesse annoncée pour la meilleure pente (franchissement d&#x27;obstacle au départ) est la plus rapide des deux : montée à 79 kt là où il faudrait 63, donc pente réelle bien plus faible que prévu au-dessus d&#x27;un obstacle, et inversement un taux de montée dégradé en croisière initiale à 63 kt.</dd>
-<dt>Action</dt><dd>Étape Vitesses de la fiche avion : intervertir Vx et Vy après lecture du manuel, et vérifier au passage V approche.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction avec la définition que la fiche donne elle-même de ses deux champs (manexExtractionService.js:125 : vx = « best angle of climb, takeoff configuration », vy = « best rate of climb, takeoff configuration ») : sous le plafond de propulsion, la vitesse de meilleure pente est toujours inférieure à celle de meilleur taux — les deux ne se rejoignent qu&#x27;au plafond absolu. Vx = 79 &gt; Vy = 63 est donc impossible. Les deux valeurs sont des saisies manuelles : manexExtraction donne speeds.vx et speeds.vy à value = null, accepted = false.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-09" data-clos="0" data-champ="aircraft_data.performanceCorrections" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-09</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceCorrections</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Clé totalement absente d&#x27;aircraft_data (0 occurrence dans la fiche), alors que compatibleRunwaySurfaces = [ASPH, CONC, GRASS] déclare l&#x27;herbe autorisée.</dd>
-<dt>Attendu</dt><dd>Au moins une règle « herbe » si le club en applique une (preset +15 %, appliesTo both) — à trancher : le manuel PA-28-161 ne fournit pas de correction de piste en herbe, c&#x27;est une convention d&#x27;exploitation. Aucune règle de vent à ajouter : les abaques portent un panneau vent (courbes h*/t*), et depuis le correctif du 21/08 les règles de vent ne s&#x27;appliquent plus quand l&#x27;abaque en contient un.</dd>
-<dt>En vol</dt><dd>Aucun effet aujourd&#x27;hui puisque aucune distance n&#x27;est calculable. Dès les abaques réparés, sélectionner une piste en herbe ne changerait rien aux distances : elles seraient calculées comme sur du revêtement dur.</dd>
-<dt>Action</dt><dd>Après reconstruction des abaques, étape Corrections de performance : ajouter la règle herbe retenue par le club (ou décider explicitement qu&#x27;il n&#x27;y en a pas).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction entre une capacité déclarée et l&#x27;absence du mécanisme qui la traduit : compatibleRunwaySurfaces contient GRASS (lignes 5141-5145) mais performanceCorrections ne figure pas parmi les clés d&#x27;aircraft_data. Le choix du niveau de correction relève du club, d&#x27;où le classement à confirmer.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-09) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-10" data-clos="0" data-champ="aircraft_data.approvedOperations (32 booléens)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-10</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.approvedOperations (32 booléens)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 32 booléens sont à false, y compris vfrDay, elt, fireExtinguisherHalon/Water/Powder, firstAidKit, lifeVests. Dans la même fiche : equipmentCom.vhf1 = true et vhf2 = true, equipmentNav.vor = true, dme = true, ils = true, gnss = true.</dd>
-<dt>Attendu</dt><dd>Au minimum vfrDay = true, plus l&#x27;inventaire réel de l&#x27;équipement de survie embarqué (ELT, extincteur, trousse de premiers secours).</dd>
-<dt>En vol</dt><dd>Le plan de vol est déposé sans aucun équipement de recherche et sauvetage déclaré — case 19 vide, pas d&#x27;ELT annoncée — alors que l&#x27;avion en porte très probablement une. Une information SAR absente ou fausse pèse au moment où on cherche l&#x27;appareil.</dd>
-<dt>Action</dt><dd>Étape Opérations approuvées de la fiche avion : cocher les règles de vol réellement approuvées et l&#x27;équipement de survie réellement embarqué.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence interne : la fiche décrit un avion équipé de deux VHF, VOR, DME, ILS et GNSS, et ne déclare dans le même temps aucune règle de vol approuvée, pas même le VFR de jour. Conséquence tracée dans le code : Step7Summary.jsx:590-606 ne remplit la case « Équipements SAR » du plan de vol qu&#x27;à partir de approvedOperations (elt, lifeRaft, survivalKit, plb), tous à false ici. L&#x27;inventaire réel n&#x27;étant pas déductible des données, le point est à confirmer sur l&#x27;avion.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-11" data-clos="0" data-champ="weights.minTakeoffWeight / minTakeoffWeight (racine) / cgEnvelope.aftMinWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-11</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">weights.minTakeoffWeight / minTakeoffWeight (racine) / cgEnvelope.aftMinWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Trois bornes basses divergentes : weights.minTakeoffWeight = 0, minTakeoffWeight (racine) = 690, cgEnvelope.aftMinWeight = 700 et cgEnvelope.forwardPoints[0].weight = 700.</dd>
-<dt>Attendu</dt><dd>Une seule borne basse, 700 kg (début de l&#x27;enveloppe du manuel) — ou le champ vide aux trois emplacements.</dd>
-<dt>En vol</dt><dd>Sans conséquence pratique : toute masse réelle, pilote et carburant compris, dépasse largement 700 kg. C&#x27;est une incohérence à solder pour que la fiche cesse de se contredire.</dd>
-<dt>Action</dt><dd>Étape Masse et centrage de la fiche avion : porter la masse minimale au décollage à 700 kg (ou la vider), afin que les trois emplacements s&#x27;alignent sur l&#x27;enveloppe.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne triple sur la même grandeur (0 / 690 / 700), et valeur hors de l&#x27;enveloppe que la fiche déclare elle-même : la racine annonce 690 kg alors que l&#x27;enveloppe commence à 700 kg (aftMinWeight = 700, premier point avant à 700). Le 690 est exactement emptyWeight = 690, valeur fabriquée au chargement.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-12" data-clos="0" data-champ="performanceModels[1].name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-12</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">performanceModels[1].name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Distance décollage — passage 15 m, Flaps UP (0°) ⚠ DOUBLON — préciser les volets », alors que le champ classification du même modèle est propre : « Distance décollage — passage 15 m, Flaps UP (0°) ».</dd>
-<dt>Attendu</dt><dd>Libellé sans le marqueur « ⚠ DOUBLON — préciser les volets ».</dd>
-<dt>En vol</dt><dd>Le modèle apparaît signalé en alerte dans l&#x27;atelier et dans les écrans de performance alors qu&#x27;il n&#x27;y a plus de doublon : alarme permanente qui finit par être ignorée.</dd>
-<dt>Action</dt><dd>Renommer le modèle dans l&#x27;atelier d&#x27;abaques, au moment de la reconstruction des axes.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Le doublon annoncé n&#x27;existe pas : les 4 classificationValue et les 4 data.metadata.systemType de la fiche sont deux à deux distincts (takeoff_ground_roll_flaps_up, takeoff_50ft_flaps_up, takeoff_ground_roll_flaps_to, takeoff_50ft_flaps_to). takeoff_50ft_flaps_up n&#x27;apparaît qu&#x27;une fois. Le marqueur d&#x27;alerte porté par le nom est donc périmé.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-13" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-13</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">equipmentSurv.transponderMode = « C » (champ au singulier) ; aucune clé equipmentSurv.transponderModes (au pluriel) dans la fiche.</dd>
-<dt>Attendu</dt><dd>Champ singulier vidé, et les modes réels (A / C / S) saisis dans l&#x27;étape Équipements, qui écrit le champ au pluriel.</dd>
-<dt>En vol</dt><dd>Le faux positif « balise de détresse » au plan de vol est corrigé côté code depuis le 17/08. Il reste qu&#x27;aucun mode transpondeur n&#x27;est réellement déclaré pour la case 10 du plan de vol, tandis que le récapitulatif de fiche continue d&#x27;afficher une pastille « Mode C » venue d&#x27;un champ que personne n&#x27;a jamais renseigné.</dd>
-<dt>Action</dt><dd>Étape Équipements de la fiche avion : cocher les modes transpondeur réels de l&#x27;appareil, puis vider le champ hérité au singulier.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Deux schémas concurrents pour la même donnée, seul l&#x27;orphelin étant rempli : l&#x27;étape Équipements écrit equipmentSurv.transponderModes sous forme de tableau (Step5Equipment.jsx:632-644) et le mapper MANEX vise le même chemin pluriel (manexExtractionMapper.js:274, label « Modes transpondeur (A/C/S) », value = null, accepted = false). Le champ singulier est posé en dur à « C » par l&#x27;initialisation de l&#x27;assistant (AircraftCreationWizard.jsx:403) et n&#x27;est plus lu que par l&#x27;affichage récapitulatif (Step5Review.jsx:1691-1692).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-14" data-clos="0" data-champ="aircraft_data.cruiseSpeedKt" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-14</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.cruiseSpeedKt</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">cruiseSpeedKt = 126 kt, exactement égal à speeds.vno = 126 kt. baseFactor = « 0.476 » = 60 / 126, donc cohérent avec la valeur saisie.</dd>
-<dt>Attendu</dt><dd>La vitesse de croisière réelle du manuel à 75 % de puissance, normalement située sous VNO ; l&#x27;égalité exacte avec le sommet de l&#x27;arc vert évoque une recopie de champ.</dd>
-<dt>En vol</dt><dd>Si 126 kt est trop optimiste, tous les temps de branche sont sous-estimés et le carburant de route avec eux — l&#x27;écart se paie en fin de navigation.</dd>
-<dt>Action</dt><dd>Relever la croisière 75 % au manuel PA-28-161 et corriger la vitesse de croisière de la fiche si nécessaire ; le facteur de base se recalcule seul.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Coïncidence exacte entre deux champs de nature différente (cruiseSpeedKt = 126 et speeds.vno = 126) dans la même fiche. L&#x27;extraction MANEX a bien accepté 126 pour les deux (labels « Vitesse de croisière (75% puissance) » et « VNO », ce dernier en page 10), mais avec une confiance nulle et sans page source pour la croisière : seul le manuel peut trancher.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-15" data-clos="0" data-champ="aircraft_data.homeBase vs aircraft_data.homeAeroclub" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-15</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">identite</span><span class="path">aircraft_data.homeBase vs aircraft_data.homeAeroclub</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">homeBase = « LFPE » (Meaux-Esbly) et homeAeroclub = « Aéro-club Melun-Villaroche » (dont le terrain est LFPM).</dd>
-<dt>Attendu</dt><dd>Un terrain d&#x27;attache cohérent avec le club — sauf si l&#x27;appareil est réellement basé à Meaux, ce que rien dans les données ne permet d&#x27;exclure.</dd>
-<dt>En vol</dt><dd>Terrain de départ proposé par défaut et distances de convoyage calculées depuis le mauvais terrain, si l&#x27;incohérence est bien une erreur.</dd>
-<dt>Action</dt><dd>Confirmer le terrain d&#x27;attache réel auprès du club et corriger LFPE en LFPM le cas échéant.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence entre deux champs d&#x27;identité de la même fiche. Non tranchable sur données : le champ terrain est libre et l&#x27;extraction MANEX a « accepté » LFPE avec confiance 0 et sans page source, ce qui n&#x27;établit rien. Décision du pilote.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-16" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-16</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Pesée datée du 2018-03-01, soit 8 ans et demi — sous le seuil d&#x27;alerte de l&#x27;application (10 ans, franchi en mars 2028). PDF joint (« Fiche de pesée TU.pdf », 981 ko, déposé le 18/06/2026) et cohérent avec la fiche : masse à vide 690 kg, bras 2,198 m, moment 1516,62 = 690 × 2,198.</dd>
-<dt>Attendu</dt><dd>Confirmation qu&#x27;aucune pesée plus récente n&#x27;existe au club.</dd>
-<dt>En vol</dt><dd>Aucune conséquence immédiate ; si une pesée plus récente existe, la masse à vide et le bras utilisés pour tous les centrages sont périmés.</dd>
-<dt>Action</dt><dd>Demander au club la dernière fiche de pesée et, si elle est postérieure, remplacer le PDF et les valeurs de masse à vide et de bras.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Point de vérification externe, non démontrable sur les données : la fiche est interne cohérente (690 × 2,198 = 1516,62) et l&#x27;échéance d&#x27;alerte n&#x27;est pas atteinte. Seul le club peut dire si une pesée plus récente existe.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-17" data-clos="0" data-champ="performanceModels[0..3].data.graphs[1].axes.xAxis.max (les 4 panneaux masse)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-17</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">performanceModels[0..3].data.graphs[1].axes.xAxis.max (les 4 panneaux masse)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">xAxis = {min 750, max 1050, step 100, unit kg, reversed} sur les 4 panneaux masse (lignes 2433, 3729, 5205, 6419), alors que la fiche déclare maxTakeoffWeight = 1055 et weights.mtow = 1055 : la MTOW tombe HORS du domaine tracé.</dd>
-<dt>Attendu</dt><dd>Axe et guides masse couvrant au moins 1055 kg — même défaut que F-GIEA-10, rapporté par l&#x27;import du preset F-GIEA du 25/08.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-17) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-20" data-clos="0" data-champ="performanceModels[0..3].importedPerformanceFrom / data.metadata.aircraftModel" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-20</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">performanceModels[0..3].importedPerformanceFrom / data.metadata.aircraftModel</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 4 modèles portent importedPerformanceFrom = {registration &quot;F-GIEA&quot;, presetId 8a95f8d8, date 2026-08-25T10:14} et aircraftModel/modelName = &quot;PA 28 Cadet&quot;, alors que la fiche est model = &quot;PA 28-161&quot; (F-GBTU). Les referenceCases (ex. modèle 0 : expected 1150 à 27 °C, masse 1055, vent 15 kt) proviennent du manuel du Cadet.</dd>
-<dt>Attendu</dt><dd>Confirmation pilote que les abaques du manuel du PA 28 Cadet F-GIEA sont bien identiques à celles du manuel du F-GBTU — sinon toutes les distances de décollage calculées seraient celles d&#x27;un autre appareil.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-20) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-21" data-clos="0" data-champ="utilityCategory.mtow / utilityCategory.mlw" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GBTU-21</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">utilityCategory.mtow / utilityCategory.mlw</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">mtow = 885 et mlw = 885 (enabled = false, lignes 2149-2152), valeur exactement égale au point de cassure 885 kg de l&#x27;enveloppe avant (forwardPoints[1].weight = 885) — évoque une recopie.</dd>
-<dt>Attendu</dt><dd>À confirmer au manuel (catégorie utilitaire d&#x27;un PA-28-161 : 2020 lb ≈ 916 kg) ; champ inerte tant que enabled = false.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-21) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ TOUJOURS OUVERT au 27/08 — coché « fait » dans le rapport, mais RIEN n&#x27;est monté en base (vérifié sur la fiche v8) : les 4 performanceModels sont tous des takeoff_* (aucun landing_ground_roll_flaps_landing ni landing_50ft_flaps_landing), advancedPerformance et performanceTables sont absents, performance.landing.groundRoll et .fiftyFeet valent &quot;&quot;, et bypassedFields ne contient que speeds.vglide — donc aucune certification d&#x27;absence non plus. En vol : aucune distance d&#x27;atterrissage n&#x27;est calculable sur cet appareil. QUESTION : voulez-vous (a) tracer les 2 abaques d&#x27;atterrissage du manuel PA 28-161 comme vous venez de le faire pour le décollage, (b) les saisir en tableaux, ou (c) certifier leur absence du manuel — auquel cas je scripte les 2 clés de bypass ?</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-02) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GGZO</span><span class="mdl">Cessna 172N</span><span class="spacer"></span>

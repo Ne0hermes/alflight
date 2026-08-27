@@ -1083,5 +1083,75 @@
   "itid": "F-BXNG-21",
   "status": "valide",
   "note": "CLOS — confirmation pilote (« c'est good ») : croisière 105 kt (75 % puissance, extraction confiance 95) face à VNO 104 kt — cohérent, baseFactor 0.571 aligné. Rien à corriger."
+ },
+ {
+  "itid": "F-GBTU-01",
+  "status": "fait",
+  "note": "CLOS — vérifié sur la fiche v7/v8 (modèles réécrits le 27/08 entre 09:22 et 09:24) : les 12 graphes sont désormais complets. Chaque panneau porte ses axes {min, max, unit, title} avec un titre X mappable (oat, mass, wind_component), le panneau température porte familyAxisVariable = pressure_altitude, le chaînage linkedTo est en place avec cascadeOrder 2 puis 3, et le panneau vent porte isWindRelated = true. Le point critique est levé. Réserve sans gravité : windDirection n'est pas renseigné et les courbes vent couvrent 0 → 15 kt en composante positive uniquement — un vent arrière sort du domaine tracé et déclenche le refus de calcul (fail-closed), conforme à la doctrine actée (F-GNAM-03, F-GIEA-10)."
+ },
+ {
+  "itid": "F-GBTU-02",
+  "status": "ouvert",
+  "note": "TOUJOURS OUVERT au 27/08 — coché « fait » dans le rapport, mais RIEN n'est monté en base (vérifié sur la fiche v8) : les 4 performanceModels sont tous des takeoff_* (aucun landing_ground_roll_flaps_landing ni landing_50ft_flaps_landing), advancedPerformance et performanceTables sont absents, performance.landing.groundRoll et .fiftyFeet valent \"\", et bypassedFields ne contient que speeds.vglide — donc aucune certification d'absence non plus. En vol : aucune distance d'atterrissage n'est calculable sur cet appareil. QUESTION : voulez-vous (a) tracer les 2 abaques d'atterrissage du manuel PA 28-161 comme vous venez de le faire pour le décollage, (b) les saisir en tableaux, ou (c) certifier leur absence du manuel — auquel cas je scripte les 2 clés de bypass ?"
+ },
+ {
+  "itid": "F-GBTU-05",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : vx = 63 kt et vy = 79 kt, l'interversion est corrigée (l'ordre Vx < Vy est rétabli et correspond au manuel du PA-28-161 Warrior II). Contrôle complémentaire demandé par l'item : vapp = 63 kt n'est pas une recopie de la case voisine — c'est la vitesse d'approche courte du manuel, qui coïncide légitimement avec Vx."
+ },
+ {
+  "itid": "F-GBTU-09",
+  "status": "fait",
+  "note": "CLOS — résolu autrement, et bien vu : plutôt que d'ajouter une règle « herbe », vous avez retiré GRASS de compatibleRunwaySurfaces (vérifié en base : [ASPH, CONC]). L'absence de performanceCorrections devient cohérente — plus aucune surface non revêtue n'est proposée, donc plus aucune majoration à saisir. Aucune règle de vent n'était attendue : les abaques portent leur propre panneau vent."
+ },
+ {
+  "itid": "F-GBTU-10",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : approvedOperations.vfrDay = true et approvedOperations.elt = true (2 clés sur 32). La coche a bien persisté cette fois, et l'ELT est déclaré au plan de vol."
+ },
+ {
+  "itid": "F-GBTU-11",
+  "status": "fait",
+  "note": "CLOS — mais ATTENTION, un effet de bord a été détecté et corrigé. Vous avez bien vidé weights.minTakeoffWeight (0 → \"\"), ce que l'item demandait. En revanche la MASSE À VIDE est passée de 690 à 700 kg entre la v5 (26/08 12:01, sauvegarde fix-titres) et la v7 (27/08 09:34) — vraisemblablement en lisant « une seule borne basse, 700 kg », qui visait les miroirs de minTakeoffWeight et non la masse à vide. L'application avait suivi en recalculant moments.empty à 1538,60. J'ai lu le rapport de pesée joint à la fiche (Étampes, 01/03/2018) : masses lues 243 + 247 + 200 = 690 kg, ligne Résultats 690,000 kg / bras 2,198 m / moment 1516,340 — et pesée précédente 692 kg au 22/01/2013. La base a donc été restaurée par script fix-gbtu-27-08 (v8 vérifiée, sauvegarde backups/fix-gbtu-2026-08-27T09-43-31) : emptyWeight 690, weights.emptyWeight 690, moments.empty 1516,62. Les trois bornes basses gardent chacune son sens propre et ne sont pas des miroirs : masse à vide 690 (pesée), racine minTakeoffWeight 690 (= masse à vide, doctrine du visuel de la fiche de pesée), cgEnvelope.aftMinWeight 700 (début de l'enveloppe du manuel). Si les 700 kg étaient délibérés — nouvel équipement, pesée plus récente — dites-le moi et je réécris."
+ },
+ {
+  "itid": "F-GBTU-12",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : performanceModels[1].name vaut « Distance décollage — passage 15 m, Flaps UP (0°) », le marqueur « ⚠ DOUBLON — préciser les volets » a disparu. Les 4 noms sont désormais alignés sur leur classification."
+ },
+ {
+  "itid": "F-GBTU-13",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : equipmentSurv.transponderMode (singulier) a disparu et transponderModes = [a, c], propre et normalisé (verrou code 45a6d986 du 26/08)."
+ },
+ {
+  "itid": "F-GBTU-14",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : cruiseSpeedKt est passé de 126 à 120 kt, désormais sous VNO = 126 kt. Le baseFactor a suivi (\"0.500\" = 60/120), donc les temps de vol estimés sont recalculés sur la bonne vitesse."
+ },
+ {
+  "itid": "F-GBTU-15",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« valide ») : l'appareil est bien basé à LFPE (Meaux-Esbly) tout en appartenant à l'Aéro-club de Melun-Villaroche. L'écart terrain/club est réel, pas une erreur de saisie."
+ },
+ {
+  "itid": "F-GBTU-16",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (coché), et vérifié sur pièce : j'ai ouvert le PDF joint à la fiche (Fiche de pesée TU.pdf). C'est un rapport de pesée établi à Étampes le 01/03/2018, qui mentionne lui-même la pesée précédente (692 kg au 22/01/2013). La certificationDate 2018-03-01 est donc exacte et c'est bien la pesée en vigueur ; le seuil d'alerte de 10 ans sera franchi en mars 2028."
+ },
+ {
+  "itid": "F-GBTU-17",
+  "status": "valide",
+  "note": "CLOS — le pilote valide l'état tel quel (« valide qd meme »), même précédent que F-GIEA-10 : les courbes du manuel ne s'étendent pas au-delà du domaine tracé, on ne peut pas élargir l'axe sans extrapoler. À retenir pour l'usage : l'axe masse des 4 panneaux s'arrête à 1050 kg alors que la MTOW est 1055 kg, donc une préparation exactement à la masse maxi sort du domaine et l'application refuse de rendre une distance plutôt que d'extrapoler (fail-closed, comportement voulu)."
+ },
+ {
+  "itid": "F-GBTU-20",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote : « je fais l'import et je m'en sers de base pour modification », l'import du preset F-GIEA est un flux de travail assumé et non une recopie subie. Vérifié en base : data.metadata.aircraftModel est passé de « PA 28 Cadet » à « PA 28-161 » sur les 4 modèles, et les modèles ont bien été retravaillés le 27/08 (09:22-09:24). Le marqueur importedPerformanceFrom est conservé, ce qui est sain pour la traçabilité. À noter : les referenceCases hérités du manuel du Cadet ont disparu — cohérent puisqu'ils décrivaient un autre appareil, mais vos 4 abaques n'ont plus aucun cas de contrôle. La fonction de cas de référence masse & centrage en cours de développement pourra servir de modèle pour en ressaisir un par abaque depuis le manuel du PA 28-161."
+ },
+ {
+  "itid": "F-GBTU-21",
+  "status": "fait",
+  "note": "CLOS — vérifié puis corrigé : contrairement à ce que vous pensiez, la catégorie utilitaire était TOUJOURS en base (utilityCategory = {mtow: 885, mlw: 885, enabled: false}), avec 885 recopié du point de cassure de l'enveloppe avant. Le bloc était inerte — tous les accès du code passent par utilityCategory?.enabled en chaînage optionnel — mais il contredisait la fiche. Supprimé par script fix-gbtu-27-08 (v8 vérifiée : utilityCategory absent). La base dit désormais ce que vous croyiez vrai."
  }
 ]
