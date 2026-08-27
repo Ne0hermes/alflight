@@ -971,8 +971,8 @@
  },
  {
   "itid": "F-GUVV-11",
-  "status": "ouvert",
-  "note": "Coché, MAIS l'état v5 est plus étrange qu'avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse. ▸ 2e coche sans commentaire, base inchangée (v6) : tranches 940-1080→101 / 1080-1180→108 / 1180-1180→115, MTOW 1150. HYPOTHÈSE à confirmer : les « 1180 » sont-ils des coquilles pour 1150 (manuel : 940-1080→101, 1080-1150→108, et le 115 kt n'existe pas ?) — répondez et je scripte ; ou le manuel publie-t-il littéralement ces tranches ?"
+  "status": "fait",
+  "note": "Coché, MAIS l'état v5 est plus étrange qu'avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse. ▸ 2e coche sans commentaire, base inchangée (v6) : tranches 940-1080→101 / 1080-1180→108 / 1180-1180→115, MTOW 1150. HYPOTHÈSE à confirmer : les « 1180 » sont-ils des coquilles pour 1150 (manuel : 940-1080→101, 1080-1150→108, et le 115 kt n'existe pas ?) — répondez et je scripte ; ou le manuel publie-t-il littéralement ces tranches ? ▸ CLOS — corrigé PAR LE PILOTE dans l'app (v8 vérifiée, entre mon extraction et mon script — dont le garde-fou a refusé d'écrire par-dessus, comportement voulu) : tranches du manuel 940-1080 → 101 kt et 1080-1150 (MTOW) → 108 kt, les bornes 1180 et la tranche vide ont disparu. F-GUVV EST SOLDÉ."
  },
  {
   "itid": "F-GUVV-13",
