@@ -341,8 +341,8 @@
  },
  {
   "itid": "F-BXNG-11",
-  "status": "ouvert",
-  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n'était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l'app puis ré-enregistrer — ou me confirmer que rien n'est approuvé sur cet avion."
+  "status": "fait",
+  "note": "Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n'était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l'app puis ré-enregistrer — ou me confirmer que rien n'est approuvé sur cet avion. ▸ CLOS — rapport pilote 27/08. Vérifié en base (v6 du 27/08 09:14) : approvedOperations.vfrDay = true — l'anomalie « coché mais pas monté » d'hier est levée, la coche a bien persisté cette fois. Les 31 autres clés et specialCapabilities restent false : conforme à l'exploitation déclarée (F150M de club, VFR jour)."
  },
  {
   "itid": "F-BXQT-01",
@@ -1043,5 +1043,45 @@
   "itid": "F-GOFP-17",
   "status": "valide",
   "note": "Rapport pilote : « elles sont données égales dans le manuel de vol » — vsTO = vs1 = 40 kt est la publication du F152, l'égalité est légitime (ordre vso 35 ≤ 40 ≤ 40 ✓). F-GOFP EST SOLDÉ."
+ },
+ {
+  "itid": "F-BXNG-13",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote : VNE 141 kt est la valeur du manuel. Le 140 de manexExtraction est un instantané d'archive jamais réécrit (doctrine GNAM-17/GUKQ-13/GOFP-14). Champ vif vérifié à 141 : rien à corriger."
+ },
+ {
+  "itid": "F-BXNG-14",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : vx vidé, vy = 68 conservée. L'affichage impossible Vx = Vy disparaît ; les deux vitesses sont facultatives depuis le 23/08."
+ },
+ {
+  "itid": "F-BXNG-16",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : transponderMode (singulier) a disparu, transponderModes = [a, c] propre et normalisé (verrou code 45a6d986)."
+ },
+ {
+  "itid": "F-BXNG-17",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« c'est good ») : la limite arrière du centrogramme est bien verticale à 0,951 m sur toute la plage 500-726 kg. Moments miroirs cohérents vérifiés (475,5 et 690,43)."
+ },
+ {
+  "itid": "F-BXNG-18",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (coché) : la pesée du 22/03/2021 est bien celle en vigueur (PDF à bord de la fiche, seuil d'alerte 10 ans non atteint)."
+ },
+ {
+  "itid": "F-BXNG-19",
+  "status": "fait",
+  "note": "CLOS — le volet actionnable (lastModified périmé) a été purgé par purge-horodatages-miroirs (vérifié : clé absente en base). Les miroirs vides (weights.minTakeoffWeight/maxBaggageAft/maxBaggageFwd = \"\", units = {}) sont inertes — l'app lit la racine et _metadata.units ; la racine minTakeoffWeight = masse à vide est un choix assumé (doctrine HDIM-18/GNAM-23/BXQT-19/GGZO-15/GOFP-08)."
+ },
+ {
+  "itid": "F-BXNG-20",
+  "status": "obsolete",
+  "note": "CLOS SANS OBJET — doctrine actée (HSTR-10, HDIM-19, GGZO-16, BXQT-17) : les clés legacy type/optional des réservoirs ne sont plus lues, les rôles tankVariants font foi (les 2 variantes 98L/144L portent role fixed). L'asymétrie de structure est cosmétique et sans effet."
+ },
+ {
+  "itid": "F-BXNG-21",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« c'est good ») : croisière 105 kt (75 % puissance, extraction confiance 95) face à VNO 104 kt — cohérent, baseFactor 0.571 aligné. Rien à corriger."
  }
 ]

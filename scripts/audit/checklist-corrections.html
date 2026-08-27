@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>208 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>35 points à
+  <b>217 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>26 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 5 majeurs, 25 mineurs — dont 15 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 4 majeurs, 17 mineurs — dont 9 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -157,111 +157,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 
 <details class="av" open>
 <summary><span class="reg">F-BXNG</span><span class="mdl">F 150M</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
-<span class="pill p-mineur">8 mineurs</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-BXNG" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXNG" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tableaux MANEX seuls, aucun abaque : performanceModels = null et performanceTables = null (sonde 23/08 : 0 modèle évalué), toute la performance repose sur advancedPerformance.tables — 4 tables réimportées d&#x27;Excel le 18/06, grille ISA diagonale (une seule case température par palier d&#x27;altitude). Masse &amp; centrage complet et cohérent (cgEnvelope 3 points avant + limite arrière constante, 2 compartiments bagages, 2 réservoirs et 2 variantes). Corrections de piste/vent créées le 21/08, encore incomplètes.</b> — Le carburant est sain et vérifié chiffre par chiffre (85 L utilisables → moment 65,48 = 85 × 0,72 × 1,07 ; Long Range 132,5 L → 102,08 ; les deux variantes pointent bien sur leur réservoir), et l&#x27;enveloppe de centrage est cohérente à la décimale près avec ses miroirs. Ce qui bloque, c&#x27;est la performance : la grille des 4 tables n&#x27;est remplie que sur la diagonale ISA, si bien qu&#x27;à 0 ft dès 16 °C — comme à 5 °C — le moteur refuse toute distance ; s&#x27;y ajoute l&#x27;absence des deux opérations de décollage volets décollage, qui fait basculer l&#x27;affichage sur les tables « Flaps UP ». Commencez par là : rouvrir l&#x27;atelier tableaux et saisir toutes les colonnes de température des pages 68 et 69 ; puis effacer les bras de sièges arrière (1,000 m, identiques aux sièges avant), qui font accepter aujourd&#x27;hui un poste de chargement fantôme sans le moindre avertissement.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 12 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXNG-11" data-clos="0" data-champ="aircraft_data.approvedOperations (32 clés) et aircraft_data.specialCapabilities" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-11</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.approvedOperations (32 clés) et aircraft_data.specialCapabilities</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 32 clés de approvedOperations sont à false, y compris vfrDay, training et elt ; les 10 clés de specialCapabilities sont à false. En regard, equipmentNav déclare vor, dme, ils et gnss à true, equipmentCom vhf1 et vhf2 à true.</dd>
-<dt>Attendu</dt><dd>Au minimum vfrDay coché et l&#x27;ELT déclaré si la balise est à bord, ainsi que les équipements de survie réellement embarqués — un avion équipé VOR/DME/ILS/GNSS et exploité en club ne peut être approuvé pour aucune opération.</dd>
-<dt>En vol</dt><dd>Le plan de vol ne déclare aucun équipement de survie : la case ELT part vide alors que la balise est réglementairement à bord. En cas de recherche, l&#x27;information manque là où elle compte.</dd>
-<dt>Action</dt><dd>Onglet Équipements → Opérations approuvées : cocher vfrDay, l&#x27;ELT et les équipements de survie réellement présents dans l&#x27;avion.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Incohérence entre deux blocs voisins de la fiche : équipements de navigation IFR déclarés présents et aucune opération approuvée, pas même le VFR de jour. Effet tracé au 21/08 : Step7Summary ne déclare l&#x27;ELT au plan de vol que si approvedOperations.elt est true.</dd>
-</dl><div class="notefait">✎ Coché « fait » par le pilote le 25/08, MAIS la base v3 porte toujours approvedOperations TOUT à false (F-BXQT, lui, a bien été mis à jour : vfrDay, training, formation, survivalKit à true). La modification n&#x27;était probablement pas dans la copie locale au moment du ré-enregistrement : re-cocher les opérations dans l&#x27;app puis ré-enregistrer — ou me confirmer que rien n&#x27;est approuvé sur cet avion.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-13" data-clos="0" data-champ="aircraft_data.speeds.vne" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-13</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vne</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">141 kt dans le champ vif, alors que manexExtraction porte pour speeds.vne la valeur 140 kt avec found = true et accepted = true (targetUnit kt). Le champ voisin vno est à 104, identique à l&#x27;extraction acceptée.</dd>
-<dt>Attendu</dt><dd>Une seule valeur, celle du manuel — la fiche et son relevé d&#x27;extraction ne peuvent pas donner deux VNE différentes.</dd>
-<dt>En vol</dt><dd>Écart de 1 kt sur la vitesse à ne jamais dépasser : sans conséquence de calcul, mais l&#x27;arc rouge du badin affiché par l&#x27;application n&#x27;est pas celui qui a été validé à l&#x27;extraction.</dd>
-<dt>Action</dt><dd>Onglet Vitesses : relire VNE au manuel et aligner le champ (ou reprendre l&#x27;extraction) pour qu&#x27;une seule valeur subsiste.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne entre manexExtraction.items (aircraftPath speeds.vne, value 140, accepted true) et aircraft_data.speeds.vne = 141. Comparaison automatisée des 113 items d&#x27;extraction avec les champs vifs : vne est le seul écart de valeur sur un item accepté.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-14" data-clos="0" data-champ="aircraft_data.speeds.vx et aircraft_data.speeds.vy" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-14</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vx et aircraft_data.speeds.vy</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vx = 68 kt et vy = 68 kt, exactement égales. Les deux items d&#x27;extraction correspondants portent aussi 68, originalUnit « kts », sourcePage 51, confidence 95, accepted true.</dd>
-<dt>Attendu</dt><dd>Vx strictement inférieure à Vy au niveau de la mer — elles ne convergent qu&#x27;au plafond de propulsion.</dd>
-<dt>En vol</dt><dd>Aucun blocage (les deux vitesses sont facultatives depuis le 23/08), mais la montée au meilleur angle et la montée au meilleur taux sont annoncées à la même vitesse : impossible de choisir la bonne pour franchir un obstacle.</dd>
-<dt>Action</dt><dd>Onglet Vitesses : relire la page 51 du manuel, vérifier la valeur ET l&#x27;unité (kt ou mph), puis corriger Vx et Vy.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Égalité stricte de deux vitesses qui ne peuvent l&#x27;être au niveau de la mer. L&#x27;égalité vient de l&#x27;extraction elle-même (les deux items page 51 portent 68), donc d&#x27;une lecture unique reportée sur les deux champs — la correction se tranche au manuel, pas en base.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-16" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">&quot;C&quot;, au singulier. Aucune clé transponderModes (pluriel), qui est celle qu&#x27;écrit l&#x27;écran Équipements. equipmentSurv.adsb = false, tcas = false, acas = false.</dd>
-<dt>Attendu</dt><dd>Champ vidé : le mode réel se saisit dans l&#x27;étape Équipements, sous la clé au pluriel.</dd>
-<dt>En vol</dt><dd>L&#x27;écran de revue affiche encore une puce « Mode C » issue d&#x27;un champ que le pilote n&#x27;a jamais rempli — une information non vérifiée présentée comme validée. L&#x27;effet le plus nocif (déclaration d&#x27;une balise au plan de vol) a été levé côté code le 17/08.</dd>
-<dt>Action</dt><dd>Onglet Équipements : vider transponderMode et saisir le mode réel dans le champ de l&#x27;étape Équipements.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Champ orphelin : la clé au singulier n&#x27;a aucun jumeau au pluriel dans la fiche, et l&#x27;extraction MANEX liste bien equipmentSurv.transponderModes (pluriel) comme chemin cible, found = false. Le champ est donc posé par défaut à l&#x27;initialisation, pas saisi.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-17" data-clos="0" data-champ="aircraft_data.cgEnvelope.aftCG / aftMinCG / aftMaxCG" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-17</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.cgEnvelope.aftCG / aftMinCG / aftMaxCG</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">0,951 m constant de aftMinWeight 500 kg à aftMaxWeight 726 kg. Moments cohérents : 475,5 = 500 × 0,951 et 690,43 = 726 × 0,951. Miroirs cgLimits.aft et weightBalance.cgLimits.aft également à 0,951 : aucune contradiction interne.</dd>
-<dt>Attendu</dt><dd>0,951 m si le centrogramme du manuel donne bien une limite arrière verticale sur toute la plage de masse ; une limite arrière qui s&#x27;infléchit vers l&#x27;avant en haut de plage serait à saisir en points.</dd>
-<dt>En vol</dt><dd>Si le centrogramme réel referme la limite arrière près de la masse maxi, un chargement jugé « dans les limites » à 726 kg pourrait en sortir. Rien dans la fiche ne permet de trancher.</dd>
-<dt>Action</dt><dd>Onglet Masse &amp; centrage → enveloppe : comparer d&#x27;un coup d&#x27;œil le tracé de la limite arrière au centrogramme du manuel et, si elle s&#x27;infléchit, saisir les points correspondants.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Aucune contradiction en base — l&#x27;enveloppe et ses deux miroirs concordent à la décimale, et la limite avant varie bien (0,798 m jusqu&#x27;à 592 kg puis 0,835 m à 726 kg). Seule la comparaison au centrogramme du manuel peut confirmer que la limite arrière est réellement constante.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-17) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-18" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-18</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">2021-03-22, soit 5 ans et 5 mois au 23/08/2026. PDF « Fiche de pesée NG.pdf » (75 895 octets) présent, hasData = true, uploadé le 2026-06-23. C&#x27;est cette pesée qui fournit emptyWeight 527,1 kg et arms.empty 0,854 m.</dd>
-<dt>Attendu</dt><dd>La pesée en vigueur au titre du programme d&#x27;entretien. Le seuil d&#x27;alerte de l&#x27;application est à 10 ans, non atteint, mais la périodicité en club est souvent plus courte.</dd>
-<dt>En vol</dt><dd>Masse à vide et bras à vide alimentent TOUS les centrages de l&#x27;avion. Si une pesée plus récente existe et n&#x27;a pas été reportée, chaque verdict de centrage part d&#x27;une base périmée.</dd>
-<dt>Action</dt><dd>Onglet Masse &amp; centrage → fiche de pesée : vérifier auprès du club qu&#x27;aucune pesée postérieure n&#x27;existe ; le cas échéant remplacer le PDF, la date, la masse à vide et le bras.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Date lue telle quelle sur la base fraîche du 23/08, inchangée depuis l&#x27;audit. Cohérence interne vérifiée : moments.empty = 450,143 = 527,1 × 0,854, donc masse et bras de la pesée sont bien ceux utilisés par le calcul.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-18) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-19" data-clos="0" data-champ="aircraft_data.weights.minTakeoffWeight, weights.maxBaggageAft, weights.maxBaggageFwd, aircraft_data.units, aircraft_data.lastModified" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-19</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.weights.minTakeoffWeight, weights.maxBaggageAft, weights.maxBaggageFwd, aircraft_data.units, aircraft_data.lastModified</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">weights.minTakeoffWeight = &quot;&quot; alors que la racine minTakeoffWeight = 527,1 (et vaut exactement emptyWeight) ; weights.maxBaggageAft = &quot;&quot; et weights.maxBaggageFwd = &quot;&quot; alors que baggageCompartments porte 54 et 18 kg ; units = {} alors que _metadata.units est complet (ltr, kt, kg, ft, nm, m, lph) et unitsVerified = true ; lastModified = 2026-06-23T07:00:50Z alors que la ligne a été sauvegardée le 2026-08-21T13:36:43Z (updated_at).</dd>
-<dt>Attendu</dt><dd>Des miroirs soit alignés sur leur source, soit supprimés — un miroir vide en face d&#x27;une source renseignée finit toujours par être lu par un écran.</dd>
-<dt>En vol</dt><dd>Aucun effet sur les calculs : le moteur lit la racine et _metadata. Mais un écran de revue qui lirait le bloc weights afficherait des soutes sans limite et une masse mini absente, et l&#x27;horodatage annoncé au pilote a deux mois de retard sur la dernière modification réelle.</dd>
-<dt>Action</dt><dd>À la prochaine ouverture de la fiche, enregistrer une fois depuis l&#x27;onglet Masse &amp; centrage pour resynchroniser les miroirs, et vérifier que l&#x27;horodatage affiché suit.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Miroirs vides face à des sources renseignées, relevés sur la base fraîche du 23/08 : racine minTakeoffWeight 527,1 vs weights.minTakeoffWeight &quot;&quot; ; baggageCompartments [54 ; 18] vs weights.maxBaggageAft/Fwd &quot;&quot; ; _metadata.units complet vs units {} ; lastModified 2026-06-23 vs updated_at 2026-08-21. Chaîne de lecture confirmée dans computeWeightBalance.js:47-51, qui lit aircraft.minTakeoffWeight à la racine.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-19) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-20" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[1].type" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-20</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.additionalFuelTanks[1].type</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le réservoir « Réservoir d&#x27;aile Long Range » (id 1787318931632.6404, arm 1,07, totalCapacity 144, usableCapacity 132,5, momentAtFull 102,08 = 132,5 × 0,72 × 1,07) ne porte AUCUNE clé type, alors que le réservoir jumeau additionalFuelTanks[0] « Réservoir d&#x27;aile Standard » porte type = « main ». Il porte en revanche une clé optional = false absente du jumeau.</dd>
-<dt>Attendu</dt><dd>Champ type renseigné comme sur le réservoir standard (même motif que F-BXQT-17 sur le réservoir Étendu) — l&#x27;asymétrie de structure entre deux réservoirs de même nature est visible dans la fiche seule.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-20) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-BXNG-21" data-clos="0" data-champ="aircraft_data.cruiseSpeedKt vs aircraft_data.speeds.vno" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXNG-21</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.cruiseSpeedKt vs aircraft_data.speeds.vno</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">cruiseSpeedKt = 105 kt, soit 1 kt AU-DESSUS de speeds.vno = 104 kt (sommet de l&#x27;arc vert). La valeur 105 vient de l&#x27;extraction acceptée « Vitesse de croisière (75% puissance) » = 105 (sourcePage 51, confidence 95) et baseFactor « 0.571 » = 60/105 est cohérent avec elle : la fiche est fidèle à son extraction, mais croisière &gt; VNO.</dd>
-<dt>Attendu</dt><dd>Confirmation au manuel : si 105 kt est une vitesse vraie (TAS) de croisière en altitude face à une VNO en vitesse indiquée, il n&#x27;y a rien à corriger ; si les deux sont des vitesses indiquées, la croisière déclarée dépasse l&#x27;arc vert et doit être revue.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXNG-21) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 21 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-BXNG-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-BXQT</span><span class="mdl">CESSNA F150 M</span><span class="spacer"></span>
