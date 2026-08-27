@@ -60,7 +60,7 @@ function renderItem(reg, item, n) {
   const classePill = (item.classe === 'a-confirmer'
     ? '<span class="pill a-manuel">À confirmer au manuel</span>'
     : '<span class="pill a-bloque">Erreur démontrée</span>')
-    + (item.ajout ? '<span class="pill a-manuel">Nouveau 26/08</span>' : '');
+    + (item.ajout ? `<span class="pill a-manuel">Nouveau ${String(item.ajout).slice(8, 10)}/${String(item.ajout).slice(5, 7)}</span>` : '');
   const r = retours[itid];
   const clos = r && CLOS.has(r.status);
   const noteHtml = r ? `<div class="notefait">${clos ? '✓' : '✎'} ${esc(r.note)}</div>` : '';

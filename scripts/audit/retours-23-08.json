@@ -1153,5 +1153,65 @@
   "itid": "F-GBTU-21",
   "status": "note",
   "note": "CLOS — vérifié puis corrigé : contrairement à ce que vous pensiez, la catégorie utilitaire était TOUJOURS en base (utilityCategory = {mtow: 885, mlw: 885, enabled: false}), avec 885 recopié du point de cassure de l'enveloppe avant. Le bloc était inerte — tous les accès du code passent par utilityCategory?.enabled en chaînage optionnel — mais il contredisait la fiche. Supprimé par script fix-gbtu-27-08 (v8 vérifiée : utilityCategory absent). La base dit désormais ce que vous croyiez vrai. ▸ ACTÉ SANS CORRECTION DURABLE POSSIBLE PAR SCRIPT. La purge de 09:43 a bien retiré le bloc utilityCategory, mais votre sauvegarde de 10:05 l'a réécrit à l'identique ({mtow: 885, mlw: 885, enabled: false}) — _updateHistory le confirme, utilityCategory figure parmi les 8 champs écrits par cette sauvegarde. C'est le motif « revient par la copie locale » déjà rencontré sur le transpondeur : la copie ouverte dans l'atelier datait d'avant la purge et a été réenregistrée telle quelle. Aucun code de l'application ne crée ce bloc (les 2 seules occurrences dans src sont une LECTURE en chaînage optionnel dans Step6WeightBalance et le mappage d'extraction MANEX) : il ne fait que survivre d'une sauvegarde à l'autre. État : totalement inerte tant que enabled reste false — tous les accès passent par utilityCategory?.enabled, et le module Masse & centrage utilise l'enveloppe racine. Le seul correctif durable serait un filet côté code, du type de celui du transpondeur, qui retire le bloc à l'écriture quand enabled n'est pas true."
+ },
+ {
+  "itid": "F-HFGI-01",
+  "status": "ouvert",
+  "note": "RÉPONSE À VOTRE QUESTION (« détaille-moi ton problème »), et la planche tranche. Le modèle déclare deux unités différentes pour une même distance : le panneau primaire porte outputKind « distance » avec outputUnit « m », tandis que l'axe de LECTURE, celui du panneau vent, est gradué de 400 à 1000 en « ft ». Le moteur retient l'unité du dernier panneau, donc il rend bien des pieds (596 ft à 15 °C / 500 ft) — le résultat servi est juste, mais la déclaration du panneau primaire le contredit, et le jour où le moteur lira cette clé la distance sera prise pour des mètres, soit un facteur 3,28. J'ai lu la planche : son échelle inférieure porte les DEUX graduations, les pieds en haut (400, 600, 800, 1000, 1200, 1400) et les mètres en dessous (150 à 450), et son exemple imprimé dit « Course d'atterrissage : 660 ft (201 m) ». C'est donc bien « ft » qui fait foi, et outputUnit « m » qui est l'erreur — correction d'un mot, que je peux scripter. MAIS elle est sans objet tant que le point F-HFGI-18 n'est pas tranché : cette planche est celle du Piper, pas celle du Robin."
+ },
+ {
+  "itid": "F-HFGI-02",
+  "status": "fait",
+  "note": "CLOS — vérifié sur la fiche v4 : la double source a disparu. Les 2 tables de la page 62 portent désormais operationId = landing_50ft_flaps_landing (« Landing Distance over 50ft - Flaps Landing », 1045 kg et 850 kg, valeurs en mètres : 545 et 460 à 0 ft / 15 °C), tandis que l'abaque garde landing_ground_roll_flaps_landing. Chaque opération n'a plus qu'une seule source, la règle d'architecture est respectée. Les tables du manuel ne sont donc plus masquées : elles servent bien le franchissement des 50 m. Réserve : la source restante du ROULAGE est l'abaque mise en cause au point F-HFGI-18."
+ },
+ {
+  "itid": "F-HFGI-03",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« pas possible, extrapolation hors graphique »), et vérifiée sur la planche que j'ai lue : les courbes d'altitude partent effectivement de la ligne de température standard et montent vers la droite, si bien que la courbe « niveau mer » ne commence qu'aux environs de +15 °C. Le tracé est donc fidèle au document. À retenir pour l'usage : au niveau de la mer en dessous d'environ +15 °C, et à 1000 ft en dessous d'environ +4,7 °C, l'application refuse de rendre une course d'atterrissage plutôt que d'extrapoler (fail-closed, conforme à la doctrine F-GNAM-03 / F-GIEA-10). En hiver, la course d'atterrissage ne sera donc pas calculable au terrain — la distance au-dessus de 50 ft, servie par les tables, le reste."
+ },
+ {
+  "itid": "F-HFGI-04",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« valide »), et la planche l'explique : son cartouche indique « MASSE MAXIMALE 2325 lb (1055 kg) », c'est-à-dire qu'elle est tracée à la masse maximale et à elle seule. Il n'y a donc aucun panneau masse à relever — l'absence d'entrée masse dans le modèle est fidèle au document, et la distance rendue est celle de la masse maximale, donc conservative à toute masse inférieure. C'est le bon sens de l'erreur."
+ },
+ {
+  "itid": "F-HFGI-05",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« valide »). Vérifié en base : les 4 tables de la page 56 portent bien operationId takeoff_ground_roll_flaps_to et takeoff_50ft_flaps_to, et leurs valeurs sont cohérentes avec un décollage de DR401 (170 à 220 m au roulage à 850 kg). Ce sont les operationId qui pilotent le calcul ; la mention « Landing Configuration » dans le libellé est un reliquat de l'intitulé anglais du manuel, et ce champ n'est pas affiché à l'écran (même malentendu écran/base qu'en F-BXQT-10 et F-GUKQ-10). Dites-le si vous voulez que je renomme les 4 tables par script."
+ },
+ {
+  "itid": "F-HFGI-06",
+  "status": "valide",
+  "note": "CLOS — confirmation pilote (« correcte »). Vérifié en base, la frontière avant est inchangée et assumée : 0,2031 m à 650 kg, 0,19 m à 800 kg, 0,45 m à 1050 kg. Le décrochement de 1,3 cm vers l'avant à 800 kg puis la remontée de 26 cm à la masse maximale correspondent au centrogramme du manuel. À noter, sans conséquence : les masses de ces trois points sont stockées en chaînes de caractères (« 650 », « 800 », « 1050 ») et non en nombres, et les miroirs cgLimits.forward ont disparu de la fiche — les points de l'enveloppe font foi."
+ },
+ {
+  "itid": "F-HFGI-10",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : baggageCompartments[0].momentMax est passé de 58,4 à 58,61, ce qui correspond bien à 40 kg × 1,4652 m. Le moment suit désormais le bras."
+ },
+ {
+  "itid": "F-HFGI-13",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : equipmentSurv.transponderMode (singulier) a disparu et transponderModes = [a, c], propre et normalisé (verrou code 45a6d986). La déclaration parasite de balise au plan de vol est levée. Point complémentaire de l'item : approvedOperations.elt = true est confirmé volontaire, la balise est déclarée à bord."
+ },
+ {
+  "itid": "F-HFGI-14",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : la table de croisière au schéma bancal (11 lignes Regime / Distance_Nm / Autonomie_h_min…, avec ses deux lignes en doublon) a été retirée. Les 6 tables restantes portent toutes le schéma consommable {Masse, value, Altitude, Temperature}. La croisière reste servie par cruiseSpeedKt et fuelConsumption, comme prévu."
+ },
+ {
+  "itid": "F-HFGI-15",
+  "status": "note",
+  "note": "ACTÉ, avec une vérification qui donne raison à votre « c'est bon » pour aujourd'hui — mais il reste une donnée à saisir. État en base inchangé : windLimits.limits = [maxTailwind 5, maxHeadwind 15], aucune entrée maxCrosswind, et les champs plats maxCrosswind / maxCrosswindWet sont vides. J'ai vérifié le code : RIEN dans le moteur de calcul ne lit windLimits.limits (le seul endroit où « maxHeadwind » apparaît dans toute l'application est la liste déroulante de saisie de l'écran Vitesses), et le vent traversier est calculé et affiché en préparation de vol mais n'est comparé à aucune limite. L'entrée « vent de face max 15 kt » est donc inerte : elle ne déclenche aucun avertissement et n'entre en conflit avec vos paliers de correction à 20 et 30 kt que sur le papier. Reste le vrai manque : le VENT TRAVERSIER MAXIMAL DÉMONTRÉ du manuel DR401, qui est une limitation publiée, n'est nulle part dans la fiche. Donnez-moi la valeur du manuel et je la saisis par script — le jour où l'application vérifiera cette limite, F-HFGI n'aura rien à lui opposer."
+ },
+ {
+  "itid": "F-HFGI-16",
+  "status": "obsolete",
+  "note": "CLOS SANS OBJET — doctrine actée (HSTR-10, HDIM-19, GGZO-16, BXQT-17, BXNG-20) : les clés legacy type/optional des réservoirs ne sont plus lues, ce sont les rôles de tankVariants qui font foi. Vérifié en base : la « Configuration standard » porte les rôles fixed, fixed, removable — le troisième réservoir est bien déclaré amovible là où le moteur le lit. L'asymétrie de la clé optional est cosmétique."
+ },
+ {
+  "itid": "F-HFGI-17",
+  "status": "fait",
+  "note": "CLOS — vérifié en base : le réservoir s'appelle désormais « Réservoir principal », la double faute est corrigée et la casse est homogène avec « Réservoir Aile » et « Réservoir Optionnel »."
  }
 ]

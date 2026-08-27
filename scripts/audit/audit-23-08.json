@@ -2614,6 +2614,17 @@
     "action": "",
     "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
     "ajout": "2026-08-26"
+   },
+   {
+    "champ": "aircraft_data.performanceModels[0] — planche source de l'abaque d'atterrissage",
+    "gravite": "critique",
+    "classe": "demontree",
+    "categorie": "Passe finale 27/08",
+    "ajout": "2026-08-27",
+    "trouve": "L'image d'atelier de l'abaque (abaque-images/F-HFGI/abaque-model_1787308947922.png, déposée le 21/08) a été téléchargée et lue le 27/08. Son cartouche annonce : « DISTANCE D'ATTERRISSAGE — CONDITIONS ASSOCIÉES : MASSE MAXIMALE 2325 lb (1055 kg), SANS MOTEUR, VOLETS : 40° — VITESSE INDIQUÉE D'APPROCHE : 63 kt (117 km/h) ». Or F-HFGI est un Robin DR401 dont la fiche déclare MTOW 1050 kg, MLW 1045 kg, vapp 81 kt et vso 50 kt. Les trois caractéristiques imprimées sur la planche (1055 kg, volets 40°, approche 63 kt) sont en revanche EXACTEMENT celles du Piper PA 28-161 F-GBTU (MTOW 1055, vapp 63). L'exemple chiffré imprimé sur la planche — 2500 ft, 24 °C, vent nul, course d'atterrissage 660 ft (201 m), franchissement 50 ft 1190 ft (363 m) — est d'ailleurs repris tel quel comme cas de référence du modèle. La même planche a été redéposée le 27/08 dans le dossier de F-GIEA (abaque-model_1787824703230.png, image comparée octet à octet : même document, deux dépôts) pour y tracer les abaques d'atterrissage du PA 28, ensuite importées dans F-GBTU — où elle est à sa place.",
+    "attendu": "La planche de distance d'atterrissage du manuel du DR401, ou aucune abaque si elle n'est pas disponible — l'opération étant alors certifiée absente dans bypassedFields.",
+    "enVol": "La course d'atterrissage servie pour le Robin est lue sur l'abaque d'un Piper Warrior. L'ordre de grandeur le montre : l'abaque rend 596 ft (182 m) à 15 °C / 500 ft, alors que les tables MANEX du DR401 lui-même (p.62, dans la fiche) donnent une distance d'atterrissage au-dessus de 50 ft de 545 m à 1045 kg et 460 m à 850 kg. Les deux avions ont beau afficher des masses voisines, ce sont deux cellules, deux voilures et deux vitesses d'approche différentes (63 kt contre 81 kt annoncés sur la fiche).",
+    "action": "Onglet Performances : retirer l'abaque d'atterrissage de F-HFGI, puis soit tracer la planche du manuel DR401, soit certifier l'absence de l'opération. Je peux faire le retrait par script sur un mot de votre part."
    }
   ]
  },

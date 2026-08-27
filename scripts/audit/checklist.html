@@ -134,12 +134,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <header class="top">
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
-  <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>230 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>13 points à
+  <p class="lede"><b>Édition consolidée</b> : sur les 244 points recensés depuis l’audit d’origine,
+  <b>240 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>4 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 3 critiques, 3 majeurs, 7 mineurs — dont 3 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 1 critiques, 0 majeurs, 3 mineurs — dont 1 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -266,13 +266,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HFGI</span><span class="mdl">DR401</span><span class="spacer"></span>
-<span class="pill p-critique">3 critiques</span>
-<span class="pill p-majeur">4 majeurs</span>
-<span class="pill p-mineur">5 mineurs</span>
+<span class="pill p-critique">2 critiques</span>
+<span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-HFGI" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-HFGI" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaque d&#x27;atelier v2 (un seul modèle, planche descendante à 2 panneaux OAT × altitude-pression puis vent, courbes tronquées en diagonale) + 9 tables MANEX réimportées d&#x27;Excel (p. 56 / 59 / 62, unité m, grille ISA diagonale 3 altitudes × 3 températures, masses 850 et 1045/1050 kg) ; enveloppe de centrage à 3 points arithmétiquement exacte, 3 réservoirs modélisés avec bras et moments exacts ; miroirs legacy (arms, weightBalance.cgLimits, capacités carburant racine, maxBaggage/maxAuxiliary) jamais resynchronisés.</b> — La partie « statique » de la fiche est saine : enveloppe de centrage cohérente (650×0,2031=132, 800×0,19=152, 1050×0,45=472,5), bras de sièges/réservoirs/soute complets, pesée du 01/01/2026 en ligne, réservoirs exacts au moment près, vitesses obligatoires toutes présentes et ordonnées (vso 50 &lt; vsTO 52 &lt; vs1 55). Ce qui bloque est concentré sur un seul objet : l&#x27;abaque « Distance atterrissage — roulage, Flaps LANDING », qui déclare deux unités contradictoires (m sur le panneau primaire, ft sur l&#x27;axe de lecture, soit un facteur 3,28 sans aucun avertissement), qui échoue purement et simplement en dessous de ≈ +15 °C au niveau de la mer, qui n&#x27;utilise aucune masse, et dont les valeurs contredisent de 29 % les tables MANEX p.62 qu&#x27;il masque (le résolveur donne la priorité à l&#x27;abaque). Commencer par là : ouvrir la p.62 du manuel, décider si l&#x27;abaque est valide — sinon le supprimer, les tables 1045/850 kg reprendront la main immédiatement — puis trancher la p.56 (les 4 tables de décollage s&#x27;intitulent « Landing Configuration ») ; le reste est de l&#x27;hygiène de miroirs inertes.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 5 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="gen">✂️ 15 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it critique" data-sev="critique" data-itid="F-HFGI-01" data-clos="0" data-champ="aircraft_data.performanceModels[0].data.graphs[0].outputUnit" data-sevlbl="critique">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -283,128 +282,29 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>une seule unité déclarée pour l&#x27;opération : &quot;m&quot; des deux côtés, ou &quot;ft&quot; des deux côtés, conforme à l&#x27;échelle imprimée sur la planche</dd>
 <dt>En vol</dt><dd>facteur 3,28 d&#x27;incertitude sur la distance de roulage à l&#x27;atterrissage : l&#x27;app affiche 596 ft (182 m) alors que la planche a peut-être été relevée en mètres. Aucun avertissement n&#x27;est émis, la garde d&#x27;unité du résolveur ne se déclenchant que si AUCUNE unité n&#x27;est déclarée.</dd>
 <dt>Action</dt><dd>Atelier abaques &gt; modèle « Distance atterrissage — roulage, Flaps LANDING » : ouvrir le panneau primaire et l&#x27;axe de sortie et déclarer la même unité, celle de l&#x27;échelle imprimée au manuel p.62.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne dans le même modèle : graphs[0].outputUnit = &quot;m&quot; vs graphs[1].axes.xAxis.unit = &quot;ft&quot; (titre landing_distance_ground) ; exécution probe → unit &quot;ft&quot;, valeur 595,97.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-01) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it critique" data-sev="critique" data-itid="F-HFGI-02" data-clos="0" data-champ="aircraft_data.performanceModels[0] (landing_ground_roll_flaps_landing) vs aircraft_data.advancedPerformance.tables[5] et tables[6]" data-sevlbl="critique">
+</dl><div class="notefait">✎ RÉPONSE À VOTRE QUESTION (« détaille-moi ton problème »), et la planche tranche. Le modèle déclare deux unités différentes pour une même distance : le panneau primaire porte outputKind « distance » avec outputUnit « m », tandis que l&#x27;axe de LECTURE, celui du panneau vent, est gradué de 400 à 1000 en « ft ». Le moteur retient l&#x27;unité du dernier panneau, donc il rend bien des pieds (596 ft à 15 °C / 500 ft) — le résultat servi est juste, mais la déclaration du panneau primaire le contredit, et le jour où le moteur lira cette clé la distance sera prise pour des mètres, soit un facteur 3,28. J&#x27;ai lu la planche : son échelle inférieure porte les DEUX graduations, les pieds en haut (400, 600, 800, 1000, 1200, 1400) et les mètres en dessous (150 à 450), et son exemple imprimé dit « Course d&#x27;atterrissage : 660 ft (201 m) ». C&#x27;est donc bien « ft » qui fait foi, et outputUnit « m » qui est l&#x27;erreur — correction d&#x27;un mot, que je peux scripter. MAIS elle est sans objet tant que le point F-HFGI-18 n&#x27;est pas tranché : cette planche est celle du Piper, pas celle du Robin.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-01) — repris dans le rapport à copier"></textarea></div></div>
+<div class="it critique" data-sev="critique" data-itid="F-HFGI-15" data-clos="0" data-champ="aircraft_data.performanceModels[0] — planche source de l&#x27;abaque d&#x27;atterrissage" data-sevlbl="critique">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
-<div class="tags"><span class="itid">F-HFGI-02</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0] (landing_ground_roll_flaps_landing) vs aircraft_data.advancedPerformance.tables[5] et tables[6]</span></div>
+<div class="tags"><span class="itid">F-HFGI-15</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 27/08</span>
+<span class="cap">Passe finale 27/08</span><span class="path">aircraft_data.performanceModels[0] — planche source de l&#x27;abaque d&#x27;atterrissage</span></div>
 <dl class="kv">
-<dt>Trouvé</dt><dd class="val">Deux sources déclarées pour le même operationId. Abaque : 595,97 à 15 °C/500 ft, 668,42 à 30 °C/2500 ft, cas de référence interne 660 à 24 °C/2500 ft (l&#x27;abaque reproduit bien son propre cas de référence, il est donc auto-cohérent). Tables MANEX p.62 : 250 m à 1045 kg et 205 m à 850 kg (0 ft/15 °C) ; interpolées à 24 °C/2500 ft → 283 m (= 928 ft) et 230 m (= 756 ft).</dd>
-<dt>Attendu</dt><dd>une seule source par operationId — règle d&#x27;architecture inscrite dans le résolveur : « abaque OU tableau, jamais les deux à la fois »</dd>
-<dt>En vol</dt><dd>Le résolveur donne la priorité à l&#x27;abaque : les tables MANEX 1045 kg et 850 kg sont masquées et ne servent JAMAIS. Le pilote se pose avec une distance de roulage 29 % plus courte que celle du manuel (201 m au lieu de 283 m à MTOW) si l&#x27;abaque est lu en pieds — ou 2,3 fois trop longue s&#x27;il est lu en mètres.</dd>
-<dt>Action</dt><dd>Trancher au manuel p.62 : soit supprimer l&#x27;abaque (les tables 1045/850 kg reprennent la main aussitôt, elles sont cohérentes), soit corriger l&#x27;abaque puis supprimer tables[5] et tables[6].</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Deux jeux de valeurs incompatibles pour le même operationId dans la même fiche (écart 29 % à 40 %) ; le résolveur (src/services/operationResolver.js, « Priorité d&#x27;évaluation : abaque &gt; tableau ») n&#x27;atteint le repli tables que si aucun abaque ne porte l&#x27;operationId. Indice interne : la valeur 660 lue en mètres tombe dans la plage des tables[7]/[8] « landing over 50 ft » (435 → 700 m), pas dans celle du roulage (190 → 340 m).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it critique" data-sev="critique" data-itid="F-HFGI-03" data-clos="0" data-champ="aircraft_data.performanceModels[0].data.graphs[0].curves[0] (« 0 ft »)" data-sevlbl="critique">
+<dt>Trouvé</dt><dd class="val">L&#x27;image d&#x27;atelier de l&#x27;abaque (abaque-images/F-HFGI/abaque-model_1787308947922.png, déposée le 21/08) a été téléchargée et lue le 27/08. Son cartouche annonce : « DISTANCE D&#x27;ATTERRISSAGE — CONDITIONS ASSOCIÉES : MASSE MAXIMALE 2325 lb (1055 kg), SANS MOTEUR, VOLETS : 40° — VITESSE INDIQUÉE D&#x27;APPROCHE : 63 kt (117 km/h) ». Or F-HFGI est un Robin DR401 dont la fiche déclare MTOW 1050 kg, MLW 1045 kg, vapp 81 kt et vso 50 kt. Les trois caractéristiques imprimées sur la planche (1055 kg, volets 40°, approche 63 kt) sont en revanche EXACTEMENT celles du Piper PA 28-161 F-GBTU (MTOW 1055, vapp 63). L&#x27;exemple chiffré imprimé sur la planche — 2500 ft, 24 °C, vent nul, course d&#x27;atterrissage 660 ft (201 m), franchissement 50 ft 1190 ft (363 m) — est d&#x27;ailleurs repris tel quel comme cas de référence du modèle. La même planche a été redéposée le 27/08 dans le dossier de F-GIEA (abaque-model_1787824703230.png, image comparée octet à octet : même document, deux dépôts) pour y tracer les abaques d&#x27;atterrissage du PA 28, ensuite importées dans F-GBTU — où elle est à sa place.</dd>
+<dt>Attendu</dt><dd>La planche de distance d&#x27;atterrissage du manuel du DR401, ou aucune abaque si elle n&#x27;est pas disponible — l&#x27;opération étant alors certifiée absente dans bypassedFields.</dd>
+<dt>En vol</dt><dd>La course d&#x27;atterrissage servie pour le Robin est lue sur l&#x27;abaque d&#x27;un Piper Warrior. L&#x27;ordre de grandeur le montre : l&#x27;abaque rend 596 ft (182 m) à 15 °C / 500 ft, alors que les tables MANEX du DR401 lui-même (p.62, dans la fiche) donnent une distance d&#x27;atterrissage au-dessus de 50 ft de 545 m à 1045 kg et 460 m à 850 kg. Les deux avions ont beau afficher des masses voisines, ce sont deux cellules, deux voilures et deux vitesses d&#x27;approche différentes (63 kt contre 81 kt annoncés sur la fiche).</dd>
+<dt>Action</dt><dd>Onglet Performances : retirer l&#x27;abaque d&#x27;atterrissage de F-HFGI, puis soit tracer la planche du manuel DR401, soit certifier l&#x27;absence de l&#x27;opération. Je peux faire le retrait par script sur un mot de votre part.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)"></dd>
+</dl><div class="notefait">✎ ACTÉ, avec une vérification qui donne raison à votre « c&#x27;est bon » pour aujourd&#x27;hui — mais il reste une donnée à saisir. État en base inchangé : windLimits.limits = [maxTailwind 5, maxHeadwind 15], aucune entrée maxCrosswind, et les champs plats maxCrosswind / maxCrosswindWet sont vides. J&#x27;ai vérifié le code : RIEN dans le moteur de calcul ne lit windLimits.limits (le seul endroit où « maxHeadwind » apparaît dans toute l&#x27;application est la liste déroulante de saisie de l&#x27;écran Vitesses), et le vent traversier est calculé et affiché en préparation de vol mais n&#x27;est comparé à aucune limite. L&#x27;entrée « vent de face max 15 kt » est donc inerte : elle ne déclenche aucun avertissement et n&#x27;entre en conflit avec vos paliers de correction à 20 et 30 kt que sur le papier. Reste le vrai manque : le VENT TRAVERSIER MAXIMAL DÉMONTRÉ du manuel DR401, qui est une limitation publiée, n&#x27;est nulle part dans la fiche. Donnez-moi la valeur du manuel et je la saisis par script — le jour où l&#x27;application vérifiera cette limite, F-HFGI n&#x27;aura rien à lui opposer.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-15) — repris dans le rapport à copier"></textarea></div></div>
+<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-18" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[0].name" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
-<div class="tags"><span class="itid">F-HFGI-03</span><span class="pill p-critique">critique</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0].data.graphs[0].curves[0] (« 0 ft »)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">3 points seulement, s&#x27;étendant de x = +14,85 °C à +39,50 °C, alors que l&#x27;axe X du graphe est déclaré min −40 / max +40 °C. Même troncature sur « 1000 ft » (démarre à +4,68 °C) et « 2000 ft » (−4,83 °C) ; seules les courbes 6000 à 8000 ft atteignent −40.</dd>
-<dt>Attendu</dt><dd>chaque courbe couvre le domaine de son axe, ou l&#x27;axe X est restreint au domaine réellement tracé</dd>
-<dt>En vol</dt><dd>Aucune distance d&#x27;atterrissage calculable au niveau de la mer en dessous de ≈ +15 °C, ni à 1000 ft en dessous de ≈ +4,7 °C. La probe échoue à 0 °C / 0 ft : « Impossible de calculer Y pour X=0 sur la courbe &quot;0 ft&quot; ». À LFPM (302 ft), tout vol par temps frais tombe dans ce trou et le calcul s&#x27;arrête.</dd>
-<dt>Action</dt><dd>Atelier abaques : prolonger les courbes basses altitudes vers la gauche jusqu&#x27;au bord de la planche, ou ramener xAxis.min au domaine réellement relevé pour que l&#x27;app affiche « hors domaine » au lieu d&#x27;échouer.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution probe, run 5/5 en erreur ; étendue des points de la courbe (14,85 → 39,50) contre xAxis.min = −40 déclaré sur le même graphe.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-HFGI-04" data-clos="0" data-champ="aircraft_data.performanceModels[0].data.graphs[*].familyAxisVariable" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-04</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceModels[0].data.graphs[*].familyAxisVariable</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les deux panneaux n&#x27;utilisent que pressure_altitude (primaire) et wind_component (sortie) : aucune entrée masse dans le modèle, et aucune masse de référence enregistrée dans data.metadata. L&#x27;abaque rend donc la même distance à 650 kg et à 1050 kg.</dd>
-<dt>Attendu</dt><dd>un panneau masse, ou à défaut la masse de référence de la planche inscrite dans le modèle</dd>
-<dt>En vol</dt><dd>Les tables du même manuel donnent +22 % de roulage entre 850 kg et 1045 kg (205 → 250 m). L&#x27;abaque ignore totalement cette variation : selon la masse de référence réelle de la planche, la distance annoncée est sous-estimée jusqu&#x27;à 22 % à MTOW, ou surestimée d&#x27;autant à faible masse.</dd>
-<dt>Action</dt><dd>Vérifier au manuel p.62 la masse de référence de la planche ; ajouter un panneau masse dans l&#x27;atelier, ou rebasculer l&#x27;opération sur les tables (voir l&#x27;item précédent).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Structure du modèle : aucun familyAxisVariable = mass ; la probe tourne à mass = 1050 sans que cette valeur n&#x27;entre dans la chaîne « Panneau d&#x27;entrée &gt; Zone de sortie ». Écart 205 → 250 m entre tables[6] (850 kg) et tables[5] (1045 kg) de la même page.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-04) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-HFGI-05" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[0..3].table_name" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-05</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[0..3].table_name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Takeoff Ground Roll Distance - Landing Configuration - 850kg / 1050kg » et « Takeoff Distance over 50ft (15m) - Landing Configuration - 850kg / 1050kg » (pageNumber 56), alors que operationId et classification valent takeoff_ground_roll_flaps_to et takeoff_50ft_flaps_to, c&#x27;est-à-dire la configuration DÉCOLLAGE.</dd>
-<dt>Attendu</dt><dd>nom de table et operationId désignant la même position de volets</dd>
-<dt>En vol</dt><dd>Si ce sont réellement des distances en configuration atterrissage, les quatre distances de décollage servies au pilote sont fausses (265 → 620 m au roulage et 530 → 1250 m au-dessus de 50 ft à 1050 kg). Si c&#x27;est le nom qui est faux, aucun effet en vol.</dd>
-<dt>Action</dt><dd>Ouvrir la p.56 du manuel puis, dans la carte avion &gt; Performances, corriger le table_name des 4 tables (cas probable) ou re-classifier les 4 opérations.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne nom ↔ operationId/classification sur les 4 tables ; les tables d&#x27;atterrissage (p.62) sont, elles, nommées de façon cohérente (« Flaps Landing » ↔ landing_*_flaps_landing).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-HFGI-06" data-clos="0" data-champ="aircraft_data.cgEnvelope.forwardPoints[1].cg" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-06</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.cgEnvelope.forwardPoints[1].cg</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">0,19 m à 800 kg, soit EN AVANT du point à 650 kg (0,2031 m) et en avant des deux miroirs cgLimits.forward = 0,2031 (racine et weightBalance) ; la limite avant remonte ensuite à 0,45 m à 1050 kg. Frontière avant non monotone : 0,2031 → 0,19 → 0,45.</dd>
-<dt>Attendu</dt><dd>frontière avant monotone (ou décrochement confirmé point par point sur la planche de centrage du manuel)</dd>
-<dt>En vol</dt><dd>L&#x27;enveloppe est la source lue par le moteur : à 800 kg l&#x27;app accepte un centrage jusqu&#x27;à 0,19 m, et entre 800 et 1050 kg la limite avant se déplace de 26 cm vers l&#x27;arrière, ce qui resserre très fortement le domaine à forte masse (0,45 → 0,5619 à MTOW). Si le point à 800 kg est faux, un chargement trop avant serait validé à tort.</dd>
-<dt>Action</dt><dd>Étape Masse &amp; centrage : comparer les 3 points de la frontière avant à la planche de centrage du manuel et corriger le point à 800 kg si nécessaire.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction miroir ↔ enveloppe : cgLimits.forward = 0,2031 (racine et weightBalance) alors que le point le plus avant de l&#x27;enveloppe vaut 0,19 ; non-monotonie interne de la liste forwardPoints. Les 3 moments sont par ailleurs exacts (650×0,2031=132, 800×0,19=152, 1050×0,45=472,5), ce qui prouve que 0,19 a bien été saisi volontairement.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-06) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-10" data-clos="0" data-champ="aircraft_data.baggageCompartments[0].momentMax" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-10</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.baggageCompartments[0].momentMax</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">58,4 alors que maxWeight × arm = 40 × 1,4652 = 58,608 (le 58,4 correspond à un bras de 1,46 m)</dd>
-<dt>Attendu</dt><dd>58,608</dd>
-<dt>En vol</dt><dd>Négligeable (0,0002 m de centrage à 1045 kg), mais c&#x27;est la signature d&#x27;un bras retouché de 1,46 à 1,4652 sans recalcul du moment.</dd>
-<dt>Action</dt><dd>Étape Masse &amp; centrage : rouvrir le compartiment « Compartiment Bagages » et revalider pour recalculer le moment.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Arithmétique interne : 40 × 1,4652 = 58,608 ≠ 58,4, alors que tous les autres moments de la fiche sont exacts (620×0,3226 = 200,01 ; 79,2×0,82268 = 65,16 ; 57,6×0,337 = 19,4112 ; 36×1,1484 = 41,3424).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-13" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-13</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« C ». Champ au SINGULIER posé en dur à l&#x27;initialisation ; la clé écrite par l&#x27;écran Équipements, transponderModes (pluriel), est absente de equipmentSurv.</dd>
-<dt>Attendu</dt><dd>champ vide, le mode réel étant porté par transponderModes</dd>
-<dt>En vol</dt><dd>Champ orphelin à l&#x27;origine de la déclaration parasite d&#x27;une balise de détresse au plan de vol. À noter : approvedOperations.elt = true est par ailleurs posé explicitement — à confirmer que c&#x27;est voulu.</dd>
-<dt>Action</dt><dd>Vider le champ ; saisir le mode transpondeur réel dans l&#x27;étape Équipements et la balise dans les opérations approuvées.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Clé au singulier renseignée alors que la clé au pluriel écrite par l&#x27;écran Équipements n&#x27;existe pas dans equipmentSurv.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-14" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[4] (cruise_speed, p.59)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-14</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[4] (cruise_speed, p.59)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">11 lignes au schéma Regime / Altitude / Distance_Nm / Distance_km / Autonomie_h_min / Consommation_l_h / Consommation_mpg / Consommation_usg_h / Vitesse_Propre_kt / Vitesse_Propre_km_h — ni Masse, ni Temperature, ni value. Lignes 10 et 11 en doublon exact de clé « Regime 65 / 10500 ft » avec 127 kt / 727 Nm / « 4,55 » contre 130 kt / 743 Nm / « 5,4 ». Autonomie_h_min en chaînes à virgule. Distance_km incohérente avec Distance_Nm sur 2 lignes (631 Nm ↔ 1208 km et 635 Nm ↔ 1202 km, soit ~3 % d&#x27;écart, contre ≤ 0,4 % sur les 9 autres).</dd>
-<dt>Attendu</dt><dd>schéma consommable {Masse, Altitude, Temperature, value} — ou table retirée, la croisière étant hors des 4 opérations obligatoires</dd>
-<dt>En vol</dt><dd>Aucun : la table n&#x27;est pas consommable par le moteur, la croisière reste servie par cruiseSpeedKt = 120 et fuelConsumption = 35 l/h.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Performances : retirer la table croisière, ou la reformater si un support croisière arrive.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Doublon de clé (Regime 65 / 10500 ft) à valeurs différentes ; conversion Nm ↔ km incohérente sur 2 lignes alors qu&#x27;elle est exacte sur les 9 autres ; colonnes du schéma des tables de performance absentes.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-HFGI-15" data-clos="0" data-champ="aircraft_data.windLimits.limits (absence de maxCrosswind, entrée maxHeadwind)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-15</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.windLimits.limits (absence de maxCrosswind, entrée maxHeadwind)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">windLimits.limits = [{ type &quot;maxTailwind&quot;, value 5 }, { type &quot;maxHeadwind&quot;, value 15 }] ; aucune entrée maxCrosswind et champs plats maxCrosswind = &quot;&quot; / maxCrosswindWet = &quot;&quot;. En regard, performanceCorrections déclare deux règles headwind en factor_table avec brackets fromKt 10 / 20 / 30 (facteurs 0,85 / 0,65 / 0,55) au décollage ET à l&#x27;atterrissage — des paliers de vent de face à 20 et 30 kt inutilisables si le vent de face était réellement « limité » à 15 kt.</dd>
-<dt>Attendu</dt><dd>La limite de vent traversier max démontré du manuel DR401 dans windLimits.limits (type maxCrosswind). Une « limite de vent de face » n&#x27;est pas une limitation publiée par un manuel de vol (le vent de face est favorable) : l&#x27;entrée maxHeadwind 15 kt est vraisemblablement la valeur de traversier démontré saisie sous le mauvais type — à trancher au manuel.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-16" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[2].optional" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.additionalFuelTanks[2].optional</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le réservoir « réservoir Optionnel » (type &quot;optional&quot;, role &quot;removable&quot; dans tankVariants, arm 1.1484, totalCapacity 50) est le SEUL des trois réservoirs à ne PAS porter la clé booléenne « optional » — les réservoirs [0] et [1] portent tous deux « optional »: false. Un accesseur lisant tank.optional obtient undefined (falsy) sur le seul réservoir réellement optionnel.</dd>
-<dt>Attendu</dt><dd>optional: true sur le réservoir amovible, ou clé retirée uniformément des trois réservoirs — jamais la clé présente à false sur les fixes et absente sur l&#x27;amovible.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-HFGI-17" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[0].name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-HFGI-17</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
+<div class="tags"><span class="itid">F-HFGI-18</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
 <span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.additionalFuelTanks[0].name</span></div>
 <dl class="kv">
 <dt>Trouvé</dt><dd class="val">name = « Reservoir principle » — double faute (« principle » pour « principal », accent manquant), incohérent avec les libellés voisins « Réservoir Aile » et « réservoir Optionnel » (casse également hétérogène entre les trois).</dd>
 <dt>Attendu</dt><dd>« Réservoir principal ». Même famille de défaut que F-BXQT-17 (« Etandu ») déjà actée sur un autre avion.</dd>
 <dt>En vol</dt><dd></dd>
 <dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-17) — repris dans le rapport à copier"></textarea></div></div>
+</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-HFGI-18) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HSTR</span><span class="mdl">DA40NG</span><span class="spacer"></span>
