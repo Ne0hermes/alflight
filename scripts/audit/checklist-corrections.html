@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>200 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>43 points à
+  <b>207 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>36 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 5 majeurs, 33 mineurs — dont 18 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 5 majeurs, 26 mineurs — dont 15 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -465,89 +465,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOFP</span><span class="mdl">Cessna F152</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
-<span class="pill p-mineur">6 mineurs</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-GOFP" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GOFP" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Aucun abaque d&#x27;atelier (performanceModels = null, performanceTables = null ; sonde 23/08 : 0 modèle évalué) — performances 100 % en tables MANEX v2.0 réimportées d&#x27;Excel : 4 opérations obligatoires couvertes, grille absolue altitude 0→8000 ft × OAT 0→40 °C à la seule masse 758 kg (45 cellules par opération, atterrissage scindé p.77 + p.78 et refusionné sans trou) ; centrage sur cgEnvelope 3 points avant / 2 points arrière, arithmétiquement exacte ; 2 variantes de réservoirs (98 L / 142 L) ; 6 règles de correction vent + herbe. Base inchangée depuis le ré-audit du 21/08 (updated_at = 2026-08-21T11:08:36).</b> — Le cœur de la fiche est sain : l&#x27;enveloppe de centrage est complète et exacte au gramme (393,975 = 515 × 0,765 ; 704,94 = 758 × 0,93), les 4 opérations de performance obligatoires sont couvertes par une grille altitude × température sans le moindre trou, l&#x27;exécution rend des valeurs finies sur 5 jeux de conditions et refuse proprement au-delà de 8000 ft / 40 °C, les réservoirs et leurs deux variantes sont cohérents et les 6 règles de correction n&#x27;ont aucun doublon. Deux points bloquent vraiment : la cellule 4000 ft / 30 °C de la table « passage 15 m au décollage » (660 m) est la seule des 180 hors lissage et sous-estime la distance d&#x27;environ 4 %, et le bras à vide de 0,765 m place l&#x27;avion vide 25 mm en avant de sa propre enveloppe — conséquence chiffrée : deux pilotes de 80 kg avec 30 L sortent de la limite avant de 0,7 mm, et avec le plein ils n&#x27;y sont que de 1,5 mm. Commencer par ces deux-là (manuel p.70 pour la cellule, PDF de pesée joint pour le bras à vide — sa date de 1977 est justement le troisième point), puis nettoyer le carburant (capacité totale 235 L au lieu de 98 L) et les deux plafonds bagages legacy 50 / 20 kg.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap partiel">Décollage : partiel</span><span class="cap oui">Atterrissage : oui</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 10 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-08" data-clos="0" data-champ="aircraft_data.minTakeoffWeight (racine) / aircraft_data.weights.minTakeoffWeight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-08</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.minTakeoffWeight (racine) / aircraft_data.weights.minTakeoffWeight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">racine = 515 ; weights.minTakeoffWeight = &quot;&quot; (vide)</dd>
-<dt>Attendu</dt><dd>Champ vide partout si le manuel ne publie pas de masse minimale, sinon la valeur du manuel saisie dans weights.minTakeoffWeight</dd>
-<dt>En vol</dt><dd>Cosmétique : WeightBalanceChart trace « Masse min : 515 » depuis la racine. Step6 lit weights.* (vide) et ne déclenche aucune alerte.</dd>
-<dt>Action</dt><dd>Vider le champ racine à la prochaine re-sauvegarde de l&#x27;étape Masse &amp; centrage, ou saisir la vraie valeur du manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">515 est exactement égal à emptyWeight (515) — valeur fabriquée par recopie, pas relevée ; le miroir structuré weights.minTakeoffWeight est vide ; et l&#x27;enveloppe de la fiche démarre à 500 kg (cgEnvelope.aftMinWeight = &quot;500&quot;, forwardPoints[0].weight = &quot;500&quot;), donc 515 ne correspond à aucune borne déclarée.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-08) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-11" data-clos="0" data-champ="aircraft_data.speeds.vne" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-11</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">vitesses</span><span class="path">aircraft_data.speeds.vne</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">149 kt en base, alors que l&#x27;item d&#x27;extraction MANEX « VNE » marqué ACCEPTÉ porte 171 sans unité d&#x27;origine</dd>
-<dt>Attendu</dt><dd>VNE du manuel dans l&#x27;unité de la page limitations : 171 mph = 148,6 kt ≈ 149 kt, ce qui valide la valeur stockée si la page est en mph</dd>
-<dt>En vol</dt><dd>VNE affichée 149 kt. Si le manuel donne réellement 171 kt, la limite affichée est 22 kt trop basse — sens conservateur, mais la fiche se contredit.</dd>
-<dt>Action</dt><dd>Vérifier la page limitations du manuel, puis corriger l&#x27;item d&#x27;extraction (ou la vitesse) pour lever la contradiction.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction entre deux valeurs présentes dans la même fiche : manexExtraction item d&#x27;aircraftPath « speeds.vne », accepted = true, value = 171, originalUnit = null — contre aircraft_data.speeds.vne = 149. Aucune autre vitesse acceptée ne diverge de sa valeur stockée (vno 111, vfeLdg 85 concordent).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-12" data-clos="0" data-champ="aircraft_data.equipmentSurv.transponderMode" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-12</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.equipmentSurv.transponderMode</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">&quot;C&quot; (champ au singulier) ; equipmentSurv.transponderModes au pluriel ABSENT de la fiche</dd>
-<dt>Attendu</dt><dd>transponderModes (tableau) renseigné depuis l&#x27;écran Équipements ; le singulier vidé</dd>
-<dt>En vol</dt><dd>Le mode transpondeur réellement déclarable au plan de vol est vide, puisque le seul champ lu par l&#x27;écran Équipements n&#x27;existe pas dans la fiche. Attention : vider le singulier en base ne tiendra pas, il est ré-injecté à chaque édition — le correctif est côté code.</dd>
-<dt>Action</dt><dd>Fiche avion &gt; étape Équipements : cocher le ou les modes transpondeur, ce qui crée transponderModes. Signaler en parallèle la ré-injection du champ singulier.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">L&#x27;écran d&#x27;édition écrit exclusivement le pluriel (Step5Equipment.jsx:632-644, handleEquipmentChange(&#x27;equipmentSurv&#x27;, &#x27;transponderModes&#x27;, …)) et le mapper MANEX vise également equipmentSurv.transponderModes (manexExtractionMapper.js:274). Le singulier « C » n&#x27;est écrit par aucun formulaire : il est posé en dur à l&#x27;initialisation (AircraftModule.jsx:3643, AircraftCreationWizard.jsx:402). Champ orphelin caractérisé.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-14" data-clos="0" data-champ="aircraft_data.manexExtraction item « homeBase » vs aircraft_data.homeBase" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-14</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">identite</span><span class="path">aircraft_data.manexExtraction item « homeBase » vs aircraft_data.homeBase</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Item d&#x27;extraction ACCEPTÉ = &quot;LFGT&quot; ; aircraft_data.homeBase = &quot;LFOB&quot;</dd>
-<dt>Attendu</dt><dd>LFOB, cohérent avec homeAeroclub = « Aéro Club du Beauvaisis » (Beauvais-Tillé) — donc l&#x27;item d&#x27;extraction est à corriger, pas la fiche</dd>
-<dt>En vol</dt><dd>Aucun : c&#x27;est bien LFOB qui est utilisé. La trace MANEX contredit néanmoins la fiche et rejouer l&#x27;extraction écraserait la base d&#x27;attache.</dd>
-<dt>Action</dt><dd>Écran d&#x27;extraction MANEX : corriger ou dé-accepter l&#x27;item « homeBase » pour qu&#x27;il porte LFOB.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Comparaison item par item des 19 items d&#x27;extraction acceptés avec la valeur stockée : 16 concordent exactement (manufacturer, model, registration, engineType, horsepower, wakeTurbulenceCategory, fuelType, fuelUsableCapacity 93, fuelConsumption 20, cruiseSpeedKt 106, maxBaggageTotalMass 54, compatibleRunwaySurfaces, vfeLdg 85, vno 111…), trois divergent : homeBase (LFGT ≠ LFOB), fuelCapacity (98 ≠ 235, cf. item carburant) et vne (171 ≠ 149, cf. item vitesses). L&#x27;item accepté LFGT porte une confiance de 0 et aucune page source.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GOFP-15" data-clos="0" data-champ="aircraft_data.approvedOperations (32 booléens)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-15</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.approvedOperations (32 booléens)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 32 booléens sont TOUS à false, y compris vfrDay, training, elt, firstAidKit et les 3 extincteurs — alors que la même fiche déclare equipmentCom.vhf1 = true, vhf2 = true et equipmentNav vor/dme/ils/gnss = true, hasManex = true, avion de club en service. (specialCapabilities est aussi intégralement à false, plausible pour un F152.)</dd>
-<dt>Attendu</dt><dd>Au minimum vfrDay = true, plus l&#x27;ELT et les équipements de survie réellement embarqués — même motif que F-BXNG-11 / F-GBTU-10 / F-GGZO-08, jamais couvert par un point F-GOFP.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-16" data-clos="0" data-champ="aircraft_data.lastModified" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.lastModified</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">lastModified = 2026-06-10T14:34:15.830Z, alors que la même fiche porte advancedPerformance.extractionMetadata.lastModified = 2026-08-23T14:38:58.219Z, _metadata.exportedAt = 2026-08-24T15:12:13.473Z et que la row porte updated_at = 2026-08-24T15:12:13.714 : l&#x27;horodatage de dernière modification est antérieur de 2 mois et demi à une modification enregistrée À L&#x27;INTÉRIEUR du même objet.</dd>
-<dt>Attendu</dt><dd>lastModified au moins égal à la plus récente modification interne (23-24/08) — même motif que F-GOVE-10, contradiction interne à la fiche.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GOFP-17" data-clos="0" data-champ="aircraft_data.speeds.vsTO et aircraft_data.speeds.vs1" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GOFP-17</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.speeds.vsTO et aircraft_data.speeds.vs1</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vsTO = 40 kt et vs1 = 40 kt, strictement identiques (vso = 35 kt — l&#x27;ordre vso ≤ vsTO ≤ vs1 est respecté). Les items d&#x27;extraction « VS T/O » et « VS1 » portent tous deux found = false / accepted = false : les deux 40 sont des saisies manuelles identiques, sans source d&#x27;extraction.</dd>
-<dt>Attendu</dt><dd>Si le manuel F152 publie une vitesse de décrochage volets décollage distincte, vsTO doit se situer entre vso (35) et vs1 (40) ; sinon l&#x27;égalité est légitime (même motif que F-GNAM-11) — à trancher au manuel.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GOFP-17) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-GOFP-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GOVE</span><span class="mdl">DR400</span><span class="spacer"></span>

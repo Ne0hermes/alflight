@@ -1008,5 +1008,40 @@
   "itid": "F-GUVV-19",
   "status": "fait",
   "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : horsepower = 135 (la vraie puissance du TDI) — ET le nouveau champ moteur est déjà rempli : « Thielert Engines - TAE 125-02-99 » (feature livrée ce matin, adoptée dans l'heure)."
+ },
+ {
+  "itid": "F-GOFP-08",
+  "status": "valide",
+  "note": "Rapport pilote : « c'est la bonne masse » — racine 515 = masse à vide, choix assumé (précédents F-HDIM-18/F-GNAM-23/F-BXQT-19 : coller au visuel de la fiche de pesée). Documenté."
+ },
+ {
+  "itid": "F-GOFP-11",
+  "status": "valide",
+  "note": "Rapport pilote : la page limitations du F152 publie 171 (mph) — 171 mph = 148,6 ≈ 149 kt : la valeur stockée est JUSTE, la conversion est confirmée."
+ },
+ {
+  "itid": "F-GOFP-12",
+  "status": "fait",
+  "note": "Clos par la migration flotte du transpondeur puis CONFIRMÉ : Vérifié sur la fiche v4 fraîche (ré-enregistrement du 27/08 09:04 UTC) : transponderModes [\"a\",\"c\"] propre (sa sélection ajoutée par l'écran corrigé), singulier disparu."
+ },
+ {
+  "itid": "F-GOFP-14",
+  "status": "obsolete",
+  "note": "Rapport pilote : « c'est au bon endroit, on ne modifie pas » — homeBase = LFOB ✓ (Aéro Club du Beauvaisis) ; l'item d'extraction « LFGT » est un INSTANTANÉ d'époque, archive non réécrite (précédents F-GNAM-17/F-GUKQ-13)."
+ },
+ {
+  "itid": "F-GOFP-15",
+  "status": "fait",
+  "note": "Vérifié sur la fiche v4 fraîche (ré-enregistrement du 27/08 09:04 UTC) : approvedOperations porte elt et vfrDay à true — le minimum exigé par l'item est atteint, le 4e avion du motif « tout false » est déclaré."
+ },
+ {
+  "itid": "F-GOFP-16",
+  "status": "fait",
+  "note": "Clos par la purge flotte des horodatages (26/08) : lastModified a disparu de la fiche, row.updated_at fait foi. Vérifié."
+ },
+ {
+  "itid": "F-GOFP-17",
+  "status": "valide",
+  "note": "Rapport pilote : « elles sont données égales dans le manuel de vol » — vsTO = vs1 = 40 kt est la publication du F152, l'égalité est légitime (ordre vso 35 ≤ 40 ≤ 40 ✓). F-GOFP EST SOLDÉ."
  }
 ]
