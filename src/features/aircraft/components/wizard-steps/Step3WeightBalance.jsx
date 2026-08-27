@@ -3270,6 +3270,39 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   InputLabelProps={{ shrink: true }}
                   sx={{ minWidth: 220 }}
                 />
+                {/* 27/08 — LES DEUX CHIFFRES LUS SUR LE RAPPORT. Facultatifs,
+                    mais ce sont EUX qui rendent le cas de référence « Fiche de
+                    pesée » vérifiable : le banc confronte alors la fiche au
+                    DOCUMENT. Sans eux il ne pouvait que se comparer à lui-même,
+                    et affichait un ✓ rassurant sur une fiche fausse. */}
+                <StyledTextField
+                  label="Masse à vide LUE sur le rapport"
+                  type="number"
+                  size="small"
+                  value={data.weighingReport?.emptyWeightFromReport ?? ''}
+                  onChange={(e) => {
+                    const n = parseFloat(e.target.value);
+                    updateData('weighingReport.emptyWeightFromReport', Number.isFinite(n) ? n : undefined);
+                  }}
+                  helperText="Recopiez la valeur du document — le banc compare la fiche au rapport"
+                  InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 250 }}
+                />
+                <StyledTextField
+                  label="Bras à vide LU sur le rapport"
+                  type="number"
+                  size="small"
+                  value={data.weighingReport?.cgFromReport ?? ''}
+                  onChange={(e) => {
+                    const n = parseFloat(e.target.value);
+                    updateData('weighingReport.cgFromReport', Number.isFinite(n) ? n : undefined);
+                  }}
+                  helperText="Bras de levier de la masse à vide, tel qu'imprimé"
+                  InputProps={{ endAdornment: <InputAdornment position="end">m</InputAdornment> }}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 250 }}
+                />
                 {age && (
                   <Typography
                     variant="caption"
