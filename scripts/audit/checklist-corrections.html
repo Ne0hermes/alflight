@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>176 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>67 points à
+  <b>188 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>55 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 6 critiques, 11 majeurs, 50 mineurs — dont 28 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 8 majeurs, 42 mineurs — dont 23 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -560,145 +560,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUKQ</span><span class="mdl">DR 400/120</span><span class="spacer"></span>
-<span class="pill p-critique">1 critique</span>
-<span class="pill p-majeur">3 majeurs</span>
-<span class="pill p-mineur">8 mineurs</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-GUKQ" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GUKQ" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Tables MANEX seules — 5 tables ré-importées d&#x27;Excel le 19/08 (grille ISA diagonale ISA−20/ISA/ISA+20 aux paliers 0/4000/8000 ft, 2 masses 900 et 700 kg, reconnue et convertie par le moteur) ; aucun abaque d&#x27;atelier (performanceModels null, performanceTables null, probe du 23/08 : 0 modèle) ; enveloppe de centrage à 3 points avant interpolés + limite arrière constante (aftCG 0,5634) ; 6 règles de correction vent/herbe, une seule headwind factor_table par phase.</b> — La fiche est saine sur l&#x27;essentiel : bras de levier complets et cohérents entre eux (moment à vide 218 = 574 × 0,3798, dans l&#x27;enveloppe), et les 4 opérations obligatoires se calculent réellement — exécution du 23/08 à 15 °C / 500 ft / 900 kg : 249,9 m et 561,0 m au décollage, 203,7 m et 466,9 m à l&#x27;atterrissage, confiance 95 %, avec refus propre au-delà d&#x27;ISA+20. Deux points faussent des chiffres réellement exploités en vol : les cellules 900 kg / niveau de la mer du roulement au décollage (235 et 255 m) sont optimistes de 7 à 10 % — deux contrôles de rapport internes à la table le démontrent — et aucun réservoir ne porte d&#x27;utilisable, si bien que le moteur consomme 159 L là où la fiche en annonce 105. Commencez par ces deux-là, puis par les paliers de vent de face à l&#x27;atterrissage (copie de ceux du décollage), le tableau de croisière qui ne se calcule jamais, et enfin la traçabilité de la pesée ; tout le reste est de l&#x27;hygiène de miroirs inertes.</div>
 <div class="caps"><span class="cap oui">Centrage : oui</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 3 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it critique" data-sev="critique" data-itid="F-GUKQ-01" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[3].data — operationId takeoff_ground_roll_flaps_to, lignes Masse 900 / Altitude 0" data-sevlbl="critique">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-01</span><span class="pill p-critique">critique</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.advancedPerformance.tables[3].data — operationId takeoff_ground_roll_flaps_to, lignes Masse 900 / Altitude 0</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">225 / 235 / 255 m à ISA−20 / ISA / ISA+20 (la cellule ISA+20 est passée de 285 à 255 le 19/08 ; la cellule ISA visée par le retour F-GUKQ-10 est restée à 235). Étalement en température de la ligne : (255−225)/225 = 13,3 %.</dd>
-<dt>Attendu</dt><dd>≈255 m à ISA et ≈285 m à ISA+20 — les deux seules valeurs qui remettent la ligne dans le motif de la table elle-même. À relire au manuel, page 54, ligne 900 kg / niveau de la mer.</dd>
-<dt>En vol</dt><dd>Roulement au décollage sous-estimé à la masse maxi au niveau de la mer : 249,9 m calculés à 15 °C / 500 ft au lieu de ≈268 m (−7 %), et −10,5 % par 35 °C au sol. L&#x27;erreur va dans le mauvais sens — le pilote croit décoller plus court qu&#x27;en réalité, sur le cas de chargement le plus contraignant.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Performances &gt; table « Distance de roulement - Masse 900 kg » : rouvrir la ligne 900 kg / 0 ft et corriger les cellules 15 °C et 35 °C d&#x27;après la page 54 du manuel.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Deux contrôles internes à la table, tous deux hors motif sur cette seule ligne. (1) Rapport 900 kg / 700 kg à chaque couple (altitude, température) : 1,73 / 1,62 / 1,55 sur la ligne 0 ft, contre 1,74 à 1,81 sur les six autres couples de la table. (2) Rapport passage 50 ft / roulement à 900 kg : 2,28 à ISA et 2,31 à ISA+20 au niveau de la mer, contre 2,05 à 2,19 sur les quinze autres cellules. Les deux rapports se normalisent simultanément avec 255 et 285. Étalement en température de 13,3 % contre 25,7 à 27,9 % sur les cinq autres lignes de la table. Exécution du 23/08 (resolveOperationFromTables) : 249,8946875 m, statut COMPUTED, confiance 95 % à 15 °C / 500 ft / 900 kg.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-01) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUKQ-02" data-clos="0" data-champ="aircraft_data.performanceCorrections[5].brackets — règle headwind, appliesTo « landing »" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-02</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">aircraft_data.performanceCorrections[5].brackets — règle headwind, appliesTo « landing »</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">brackets = [{fromKt 10 → 0,85}, {fromKt 20 → 0,65}, {fromKt 30 → 0,55}], strictement identiques à ceux de la règle headwind décollage (performanceCorrections[4]).</dd>
-<dt>Attendu</dt><dd>Paliers propres à l&#x27;atterrissage : [{10 → 0,78}, {20 → 0,63}, {30 → 0,52}] — les valeurs que portaient les trois anciennes règles headwind atterrissage de la fiche avant leur regroupement du 19/08. À confirmer sur la page des corrections de vent du manuel.</dd>
-<dt>En vol</dt><dd>Distance d&#x27;atterrissage surestimée d&#x27;environ 9 % entre 10 et 19 kt de vent de face (facteur 0,85 appliqué au lieu de 0,78). L&#x27;erreur est du côté sûr, mais le chiffre affiché n&#x27;est pas celui du manuel et peut faire refuser une piste courte pourtant utilisable.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Corrections de performance &gt; règle « Vent de face — atterrissage » : remplacer les trois paliers par ceux de l&#x27;atterrissage.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Comparaison des deux règles dans la base fraîche : performanceCorrections[4] (takeoff) et [5] (landing) portent des brackets identiques valeur pour valeur, alors que l&#x27;historique d&#x27;audit (retours.json, F-GUKQ-02) enregistre pour l&#x27;atterrissage 0,78 / 0,63 / 0,52 relevés dans les trois règles remplacées le 19/08 à 14:53–14:54 UTC. La fiche n&#x27;ayant pas d&#x27;abaque (probe : 0 modèle), l&#x27;exception « panneau vent » du 21/08 ne s&#x27;applique pas : ces règles sont bien appliquées.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-02) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUKQ-03" data-clos="0" data-champ="aircraft_data.additionalFuelTanks[0].usableCapacity et [1].usableCapacity (absents) vs aircraft_data.fuelUsableCapacity" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-03</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">carburant</span><span class="path">aircraft_data.additionalFuelTanks[0].usableCapacity et [1].usableCapacity (absents) vs aircraft_data.fuelUsableCapacity</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Réservoir principal : {capacity 109, arm 1,1616}, aucun usableCapacity. Réservoir optionnel : {capacity 50, arm 1,44613}, aucun usableCapacity. fuelCapacity racine = 159 (= 109 + 50, cohérent). fuelUsableCapacity racine = 105.</dd>
-<dt>Attendu</dt><dd>usableCapacity porté sur chaque réservoir (principal ≈105 L si 109 L est le volume physique, optionnel à préciser), et fuelUsableCapacity racine égal à la somme des utilisables sélectionnés.</dd>
-<dt>En vol</dt><dd>Le moteur applique usableCapacity ?? capacity : il tient 109 L pour utilisables sur le principal, soit 4 L (≈10 min à 25 L/h) de plus que les 105 L annoncés par la fiche ; si le réservoir optionnel est coché, 50 L de plus sont comptés intégralement utilisables. L&#x27;autonomie et la réserve finale sont surévaluées, jamais sous-évaluées.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Carburant &gt; réservoirs : saisir la contenance utilisable de chaque réservoir en plus de la contenance totale ; le champ racine se resynchronisera à l&#x27;enregistrement.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne directe : Σ(usableCapacity ?? capacity) = 109 + 50 = 159 L, alors que fuelUsableCapacity = 105 L déclaré par la fiche elle-même. Le seul réservoir principal (109 L) dépasse déjà à lui seul l&#x27;utilisable global annoncé.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUKQ-05" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate (et bypassedFields contenant « weighingReport »)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-05</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.weighingReport.certificationDate (et bypassedFields contenant « weighingReport »)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">certificationDate = « 1992-09-01 » ; hasData = true ; fileName = « DR400-120 - F-GUKQ-Masse et Centrage.pdf » (195 917 o, 1 page) ; et « weighingReport » figure simultanément dans bypassedFields.</dd>
-<dt>Attendu</dt><dd>Date de la dernière pesée réelle de F-GUKQ et document de pesée correspondant (immatriculation, masse et bras à vide, date, signature).</dd>
-<dt>En vol</dt><dd>La masse à vide 574 kg et le bras 0,3798 m — dont dépend tout le centrage — n&#x27;ont pas de source de pesée traçable. Les calculs restent cohérents entre eux, mais rien ne garantit qu&#x27;ils décrivent l&#x27;avion tel qu&#x27;il vole aujourd&#x27;hui, 34 ans après la date portée.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Masse et centrage &gt; rapport de pesée : téléverser la fiche de pesée réelle et saisir sa date, puis relire masse et bras à vide dessus ; retirer alors « weighingReport » de bypassedFields.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : la fiche déclare hasData = true avec un PDF joint, tout en listant « weighingReport » parmi les champs contournés. La lecture du PDF consignée au ré-audit du 21/08 (retours.json, F-GUKQ-06) identifie une page 6.02 du « MANUEL DE VOL DR 400/120 », pied de page « Edition 10 - Septembre 1992 » : la certificationDate saisie est la date d&#x27;édition de ce manuel, et le document ne porte ni immatriculation, ni date de pesée, ni signature. Ce constat n&#x27;a pas pu être refait dans ce passage (pas d&#x27;accès au PDF) : à retrancher au document.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-05) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-08" data-clos="0" data-champ="aircraft_data.cgEnvelope.categories.Normale (forwardPoints et aftPoints)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-08</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.cgEnvelope.categories.Normale (forwardPoints et aftPoints)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Le miroir « Normale » porte forwardPoints[1].weight = 748 et une masse haute de 899,0196078431371 kg sur ses deux courbes, alors que les points racine portent 750 et 900.</dd>
-<dt>Attendu</dt><dd>Miroir identique aux points racine (550 / 750 / 900), ou suppression du bloc categories, une seule catégorie étant déclarée et utilityCategory.enabled valant false.</dd>
-<dt>En vol</dt><dd>Aucun effet : le moteur lit cgEnvelope.forwardPoints et cgEnvelope.aftCG à la racine, jamais categories tant qu&#x27;aucune catégorie n&#x27;est passée. Le risque est de voir un jour tracer une enveloppe s&#x27;arrêtant 0,98 kg sous la masse maxi et rejeter à tort un chargement à 900 kg pile.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Centrogramme : ré-enregistrer l&#x27;enveloppe pour resynchroniser le bloc categories sur les points racine.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Miroir ≠ source, sur deux valeurs : 748 vs 750 (les moments racine confirment 750 — 153,38 / 0,2045 = 750,0) et 899,0196078431371 vs 900 = maxTakeoffWeight. Chemin moteur vérifié : computeWeightBalance.js l.97-99 et Step6WeightBalance.jsx l.112-114 lisent forwardPoints[0].cg, aftCG et forwardPoints ; cgEnvelope.js n&#x27;entre dans categories que si une catégorie est explicitement demandée.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-08) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-09" data-clos="0" data-champ="aircraft_data.cgEnvelope.forwardPoints[2].cg" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-09</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">masse-centrage</span><span class="path">aircraft_data.cgEnvelope.forwardPoints[2].cg</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">0,4222 m à 900 kg (moment 379,98 = 0,4222 × 900, donc dérivé du CG), après 0,2078 m à 550 kg et 0,2045 m à 750 kg.</dd>
-<dt>Attendu</dt><dd>Valeur relue sur le centrogramme du manuel : la limite avant recule de 0,2177 m entre 750 et 900 kg alors qu&#x27;elle est quasi plate (−0,0033 m) entre 550 et 750 kg. Un 0,2422 ou 0,3222 mal relevé donnerait la même allure de saisie.</dd>
-<dt>En vol</dt><dd>Aucun effet démontrable : à 900 kg il faudrait plus de 282 kg sur les deux sièges avant pour franchir cette limite, situation inatteignable ; tous les chargements réalistes à la masse maxi ressortent autour de 0,50–0,53 m, largement en arrière. Le point n&#x27;est jamais mordant, mais il n&#x27;a jamais été vérifié non plus.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Centrogramme : rouvrir le point avant à 900 kg et le confronter au centrogramme du manuel (page 6.02) avant la mise au propre.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Discontinuité de pente interne à la courbe avant : −0,0000165 m/kg sur le segment 550→750 kg, puis +0,001451 m/kg sur le segment 750→900 kg, soit un facteur 88 sur la même courbe. Aucune autre source de la fiche ne recoupe cette valeur (cgLimits.forward racine vaut 0,2078, c&#x27;est-à-dire le point à 550 kg).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-09) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-10" data-clos="0" data-champ="aircraft_data.advancedPerformance.tables[4].table_name" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-10</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.advancedPerformance.tables[4].table_name</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Distance d&#x27;atterrissage passage 15m/50ft - Masse 900 kg » pour une table dont operationId et classification valent takeoff_50ft_flaps_to.</dd>
-<dt>Attendu</dt><dd>« Distance de décollage passage 15 m / 50 ft - Masse 900 kg ».</dd>
-<dt>En vol</dt><dd>Aucun effet sur les calculs — le moteur ne lit que l&#x27;operationId. Mais le titre s&#x27;affiche dans le détail de calcul : le pilote peut croire lire une distance d&#x27;atterrissage là où on lui donne une distance de décollage.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Performances : renommer la table.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction titre / operationId, et les données ne sont pas celles de l&#x27;atterrissage : à 900 kg / 0 ft / ISA cette table donne 535 m quand la table landing_50ft_flaps_landing (page 50) donne 460 m — ce ne sont donc pas les mêmes chiffres, la confusion est bien limitée au libellé. Même page source (54) que la table takeoff_ground_roll_flaps_to.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-10) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-11" data-clos="0" data-champ="aircraft_data.bypassedFields — entrée « fuelTankArms »" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-11</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.bypassedFields — entrée « fuelTankArms »</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">bypassedFields = [&quot;weighingReport&quot;, &quot;fuelTankArms&quot;, &quot;performance.takeoff_ground_roll_flaps_up&quot;, &quot;performance.takeoff_50ft_flaps_up&quot;, &quot;performance.landing_ground_roll_flaps_up&quot;, &quot;performance.landing_50ft_flaps_up&quot;].</dd>
-<dt>Attendu</dt><dd>Retrait de « fuelTankArms ». Les quatre contournements performance.*_flaps_up sont désormais légitimes (variantes volets rentrés facultatives depuis le 23/08) ; « weighingReport » ne se retirera qu&#x27;une fois une vraie pesée jointe.</dd>
-<dt>En vol</dt><dd>Aucun effet direct. Un contournement qui ne correspond plus à rien affaiblit la valeur d&#x27;alerte de la liste : le jour où un bras de réservoir disparaîtra vraiment, le silence sera pris pour normal.</dd>
-<dt>Action</dt><dd>Carte avion : décocher le contournement « bras de réservoirs ».</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Le contournement déclare une donnée manquante qui est présente : additionalFuelTanks[0].arm = 1,1616 et [1].arm = 1,44613, le premier recoupant arms.fuelMain et weightBalance.fuelArm.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-12" data-clos="0" data-champ="aircraft_data.approvedOperations.vfrDay et .vfrNight" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-12</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">aircraft_data.approvedOperations.vfrDay et .vfrNight</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vfrDay = false, vfrNight = false, ifrDay = false, ifrNight = false, svfr = false — aucune règle de vol autorisée — alors que training = true.</dd>
-<dt>Attendu</dt><dd>Au moins vfrDay = true, conformément à l&#x27;extraction du manuel.</dd>
-<dt>En vol</dt><dd>Aucun blocage : ces cases ne sont qu&#x27;affichées (carte avion et récapitulatif du wizard), aucune préparation de vol ne s&#x27;appuie dessus. Mais la fiche décrit un avion-école qui ne serait autorisé à aucune règle de vol.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Opérations approuvées : cocher VFR jour (et VFR nuit si l&#x27;équipement le permet).</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne entre les items d&#x27;extraction et les champs vivants : manexExtraction.items porte vfrDay = true (page 62, confiance 100) et vfrNight = true (page 60, confiance 95), tous deux avec accepted = false, jamais reportés sur la fiche. Usage vérifié dans le code : approvedOperations n&#x27;apparaît que dans AircraftModule.jsx (cases à cocher) et Step5Review.jsx (affichage).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-12) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-13" data-clos="0" data-champ="aircraft_data.manexExtraction.items[] — entrées accepted = true divergentes (homeBase, speeds.vr)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-13</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">aircraft_data.manexExtraction.items[] — entrées accepted = true divergentes (homeBase, speeds.vr)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Item « Terrain de base (OACI) » : value = « FMEP », accepted = true, confiance 0, sourcePage null — la fiche porte homeBase = « LFRW ». Item « VR » : value = 78 (originalValue 73 kt), accepted = true, confiance 95 — la fiche porte speeds.vr = 54.</dd>
-<dt>Attendu</dt><dd>Items d&#x27;extraction alignés sur les valeurs retenues, ou repassés en accepted = false.</dd>
-<dt>En vol</dt><dd>Aucun effet tant que l&#x27;extraction n&#x27;est pas ré-appliquée. Le jour où elle le serait, le terrain de base basculerait sur FMEP (La Réunion) au lieu de LFRW — cohérent, lui, avec homeAeroclub « aérodrome d&#x27;Avranches-Le Val-St-Père » — et VR passerait de 54 à 78 kt.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Extraction MANEX : rejeter ces deux items, ou relancer l&#x27;extraction pour resynchroniser la liste.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Items marqués accepted = true dont la valeur diffère de celle réellement en base, sur deux chemins (homeBase, speeds.vr). La valeur retenue pour VR est la cohérente : 54 kt se situe bien au-dessus de vsTO = 48 et vs1 = 51, tandis que la conversion de l&#x27;item est elle-même incohérente (originalValue 73 kt rendue en 78).</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-14" data-clos="0" data-champ="aircraft_data.speeds.initialClimb" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-14</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">unites</span><span class="path">aircraft_data.speeds.initialClimb</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">65 (nombre), dans le bloc speeds dont _metadata.units.speed vaut « kt ».</dd>
-<dt>Attendu</dt><dd>Grandeur tranchée : 65 kt en vitesse de montée initiale est plausible, 65 ft/min serait aberrant. Valeur elle-même à relire au manuel.</dd>
-<dt>En vol</dt><dd>Ambiguïté d&#x27;affichage seulement : le champ est saisi et présenté comme une vitesse par le wizard, donc lu en kt par le pilote. Le risque est celui d&#x27;une future reprise du champ par le mapper, qui le considère comme un taux de montée.</dd>
-<dt>Action</dt><dd>Carte avion &gt; Vitesses : confirmer que 65 désigne bien des nœuds, et faire trancher le schéma d&#x27;extraction côté projet.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Conflit de schéma interne au projet, inchangé en base : Step2Speeds.jsx définit initialClimb comme « V Montée initiale » en unité de vitesse, tandis que manexExtractionMapper.js l.211 déclare le même chemin « Taux montée initial » en ft/min — l&#x27;item d&#x27;extraction correspondant porte d&#x27;ailleurs 570 (originalValue 1200 « tr/min »), accepté mais non reporté.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUKQ-15" data-clos="0" data-champ="aircraft_data.version et aircraft_data.lastModified" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUKQ-15</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.version et aircraft_data.lastModified</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">aircraft_data.version = 2 et aircraft_data.lastModified = &quot;2026-08-16T13:27:39.350Z&quot;, alors que la même fiche porte row version = 3, updated_at = &quot;2026-08-25T10:22:13.687&quot;, _metadata.exportedAt = &quot;2026-08-25T10:22:13.350Z&quot; et un _updateHistory enregistrant l&#x27;écriture du 25/08 (9 groupes de champs, &quot;version&quot;: 3).</dd>
-<dt>Attendu</dt><dd>Miroirs alignés sur la dernière écriture (version 3, 25/08) ou supprimés au profit des champs de la row — un version/lastModified interne périmé contredit l&#x27;historique que la fiche porte elle-même.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUKQ-15) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 15 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-GUKQ-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUVV</span><span class="mdl">DA40TDI</span><span class="spacer"></span>

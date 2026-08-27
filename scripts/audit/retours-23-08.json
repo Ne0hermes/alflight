@@ -883,5 +883,65 @@
   "itid": "F-BXQT-19",
   "status": "valide",
   "note": "Choix pilote (rapport 26/08, même précédent que F-HDIM-18/F-GNAM-23/F-GGZO-15) : « correspond au visuel de la masse et centrage » — le centrogramme du C150M est publié à partir de 500 kg (sous la masse à vide, cas courant). Cohérent aux 3 emplacements. Documenté."
+ },
+ {
+  "itid": "F-GUKQ-01",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « données revérifiées, elles sont justes » — ET la base porte 225/235/285 : la cellule ISA+20 est REVENUE à 285 (celle que l'audit attendait), le 235 à ISA est confirmé au manuel p54. Le motif de la table est rétabli. Clos."
+ },
+ {
+  "itid": "F-GUKQ-02",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 du pilote puis v6 fix-gukq --apply sur mandat, sauvegarde backups/fix-gukq-2026-08-27T07-51-57) : les paliers headwind ATTERRISSAGE portent leurs valeurs propres (10→0,78 / 20→0,63 / 30→0,52) — exactement l'attendu, plus de copie des paliers décollage."
+ },
+ {
+  "itid": "F-GUKQ-03",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 du pilote puis v6 fix-gukq --apply sur mandat, sauvegarde backups/fix-gukq-2026-08-27T07-51-57) : usableCapacity EXPLICITE sur les deux réservoirs (109 et 50, clés legacy retirées, totaux 110/50) — racine 160/159 cohérente avec les sommes."
+ },
+ {
+  "itid": "F-GUKQ-05",
+  "status": "valide",
+  "note": "Le contournement weighingReport a été retiré ce matin (purge-scories) ; la pesée de 1992 est LA pesée en vigueur (coche pilote sans réserve, précédent F-GOVE-05). L'avertissement d'ancienneté restera, c'est voulu."
+ },
+ {
+  "itid": "F-GUKQ-08",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 du pilote puis v6 fix-gukq --apply sur mandat, sauvegarde backups/fix-gukq-2026-08-27T07-51-57) : le bloc cgEnvelope.categories (miroir « Normale » divergent : 748 vs 750, 899,02 vs 900) est SUPPRIMÉ — catégorie unique, utilityCategory désactivée, les points racine font foi."
+ },
+ {
+  "itid": "F-GUKQ-09",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « c'est juste » — le recul de la limite avant à 900 kg (0,4222 m) est celui du centrogramme du manuel. Relu, acté."
+ },
+ {
+  "itid": "F-GUKQ-10",
+  "status": "fait",
+  "note": "Réponse au « le fichier est nommé juste » : à l'ÉCRAN oui (l'app montre l'opération), mais le champ table_name en base disait encore « atterrissage » (invisible depuis l'app — même malentendu que F-BXQT-10). RENOMMÉ par script (v6) : « Distance de décollage passage 15 m / 50 ft - Masse 900 kg ». Vérifié."
+ },
+ {
+  "itid": "F-GUKQ-11",
+  "status": "fait",
+  "note": "RÉPONSE à « où je fais ça ? » : NULLE PART dans l'app — et c'était DÉJÀ FAIT : le script purge-scories de ce matin a retiré fuelTankArms (et weighingReport) ; les 4 contournements performance.*_flaps_up restants sont légitimes (variantes volets rentrés facultatives). Vérifié en base."
+ },
+ {
+  "itid": "F-GUKQ-12",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 du pilote puis v6 fix-gukq --apply sur mandat, sauvegarde backups/fix-gukq-2026-08-27T07-51-57) : approvedOperations porte vfrDay, training, elt, firstAidKit et fireExtinguisherHalon à true — les règles de vol sont déclarées."
+ },
+ {
+  "itid": "F-GUKQ-13",
+  "status": "obsolete",
+  "note": "REQUALIFIÉ (précédent F-GNAM-17) : l'historique d'extraction MANEX est un INSTANTANÉ d'époque (FMEP, VR 78) — la fiche fait foi (LFRW, vr 54) et aucun écran ne réécrit cet historique. Archive, pas un défaut."
+ },
+ {
+  "itid": "F-GUKQ-14",
+  "status": "valide",
+  "note": "Rapport pilote 26/08 : « ce sont des kt » — initialClimb = 65 kt (vitesse de montée initiale), grandeur tranchée, cohérente avec le bloc speeds en kt."
+ },
+ {
+  "itid": "F-GUKQ-15",
+  "status": "fait",
+  "note": "lastModified purgé ce matin (purge flotte des horodatages) ✓ et aircraft_data.version (miroir périmé 4 vs row) SUPPRIMÉ par fix-gukq (v6) — la row Supabase fait foi. F-GUKQ EST SOLDÉ."
  }
 ]
