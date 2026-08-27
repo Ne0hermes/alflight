@@ -943,5 +943,70 @@
   "itid": "F-GUKQ-15",
   "status": "fait",
   "note": "lastModified purgé ce matin (purge flotte des horodatages) ✓ et aircraft_data.version (miroir périmé 4 vs row) SUPPRIMÉ par fix-gukq (v6) — la row Supabase fait foi. F-GUKQ EST SOLDÉ."
+ },
+ {
+  "itid": "F-GUVV-02",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : le panneau vent est complet et nommé : HEADWIND 1 à 10 + TAILWIND 1 à 10 — le guide anonyme a son numéro."
+ },
+ {
+  "itid": "F-GUVV-03",
+  "status": "note",
+  "note": "Le panneau vent ayant été retouché (HEADWIND 1 nommé/tagué), le rejeu du cas de référence (330 m à 40 °C/4000 ft/1050 kg/10 kt) a pu repasser sous les 5 %. VÉRIFICATION SIMPLE : ouvrez le modèle dans l'atelier — la ligne du cas affiche son écart. Dites-moi le % et je clos (ou corrige)."
+ },
+ {
+  "itid": "F-GUVV-06",
+  "status": "fait",
+  "note": "Rapport pilote « good 15kt » + Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : limits[] complet (traversier 20 / arrière 10 / traversier mouillé 15) et miroir plat maxCrosswind ALIGNÉ 25 → 20 par script (la saisie moderne fait foi, précédent F-HSTR-15). Signalez-moi si le manuel dit 25 et j'inverse."
+ },
+ {
+  "itid": "F-GUVV-09",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : transponderModes [\"a\",\"c\"] (singulier disparu — migration flotte) et tcas normalisé « None » → false par script. Le schéma legacy est soldé."
+ },
+ {
+  "itid": "F-GUVV-10",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : ELT cohérente des deux côtés : equipmentCom.elt = true ET approvedOperations.elt = true."
+ },
+ {
+  "itid": "F-GUVV-11",
+  "status": "ouvert",
+  "note": "Coché, MAIS l'état v5 est plus étrange qu'avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse."
+ },
+ {
+  "itid": "F-GUVV-13",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : « Diamond Aircraft » dans aircraft_data ET la colonne racine — la faute « Diamand » est corrigée partout."
+ },
+ {
+  "itid": "F-GUVV-14",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : remarks est vidé — le texte de test a disparu."
+ },
+ {
+  "itid": "F-GUVV-15",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : GRASS ajouté à compatibleRunwaySurfaces — cohérent avec les deux règles herbe +15 % (l'avion opère sur herbe)."
+ },
+ {
+  "itid": "F-GUVV-16",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : les 8 guides du panneau masse sont renommés « 1 » à « 8 » sans unité — conforme à la convention."
+ },
+ {
+  "itid": "F-GUVV-17",
+  "status": "valide",
+  "note": "Coché pilote (sans réserve) : la pesée du 20/06/2012 est LA pesée en vigueur — aucune plus récente au club. L'avertissement d'ancienneté (14 ans, seul avion au-delà du seuil) restera affiché : c'est voulu."
+ },
+ {
+  "itid": "F-GUVV-18",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : vx est VIDÉ, vy = 72 conservée — l'égalité impossible vx = vy est levée."
+ },
+ {
+  "itid": "F-GUVV-19",
+  "status": "fait",
+  "note": "Vérifié sur la fiche fraîche (v5 pilote puis v6 fix-guvv sur mandat, sauvegarde backups/fix-guvv-2026-08-27T08-16-13) : horsepower = 135 (la vraie puissance du TDI) — ET le nouveau champ moteur est déjà rempli : « Thielert Engines - TAE 125-02-99 » (feature livrée ce matin, adoptée dans l'heure)."
  }
 ]

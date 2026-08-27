@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>188 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>55 points à
+  <b>199 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>44 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 8 majeurs, 42 mineurs — dont 23 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 6 majeurs, 33 mineurs — dont 18 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -569,23 +569,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUVV</span><span class="mdl">DA40TDI</span><span class="spacer"></span>
-<span class="pill p-majeur">3 majeurs</span>
-<span class="pill p-mineur">10 mineurs</span>
+<span class="pill p-majeur">1 majeur</span>
+<span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GUVV" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GUVV" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 entièrement reconstruits le 23/08 (updated_at 12:39) : 4 modèles couvrant exactement les 4 opérations obligatoires, panneau d&#x27;entrée OAT primaire en famille pressure_altitude puis 2 panneaux de correction à guides numérotés (masse, vent), 1 cas de référence MANEX par modèle ; aucune table MANEX (performanceTables null, advancedPerformance null) ; masse-centrage sur cgEnvelope (3 points avant, 2 arrière, moments recalculés exacts), un seul réservoir principal ; équipements encore en forme legacy.</b> — La refonte du 23/08 a réglé l&#x27;essentiel : les 6 vieux modèles mal étiquetés ont laissé place à 4 abaques propres, le panneau OAT est bien l&#x27;entrée de chaîne, le vent de face raccourcit désormais les distances au décollage, le centrage et le carburant tournent sans faute (plein 147,6 L = 124,0 kg à 0,84, CG 2,530 m, enveloppe et miroir weightBalance cohérents). Ce qui bloque : les deux abaques d&#x27;atterrissage n&#x27;ont AUCUN guide de vent arrière, si bien que le moteur se rabat en silence sur le guide n°1 et renvoie 403 m (passage 15 m) et 157 m (roulage) quels que soient la température, l&#x27;altitude et la masse — 47 % trop court, alors que la fiche autorise 10 kt de vent arrière. Commencer par là : digitaliser les guides vent arrière des 2 charts d&#x27;atterrissage ; puis renommer le guide « HEADWIND » du décollage roulage (écarté du calcul) et refaire passer son cas de référence, qui échoue à 5,1 % ; le reste est de l&#x27;hygiène de fiche à trancher au manuel.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 6 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUVV-02" data-clos="0" data-champ="performanceModels[0].data.graphs[1].curves[10] — guide « HEADWIND » (panneau vent de « Distance sol décollage »)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-02</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">performanceModels[0].data.graphs[1].curves[10] — guide « HEADWIND » (panneau vent de « Distance sol décollage »)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Guide nommé « HEADWIND » sans numéro et sans valeur de famille, alors que ses 9 voisins s&#x27;appellent « HEADWIND 2 » à « HEADWIND 10 » et que les 10 guides opposés sont « TAILWIND 1 » à « TAILWIND 10 ». Le moteur ne peut lui attribuer aucun paramètre et l&#x27;écarte : « Graphe &quot;Correction 3&quot; : 1 courbe(s) ÉCARTÉE(S) du calcul — ni valeur de famille saisie, ni nombre lisible dans le nom : « HEADWIND » ». Il ne reste que 9 guides de vent de face sur 10, et c&#x27;est le plus haut du panneau qui manque (Y = 617,7 m sur la ligne de référence, contre 556,7 m pour « HEADWIND 2 »). Accessoirement, ces 10 guides de face n&#x27;ont aucune propriété windDirection (le filtrage ne tient qu&#x27;au mot « HEADWIND » dans leur nom), là où les 10 guides arrière sont tagués.</dd>
-<dt>Attendu</dt><dd>Guide nommé « HEADWIND 1 » (ou valeur de famille 1), et direction « vent de face » tagués comme sur les guides arrière.</dd>
-<dt>En vol</dt><dd>Dès que la distance à l&#x27;entrée du panneau vent dépasse ~557 m, l&#x27;encadrement n&#x27;a plus de guide supérieur et la correction de vent est extrapolée au lieu d&#x27;être encadrée. Cas réel vérifié : 15 °C / 8000 ft / 1150 kg / 10 kt de face → 435,7 m avec la mention « Au-dessus de la courbe 2 &quot;HEADWIND 2&quot; (extrapolation) » ; 40 °C / 8000 ft → 627,3 m, même extrapolation. Sous ce seuil (conditions courantes, 342,0 m à 15 °C/500 ft), aucun effet.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèle « Distance sol décollage », panneau vent : renommer la courbe « HEADWIND » en « HEADWIND 1 » (ou lui saisir la valeur de famille 1) et cocher la direction « vent de face » sur les 10 guides de face.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution du moteur avec traceur branché (avertissement de rejet émis par cascade.ts) + le nom « HEADWIND » ne contient aucun chiffre et curve.familyValue est absent ; trace d&#x27;étape « Au-dessus de la courbe 2 &quot;HEADWIND 2&quot; (extrapolation) » sur la sonde 15 °C/8000 ft/1150 kg/face 10 kt.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-02) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it majeur" data-sev="majeur" data-itid="F-GUVV-03" data-clos="0" data-champ="performanceModels[0].data.metadata.referenceCases[0] (takeoff_ground_roll_flaps_to)" data-sevlbl="majeur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -596,40 +585,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Écart ≤ 5 % comme les 3 autres modèles.</dd>
 <dt>En vol</dt><dd>Distance de roulement au décollage sous-estimée d&#x27;environ 5 % au point du manuel (17 m sur 330). Sens non conservatif — l&#x27;écart se propage à toutes les conditions voisines.</dd>
 <dt>Action</dt><dd>Atelier abaques → modèle « Distance sol décollage » : vérifier d&#x27;abord que le cas de référence est bien recopié du MANEX, puis reprendre les points du panneau OAT (courbe 4000 ft vers 40 °C) et/ou des guides masse 6-7, et re-valider jusqu&#x27;au PASS du banc.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution de referenceBench.runAllReferenceCases sur les graphes de la fiche fraîche (statut fail, deviationPct 5,141). Vérifié indépendant du guide « HEADWIND » écarté : le rejeu avec ce guide renommé donne exactement la même valeur 313,03 m.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-03) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-06" data-clos="0" data-champ="windLimits.limits[] vs windLimits.maxCrosswind / maxCrosswindWet" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-06</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">vitesses</span><span class="path">windLimits.limits[] vs windLimits.maxCrosswind / maxCrosswindWet</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">windLimits.limits = [{maxCrosswind, 20}, {maxTailwind, 10}] ; champs historiques du même objet = maxCrosswind 25, maxTailwind 10, maxCrosswindWet 15. Le vent traversier maxi vaut donc 20 kt dans un format et 25 kt dans l&#x27;autre, et le traversier piste mouillée (15 kt) n&#x27;existe pas dans limits[].</dd>
-<dt>Attendu</dt><dd>Une seule valeur de traversier maxi, et les 3 limitations présentes dans limits[].</dd>
-<dt>En vol</dt><dd>L&#x27;étape Vitesses du wizard affiche 20 kt de traversier maxi, l&#x27;écran fiche avion 25 kt : deux limites différentes selon l&#x27;écran consulté. Aucun calcul ne consomme ces champs aujourd&#x27;hui (recherche exhaustive : seuls AircraftModule.jsx et Step2Speeds.jsx les lisent).</dd>
-<dt>Action</dt><dd>Étape Vitesses : remettre le traversier maxi à la valeur du manuel et ajouter la ligne « traversier piste mouillée » ; l&#x27;écran fiche avion réécrira ensuite les champs historiques.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne 20 ≠ 25 kt dans le même objet windLimits, sur la même limitation ; recensement des consommateurs dans src/ et packages/.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-06) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-09" data-clos="0" data-champ="equipmentSurv (forme legacy) — transponderMode « C », tcas « None », gpws/egpws/flarm/ras ; transponderModes absent" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-09</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">equipmentSurv (forme legacy) — transponderMode « C », tcas « None », gpws/egpws/flarm/ras ; transponderModes absent</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">equipmentSurv = {cvr false, fdr false, ras false, adsb false, gpws false, taws false, tcas « None », egpws false, flarm false, adsbIn false, transponderMode « C »} ; aucune clé transponderModes. L&#x27;étape Équipements du wizard lit et écrit transponderModes (Step5Equipment.jsx:632-644) ; l&#x27;écran fiche avion lit et écrit transponderMode au singulier (AircraftModule.jsx:6470).</dd>
-<dt>Attendu</dt><dd>Schéma actuel : transponderModes (liste A/C/S) + booléens ; tcas booléen et non la chaîne « None ».</dd>
-<dt>En vol</dt><dd>L&#x27;étape Équipements du wizard n&#x27;affiche aucun mode transpondeur coché alors que l&#x27;écran fiche avion affiche « Mode C » : deux écrans, deux vérités. Le plan de vol ne déclare plus de balise à partir de ce champ orphelin (correctif déjà en place, Step7Summary.jsx:584).</dd>
-<dt>Action</dt><dd>Repasser l&#x27;étape Équipements du wizard et cocher le ou les modes réels : une sauvegarde réécrit la forme moderne.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne : le champ lu par l&#x27;écran de saisie actuel (transponderModes) est absent tandis que le champ orphelin (transponderMode) porte une valeur ; lecture des deux écrans consommateurs.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-09) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-10" data-clos="0" data-champ="equipmentCom.elt (true) vs approvedOperations.elt (false)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-10</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">equipements</span><span class="path">equipmentCom.elt (true) vs approvedOperations.elt (false)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">equipmentCom.elt = true ; approvedOperations.elt = false. Inchangé depuis l&#x27;audit du 21/08.</dd>
-<dt>Attendu</dt><dd>Un seul état ELT, cohérent des deux côtés.</dd>
-<dt>En vol</dt><dd>L&#x27;ELT est déclarée présente sur l&#x27;écran fiche avion (qui lit equipmentCom.elt) et absente dans les équipements de survie du wizard et du mapper MANEX (qui lisent approvedOperations.elt).</dd>
-<dt>Action</dt><dd>Cocher l&#x27;ELT dans les équipements de survie (opérations approuvées), ou décocher côté équipements de communication.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contradiction interne entre deux champs décrivant le même équipement + lecture des consommateurs : AircraftModule.jsx:3618 lit equipmentCom.elt, AircraftCreationWizard.jsx:450 et manexExtractionMapper.js:313 lisent approvedOperations.elt.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-10) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Le panneau vent ayant été retouché (HEADWIND 1 nommé/tagué), le rejeu du cas de référence (330 m à 40 °C/4000 ft/1050 kg/10 kt) a pu repasser sous les 5 %. VÉRIFICATION SIMPLE : ouvrez le modèle dans l&#x27;atelier — la ligne du cas affiche son écart. Dites-moi le % et je clos (ou corrige).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-03) — repris dans le rapport à copier"></textarea></div></div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GUVV-11" data-clos="0" data-champ="speeds.voRanges[1].maxWeight = 1180" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -640,84 +596,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Borne haute ≤ 1150 kg, sauf si le manuel écrit la tranche telle quelle.</dd>
 <dt>En vol</dt><dd>Aucun effet de calcul ; la table des VO affiche une tranche de masse que l&#x27;avion ne peut pas atteindre, ce qui sème le doute sur la VO à retenir à la MTOW.</dd>
 <dt>Action</dt><dd>Vérifier la tranche VO au MANEX et ramener la borne à 1150 kg si le manuel ne dit pas 1180.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe de masse déclarée par la fiche elle-même (1180 &gt; MTOW 1150, cohérente dans trois champs). Le libellé exact du manuel reste à vérifier.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-11) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-13" data-clos="0" data-champ="manufacturer (aircraft_data.manufacturer, colonne racine manufacturer, search_vector)" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-13</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">identite</span><span class="path">manufacturer (aircraft_data.manufacturer, colonne racine manufacturer, search_vector)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« Diamand Aircraft » dans aircraft_data ET dans la colonne racine ; le search_vector indexe le lexème &#x27;diamand&#x27;.</dd>
-<dt>Attendu</dt><dd>« Diamond Aircraft ».</dd>
-<dt>En vol</dt><dd>Aucune conséquence de calcul ; la fiche ne remonte pas dans une recherche communautaire sur « Diamond ».</dd>
-<dt>Action</dt><dd>Corriger l&#x27;orthographe dans la fiche avion (le champ constructeur), ce qui réécrit la colonne et l&#x27;index de recherche.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Faute d&#x27;orthographe du nom du constructeur, propagée dans les trois emplacements de l&#x27;extraction fraîche.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-13) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-14" data-clos="0" data-champ="remarks" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-14</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">metadonnees</span><span class="path">remarks</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« test testsetsetset » — texte de test toujours présent après la refonte du 23/08.</dd>
-<dt>Attendu</dt><dd>Remarques opérationnelles réelles, ou champ vide.</dd>
-<dt>En vol</dt><dd>Ce texte s&#x27;affiche comme remarque de l&#x27;avion sur la fiche et dans les exports PDF.</dd>
-<dt>Action</dt><dd>Effacer le champ Remarques ou y mettre les vraies remarques.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Contenu manifestement de test lu tel quel sur l&#x27;extraction fraîche.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-14) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-15" data-clos="0" data-champ="performanceCorrections[0] et [1] (grass +15 % décollage et atterrissage) vs compatibleRunwaySurfaces" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-15</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span>
-<span class="cap">performances</span><span class="path">performanceCorrections[0] et [1] (grass +15 % décollage et atterrissage) vs compatibleRunwaySurfaces</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Deux règles « grass » à +15 % en mode percent_fixed (une décollage, une atterrissage), alors que compatibleRunwaySurfaces = [« ASPH », « CONC »] uniquement. Aucune règle de vent n&#x27;est définie, ce qui est correct puisque les abaques portent un panneau vent.</dd>
-<dt>Attendu</dt><dd>Cohérence entre les deux : ajouter GRASS aux surfaces compatibles si l&#x27;avion y opère, ou retirer les corrections herbe.</dd>
-<dt>En vol</dt><dd>Aucun blocage : les surfaces compatibles ne sont qu&#x27;affichées et exportées (aucun usage dans les calculs), la correction herbe s&#x27;applique quand même si une piste en herbe est choisie. Mais la fiche dit à la fois « pas d&#x27;herbe » et « +15 % sur l&#x27;herbe ».</dd>
-<dt>Action</dt><dd>Trancher : cocher l&#x27;herbe dans les surfaces compatibles de la fiche avion, ou supprimer les deux corrections herbe à l&#x27;étape Performances.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Deux champs de la même fiche en désaccord sur l&#x27;exploitation en herbe ; recensement des consommateurs de compatibleRunwaySurfaces (affichage et export PDF seulement). Lequel des deux est juste dépend de l&#x27;exploitation réelle du club.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-15) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-16" data-clos="0" data-champ="performanceModels[1].data.graphs[1].curves[0..7] — guides « 1 kg » à « 8 kg » du panneau masse de « Distance décollage — passage 15 m »" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-16</span><span class="pill p-mineur">mineur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">unites</span><span class="path">performanceModels[1].data.graphs[1].curves[0..7] — guides « 1 kg » à « 8 kg » du panneau masse de « Distance décollage — passage 15 m »</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Les 8 guides du panneau de correction de masse sont nommés « 1 kg », « 2 kg » … « 8 kg » avec valeurs de famille 1 à 8, dans un panneau dont l&#x27;axe X va de 850 à 1150 kg. Les panneaux équivalents des 3 autres modèles nomment leurs guides « 1 » à « 11 » ou « 1 » à « 6 », sans unité.</dd>
-<dt>Attendu</dt><dd>Guides numérotés sans unité (« 1 » à « 8 »), conformément à la convention : la valeur d&#x27;un guide n&#x27;a pas de sens physique.</dd>
-<dt>En vol</dt><dd>Aucun effet sur le calcul (le moteur utilise la valeur de famille 1 à 8 pour l&#x27;ordre des guides). Mais en atelier, « 1 kg » se lit comme une courbe à 1 kg dans un panneau gradué en centaines de kilos.</dd>
-<dt>Action</dt><dd>Renommer les 8 guides en « 1 » à « 8 » dans le gestionnaire de courbes du panneau masse.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Unité incohérente avec le champ voisin : suffixe « kg » sur des guides dont la valeur de famille (1 à 8) est sans rapport avec l&#x27;axe des masses 850–1150 kg du même panneau ; nommage divergent des 3 autres modèles de la même fiche.</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-16) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUVV-17" data-clos="0" data-champ="aircraft_data.weighingReport.certificationDate" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-17</span><span class="pill p-majeur">majeur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.weighingReport.certificationDate</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">« 2012-06-20 », soit 14 ans et 2 mois au 26/08/2026 — AU-DELÀ du seuil d&#x27;alerte de 10 ans de l&#x27;application (seul avion de la flotte dans ce cas). PDF joint : « fiche de pesee guvv.pdf », 670 478 octets, uploadé le 21/05/2026, hasData = true. C&#x27;est cette pesée qui fonde emptyWeight 796,5 kg et arms.empty 2,515 m (moment 2003,198 = 796,5 × 2,515, cohérent).</dd>
-<dt>Attendu</dt><dd>La date de la dernière pesée en vigueur — confirmer qu&#x27;aucune pesée plus récente que 2012 n&#x27;existe au club, ou corriger la date si le champ porte autre chose que la date de pesée.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-17) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-18" data-clos="0" data-champ="aircraft_data.speeds.vx / aircraft_data.speeds.vy" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-18</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.speeds.vx / aircraft_data.speeds.vy</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">vx = 72 kt et vy = 72 kt (lignes 22-23), strictement égales — Vx et Vy ne convergent qu&#x27;au plafond de propulsion, jamais au niveau de la mer. Champs facultatifs mais saisis. Coïncidence supplémentaire : même valeur 72 que le quadruplet vr=vx=vy=initialClimb du F-HSTR (autre DA40).</dd>
-<dt>Attendu</dt><dd>Les Vx et Vy propres du manuel DA40 TDI (Vx strictement inférieure à Vy), ou champs facultatifs vidés.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-18) — repris dans le rapport à copier"></textarea></div></div>
-<div class="it mineur" data-sev="mineur" data-itid="F-GUVV-19" data-clos="0" data-champ="aircraft_data.horsepower" data-sevlbl="mineur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-19</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
-<span class="cap">Passe finale 26/08</span><span class="path">aircraft_data.horsepower</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">horsepower = 178, valeur strictement identique à speeds.vne = 178 kt (lignes 128 et 27) — motif de recopie de champ voisin. Un DA40 TDI développe 135 ch (Thielert/CD-135) ou 168 ch (DA40 NG / AE300), pas 178.</dd>
-<dt>Attendu</dt><dd>La puissance réelle du moteur au manuel (vraisemblablement 135 ch pour un DA40 TDI), la VNE 178 kt restant inchangée.</dd>
-<dt>En vol</dt><dd></dd>
-<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-19) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché, MAIS l&#x27;état v5 est plus étrange qu&#x27;avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-11) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HDIM</span><span class="mdl">Cessna Skyhawk 172P</span><span class="spacer"></span>
