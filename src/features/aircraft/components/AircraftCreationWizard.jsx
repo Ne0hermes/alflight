@@ -346,6 +346,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     // exactement comme baggageCompartments / additionalSeats ci-dessus.
     additionalFuelTanks: existingAircraft?.additionalFuelTanks || [],
 
+    // 🧪 Cas de référence MASSE & CENTRAGE (banc de test, 27/08/2026) —
+    // pendant M&C des referenceCases de performance. L'état du wizard étant
+    // construit champ par champ (PAS de spread de existingAircraft), toute
+    // omission ici EFFACERAIT les cas au premier enregistrement en édition
+    // (même piège que additionalFuelTanks ci-dessus).
+    wbReferenceCases: existingAircraft?.wbReferenceCases || [],
+
     // 🔧 LOT 5 : variantes de configuration des réservoirs (Standard / Long
     // Range…) — sous-ensembles nommés de additionalFuelTanks, référencés par id
     // 🛢️ 23/08/2026 — HYDRATATION : une fiche qui déclare des réservoirs sans

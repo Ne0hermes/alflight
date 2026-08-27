@@ -119,6 +119,11 @@
   --scenario-takeoff: #4FC3D9;   /* cyan — masse au décollage (FOB) */
   --scenario-landing: #E0A33E;   /* ambre — masse à l'atterrissage */
   --scenario-fulltank: var(--color-orange-primary); /* orange — réservoirs pleins */
+  /* Cas de référence M&C (banc de test) — série distincte des 4 scénarios,
+     lisible sur fond sombre (cf. WeightBalanceChart, WB_REF_COLORS). */
+  --wb-ref-1: #B48CE8;
+  --wb-ref-2: #7FBF7F;
+  --wb-ref-3: #D98CB3;
   --accent-hover: var(--color-orange-bright);
   --accent-active: var(--color-orange-dim);
   --accent-soft: var(--color-orange-soft);
@@ -318,6 +323,10 @@ select:-webkit-autofill {
   --scenario-takeoff: #1E8FA6;
   --scenario-landing: #B57A1E;
   --scenario-fulltank: var(--color-orange-dim);
+  /* Cas de référence M&C — variantes plus sombres pour fond clair */
+  --wb-ref-1: #6D3FB8;
+  --wb-ref-2: #3E7D3E;
+  --wb-ref-3: #A8467D;
   --accent-hover: var(--color-orange-primary);
   --accent-active: #A8420C;
   --accent-soft: rgba(242, 105, 33, 0.12);

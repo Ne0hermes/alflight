@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, Fragment } from 'react';
 import {
   Box,
   Typography,
@@ -60,6 +60,17 @@ import {
 import { StyledTextField } from './FormFieldStyles';
 import { getWeighingReportAge, WEIGHING_REPORT_WARN_YEARS } from '@utils/weighingReportAge';
 import { uploadWeighingReportPdf } from '@services/blobStorage';
+// 🧪 Cas de référence M&C (banc de test, 27/08/2026) — pendant M&C des
+// referenceCases de performance : évalués par le VRAI moteur, catalogue de
+// postes fourni par le moteur (clés de `loads` exactes, jamais traduites ici).
+import {
+  evaluateAllWbReferenceCases,
+  wbPostesForAircraft,
+  DEFAULT_WB_TOLERANCE_CG_MM
+} from '@alflight/calc-engine/wb/referenceCases';
+// Projection de la fiche en cours d'édition (forme wizard : arms.*, weights.*)
+// vers la forme moteur (weightBalance.*) — même adaptateur que le store avions.
+import { toLightAircraftRecord } from '@core/stores/lightAircraftRecord';
 
 // 🎭 24/08/2026 — LE TYPE A QUITTÉ LE CATALOGUE (demande pilote : « il n'est
 // plus utile de marquer si c'est un type principal ou optionnel quand je
@@ -129,6 +140,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     baggage: false,
     limits: false,
     cgEnvelope: false,
+    wbRefCases: false,
     utility: false
   });
 
@@ -141,6 +153,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         baggage: false,
         limits: false,
         cgEnvelope: false,
+        wbRefCases: false,
         utility: false,
         [panel]: true
       });
@@ -621,6 +634,34 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     const x = convertMoment(n, units, 'toStorage');
     return Number.isFinite(x) ? Math.round(x * 10000) / 10000 : ''; // kg·m, 4 déc.
   };
+
+  // ─── 🧪 Cas de référence M&C (banc de test permanent, 27/08/2026) ─────────
+  // La fiche EN COURS d'édition est projetée vers la forme moteur puis rejouée
+  // en direct : le pilote voit PASS/FAIL/non évaluable pendant qu'il saisit.
+  // Stockage canonique : cgAttendu en MÈTRES (inArm), masses en KG (inWeight),
+  // litres bruts pour les postes carburant par réservoir (convention moteur).
+  const wbRefCases = Array.isArray(data.wbReferenceCases) ? data.wbReferenceCases : [];
+  const wbBenchAircraft = useMemo(() => toLightAircraftRecord({ ...data }), [data]);
+  const wbBenchResults = useMemo(() => evaluateAllWbReferenceCases(wbBenchAircraft), [wbBenchAircraft]);
+  const wbPostesCatalog = useMemo(() => wbPostesForAircraft(wbBenchAircraft), [wbBenchAircraft]);
+
+  const setWbRefCases = (next) => updateData('wbReferenceCases', next);
+  const addWbRefCase = () => setWbRefCases([
+    ...wbRefCases,
+    { id: `wbref-${Date.now()}`, label: '', source: '', postes: [], cgAttendu: '', toleranceCgMm: DEFAULT_WB_TOLERANCE_CG_MM }
+  ]);
+  const updateWbRefCase = (id, field, value) =>
+    setWbRefCases(wbRefCases.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
+  const removeWbRefCase = (id) => setWbRefCases(wbRefCases.filter((c) => c.id !== id));
+  const addWbRefPoste = (id) =>
+    setWbRefCases(wbRefCases.map((c) => (c.id === id ? { ...c, postes: [...(c.postes || []), { poste: '', masse: '' }] } : c)));
+  const updateWbRefPoste = (id, index, field, value) =>
+    setWbRefCases(wbRefCases.map((c) => {
+      if (c.id !== id) return c;
+      return { ...c, postes: (c.postes || []).map((p, i) => (i === index ? { ...p, [field]: value } : p)) };
+    }));
+  const removeWbRefPoste = (id, index) =>
+    setWbRefCases(wbRefCases.map((c) => (c.id !== id ? c : { ...c, postes: (c.postes || []).filter((_, i) => i !== index) })));
 
   // Gestion des points Forward CG
   const addForwardPoint = () => {
@@ -2871,6 +2912,202 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         massUnit={getUnitSymbol(units.weight)}
         armUnit={getUnitSymbol(units.armLength)}
       />
+
+      {/* 🧪 Cas de référence M&C — banc de test permanent (27/08/2026).
+          Pendant M&C des referenceCases de performance : la fiche de pesée
+          (cas AUTO) + des cas manuels (exemple de chargement du POH) sont
+          rejoués par le VRAI moteur à chaque affichage, et tracés sur le
+          graphique M&C du vol (un point par bras de levier + point résultant
+          + verdict d'écart chiffré). */}
+      <Accordion
+        expanded={expandedPanels.wbRefCases}
+        onChange={handlePanelChange('wbRefCases')}
+        elevation={0}
+        sx={{
+          mb: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          '&:before': { display: 'none' }
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            minHeight: '40px',
+            '&.Mui-expanded': { minHeight: '40px' },
+            '& .MuiAccordionSummary-content': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              margin: '8px 0'
+            },
+            '& .MuiAccordionSummary-content.Mui-expanded': {
+              margin: '8px 0'
+            }
+          }}
+        >
+          <AutoGraphIcon color="primary" />
+          <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
+            Cas de référence M&C — banc de test (pesée + manuel)
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ pt: 1, pb: 2 }}>
+          <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Comme pour les performances, ces cas connus (fiche de pesée, exemple de
+              chargement du manuel de vol) sont rejoués par le moteur M&C : CG attendu
+              vs CG calculé ± tolérance. Ils sont aussi tracés sur le graphique de
+              centrage du vol — un point par bras de levier utilisé, plus le point
+              résultant.
+            </Alert>
+
+            {/* Verdict live du banc (cas AUTO de la pesée + cas saisis) */}
+            <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              {wbBenchResults.map((r) => (
+                <Typography key={`bench-${r.id}`} variant="caption" sx={{ display: 'block' }}>
+                  <strong style={{ color: r.status === 'pass' ? 'var(--wb-ref-1)' : r.status === 'fail' ? 'var(--color-red-critical)' : 'var(--scenario-landing)' }}>
+                    {r.status === 'pass' ? '✓ PASS' : r.status === 'fail' ? '✗ FAIL' : '⚠ NON ÉVALUABLE'}
+                  </strong>
+                  {' '}{r.label}
+                  {r.status === 'error'
+                    ? ` — ${r.message}`
+                    : ` — CG attendu ${(r.cgExpected * 1000).toFixed(1)} mm · calculé ${(r.cgComputed * 1000).toFixed(1)} mm · écart ${r.deviationMm.toFixed(1)} mm (±${r.toleranceMm} mm)`}
+                </Typography>
+              ))}
+            </Box>
+
+            {wbRefCases.map((rc) => {
+              const result = wbBenchResults.find((r) => r.id === rc.id);
+              return (
+                <Paper key={rc.id} elevation={0} sx={{ p: 2, mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)' }}>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1.5 }}>
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Nom du cas"
+                      value={rc.label || ''}
+                      onChange={(e) => updateWbRefCase(rc.id, 'label', e.target.value)}
+                      placeholder="Exemple de chargement POH"
+                    />
+                    <StyledTextField
+                      fullWidth
+                      size="small"
+                      label="Source"
+                      value={rc.source || ''}
+                      onChange={(e) => updateWbRefCase(rc.id, 'source', e.target.value)}
+                      placeholder="Manuel de vol §6.5"
+                    />
+                    <IconButton color="error" size="small" sx={{ mt: 0.5 }} onClick={() => removeWbRefCase(rc.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                  <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
+                    <Grid size={{ xs: 6 }}>
+                      <StyledTextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="CG attendu"
+                        value={dispArm(rc.cgAttendu)}
+                        onChange={(e) => {
+                          const c = inArm(e.target.value); // canonique m
+                          updateWbRefCase(rc.id, 'cgAttendu', c === '' ? '' : c);
+                        }}
+                        helperText="CG total donné par le manuel pour ce chargement"
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <StyledTextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label="Tolérance d'écart"
+                        value={rc.toleranceCgMm ?? ''}
+                        onChange={(e) => {
+                          const n = parseFloat(e.target.value);
+                          updateWbRefCase(rc.id, 'toleranceCgMm', Number.isFinite(n) ? n : '');
+                        }}
+                        helperText={`Défaut : ±${DEFAULT_WB_TOLERANCE_CG_MM} mm`}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">mm</InputAdornment>,
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                    La masse à vide (à son bras de pesée) est toujours incluse par le moteur.
+                    Ajouter les postes CHARGÉS de l'exemple ; carburant en masse (bloc unique)
+                    ou en litres (par réservoir).
+                  </Typography>
+                  {(rc.postes || []).map((p, pi) => {
+                    const posteDef = wbPostesCatalog.find((cat) => cat.key === p.poste);
+                    const isLtr = posteDef?.unite === 'ltr';
+                    return (
+                      <Box key={`${rc.id}-poste-${pi}`} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+                        <StyledTextField
+                          select
+                          fullWidth
+                          size="small"
+                          label="Poste"
+                          value={p.poste || ''}
+                          onChange={(e) => updateWbRefPoste(rc.id, pi, 'poste', e.target.value)}
+                        >
+                          {wbPostesCatalog.map((cat) => (
+                            <MenuItem key={cat.key} value={cat.key}>{cat.label}</MenuItem>
+                          ))}
+                        </StyledTextField>
+                        <StyledTextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label={isLtr ? 'Volume' : 'Masse'}
+                          value={isLtr ? (p.masse ?? '') : dispWeight(p.masse)}
+                          onChange={(e) => {
+                            const v = isLtr
+                              ? (e.target.value === '' ? '' : parseFloat(e.target.value))
+                              : inWeight(e.target.value);
+                            updateWbRefPoste(rc.id, pi, 'masse', v === '' ? '' : v);
+                          }}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{isLtr ? 'L' : getUnitSymbol(units.weight)}</InputAdornment>,
+                          }}
+                        />
+                        <IconButton color="error" size="small" sx={{ mt: 0.5 }} onClick={() => removeWbRefPoste(rc.id, pi)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    );
+                  })}
+                  <Button size="small" startIcon={<AddIcon />} onClick={() => addWbRefPoste(rc.id)} sx={{ textTransform: 'none' }}>
+                    Ajouter un poste
+                  </Button>
+
+                  {result && (
+                    <Alert
+                      severity={result.status === 'pass' ? 'success' : result.status === 'fail' ? 'error' : 'warning'}
+                      sx={{ mt: 1.5 }}
+                    >
+                      {result.status === 'error'
+                        ? result.message
+                        : `CG attendu ${(result.cgExpected * 1000).toFixed(1)} mm · calculé ${(result.cgComputed * 1000).toFixed(1)} mm · écart ${result.deviationMm.toFixed(1)} mm (tolérance ±${result.toleranceMm} mm)`}
+                    </Alert>
+                  )}
+                </Paper>
+              );
+            })}
+
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={addWbRefCase}>
+                Ajouter un cas de référence
+              </Button>
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
 
       {/* Catégorie Utilitaire (U) retirée (demande utilisateur) : section
           encore vide / non utilisée. */}

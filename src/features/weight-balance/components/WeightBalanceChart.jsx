@@ -8,13 +8,23 @@
 // représentations (celle du MANEX + sa duale). Le pilote ne saisit l'enveloppe
 // qu'UNE fois (en CG, dans l'éditeur avion) ; le moment est calculé ici.
 // ============================================================================
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { sx } from '@shared/styles/styleSystem';
 import { tokens } from '@shared/styles/designSystem';
 import { SCENARIO_COLORS } from '../scenarioColors';
 import { isWithinEnvelope } from '@utils/cgEnvelope';
+import { evaluateAllWbReferenceCases } from '@alflight/calc-engine/wb/referenceCases';
 
-export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) => {
+// Couleurs de la série « cas de référence M&C » (jetons clair/sombre définis
+// dans index.css) — jamais confondues avec les 4 scénarios du vol.
+const WB_REF_COLORS = ['var(--wb-ref-1)', 'var(--wb-ref-2)', 'var(--wb-ref-3)'];
+
+// showReferenceCases (27/08) : état INITIAL de la couche « cas de référence ».
+// Faux partout en préparation de vol — c'est une aide à la vérification de la
+// fiche avion, que le pilote allume par la case sous le graphique. Un appelant
+// dont le métier EST la vérification (atelier de la fiche, banc) peut l'ouvrir
+// d'emblée en passant la prop.
+export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations, showReferenceCases = false }) => {
   // Source unique : l'enveloppe CG saisie dans « Gestion des avions ».
   const cgEnvelope = aircraft?.cgEnvelope;
 
@@ -22,6 +32,40 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     cgEnvelope.forwardPoints &&
     cgEnvelope.forwardPoints.length > 0 &&
     (cgEnvelope.aftCG || cgEnvelope.aftMinCG || cgEnvelope.aftMaxCG);
+
+  // ─── Cas de référence M&C (banc de test — demande pilote 26-27/08/2026) ──
+  // Rejoués par le VRAI moteur (evaluateAllWbReferenceCases → computeWeight-
+  // Balance) : cas AUTO de la fiche de pesée + cas manuels stockés dans
+  // aircraft.wbReferenceCases. Chaque cas évaluable trace UN POINT PAR BRAS
+  // DE LEVIER utilisé + le point résultant (CG total) + le verdict d'écart.
+  // 27/08 — appel PROTÉGÉ : le banc s'exécute avant les garde-fous d'affichage
+  // du composant ; une fiche importée mal formée y levait une exception qui
+  // emportait le graphique entier, enveloppe comprise. Le banc peut être
+  // indisponible, le graphe de centrage jamais.
+  const refCases = useMemo(() => {
+    if (!aircraft) return [];
+    try { return evaluateAllWbReferenceCases(aircraft); } catch { return []; }
+  }, [aircraft]);
+  // 27/08 — on ne trace QUE ce que le moteur a réellement vérifié. Un cas au
+  // statut 'error' conserve ses points et son point résultant (utile à lire
+  // dans la liste), mais le tracer à l'identique d'un cas validé revenait à
+  // présenter comme vérifié un cas que le moteur a refusé de juger.
+  const drawableRefCases = useMemo(
+    () => refCases.filter((c) => (c.status === 'pass' || c.status === 'fail') && c.resultPoint && c.points.length > 0),
+    [refCases]
+  );
+  // Le cas AUTO de la pesée existe pour TOUS les avions : s'il suffisait à
+  // afficher le bandeau, les 13 fiches montreraient un bloc « Cas de référence »
+  // en préparation de vol sans que le pilote ait rien saisi. Seuls les cas
+  // STOCKÉS ouvrent le bloc.
+  const storedRefCases = useMemo(() => refCases.filter((c) => !c.auto), [refCases]);
+  // 27/08 — ÉTEINT PAR DÉFAUT. Cette couche est une aide à la VÉRIFICATION de
+  // la fiche avion, pas du mobilier de préparation de vol : allumée d'office,
+  // elle se superposait au point de chargement du jour sur l'écran Masse &
+  // centrage ET dans le récapitulatif imprimé, sans que le pilote l'ait
+  // demandée. Elle s'allume à la demande, par la case sous le graphique.
+  const [showRefCases, setShowRefCases] = useState(showReferenceCases);
+  const refVisible = showRefCases && drawableRefCases.length > 0;
 
   // ─── Échelles CG (mm) + masse (kg) ────────────────────────────────────────
   const scales = useMemo(() => {
@@ -55,13 +99,39 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
     const minWeight = allWeights.length > 0 ? Math.min(...allWeights) : 600;
     const maxWeight = allWeights.length > 0 ? Math.max(...allWeights) : 1150;
 
-    return {
+    const base = {
       cgMin: (cgMin - cgRange * 0.1) * 1000,
       cgMax: (cgMax + cgRange * 0.1) * 1000,
       weightMin: minWeight - 50,
       weightMax: maxWeight + 50
     };
-  }, [aircraft, cgEnvelope]);
+
+    // 27/08 — LES POSTES NE PILOTENT PLUS LES ÉCHELLES. La version précédente
+    // étendait les deux axes pour englober CHAQUE poste à son bras. Or un poste,
+    // ce sont 20 kg de bagages à 1,90 m, face à une enveloppe qui vit entre
+    // 0,20 et 0,56 m : l'axe des centrages était dilaté d'un facteur 4 et
+    // l'enveloppe — la seule chose que le pilote doit lire ici — se retrouvait
+    // écrasée sur un cinquième de la largeur. Seuls le CG RÉSULTANT du cas et
+    // le CG ATTENDU peuvent désormais élargir le cadre : ce sont des centrages,
+    // homogènes à l'enveloppe, et ils restent dans son voisinage. Les points de
+    // postes hors cadre sont simplement écrêtés au rendu.
+    if (refVisible) {
+      const cgVals = [];
+      const wVals = [];
+      drawableRefCases.forEach((c) => {
+        cgVals.push(c.resultPoint.cg * 1000);
+        wVals.push(c.resultPoint.w);
+        if (Number.isFinite(c.cgExpected)) cgVals.push(c.cgExpected * 1000);
+      });
+      if (cgVals.length > 0) {
+        base.cgMin = Math.min(base.cgMin, Math.min(...cgVals) - 20);
+        base.cgMax = Math.max(base.cgMax, Math.max(...cgVals) + 20);
+        base.weightMin = Math.min(base.weightMin, Math.min(...wVals) - 20);
+        base.weightMax = Math.max(base.weightMax, Math.max(...wVals) + 20);
+      }
+    }
+    return base;
+  }, [aircraft, cgEnvelope, refVisible, drawableRefCases]);
 
   // Masse → Y (commun aux 2 graphes)
   const toSvgY = (w) => {
@@ -134,13 +204,22 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
       const s = scenarios?.[k];
       if (s && !isNaN(s.w) && !isNaN(s.cg)) moments.push(s.w * s.cg);
     });
+    // 27/08 — même correction que sur l'échelle CG : le moment d'un POSTE isolé
+    // (20 kg × 1,90 m = 38 kg·m, contre 300 à 600 kg·m pour l'enveloppe) tirait
+    // l'axe vers le bas et tassait l'enveloppe. Seul le moment RÉSULTANT du cas
+    // entre dans le cadre — il est homogène à ce que l'axe représente.
+    if (refVisible) {
+      drawableRefCases.forEach((c) => {
+        moments.push(c.resultPoint.w * c.resultPoint.cg);
+      });
+    }
     const valid = moments.filter(m => !isNaN(m) && m > 0);
     if (valid.length === 0) return { min: 0, max: 1 };
     const min = Math.min(...valid);
     const max = Math.max(...valid);
     const range = (max - min) || max || 1;
     return { min: Math.max(0, min - range * 0.1), max: max + range * 0.1 };
-  }, [envelopeData, scenarios]);
+  }, [envelopeData, scenarios, refVisible, drawableRefCases]);
 
   // ─── Garde-fous d'UI APRÈS tous les hooks ─────────────────────────────────
   if (!aircraft || !scenarios || !calculations) {
@@ -314,6 +393,57 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             );
           })}
 
+          {/* ─── CAS DE RÉFÉRENCE M&C — un point PAR BRAS DE LEVIER utilisé
+              (losange : masse du poste À SON bras), reliés au point résultant
+              (double cercle : CG total calculé) ; croix = CG ATTENDU du
+              manuel. Demande pilote 26-27/08/2026 : vérifier d'un coup d'œil
+              que chaque poste tombe où le manuel le place. */}
+          {refVisible && drawableRefCases.map((c, ci) => {
+            const color = WB_REF_COLORS[ci % WB_REF_COLORS.length];
+            const verdictColor = c.status === 'fail' ? 'var(--color-red-critical)' : color;
+            const rx = toX(xOf(c.resultPoint.w, c.resultPoint.cg));
+            const ry = toSvgY(c.resultPoint.w);
+            return (
+              <g key={`refcase-${c.id}`}>
+                {c.points.map((p) => {
+                  const px = toX(xOf(p.masse, p.bras));
+                  const py = toSvgY(p.masse);
+                  return (
+                    <line key={`spoke-${p.key}`} x1={px} y1={py} x2={rx} y2={ry} stroke={color} strokeWidth="1" strokeDasharray="2,3" opacity="0.45" />
+                  );
+                })}
+                {c.points.map((p, pi) => {
+                  const px = toX(xOf(p.masse, p.bras));
+                  const py = toSvgY(p.masse);
+                  return (
+                    <g key={`pt-${p.key}`}>
+                      <rect x={px - 3} y={py - 3} width="6" height="6" transform={`rotate(45 ${px} ${py})`} fill={color} fillOpacity="0.9" />
+                      {/* Étiquettes alternées haut/bas pour limiter les collisions
+                          entre postes voisins (sièges à bras proches). */}
+                      <text x={px} y={pi % 2 === 0 ? py - 6 : py + 13} textAnchor="middle" fontSize="7" fill={color}>
+                        {p.label} · {p.masse.toFixed(0)} kg
+                      </text>
+                    </g>
+                  );
+                })}
+                {Number.isFinite(c.cgExpected) && (() => {
+                  const ex = toX(xOf(c.resultPoint.w, c.cgExpected));
+                  return (
+                    <g>
+                      <line x1={ex - 4} y1={ry - 4} x2={ex + 4} y2={ry + 4} stroke={verdictColor} strokeWidth="1.5" />
+                      <line x1={ex - 4} y1={ry + 4} x2={ex + 4} y2={ry - 4} stroke={verdictColor} strokeWidth="1.5" />
+                    </g>
+                  );
+                })()}
+                <circle cx={rx} cy={ry} r="5" fill="none" stroke={verdictColor} strokeWidth="2" />
+                <circle cx={rx} cy={ry} r="1.6" fill={verdictColor} />
+                <text x={rx} y={ry - 9} textAnchor="middle" fontSize="7.5" fontWeight="700" fill={verdictColor}>
+                  {c.label}{c.deviationMm != null ? ` — écart ${c.deviationMm.toFixed(1)} mm ${c.status === 'pass' ? '✓' : '✗'}` : ''}
+                </text>
+              </g>
+            );
+          })}
+
           {/* Ligne reliant les scénarios */}
           {scenarioPath && (
             <path d={scenarioPath} fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeDasharray="5,5" />
@@ -409,6 +539,53 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations }) =
             : 'Un ou plusieurs scénarios critiques hors limites'}
         </p>
       </div>
+
+      {/* ─── Banc de cas de référence M&C : verdict d'écart chiffré (CG
+          attendu vs calculé ± tolérance) + interrupteur du tracé. Le cas AUTO
+          de la fiche de pesée est toujours listé — « non évaluable » explicite
+          si la pesée est incomplète (fail-closed, jamais un verdict muet). */}
+      {storedRefCases.length > 0 && (
+        <div style={sx.combine(sx.components.card.base, sx.spacing.mb(4))}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: tokens.spacing[2], cursor: 'pointer', fontWeight: 600 }}>
+            <input
+              type="checkbox"
+              checked={showRefCases}
+              onChange={(e) => setShowRefCases(e.target.checked)}
+            />
+            <span style={sx.text.sm}>
+              Cas de référence M&C ({refCases.length}) — un point par bras de levier sur le graphique
+            </span>
+          </label>
+          <div style={{ marginTop: tokens.spacing[2], display: 'flex', flexDirection: 'column', gap: tokens.spacing[1] }}>
+            {refCases.map((c, ci) => {
+              const color = WB_REF_COLORS[ci % WB_REF_COLORS.length];
+              const badge = c.status === 'pass'
+                ? { text: '✓ PASS', color }
+                : c.status === 'fail'
+                  ? { text: '✗ FAIL', color: 'var(--color-red-critical)' }
+                  : { text: '⚠ NON ÉVALUABLE', color: 'var(--scenario-landing)' };
+              return (
+                <div key={`bench-${c.id}`} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: tokens.spacing[2] }}>
+                  <span style={{ color: badge.color, fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{badge.text}</span>
+                  <span style={{ color, fontWeight: 600, fontSize: '0.85rem' }}>{c.label}</span>
+                  {c.source && <span style={sx.combine(sx.text.xs, sx.text.secondary)}>({c.source})</span>}
+                  {c.status === 'error' ? (
+                    <span style={sx.combine(sx.text.xs, sx.text.secondary)}>{c.message}</span>
+                  ) : (
+                    <span style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                      CG attendu {(c.cgExpected * 1000).toFixed(1)} mm · CG calculé {(c.cgComputed * 1000).toFixed(1)} mm
+                      {' · '}écart {c.deviationMm.toFixed(1)} mm (tolérance ±{c.toleranceMm} mm)
+                      {c.isWithinLimits === false && (
+                        <span style={{ color: 'var(--color-red-critical)', fontWeight: 700 }}> · hors limites M&C</span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div style={sx.combine(sx.components.card.base)}>
         {/* Graphe 1 — base CG */}

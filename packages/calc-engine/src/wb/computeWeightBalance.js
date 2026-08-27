@@ -21,6 +21,44 @@ import { normalizeAircraftArmsToMeters, normalizeAircraftCgEnvelopeToMeters } fr
 import { cgLimitsAtMass } from './cgEnvelope.js';
 import { singleFuelArm } from './fuelArm.js';
 
+/**
+ * Bras de levier du bilan : weightBalance s'il existe, sinon DÉRIVÉS de
+ * armLengths SANS fabrication (A6/P0 — absent ⇒ null, jamais un bras inventé).
+ * Extrait du corps de computeWeightBalance (27/08/2026) pour être partagé avec
+ * le banc de cas de référence M&C (referenceCases.js) — même résolution,
+ * texte pour texte, jamais une seconde logique qui pourrait diverger.
+ * ⚠️ Attend un avion DÉJÀ normalisé en mètres (normalizeAircraftArmsToMeters).
+ * @param {object} aircraft
+ * @returns {object} bras du bilan (l'objet weightBalance d'origine, ou un dérivé)
+ */
+export function resolveWbArms(aircraft) {
+      // Utiliser weightBalance s'il existe, sinon créer depuis armLengths
+      let wb = aircraft.weightBalance;
+
+      if (!wb || !wb.emptyWeightArm) {
+        // 🔧 A6/P0 — Bras dérivés de armLengths SANS fabrication. Absent ⇒ null
+        // (au lieu de 2.00/2.90/3.50… inventés, qui produisaient un CG faux mais
+        // d'apparence valide). Un bras null d'une station CHARGÉE rend le CG non
+        // fiable ⇒ isWithinCG = null + warning (détection plus bas).
+        const armOrNull = (v) => {
+          const n = parseFloat(v);
+          return Number.isFinite(n) && n !== 0 ? n : null;
+        };
+        wb = {
+          emptyWeightArm: armOrNull(aircraft.armLengths?.emptyMassArm),
+          frontLeftSeatArm: armOrNull(aircraft.armLengths?.frontSeat1Arm),
+          frontRightSeatArm: armOrNull(aircraft.armLengths?.frontSeat2Arm),
+          rearLeftSeatArm: armOrNull(aircraft.armLengths?.rearSeat1Arm),
+          rearRightSeatArm: armOrNull(aircraft.armLengths?.rearSeat2Arm),
+          baggageArm: armOrNull(aircraft.armLengths?.standardBaggageArm),
+          auxiliaryArm: armOrNull(aircraft.armLengths?.aftBaggageExtensionArm) || armOrNull(aircraft.armLengths?.baggageTubeArm),
+          fuelArm: armOrNull(aircraft.armLengths?.fuelArm),
+          cgLimits: null // l'enveloppe réelle est recalculée plus bas via cgEnvelope
+        };
+      }
+      return wb;
+}
+
 export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, activeTankIds = null }) {
       if (!aircraft) return null;
 
@@ -58,30 +96,9 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         return null;
       }
 
-      // Utiliser weightBalance s'il existe, sinon créer depuis armLengths
-      let wb = aircraft.weightBalance;
-
-      if (!wb || !wb.emptyWeightArm) {
-        // 🔧 A6/P0 — Bras dérivés de armLengths SANS fabrication. Absent ⇒ null
-        // (au lieu de 2.00/2.90/3.50… inventés, qui produisaient un CG faux mais
-        // d'apparence valide). Un bras null d'une station CHARGÉE rend le CG non
-        // fiable ⇒ isWithinCG = null + warning (détection plus bas).
-        const armOrNull = (v) => {
-          const n = parseFloat(v);
-          return Number.isFinite(n) && n !== 0 ? n : null;
-        };
-        wb = {
-          emptyWeightArm: armOrNull(aircraft.armLengths?.emptyMassArm),
-          frontLeftSeatArm: armOrNull(aircraft.armLengths?.frontSeat1Arm),
-          frontRightSeatArm: armOrNull(aircraft.armLengths?.frontSeat2Arm),
-          rearLeftSeatArm: armOrNull(aircraft.armLengths?.rearSeat1Arm),
-          rearRightSeatArm: armOrNull(aircraft.armLengths?.rearSeat2Arm),
-          baggageArm: armOrNull(aircraft.armLengths?.standardBaggageArm),
-          auxiliaryArm: armOrNull(aircraft.armLengths?.aftBaggageExtensionArm) || armOrNull(aircraft.armLengths?.baggageTubeArm),
-          fuelArm: armOrNull(aircraft.armLengths?.fuelArm),
-          cgLimits: null // l'enveloppe réelle est recalculée plus bas via cgEnvelope
-        };
-      }
+      // Bras du bilan : weightBalance ou dérivés d'armLengths (résolution
+      // partagée avec le banc de cas de référence — cf. resolveWbArms ci-dessus).
+      let wb = resolveWbArms(aircraft);
 
       // 🔧 FIX CRITIQUE: TOUJOURS utiliser cgEnvelope comme source de vérité
       // cgEnvelope est plus précis (varie avec la masse) que cgLimits (valeur fixe)

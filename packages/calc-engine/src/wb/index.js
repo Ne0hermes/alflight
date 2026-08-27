@@ -7,3 +7,4 @@ export * from './fuelArm.js';
 export * from './centrogramAdapter.js';
 export * from './scenarios.js';
 export * from './computeWeightBalance.js';
+export * from './referenceCases.js';

@@ -3139,7 +3139,15 @@ export const AircraftModule = memo(() => {
                   const { photo, manex, weighingReport, ...lightData } = processedData;
 
                   if (editingAircraft) {
-                    const updatedAircraft = {...lightData, id: editingAircraft.id};
+                    // 27/08 — PARTIR DE LA FICHE EXISTANTE. Ce formulaire hérité
+                    // construit son état par LISTE BLANCHE de champs : tout ce
+                    // qu'il ne connaît pas était effacé à l'enregistrement, en
+                    // local ET en base. C'est ce qui emportait wbReferenceCases
+                    // (les cas de référence masse & centrage) dès qu'un pilote
+                    // rouvrait « Configurer » après les avoir saisis dans
+                    // l'assistant. On étale la fiche d'origine dessous : les
+                    // champs du formulaire gagnent, les autres survivent.
+                    const updatedAircraft = {...editingAircraft, ...lightData, id: editingAircraft.id};
 
                     // Marquer si l'avion a des données volumineuses (flags pour
                     // re-chargement lazy depuis IndexedDB lors d'une édition future)
