@@ -31,6 +31,15 @@ const mkMass = (yUnit) => ({
   curves: [mkCurve('low', 1, [[950, 100], [1150, 200]]), mkCurve('high', 2, [[950, 200], [1150, 300]])]
 });
 const mkAircraft = (yUnit) => ({ performanceModels: [{ id: 'm1', name: 'Set', data: { graphs: [mkPrimary(yUnit), mkMass(yUnit)] } }] });
+// Variante avec un outputUnit ESTAMPILLÉ sur le primaire — c'est ce que fait
+// l'atelier dès que l'opération n'accepte qu'une seule sortie : la valeur vient
+// du défaut du catalogue, pas d'un choix du pilote.
+const mkAircraftEstampille = (yUnit, outputUnit) => ({
+  performanceModels: [{
+    id: 'm1', name: 'Set',
+    data: { graphs: [{ ...mkPrimary(yUnit), outputKind: 'distance', outputUnit }, mkMass(yUnit)] }
+  }]
+});
 const inputs = { mass: 1000, oat: 20, pressureAltitude: 2000, headwind: 0, windComponent: 0, tailwind: 0 };
 
 describe('K2 — garde d\'unité (distance sans unité déclarée)', () => {
@@ -47,5 +56,27 @@ describe('K2 — garde d\'unité (distance sans unité déclarée)', () => {
     expect(res.status).toBe('COMPUTED');
     expect(res.unit).toBe('ft');
     expect(res.warnings.some(w => /non déclarée/i.test(w))).toBe(false);
+  });
+
+  // 27/08 — motif relevé sur les planches d'atterrissage de la flotte : l'axe
+  // de sortie est en « ft » et le primaire porte « m », estampillé par l'atelier
+  // depuis le défaut du catalogue. La valeur doit être servie dans l'unité de
+  // l'axe RÉELLEMENT lu, et le désaccord signalé.
+  it('unités contradictoires (axe « ft », primaire estampillé « m ») → unité de l\'axe + warning', () => {
+    const res = resolveOperation(mkAircraftEstampille('ft', 'm'), 'takeoff_50ft', inputs);
+    expect(res.status).toBe('COMPUTED');
+    expect(res.unit).toBe('ft'); // l'axe de sortie fait foi, pas l'estampille
+    expect(res.warnings.some(w => /contradictoires/i.test(w))).toBe(true);
+    expect(res.confidence).toBe('85%');
+  });
+
+  // Le trou que la rédaction précédente laissait passer : sans unité sur l'axe
+  // de sortie, un primaire estampillé suffisait à taire la garde.
+  it('axe de sortie MUET mais primaire estampillé → warning quand même', () => {
+    const res = resolveOperation(mkAircraftEstampille(null, 'm'), 'takeoff_50ft', inputs);
+    expect(res.status).toBe('COMPUTED');
+    expect(res.unit).toBe('m'); // repli assumé sur l'estampille
+    expect(res.warnings.some(w => /non déclarée/i.test(w))).toBe(true);
+    expect(res.confidence).toBe('85%');
   });
 });

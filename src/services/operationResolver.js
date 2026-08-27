@@ -421,21 +421,39 @@ export function resolveOperation(aircraft, operationId, inputs = {}) {
     ? `Moteur atelier — cascade ${cascade.steps.length} graphes (chaîne de l'atelier)`
     : 'Moteur atelier — graphe unique';
   const warnings = Array.isArray(cascade.warnings) ? [...cascade.warnings] : [];
-  // Unité réellement DÉCLARÉE par l'abaque : axe Y du dernier graphe (remontée
-  // par l'adaptateur) ou outputUnit du primaire. Le repli sur le défaut du
-  // catalogue n'est PAS une déclaration de l'abaque.
-  const abacDeclaredUnit = cascade.outputUnit || graph.outputUnit || null;
+  // Unité réellement DÉCLARÉE par l'abaque : celle de l'AXE DE SORTIE du
+  // dernier graphe (Y standard, ou X en lecture descendante — remontée par
+  // l'adaptateur). Le outputUnit du primaire ne vient qu'en repli, et n'est PAS
+  // une déclaration du pilote : l'atelier l'estampille depuis le défaut du
+  // catalogue dès que l'opération n'accepte qu'une seule sortie (plancheSetup,
+  // GraphIdentityPanel). Le repli sur le défaut du catalogue non plus.
+  const cascadeUnit = cascade.outputUnit || null;
+  const primaryUnit = graph.outputUnit || null;
+  const abacDeclaredUnit = cascadeUnit || primaryUnit;
   const unit = abacDeclaredUnit || opDef.acceptedOutputs[0]?.defaultUnit || '';
   // ── K2 (AUDIT_CONVERSION_PERF_VOL.md) — GARDE D'UNITÉ ──
-  // Ne jamais faire passer le défaut catalogue pour une vérité : une opération
-  // « distance » dont l'abaque ne déclare AUCUNE unité est FLAGUÉE (au lieu de
-  // retomber silencieusement sur « m »). Le warning dégrade aussi la confiance
-  // et signale à l'UI une étiquette d'unité non fiable (conversion d'affichage
-  // potentiellement trompeuse).
-  if (outputKind === 'distance' && !abacDeclaredUnit) {
+  // Ne jamais faire passer un défaut pour une vérité. Deux cas distincts.
+  // (a) CONTRADICTION : l'axe de sortie et le primaire déclarent deux unités
+  //     différentes (motif relevé le 27/08 sur les planches d'atterrissage —
+  //     axe de lecture en « ft », primaire estampillé « m »). La valeur est
+  //     servie dans l'unité de l'axe RÉELLEMENT lu ; le désaccord est signalé.
+  // (b) SILENCE : l'axe de sortie ne déclare rien. On se rabat alors sur une
+  //     valeur qui n'a pas été choisie pour cet abaque — auto-estampillée ou
+  //     tirée du catalogue — donc étiquette non fiable. C'est le trou que la
+  //     rédaction précédente laissait passer : elle ne flaguait que l'absence
+  //     TOTALE d'unité, si bien qu'un primaire estampillé suffisait à la taire.
+  if (outputKind === 'distance' && cascadeUnit && primaryUnit && cascadeUnit !== primaryUnit) {
     warnings.push(
-      `⚠ Unité non déclarée par l'abaque — valeur affichée en « ${unit} » par ` +
-      `défaut (catalogue). Déclarez l'unité de l'axe Y du modèle pour une conversion fiable.`
+      `⚠ Unités contradictoires dans le modèle : l'axe de sortie déclare ` +
+      `« ${cascadeUnit} » et le panneau primaire « ${primaryUnit} ». La valeur est ` +
+      `servie en « ${cascadeUnit} », l'unité de l'axe réellement lu. Alignez ` +
+      `outputUnit sur l'axe de sortie pour lever l'ambiguïté.`
+    );
+  } else if (outputKind === 'distance' && !cascadeUnit) {
+    warnings.push(
+      `⚠ Unité non déclarée par l'axe de sortie de l'abaque — valeur affichée en ` +
+      `« ${unit} » par repli sur ${primaryUnit ? 'le panneau primaire (estampillé automatiquement par l\'atelier)' : 'le défaut du catalogue'}. ` +
+      `Déclarez l'unité de l'axe de sortie du modèle pour une conversion fiable.`
     );
   }
   // Même moteur que le banc de référence de l'atelier : confiance élevée,

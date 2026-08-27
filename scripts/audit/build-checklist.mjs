@@ -90,10 +90,16 @@ function renderAvion(a) {
   // Les items AJOUTÉS après coup (flag `ajout`, ex. passe finale du 26/08)
   // sont numérotés APRÈS tous les items historiques — jamais intercalés,
   // sinon la numérotation figée casserait.
+  // ⚠️ Et entre eux, les ajouts se trient par DATE D'AJOUT AVANT la gravité :
+  // sans cela un ajout critique d'une passe ultérieure se glissait devant les
+  // ajouts d'une passe antérieure et décalait leurs numéros (constaté le 27/08
+  // sur F-HFGI, où le nouveau point critique avait pris le n° 15 et repoussé
+  // trois points déjà rapportés par le pilote).
   const anciens = (a.items || []).filter((it) => !it.ajout);
   const ajouts = (a.items || []).filter((it) => it.ajout);
   const tri = (x, y) => (SEV_ORDER[x.gravite] ?? 3) - (SEV_ORDER[y.gravite] ?? 3);
-  const tous = [...[...anciens].sort(tri), ...[...ajouts].sort(tri)]
+  const triAjouts = (x, y) => String(x.ajout).localeCompare(String(y.ajout)) || tri(x, y);
+  const tous = [...[...anciens].sort(tri), ...[...ajouts].sort(triAjouts)]
     .map((it, i) => ({ it, n: i + 1 }));
   // ✂️ ÉDITION CONSOLIDÉE (demande pilote 25/08) : les points réglés ET
   // vérifiés en base sont RETIRÉS de la page — elle ne montre que ce qui
