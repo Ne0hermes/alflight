@@ -468,6 +468,17 @@
     "action": "",
     "demontrePar": "Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)",
     "ajout": "2026-08-26"
+   },
+   {
+    "champ": "aircraft_data.utilityCategory (enabled = true, sans forwardCG ni aftMaxCG)",
+    "gravite": "majeur",
+    "classe": "demontree",
+    "categorie": "Passe finale 27/08",
+    "ajout": "2026-08-27",
+    "trouve": "F-BXQT est le SEUL avion de la flotte dont la catégorie utilitaire est ACTIVE : utilityCategory = {mtow: 726, mlw: 726, enabled: true}. Or le bloc ne porte ni forwardCG ni aftMaxCG. Conséquence, lue dans Step6WeightBalance.jsx (l.127-161) : quand le pilote choisit « U » en haut de la page Masse & centrage, le code substitue la MTOW et la MLW — 726 et 726, soit exactement les valeurs de la catégorie normale — puis SAUTE le bloc des limites de centrage, car forwardCG et aftMaxCG donnent NaN et sont écartés par Number.isFinite. L'enveloppe normale reste donc en vigueur (points avant 0,798 m à 500 et 592 kg, puis 0,835 m à 726 kg), et la soute garde ses 54 kg. Pendant ce temps la console annonce « Catégorie UTILITAIRE active — limites U appliquées ».",
+    "attendu": "Soit les limites réelles de la catégorie utilitaire du manuel F150 M saisies dans le bloc (forwardCG, aftMaxCG, et la masse maximale utilitaire si elle diffère), soit enabled = false — une catégorie ne doit pas s'annoncer appliquée sans rien restreindre.",
+    "enVol": "Sélectionner « U » ne change STRICTEMENT RIEN : même masse maximale, même enveloppe, même soute. Le pilote qui prépare un vol en catégorie utilitaire — la seule qui autorise les manœuvres — reçoit un verdict « dans les limites » calculé sur l'enveloppe NORMALE, plus large à l'arrière. Un chargement accepté en normale peut être hors limites en utilitaire.",
+    "action": "Onglet Masse & centrage : soit saisir les limites utilitaires du manuel, soit décocher la catégorie. Sur un F150 M la catégorie utilitaire impose classiquement une soute vide et une limite arrière plus avant, à masse maximale inchangée."
    }
   ]
  },
