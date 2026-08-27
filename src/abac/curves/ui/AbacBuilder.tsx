@@ -1303,7 +1303,6 @@ const renderStepContent = () => {
                   isFirst={chainIdx === 0}
                   readiness={graphReadinessById.get(g.id) || []}
                   showAdvancedRoles={rolesOffConvention}
-                  onEditOperation={() => setCurrentStep('setup')}
                   onRemoveGraph={removeCurrentGraphAndFrame}
                 />
               );

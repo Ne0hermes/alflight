@@ -224,17 +224,27 @@ const TextFieldMini: React.FC<{ label: string; value: string; onChange: (s: stri
 // liste courte (vieux modèles, ex. « Vent de face ») est INJECTÉE en tête
 // avec son label normal — le préfixe « ⚠ legacy » reste réservé aux ids
 // inconnus du catalogue.
+// 27/08 — signalement pilote : sur une planche d'atterrissage graduée en pieds,
+// ce sélecteur annonçait « Distance d'atterrissage (roulage) (m) » alors que le
+// champ d'unité voisin affichait bien « ft ». L'unité collée derrière le nom
+// était le DÉFAUT du catalogue, jamais celle réglée sur l'axe. La variable
+// sélectionnée porte désormais l'unité réelle de l'axe ; les autres options
+// gardent leur défaut, qui est ce qu'elles appliqueront si on les choisit.
 const VarSelectMini: React.FC<{
   label: string;
   axis: 'x' | 'y';
   value: string;
+  /** Unité réellement réglée sur l'axe (affichée sur la variable choisie). */
+  currentUnit?: string;
   onChange: (variableId: string) => void;
   width?: number;
-}> = ({ label, axis, value, onChange, width = 200 }) => {
+}> = ({ label, axis, value, currentUnit, onChange, width = 200 }) => {
   const groups = getAxisVariablesGroupedForCore(axis);
   const known = getAxisVariable(value);
   const isKnown = !!known;
   const inShortList = groups.some(g => g.items.some(v => v.id === value));
+  const uniteAffichee = (v: { id: string; defaultUnit?: string }) =>
+    (v.id === value && currentUnit ? currentUnit : v.defaultUnit);
   return (
     <label style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, fontSize: 10, color: !isKnown && value ? 'var(--color-red-critical)' : 'var(--text-secondary)' }}>
       {label}{!isKnown && value ? ' — ⚠ non canonique' : ''}
@@ -249,14 +259,14 @@ const VarSelectMini: React.FC<{
       >
         {!isKnown && value !== '' && <option value={value}>⚠ {value} (legacy)</option>}
         {known && !inShortList && (
-          <option value={known.id}>{known.label}{known.defaultUnit ? ` (${known.defaultUnit})` : ''}</option>
+          <option value={known.id}>{known.label}{uniteAffichee(known) ? ` (${uniteAffichee(known)})` : ''}</option>
         )}
         {value === '' && <option value="">— Choisir la variable —</option>}
         {groups.map(g => (
           <optgroup key={g.category} label={g.label}>
             {g.items.map(v => (
               <option key={v.id} value={v.id}>
-                {v.label}{v.defaultUnit ? ` (${v.defaultUnit})` : ''}
+                {v.label}{uniteAffichee(v) ? ` (${uniteAffichee(v)})` : ''}
               </option>
             ))}
           </optgroup>
@@ -811,6 +821,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
             label="Variable"
             axis="y"
             value={workshop.sharedY.title}
+            currentUnit={workshop.sharedY.unit}
             onChange={(id) => {
               const v = getAxisVariable(id);
               patchSharedY({ title: id, ...(v && v.id !== 'custom' ? { unit: v.defaultUnit } : {}) });
@@ -868,6 +879,7 @@ export const WorkshopCanvas: React.FC<WorkshopCanvasProps> = ({
               label="Variable"
               axis={focusedGraph.readoutAxis === 'x' ? 'y' : 'x'}
               value={focusedX.title}
+              currentUnit={focusedX.unit}
               onChange={(id) => {
                 const v = getAxisVariable(id);
                 onUpdateGraphXAxis(focusedGraph.id, { ...focusedX, title: id, ...(v && v.id !== 'custom' ? { unit: v.defaultUnit } : {}) });

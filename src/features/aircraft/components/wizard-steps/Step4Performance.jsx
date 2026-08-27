@@ -1324,8 +1324,16 @@ const Step4Performance = ({ data, updateData, errors = {}, registerStepNav, abac
         >
           ➕ Nouvel abaque — atelier image unique
         </button>
+        {/* 27/08 — signalement pilote : ce bouton menait à un écran de choix à
+            deux cartes dont l'une, « Graphiques/Abaques », rouvrait l'atelier
+            déjà accessible par le bouton juste au-dessus. L'écran intermédiaire
+            est court-circuité : on entre DIRECTEMENT dans la lecture des
+            tableaux (étape 3, sélection des pages), et la carte redondante a
+            été retirée de PerformanceWizard. Les deux voies d'ajout — abaque et
+            tableaux — sont désormais côte à côte ici. */}
         <button
           onClick={() => {
+            setWizardStep(3);
             setShowExistingData(false);
             setForceShowSummary(false);
           }}
@@ -1342,7 +1350,7 @@ const Step4Performance = ({ data, updateData, errors = {}, registerStepNav, abac
             width: '100%'
           }}
         >
-          Ajouter des données de performance (tableaux du manuel de vol / mixte)
+          ➕ Nouveaux tableaux — lecture du manuel de vol
         </button>
 
         {/* ✈️ Facteurs correctifs du manuel (vent, herbe…) — validé César 16/08 */}
@@ -1573,6 +1581,7 @@ const Step4Performance = ({ data, updateData, errors = {}, registerStepNav, abac
         onPerformanceUpdate={handlePerformanceUpdate}
         initialData={null}
         startAtStep={wizardStep}
+        startAtType={wizardStep === 3 ? 'tables' : null}
         sessionRef={abacSessionRef}
         abacBuilderRefCallback={handleAbacBuilderRefCallback}
         onCancel={handleAbacCancel}

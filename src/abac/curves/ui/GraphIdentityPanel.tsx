@@ -24,7 +24,7 @@ import { getAxisVariable, getFamilyVariablesGrouped, isWindAxisVariable } from '
 // valeur de famille (le moteur suit la pente, il ne lit pas la valeur).
 import { usesNumberedGuides } from '../core/guideMode';
 import { ReadinessItem } from '../core/modelReadiness';
-import { KitBadge, KitButton, KitPanel, FONT, SPACING } from './kit';
+import { KitBadge, KitPanel, FONT, SPACING } from './kit';
 
 interface GraphIdentityPanelProps {
   graph: GraphConfig;
@@ -37,8 +37,6 @@ interface GraphIdentityPanelProps {
   readiness: ReadinessItem[];
   /** Rôles hors convention (legacy sans écran Opération) : montre les radios. */
   showAdvancedRoles: boolean;
-  /** Retour à l'écran « Opération » (graphes et cadres conservés). */
-  onEditOperation: () => void;
   /** Supprime le graphe focalisé, ses courbes et son cadre. */
   onRemoveGraph: () => void;
 }
@@ -57,7 +55,7 @@ const rowStyle: React.CSSProperties = {
 };
 
 export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
-  graph, onUpdateGraph, frameNumber, isFirst, readiness, showAdvancedRoles, onEditOperation, onRemoveGraph
+  graph, onUpdateGraph, frameNumber, isFirst, readiness, showAdvancedRoles, onRemoveGraph
 }) => {
   const numberedGuides = usesNumberedGuides(graph, isFirst);
   const isPrimary = (graph.role || 'primary') === 'primary';
@@ -182,18 +180,19 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
 
         {/* L'OPÉRATION ne se règle plus ici : elle vit à l'écran « Opération »
             (rappel + lien « Modifier », graphes et cadres conservés). */}
-        {isPrimary && (
+        {/* 27/08 — signalement pilote : le rappel de l'opération et son bouton
+            « Modifier » faisaient DOUBLON avec la barre d'identité du set
+            (AbacBuilder), à quelques centimètres au-dessus et menant au même
+            écran. Le rappel nominal est retiré d'ici. Ne subsiste que
+            l'ALERTE — opération absente ou inconnue du catalogue — parce que
+            la barre du haut ne la montre pas : elle masque purement la mention
+            quand aucune opération n'est choisie, et affiche l'identifiant brut
+            quand il est inconnu. Le bouton « Modifier » de cette barre reste à
+            portée immédiate pour corriger. */}
+        {isPrimary && !op && (
           <div style={rowStyle}>
             <span style={labelStyle}>Opération du set</span>
-            {op ? (
-              <span style={{ fontSize: 12, color: 'var(--text-primary)' }} title={op.description || undefined}>
-                <strong>{op.labelFr}</strong>
-                <span style={{ color: 'var(--text-secondary)', marginLeft: 6, fontSize: 11 }}>
-                  <code>{op.id}</code>
-                  {op.configuration?.flaps && ` · Flaps : ${op.configuration.flaps}`}
-                </span>
-              </span>
-            ) : graph.operationId ? (
+            {graph.operationId ? (
               <span style={{ fontSize: 11, color: 'var(--color-red-critical)', fontWeight: 600 }}>
                 operationId « {graph.operationId} » inconnu du catalogue
               </span>
@@ -202,10 +201,6 @@ export const GraphIdentityPanel: React.FC<GraphIdentityPanelProps> = ({
                 aucune opération sélectionnée
               </span>
             )}
-            <KitButton level="tertiary" size="compact" onClick={onEditOperation}
-              title="Revenir à l'écran Opération — graphes et cadres conservés (le bouton devient « Appliquer »)">
-              Modifier
-            </KitButton>
           </div>
         )}
 

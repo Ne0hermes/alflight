@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Table, LineChart, AlertCircle, Check } from 'lucide-react';
+import { FileText, Table, AlertCircle, Check } from 'lucide-react';
 import pdfToImageConverterOptimized from '../../../services/pdfToImageConverterOptimized';
 // 🔄 Lot 2.0 (correctif purge) : re-téléchargement à la demande du MANEX quand
 // le blob local a été purgé mais que la référence serveur existe (ensureManexLocal).
@@ -95,7 +95,10 @@ const styles = {
   }
 };
 
-const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 2, onCancel, abacBuilderRefCallback, sessionRef }) => {
+// startAtType (27/08) : type de données déjà choisi par l'appelant. La page des
+// données de performance ouvre désormais le flux TABLEAUX en un clic, sans
+// passer par l'écran de choix — il faut donc pouvoir amorcer performanceType.
+const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAtStep = 2, startAtType = null, onCancel, abacBuilderRefCallback, sessionRef }) => {
   // ─── Session restaurée (partie pdf) ───────────────────────────────────────
   // Ce wizard est démonté au moindre changement d'étape de l'assistant avion :
   // les pages PDF du MANEX rendues en PNG (coûteuses), la sélection et les
@@ -121,7 +124,7 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
   const [manualFile, setManualFile] = useState(S?.manualFile ?? null);
   const [extractedPages, setExtractedPages] = useState(S?.extractedPages ?? []);
   const [selectedPages, setSelectedPages] = useState(S?.selectedPages ?? []);
-  const [performanceType, setPerformanceType] = useState(navRestored ? (S.performanceType ?? null) : null);
+  const [performanceType, setPerformanceType] = useState(navRestored ? (S.performanceType ?? startAtType) : startAtType);
   const [pageSystemTypes, setPageSystemTypes] = useState(S?.pageSystemTypes ?? {}); // Type de système pour chaque page (table ou abaque)
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -649,50 +652,13 @@ const PerformanceWizard = ({ aircraft, onPerformanceUpdate, initialData, startAt
                   </p>
                 </div>
 
-                {/* Carte Graphiques/Abaques - CLIQUABLE - Navigation directe.
-                    canUseManex : même règle que la carte Tableaux (référence
-                    serveur acceptée — la construction manuelle n'exige pas le PDF). */}
-                <div
-                  onClick={() => {
-                    if (canUseManex) {
-                      setPerformanceType('abacs');
-                      setCurrentStep(4); // Aller directement à l'AbacBuilder
-                    }
-                  }}
-                  style={{
-                    padding: '10px',
-                    backgroundColor: 'var(--bg-overlay)',
-                    border: '2px solid var(--text-primary)',
-                    borderRadius: 'var(--radius-sm)',
-                    cursor: canUseManex ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s',
-                    opacity: canUseManex ? 1 : 0.4,
-                    transform: 'scale(1)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (canUseManex) {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(22, 163, 74, 0.3)';
-                      e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
-                    e.currentTarget.style.backgroundColor = 'var(--bg-overlay)';
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <LineChart size={28} style={{ color: 'var(--text-primary)' }} />
-                    <h4 style={{ ...styles.text.md, ...styles.text.bold, color: 'var(--text-primary)', margin: 0 }}>
-                      Graphiques/Abaques
-                    </h4>
-                  </div>
-                  <p style={{ ...styles.text.sm, color: 'var(--text-secondary)', margin: 0 }}>
-                    Construction manuelle interactive
-                  </p>
-                </div>
+                {/* 27/08 — signalement pilote : la carte « Graphiques/Abaques »
+                    a été RETIRÉE. Elle ouvrait le même atelier que le bouton
+                    « ➕ Nouvel abaque » de la page des données de performance,
+                    qui y mène en un clic au lieu de deux. Les deux entrées
+                    d'ajout vivent désormais côte à côte sur cette page ; cet
+                    écran n'est plus qu'un relais de retour depuis la sélection
+                    des pages. */}
               </div>
 
               {/* Bouton Précédent pour revenir à la page d'accueil des performances */}
