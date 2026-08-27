@@ -129,13 +129,28 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         // wb.cgLimits existe déjà - le garder tel quel
       }
 
-      // Vérifier que toutes les propriétés requises existent
+      // Vérifier que les propriétés INDISPENSABLES existent.
       // NOTE: baggageArm et auxiliaryArm ne sont plus requis (compartiments dynamiques)
-      const requiredProps = [
-        'emptyWeightArm', 'frontLeftSeatArm', 'frontRightSeatArm',
-        'rearLeftSeatArm', 'rearRightSeatArm', 'fuelArm', 'cgLimits'
-      ];
-      
+      //
+      // 🔧 27/08/2026 — LES BRAS DE STATION NE SONT PLUS EXIGÉS D'ENTRÉE.
+      // Cette liste réclamait aussi frontLeft/frontRight/rearLeft/rearRightSeatArm
+      // et fuelArm, et refusait TOUT le calcul si l'un d'eux était absent. Or
+      // « absent » n'y distinguait pas la donnée oubliée de la STATION QUI
+      // N'EXISTE PAS : sur la flotte réelle, les trois biplaces (Cessna 150 et
+      // 152, arms.rearSeats vide parce qu'ils n'ont pas de sièges arrière) et le
+      // DR401 (carburant réparti sur trois réservoirs à trois bras différents,
+      // donc aucun bras unique) ne calculaient AUCUN centrage — ni en
+      // préparation de vol, ni au banc de cas de référence.
+      //
+      // Le refus reste FAIL-CLOSED, mais au bon endroit : le contrôle
+      // « bras manquant pour une station CHARGÉE » (plus bas, missingArms) rend
+      // déjà cg = null avec un avertissement nommant la station. Un siège arrière
+      // sans bras sur lequel on pose 80 kg refuse toujours ; le même siège vide
+      // sur un biplace ne bloque plus rien. Le carburant a sa propre chaîne
+      // stricte (mode par réservoir, ou bras unique non ambigu — jamais de
+      // moyenne fabriquée).
+      const requiredProps = ['emptyWeightArm', 'cgLimits'];
+
       for (const prop of requiredProps) {
         if (wb[prop] === undefined) {
           return null;
@@ -298,12 +313,25 @@ export function computeWeightBalance({ aircraft, loads = {}, fobFuel = null, act
         baggageWeight +
         fuelWeight;
 
-      // Calcul du moment total
-      const emptyMoment = emptyWeight * wb.emptyWeightArm;
-      const frontLeftMoment = (loads.frontLeft || 0) * wb.frontLeftSeatArm;
-      const frontRightMoment = (loads.frontRight || 0) * wb.frontRightSeatArm;
-      const rearLeftMoment = (loads.rearLeft || 0) * wb.rearLeftSeatArm;
-      const rearRightMoment = (loads.rearRight || 0) * wb.rearRightSeatArm;
+      // Calcul du moment total.
+      // 🔧 27/08/2026 — Une station VIDE dont le bras est absent contribue 0,
+      // pas NaN. Auparavant `0 * undefined` donnait NaN et contaminait le moment
+      // total, donc le CG : le défaut restait invisible parce que la
+      // vérification d'entrée refusait ces avions avant d'arriver ici. Depuis
+      // qu'un biplace calcule (ses sièges arrière n'existent pas), le cas se
+      // présente en vrai. Une station CHARGÉE sans bras reste, elle, traitée par
+      // missingArms plus bas : cg = null et avertissement nommant la station —
+      // le zéro ci-dessous ne masque donc jamais une charge non pesée.
+      const momentDe = (charge, bras) => {
+        const w = parseFloat(charge) || 0;
+        const a = parseFloat(bras);
+        return w !== 0 && Number.isFinite(a) ? w * a : 0;
+      };
+      const emptyMoment = momentDe(emptyWeight, wb.emptyWeightArm);
+      const frontLeftMoment = momentDe(loads.frontLeft, wb.frontLeftSeatArm);
+      const frontRightMoment = momentDe(loads.frontRight, wb.frontRightSeatArm);
+      const rearLeftMoment = momentDe(loads.rearLeft, wb.rearLeftSeatArm);
+      const rearRightMoment = momentDe(loads.rearRight, wb.rearRightSeatArm);
 
       const totalMoment =
         emptyMoment +
