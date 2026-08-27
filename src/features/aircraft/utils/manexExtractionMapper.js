@@ -225,8 +225,13 @@ const FIELD_MAPPINGS = [
   { aircraftPath: 'weights.emptyWeight',         src: ['weights', 'empty_weight'],        category: 'weight', targetUnit: 'kg', label: 'Masse à vide (BEW)' },
   { aircraftPath: 'weights.mtow',                src: ['weights', 'mtow'],                category: 'weight', targetUnit: 'kg', label: 'MTOW (cat. Normale)', description: 'Masse maximale au décollage en catégorie Normale (N). Limite standard d\'opération.' },
   { aircraftPath: 'weights.mlw',                 src: ['weights', 'mlw'],                 category: 'weight', targetUnit: 'kg', label: 'MLW (cat. Normale)', description: 'Masse maximale à l\'atterrissage en catégorie Normale. Souvent égale au MTOW en aviation générale.' },
-  { aircraftPath: 'utilityCategory.mtow',        src: ['weights', 'mtow_utility'],        category: 'weight', targetUnit: 'kg', label: 'MTOW (cat. Utilitaire)', description: 'Masse maximale au décollage en catégorie Utilitaire (U). Souvent inférieure à la MTOW normale. Présente sur les avions certifiés CS-23 / FAR 23 catégorie U.' },
-  { aircraftPath: 'utilityCategory.mlw',         src: ['weights', 'mlw_utility'],         category: 'weight', targetUnit: 'kg', label: 'MLW (cat. Utilitaire)', description: 'Masse maximale à l\'atterrissage en catégorie Utilitaire. Souvent égale au MTOW utilitaire.' },
+  // 🔧 27/08/2026 — MTOW/MLW de la catégorie UTILITAIRE retirées de l'extraction.
+  // Le club a décidé de ne pas exploiter les catégories utilitaires et l'écran
+  // qui permettait de les configurer a été supprimé (commit 4a7fbcf4) : plus
+  // aucune voie ne permettait de corriger le bloc à la main. Un filet retire
+  // désormais utilityCategory à l'écriture — ces deux champs auraient donc été
+  // proposés au pilote dans la revue d'extraction pour disparaître ensuite en
+  // silence. À rétablir tel quel si la fonction de configuration revient.
   { aircraftPath: 'weights.minTakeoffWeight',    src: ['weights', 'min_takeoff_weight'],  category: 'weight', targetUnit: 'kg', label: 'Masse min décollage' },
 
   // ═══ BRAS DE LEVIER & ENVELOPPE CG ═══
@@ -619,21 +624,21 @@ export function buildBulkUpdatePayload(reviewItems) {
     payload.additionalFuelTanks = fuelTankEntries;
   }
 
-  // Auto-activation catégorie Utilitaire si l'IA a trouvé MTOW/MLW utility.
-  // Sans cela, les valeurs U seraient stockées mais Step3 ne montrerait pas
-  // le bloc utilitaire (qui dépend de utilityCategory.enabled = true).
-  // 🔧 Phase 0 (2026-08-17) — La catégorie Utilitaire n'a de sens que si ses
-  // LIMITES DE CENTRAGE existent. Il suffisait auparavant d'UN seul champ extrait
-  // (souvent une MTOW utilitaire égale à la MTOW normale) pour l'activer : le
-  // sélecteur « Normale / Utilitaire » s'affichait alors en préparation de vol
-  // avec la mention « domaine CG plus restreint », mais aucune limite n'était
-  // substituée. Le pilote croyait voler dans un domaine restreint ; il volait
-  // dans le domaine normal. Six avions de la base étaient dans ce cas.
-  if (payload.utilityCategory &&
-      payload.utilityCategory.forwardCG &&
-      payload.utilityCategory.aftMaxCG) {
-    payload.utilityCategory.enabled = true;
-  }
+  // 🔧 27/08/2026 — L'auto-activation de la catégorie Utilitaire est SUPPRIMÉE
+  // avec les deux champs qui l'alimentaient (voir plus haut). Elle était de
+  // toute façon déjà inatteignable : elle exigeait forwardCG et aftMaxCG, or
+  // les limites de centrage ne sont plus extraites du MANEX depuis la refonte
+  // du wizard masse & centrage — aucun code ne les produisait plus.
+  //
+  // Histoire, à garder si la fonction revient un jour. Le 17/08, un SEUL champ
+  // extrait suffisait à activer la catégorie — souvent une MTOW utilitaire
+  // égale à la MTOW normale. Le sélecteur « Normale / Utilitaire » apparaissait
+  // alors en préparation de vol en promettant un « domaine CG plus restreint »,
+  // sans qu'aucune limite ne soit substituée : le pilote croyait voler dans un
+  // domaine restreint, il volait dans le domaine normal. Six avions étaient
+  // dans ce cas ; la double condition les a ramenés à quatre, désactivés par
+  // script le 19/08. F-BXQT y est revenu par une copie locale et a été purgé
+  // le 27/08 avec les deux derniers porteurs du bloc.
 
   return payload;
 }
