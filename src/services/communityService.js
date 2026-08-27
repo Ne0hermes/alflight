@@ -127,21 +127,22 @@ function stripBannedLegacyFields(d) {
       out.equipmentSurv = surv;
     }
   }
-  // ⚖️ 27/08/2026 — CATÉGORIE UTILITAIRE : filet de sécurité à l'ÉCRITURE.
-  // `utilityCategory` ne porte une vraie limitation (MTOW/MLW réduits d'une
-  // catégorie utilitaire publiée) que si `enabled === true` — Step6WeightBalance
-  // ne le lit QUE sous cette condition, et manexExtractionMapper n'active le
-  // drapeau que si l'enveloppe utilitaire est complète. Désactivé, le bloc ne
-  // fait que survivre d'une sauvegarde à l'autre : purgé en base sur F-GBTU le
-  // 27/08 (v8), il est revenu À L'IDENTIQUE dès la sauvegarde suivante du
-  // pilote (v9, 10h05) depuis une copie locale antérieure à la purge — même
-  // motif que le transpondeur ci-dessus. Il ne repart plus.
-  if (out.utilityCategory !== undefined) {
-    const uc = out.utilityCategory;
-    if (!uc || typeof uc !== 'object' || Array.isArray(uc) || uc.enabled !== true) {
-      delete out.utilityCategory;
-    }
-  }
+  // ⚖️ 27/08/2026 — CATÉGORIE UTILITAIRE : retirée À L'ÉCRITURE, sans condition.
+  // La fonction qui permettait de configurer une catégorie utilitaire a été
+  // SUPPRIMÉE du wizard avion (commit 4a7fbcf4, « retrait cat. Utilitaire ») :
+  // plus aucun écran ne crée ni ne corrige ce bloc, il ne fait que survivre
+  // d'une sauvegarde à l'autre. Le laisser passer quand enabled === true était
+  // le pire des cas : F-BXQT portait {mtow: 726, mlw: 726, enabled: true} pour
+  // une MTOW normale de 726 kg, sans forwardCG ni aftMaxCG — choisir « U »
+  // substituait des masses IDENTIQUES puis sautait les limites de centrage
+  // (écartées par Number.isFinite dans Step6WeightBalance), tout en annonçant
+  // « limites U appliquées » et un « domaine CG plus restreint ». Une
+  // restriction promise mais jamais appliquée, et plus rien pour la corriger.
+  // Quatre fiches avaient déjà été désactivées par script le 19/08 pour ce
+  // motif exact, et F-BXQT était revenu en arrière par une copie locale.
+  // Sans écran de configuration, aucun bloc utilitaire n'est vérifiable : il
+  // ne repart plus en base, actif ou non. À RETIRER si la fonction revient.
+  delete out.utilityCategory;
   // ⚖️ 25/08/2026 — un BRAS À ZÉRO est impossible par nature (aucun poste
   // n'est au point de référence) : c'est toujours le zéro fabriqué que les
   // purges ont retiré. Un cache local antérieur aux purges peut encore

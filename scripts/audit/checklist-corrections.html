@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>231 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>12 points à
+  <b>230 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>13 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 3 critiques, 3 majeurs, 6 mineurs — dont 2 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 3 critiques, 3 majeurs, 7 mineurs — dont 3 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -175,12 +175,22 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GBTU</span><span class="mdl">PA 28-161</span><span class="spacer"></span>
-
+<span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GBTU" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GBTU" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier réimportés d&#x27;Excel le 18/06 (4 modèles décollage réduits à des nuages de points sans axes ni chaînage), aucun tableau MANEX (advancedPerformance = null, performanceTables = null), masse et centrage complets et cohérents (enveloppe à 3 points avant + limite arrière fixe 2,361 m, pesée 2018 jointe, extraction MANEX à 95 % de confiance sur 43 pages).</b> — Le bloc masse et centrage est le point solide de la fiche : enveloppe à trois points avant, moments recalculés justes (690 × 2,198 = 1516,62 ; 91 × 3,627 = 330,06 ; 1055 × 2,361 = 2490,86), pesée 2018 jointe et cohérente. Ce qui bloque, c&#x27;est toute la performance : les 4 abaques de décollage échouent 20 fois sur 20 à l&#x27;exécution (aucun axe, aucune famille, aucun chaînage n&#x27;a survécu à l&#x27;aller-retour Excel du 18/06) et l&#x27;atterrissage n&#x27;existe nulle part — ni abaque, ni tableau, ni certification d&#x27;absence — donc aucune distance n&#x27;est calculable aujourd&#x27;hui, ni au décollage ni à l&#x27;atterrissage. Commencez par reconstruire les 4 abaques dans l&#x27;atelier puis saisir les 2 opérations d&#x27;atterrissage obligatoires ; ensuite, trois corrections rapides et sans ambiguïté : VS T/O absente, l&#x27;utilisable réservoir à 188 l qui contredit les 182 l du manuel, et Vx/Vy manifestement interverties.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap partiel">Carburant : partiel</span></div>
-<div class="gen">✂️ 21 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it mineur regle done" data-sev="mineur" data-itid="F-GBTU-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
+<div class="gen">✂️ 20 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur" data-sev="mineur" data-itid="F-GBTU-21" data-clos="0" data-champ="utilityCategory.mtow / utilityCategory.mlw" data-sevlbl="mineur">
+<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
+<div class="body">
+<div class="tags"><span class="itid">F-GBTU-21</span><span class="pill p-mineur">mineur</span><span class="pill a-manuel">À confirmer au manuel</span><span class="pill a-manuel">Nouveau 26/08</span>
+<span class="cap">Passe finale 26/08</span><span class="path">utilityCategory.mtow / utilityCategory.mlw</span></div>
+<dl class="kv">
+<dt>Trouvé</dt><dd class="val">mtow = 885 et mlw = 885 (enabled = false, lignes 2149-2152), valeur exactement égale au point de cassure 885 kg de l&#x27;enveloppe avant (forwardPoints[1].weight = 885) — évoque une recopie.</dd>
+<dt>Attendu</dt><dd>À confirmer au manuel (catégorie utilitaire d&#x27;un PA-28-161 : 2020 lb ≈ 916 kg) ; champ inerte tant que enabled = false.</dd>
+<dt>En vol</dt><dd></dd>
+<dt>Action</dt><dd></dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Passe finale du 26/08/2026 — vérification croisée sur extraction fraîche (13 vérificateurs)</dd>
+</dl><div class="notefait">✎ CLOS — vérifié puis corrigé : contrairement à ce que vous pensiez, la catégorie utilitaire était TOUJOURS en base (utilityCategory = {mtow: 885, mlw: 885, enabled: false}), avec 885 recopié du point de cassure de l&#x27;enveloppe avant. Le bloc était inerte — tous les accès du code passent par utilityCategory?.enabled en chaînage optionnel — mais il contredisait la fiche. Supprimé par script fix-gbtu-27-08 (v8 vérifiée : utilityCategory absent). La base dit désormais ce que vous croyiez vrai. ▸ ACTÉ SANS CORRECTION DURABLE POSSIBLE PAR SCRIPT. La purge de 09:43 a bien retiré le bloc utilityCategory, mais votre sauvegarde de 10:05 l&#x27;a réécrit à l&#x27;identique ({mtow: 885, mlw: 885, enabled: false}) — _updateHistory le confirme, utilityCategory figure parmi les 8 champs écrits par cette sauvegarde. C&#x27;est le motif « revient par la copie locale » déjà rencontré sur le transpondeur : la copie ouverte dans l&#x27;atelier datait d&#x27;avant la purge et a été réenregistrée telle quelle. Aucun code de l&#x27;application ne crée ce bloc (les 2 seules occurrences dans src sont une LECTURE en chaînage optionnel dans Step6WeightBalance et le mappage d&#x27;extraction MANEX) : il ne fait que survivre d&#x27;une sauvegarde à l&#x27;autre. État : totalement inerte tant que enabled reste false — tous les accès passent par utilityCategory?.enabled, et le module Masse &amp; centrage utilise l&#x27;enveloppe racine. Le seul correctif durable serait un filet côté code, du type de celui du transpondeur, qui retire le bloc à l&#x27;écriture quand enabled n&#x27;est pas true.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GBTU-21) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GGZO</span><span class="mdl">Cessna 172N</span><span class="spacer"></span>
