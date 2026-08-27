@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 245 points recensés depuis l’audit d’origine,
-  <b>244 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>1 points à
+  <b>245 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>0 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 0 critiques, 0 majeurs, 1 mineurs — dont 1 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 0 critiques, 0 majeurs, 0 mineurs — dont 0 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -166,22 +166,12 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-BXQT</span><span class="mdl">CESSNA F150 M</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
+
 <span class="cap count"></span><button class="rapport" data-reg="F-BXQT" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-BXQT" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Fiche v3.0.0 « tables MANEX seules » : aucun abaque (performanceModels = null, sonde models = []), 4 tables d&#x27;opérations réimportées d&#x27;Excel le 18/06 et réduites à la seule diagonale ISA ; masse-centrage complet (enveloppe cgEnvelope à 3 points avant + limite arrière fixe 0,951 m, 2 compartiments bagages bras 1,63 / 2,13 m, 2 variantes de réservoir 98 L / 144 L) ; extraction MANEX de 113 items dont 2 seulement issus du PDF (VX/VY, p.45).</b> — Le socle masse-centrage et carburant est sain et arithmétiquement cohérent (masse à vide × bras = moment au gramme près, enveloppe et miroirs cgLimits concordants, réservoirs et moments à plein exacts, couverture des 4 opérations obligatoires acquise par tables + certifications). Ce qui bloque est unique et total : les 4 tables de performance ne contiennent qu&#x27;une seule température par palier d&#x27;altitude, ce qui laisse 12 cases vides sur 16 dans la grille du moteur — à l&#x27;exécution du 23/08, 4 jeux de conditions sur 5 échouent, et aucune distance de décollage ni d&#x27;atterrissage n&#x27;est calculable ailleurs qu&#x27;au point exact (0 ft, 15 °C, 726 kg). Commencer par ré-importer les pages 68-69 avec toutes les colonnes de température du manuel ; enchaîner ensuite sur les bras de sièges arrière fantômes (1,000 m, identiques aux sièges avant, qui ouvrent deux postes de charge inexistants dans le bilan de centrage), puis sur le trio de vitesses vsTO/vso/vfeTO qui est inversé.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap non">Décollage : non</span><span class="cap non">Atterrissage : non</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 19 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-BXQT-20" data-clos="0" data-champ="aircraft_data.utilityCategory (enabled = true, sans forwardCG ni aftMaxCG)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-BXQT-20</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span><span class="pill a-manuel">Nouveau 27/08</span>
-<span class="cap">Passe finale 27/08</span><span class="path">aircraft_data.utilityCategory (enabled = true, sans forwardCG ni aftMaxCG)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">F-BXQT est le SEUL avion de la flotte dont la catégorie utilitaire est ACTIVE : utilityCategory = {mtow: 726, mlw: 726, enabled: true}. Or le bloc ne porte ni forwardCG ni aftMaxCG. Conséquence, lue dans Step6WeightBalance.jsx (l.127-161) : quand le pilote choisit « U » en haut de la page Masse &amp; centrage, le code substitue la MTOW et la MLW — 726 et 726, soit exactement les valeurs de la catégorie normale — puis SAUTE le bloc des limites de centrage, car forwardCG et aftMaxCG donnent NaN et sont écartés par Number.isFinite. L&#x27;enveloppe normale reste donc en vigueur (points avant 0,798 m à 500 et 592 kg, puis 0,835 m à 726 kg), et la soute garde ses 54 kg. Pendant ce temps la console annonce « Catégorie UTILITAIRE active — limites U appliquées ».</dd>
-<dt>Attendu</dt><dd>Soit les limites réelles de la catégorie utilitaire du manuel F150 M saisies dans le bloc (forwardCG, aftMaxCG, et la masse maximale utilitaire si elle diffère), soit enabled = false — une catégorie ne doit pas s&#x27;annoncer appliquée sans rien restreindre.</dd>
-<dt>En vol</dt><dd>Sélectionner « U » ne change STRICTEMENT RIEN : même masse maximale, même enveloppe, même soute. Le pilote qui prépare un vol en catégorie utilitaire — la seule qui autorise les manœuvres — reçoit un verdict « dans les limites » calculé sur l&#x27;enveloppe NORMALE, plus large à l&#x27;arrière. Un chargement accepté en normale peut être hors limites en utilitaire.</dd>
-<dt>Action</dt><dd>Onglet Masse &amp; centrage : soit saisir les limites utilitaires du manuel, soit décocher la catégorie. Sur un F150 M la catégorie utilitaire impose classiquement une soute vide et une limite arrière plus avant, à masse maximale inchangée.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)"></dd>
-</dl><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-BXQT-20) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 20 points réglés et vérifiés en base — retirés de cette édition.</div>
+<div class="it mineur regle done" data-sev="mineur" data-itid="F-BXQT-00" data-clos="1" data-champ="—" data-sevlbl="mineur"><span class="verif">✅</span><div class="body"><div class="tags"><span class="pill p-mineur">tout est réglé</span></div><dl class="kv"><dt>État</dt><dd>Plus aucun point ouvert sur cette fiche — chaque correction a été vérifiée sur l’extraction de la base.</dd></dl></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GBTU</span><span class="mdl">PA 28-161</span><span class="spacer"></span>
