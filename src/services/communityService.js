@@ -127,6 +127,21 @@ function stripBannedLegacyFields(d) {
       out.equipmentSurv = surv;
     }
   }
+  // ⚖️ 27/08/2026 — CATÉGORIE UTILITAIRE : filet de sécurité à l'ÉCRITURE.
+  // `utilityCategory` ne porte une vraie limitation (MTOW/MLW réduits d'une
+  // catégorie utilitaire publiée) que si `enabled === true` — Step6WeightBalance
+  // ne le lit QUE sous cette condition, et manexExtractionMapper n'active le
+  // drapeau que si l'enveloppe utilitaire est complète. Désactivé, le bloc ne
+  // fait que survivre d'une sauvegarde à l'autre : purgé en base sur F-GBTU le
+  // 27/08 (v8), il est revenu À L'IDENTIQUE dès la sauvegarde suivante du
+  // pilote (v9, 10h05) depuis une copie locale antérieure à la purge — même
+  // motif que le transpondeur ci-dessus. Il ne repart plus.
+  if (out.utilityCategory !== undefined) {
+    const uc = out.utilityCategory;
+    if (!uc || typeof uc !== 'object' || Array.isArray(uc) || uc.enabled !== true) {
+      delete out.utilityCategory;
+    }
+  }
   // ⚖️ 25/08/2026 — un BRAS À ZÉRO est impossible par nature (aucun poste
   // n'est au point de référence) : c'est toujours le zéro fabriqué que les
   // purges ont retiré. Un cache local antérieur aux purges peut encore
