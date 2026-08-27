@@ -135,11 +135,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
   <div class="eyebrow">ALFlight · check-list de correction · v3</div>
   <h1>13 avions — dernier passage sur l’intégrité des données</h1>
   <p class="lede"><b>Édition consolidée</b> : sur les 243 points recensés depuis l’audit d’origine,
-  <b>199 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
-  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>44 points à
+  <b>200 sont réglés et vérifiés en base</b> — ils ont été <b>retirés de cette page</b> (chaque retrait a été
+  contrôlé sur l’extraction du 26 août 2026 : la valeur fautive a réellement disparu). Il reste <b>43 points à
   traiter</b>. Cochez « corrigé de mon côté » et commentez : « Copier le rapport » me transmet vos retours, je vérifie
   sur pièces, et le point disparaît à l’édition suivante. Vos coches sont conservées d’une édition à l’autre.</p>
-  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 6 majeurs, 33 mineurs — dont 18 « à confirmer au manuel ».
+  <p class="lede" style="margin-top:10px">Restants : 5 critiques, 5 majeurs, 33 mineurs — dont 18 « à confirmer au manuel ».
   À l’ouverture, seuls les critiques et majeurs sont affichés ; le bouton « Mineurs » révèle le reste. Dernière édition : 26 août 2026.</p>
 </header>
 
@@ -569,23 +569,11 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 </details>
 <details class="av" open>
 <summary><span class="reg">F-GUVV</span><span class="mdl">DA40TDI</span><span class="spacer"></span>
-<span class="pill p-majeur">1 majeur</span>
 <span class="pill p-mineur">1 mineur</span>
 <span class="cap count"></span><button class="rapport" data-reg="F-GUVV" title="Copie vos coches et commentaires de cet avion, à me coller dans la conversation">Copier le rapport</button><button class="hideav" data-reg="F-GUVV" title="Masquer cet avion de la liste (récupérable via « Avions masqués »)">Masquer</button></summary>
 <div class="gen"><b>Abaques d&#x27;atelier v2 entièrement reconstruits le 23/08 (updated_at 12:39) : 4 modèles couvrant exactement les 4 opérations obligatoires, panneau d&#x27;entrée OAT primaire en famille pressure_altitude puis 2 panneaux de correction à guides numérotés (masse, vent), 1 cas de référence MANEX par modèle ; aucune table MANEX (performanceTables null, advancedPerformance null) ; masse-centrage sur cgEnvelope (3 points avant, 2 arrière, moments recalculés exacts), un seul réservoir principal ; équipements encore en forme legacy.</b> — La refonte du 23/08 a réglé l&#x27;essentiel : les 6 vieux modèles mal étiquetés ont laissé place à 4 abaques propres, le panneau OAT est bien l&#x27;entrée de chaîne, le vent de face raccourcit désormais les distances au décollage, le centrage et le carburant tournent sans faute (plein 147,6 L = 124,0 kg à 0,84, CG 2,530 m, enveloppe et miroir weightBalance cohérents). Ce qui bloque : les deux abaques d&#x27;atterrissage n&#x27;ont AUCUN guide de vent arrière, si bien que le moteur se rabat en silence sur le guide n°1 et renvoie 403 m (passage 15 m) et 157 m (roulage) quels que soient la température, l&#x27;altitude et la masse — 47 % trop court, alors que la fiche autorise 10 kt de vent arrière. Commencer par là : digitaliser les guides vent arrière des 2 charts d&#x27;atterrissage ; puis renommer le guide « HEADWIND » du décollage roulage (écarté du calcul) et refaire passer son cas de référence, qui échoue à 5,1 % ; le reste est de l&#x27;hygiène de fiche à trancher au manuel.</div>
 <div class="caps"><span class="cap partiel">Centrage : partiel</span><span class="cap partiel">Décollage : partiel</span><span class="cap partiel">Atterrissage : partiel</span><span class="cap oui">Carburant : oui</span></div>
-<div class="gen">✂️ 17 points réglés et vérifiés en base — retirés de cette édition.</div>
-<div class="it majeur" data-sev="majeur" data-itid="F-GUVV-03" data-clos="0" data-champ="performanceModels[0].data.metadata.referenceCases[0] (takeoff_ground_roll_flaps_to)" data-sevlbl="majeur">
-<input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
-<div class="body">
-<div class="tags"><span class="itid">F-GUVV-03</span><span class="pill p-majeur">majeur</span><span class="pill a-bloque">Erreur démontrée</span>
-<span class="cap">performances</span><span class="path">performanceModels[0].data.metadata.referenceCases[0] (takeoff_ground_roll_flaps_to)</span></div>
-<dl class="kv">
-<dt>Trouvé</dt><dd class="val">Cas de référence saisi : 40 °C / 4000 ft / 1050 kg / 10 kt de face → attendu 330 m. Rejeu du banc sur la fiche fraîche : 313,0 m, écart 5,14 % → statut FAIL (tolérance 5 %). Détail de la chaîne : panneau OAT 4000 ft à 40 °C = 547,2 m, puis masse 1050 kg = 426,1 m (entre guides 6 et 7), puis vent 10 kt de face = 313,0 m (entre HEADWIND 5 et HEADWIND 4). Les 3 autres modèles passent : 680,2 vs 700 (2,8 %), 508,2 vs 500 (1,6 %), 194,4 vs 195 (0,3 %).</dd>
-<dt>Attendu</dt><dd>Écart ≤ 5 % comme les 3 autres modèles.</dd>
-<dt>En vol</dt><dd>Distance de roulement au décollage sous-estimée d&#x27;environ 5 % au point du manuel (17 m sur 330). Sens non conservatif — l&#x27;écart se propage à toutes les conditions voisines.</dd>
-<dt>Action</dt><dd>Atelier abaques → modèle « Distance sol décollage » : vérifier d&#x27;abord que le cas de référence est bien recopié du MANEX, puis reprendre les points du panneau OAT (courbe 4000 ft vers 40 °C) et/ou des guides masse 6-7, et re-valider jusqu&#x27;au PASS du banc.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Exécution de referenceBench.runAllReferenceCases sur les graphes de la fiche fraîche (statut fail, deviationPct 5,141). Vérifié indépendant du guide « HEADWIND » écarté : le rejeu avec ce guide renommé donne exactement la même valeur 313,03 m.</dd>
-</dl><div class="notefait">✎ Le panneau vent ayant été retouché (HEADWIND 1 nommé/tagué), le rejeu du cas de référence (330 m à 40 °C/4000 ft/1050 kg/10 kt) a pu repasser sous les 5 %. VÉRIFICATION SIMPLE : ouvrez le modèle dans l&#x27;atelier — la ligne du cas affiche son écart. Dites-moi le % et je clos (ou corrige).</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-03) — repris dans le rapport à copier"></textarea></div></div>
+<div class="gen">✂️ 18 points réglés et vérifiés en base — retirés de cette édition.</div>
 <div class="it mineur" data-sev="mineur" data-itid="F-GUVV-11" data-clos="0" data-champ="speeds.voRanges[1].maxWeight = 1180" data-sevlbl="mineur">
 <input type="checkbox" aria-label="Corrigé de mon côté (sera vérifié)">
 <div class="body">
@@ -596,7 +584,7 @@ footer{margin-top:52px;padding-top:20px;border-top:1px solid var(--line);color:v
 <dt>Attendu</dt><dd>Borne haute ≤ 1150 kg, sauf si le manuel écrit la tranche telle quelle.</dd>
 <dt>En vol</dt><dd>Aucun effet de calcul ; la table des VO affiche une tranche de masse que l&#x27;avion ne peut pas atteindre, ce qui sème le doute sur la VO à retenir à la MTOW.</dd>
 <dt>Action</dt><dd>Vérifier la tranche VO au MANEX et ramener la borne à 1150 kg si le manuel ne dit pas 1180.</dd><dt>Preuve</dt><dd style="font-style:italic;color:var(--ink-3)">Valeur hors de l&#x27;enveloppe de masse déclarée par la fiche elle-même (1180 &gt; MTOW 1150, cohérente dans trois champs). Le libellé exact du manuel reste à vérifier.</dd>
-</dl><div class="notefait">✎ Coché, MAIS l&#x27;état v5 est plus étrange qu&#x27;avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse.</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-11) — repris dans le rapport à copier"></textarea></div></div>
+</dl><div class="notefait">✎ Coché, MAIS l&#x27;état v5 est plus étrange qu&#x27;avant : tranches VO 940-1080→101 / 1080-1180→108 / 1180-1180→115 — une tranche VIDE (min = max = 1180) est apparue, et les bornes hautes dépassent toujours la MTOW 1150. QUESTION : que publie exactement le manuel DA40 TDI pour VO (tranches et bornes) ? Je scripte sur votre réponse. ▸ 2e coche sans commentaire, base inchangée (v6) : tranches 940-1080→101 / 1080-1180→108 / 1180-1180→115, MTOW 1150. HYPOTHÈSE à confirmer : les « 1180 » sont-ils des coquilles pour 1150 (manuel : 940-1080→101, 1080-1150→108, et le 115 kt n&#x27;existe pas ?) — répondez et je scripte ; ou le manuel publie-t-il littéralement ces tranches ?</div><textarea class="note" rows="1" placeholder="Votre correctif ou commentaire (F-GUVV-11) — repris dans le rapport à copier"></textarea></div></div>
 </details>
 <details class="av" open>
 <summary><span class="reg">F-HDIM</span><span class="mdl">Cessna Skyhawk 172P</span><span class="spacer"></span>
