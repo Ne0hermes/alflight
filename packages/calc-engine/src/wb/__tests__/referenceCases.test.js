@@ -51,92 +51,6 @@ const AVION_AVEC_RAPPORT = {
   weighingReport: { ...AVION.weighingReport, cgFromReport: 0.30, emptyWeightFromReport: 600 },
 };
 
-describe('buildAutoWeighingCase — cas AUTO dérivé de la fiche de pesée', () => {
-  it('valeurs du rapport saisies → CG et masse attendus repris du document', () => {
-    const auto = buildAutoWeighingCase(AVION_AVEC_RAPPORT);
-    expect(auto).not.toBeNull();
-    expect(auto.id).toBe(AUTO_WEIGHING_CASE_ID);
-    expect(auto.postes).toEqual([]);
-    expect(auto.cgAttendu).toBe(0.30);
-    expect(auto.masseAttendue).toBe(600);
-    expect(auto.manqueReference).toBe(false);
-    expect(auto.source).toMatch(/2024-03-12/);
-  });
-
-  it('rapport non transcrit → cas construit mais SANS attendu (aucun faux succès)', () => {
-    const auto = buildAutoWeighingCase(AVION);
-    expect(auto).not.toBeNull();
-    expect(auto.cgAttendu).toBeUndefined();
-    expect(auto.manqueReference).toBe(true);
-  });
-
-  it('bras de pesée en MILLIMÈTRES (fiche legacy) → cas en mètres (garde-fou m/mm)', () => {
-    const legacy = {
-      ...AVION_AVEC_RAPPORT,
-      weightBalance: { ...AVION.weightBalance, emptyWeightArm: 300 },
-    };
-    const auto = buildAutoWeighingCase(legacy);
-    expect(auto.cgAttendu).toBe(0.30);
-  });
-
-  it('masse à vide absente → null (fail-closed, pas de cas fabriqué)', () => {
-    const { weights, ...sansMasse } = AVION;
-    expect(buildAutoWeighingCase(sansMasse)).toBeNull();
-  });
-
-  it('bras de la masse à vide absent → null', () => {
-    const sansBras = { ...AVION, weightBalance: { ...AVION.weightBalance, emptyWeightArm: null } };
-    expect(buildAutoWeighingCase(sansBras)).toBeNull();
-  });
-});
-
-describe('evaluateWbReferenceCase — cas AUTO (avion à vide)', () => {
-  it('fiche conforme au rapport → PASS, écart 0, un point (masse à vide) + point résultant', () => {
-    const r = evaluateWbReferenceCase(AVION_AVEC_RAPPORT, buildAutoWeighingCase(AVION_AVEC_RAPPORT));
-    expect(r.status).toBe('pass');
-    expect(r.cgComputed).toBe(0.30);
-    expect(r.deviationMm).toBe(0);
-    expect(r.weightComputed).toBe(600);
-    // UN POINT PAR BRAS UTILISÉ : ici un seul poste (masse à vide à son bras).
-    // Le point porte aussi, depuis le 28/08, sa confrontation au document :
-    // bras imprimé, écart et moment — les colonnes de l'exemple de chargement.
-    expect(r.points).toHaveLength(1);
-    expect(r.points[0]).toMatchObject({
-      key: 'empty', label: 'Masse à vide', masse: 600, bras: 0.30,
-      brasAttendu: 0.30, ecartBrasMm: 0, momentCalcule: 180, momentAttendu: 180, brasConforme: true,
-    });
-    expect(r.resultPoint).toEqual({ w: 600, cg: 0.30 });
-  });
-
-  // 27/08 — le contrôle qui manquait, et qui aurait servi le jour même :
-  // la masse à vide de F-GBTU avait été portée à 700 kg alors que son rapport
-  // de pesée du 01/03/2018 dit 690. Une fiche qui s'écarte de son document
-  // doit ÉCHOUER, pas afficher un « ✓ 0,0 mm » rassurant.
-  it('fiche qui contredit le rapport (masse à vide fausse) → FAIL chiffré', () => {
-    const ficheFausse = {
-      ...AVION_AVEC_RAPPORT,
-      weights: { ...AVION.weights, emptyWeight: 610 }, // le rapport dit 600
-    };
-    const r = evaluateWbReferenceCase(ficheFausse, buildAutoWeighingCase(ficheFausse));
-    expect(r.status).toBe('fail');
-    expect(r.weightComputed).toBe(610);
-    expect(r.masseExpected).toBe(600);
-    expect(r.ecartMasseKg).toBe(10);
-  });
-
-  it('rapport non transcrit → NON VÉRIFIABLE, message qui dit quoi saisir', () => {
-    const r = evaluateWbReferenceCase(AVION, buildAutoWeighingCase(AVION));
-    expect(r.status).toBe('error');
-    expect(r.message).toMatch(/rapport de pesée/i);
-    // Les chiffres calculés restent disponibles pour le pilote.
-    expect(r.cgComputed).toBe(0.30);
-    expect(r.weightComputed).toBe(600);
-  });
-});
-
-// 28/08 — L'EXEMPLE DE CHARGEMENT d'une fiche de pesée, rejoué ligne à ligne.
-// C'est la demande du pilote : confronter la fiche au tableau imprimé, poste par
-// poste (masse, bras, moment), et pas seulement sur le centrage total.
 describe('evaluateWbReferenceCase — exemple de chargement confronté au document', () => {
   const AVION_EX = {
     ...AVION_AVEC_RAPPORT,
@@ -293,14 +207,35 @@ describe('evaluateWbReferenceCase — fail-closed (rien, aucun fallback)', () =>
     expect(r.message).toMatch(/poste inconnu « pilote »/);
   });
 
-  it('CG attendu non renseigné → error explicite (mais points calculés, tracé possible)', () => {
+  // 28/08 — comparer à un centrage annoncé est FACULTATIF : le pilote saisit
+  // d'abord ses masses pour voir où se posent les points. Statut « info », pas
+  // « error » : les chiffres et les points sortent, sans avertissement.
+  it('CG attendu non renseigné → info, chiffres et points disponibles', () => {
     const r = evaluateWbReferenceCase(AVION, {
       label: 'Cas', postes: [{ poste: 'frontLeft', masse: 77 }],
     });
-    expect(r.status).toBe('error');
-    expect(r.message).toMatch(/CG attendu non renseigné/);
+    expect(r.status).toBe('info');
+    expect(r.message).toMatch(/Chargement calculé/);
     expect(r.points.length).toBe(2);
     expect(r.resultPoint).not.toBeNull();
+  });
+
+  // 28/08 — le cas arrive pré-rempli avec TOUS les postes de l'avion, masses
+  // vides. Une ligne pas encore remplie ne doit pas casser le cas, sinon le
+  // tableau disparaît de l'écran pendant toute la saisie.
+  it('lignes pré-remplies non saisies → ignorées, le cas reste calculable', () => {
+    const r = evaluateWbReferenceCase(AVION, {
+      label: 'Cas',
+      postes: [
+        { poste: 'frontLeft', masse: 77 },
+        { poste: 'frontRight', masse: '' },
+        { poste: 'rearLeft', masse: null },
+        { poste: 'baggage' },
+      ],
+    });
+    expect(r.status).toBe('info');
+    expect(r.points.map((p) => p.key)).toEqual(['empty', 'frontLeft']);
+    expect(r.weightComputed).toBe(677);
   });
 
   it('carburant par réservoir avec type carburant inconnu → error densité', () => {
@@ -373,48 +308,23 @@ describe('evaluateWbReferenceCase — carburant par réservoir (litres × densit
   });
 });
 
-describe('evaluateAllWbReferenceCases — banc complet', () => {
-  it('cas AUTO en tête + cas stockés (wbReferenceCases)', () => {
-    const avion = {
-      // Rapport de pesée transcrit : sans lui le cas AUTO est « non vérifiable »
-      // et non « PASS » (il ne se compare plus à la fiche elle-même).
-      ...AVION_AVEC_RAPPORT,
-      wbReferenceCases: [{
-        id: 'poh-1',
-        label: 'Exemple POH',
-        source: 'Manuel §6.5',
-        postes: [{ poste: 'frontLeft', masse: 77 }],
-        cgAttendu: 0.313,
-        toleranceCgMm: 2,
-      }],
-    };
-    const all = evaluateAllWbReferenceCases(avion);
-    expect(all).toHaveLength(2);
-    expect(all[0].id).toBe(AUTO_WEIGHING_CASE_ID);
-    expect(all[0].status).toBe('pass');
-    // 600×0.30 + 77×0.41 = 211.57 ; W = 677 ; CG = 0.31251… → 0.313
-    expect(all[1].status).toBe('pass');
-  });
-
-  it('pesée incomplète → le cas AUTO reste listé, « non évaluable » explicite', () => {
-    const { weights, ...sansMasse } = AVION;
-    const all = evaluateAllWbReferenceCases(sansMasse);
-    expect(all[0].id).toBe(AUTO_WEIGHING_CASE_ID);
-    expect(all[0].status).toBe('error');
-    expect(all[0].message).toMatch(/non évaluable/);
-  });
-});
-
-describe('wbPostesForAircraft — catalogue des postes sélectionnables', () => {
-  it('avion legacy : sièges + bagages/auxiliaire + carburant bloc unique', () => {
-    const keys = wbPostesForAircraft(AVION).map((p) => p.key);
-    expect(keys).toEqual([
-      'frontLeft', 'frontRight', 'rearLeft', 'rearRight',
-      'baggage', 'auxiliary', 'fuel',
+// 28/08 — le catalogue sert désormais à PRÉ-REMPLIR le tableau de saisie : il
+// ne liste que les postes qui existent sur CET avion, et porte leur bras pour
+// que l'écran l'affiche sans que le pilote ait rien à recopier.
+describe('wbPostesForAircraft — postes de l\'avion, avec leur bras', () => {
+  it('avion legacy : sièges, bagages/auxiliaire, carburant — chacun avec son bras', () => {
+    const postes = wbPostesForAircraft(AVION);
+    expect(postes.map((p) => p.key)).toEqual([
+      'frontLeft', 'frontRight', 'rearLeft', 'rearRight', 'baggage', 'fuel',
     ]);
+    expect(postes.find((p) => p.key === 'frontLeft').bras).toBe(0.41);
+    expect(postes.find((p) => p.key === 'baggage').bras).toBe(1.90);
+    expect(postes.find((p) => p.key === 'fuel').bras).toBe(1.12);
+    // « Rangement auxiliaire » n'est pas proposé : aucun bras auxiliaire.
+    expect(postes.find((p) => p.key === 'auxiliary')).toBeUndefined();
   });
 
-  it('compartiments + réservoirs déclarés : clés du moteur, litres pour les réservoirs', () => {
+  it('compartiments + réservoirs déclarés : un poste par réservoir, en litres, et PAS de bloc unique', () => {
     const avion = {
       ...AVION,
       baggageCompartments: [{ id: 'c1', name: 'Soute', arm: 1.85 }],
@@ -422,9 +332,23 @@ describe('wbPostesForAircraft — catalogue des postes sélectionnables', () => 
     };
     const postes = wbPostesForAircraft(avion);
     expect(postes.map((p) => p.key)).toEqual([
-      'frontLeft', 'frontRight', 'rearLeft', 'rearRight',
-      'baggage_c1', 'fuel_g', 'fuel',
+      'frontLeft', 'frontRight', 'rearLeft', 'rearRight', 'baggage_c1', 'fuel_g',
     ]);
     expect(postes.find((p) => p.key === 'fuel_g').unite).toBe('ltr');
+    expect(postes.find((p) => p.key === 'fuel_g').bras).toBe(1.10);
+    // Deux façons de saisir le même carburant feraient perdre le bloc unique.
+    expect(postes.find((p) => p.key === 'fuel')).toBeUndefined();
+  });
+
+  // Le motif qui rendait tout un cas non évaluable sur les trois biplaces.
+  it('biplace : aucun siège arrière proposé', () => {
+    const biplace = {
+      ...AVION,
+      weightBalance: { ...AVION.weightBalance, rearLeftSeatArm: undefined, rearRightSeatArm: undefined },
+    };
+    const keys = wbPostesForAircraft(biplace).map((p) => p.key);
+    expect(keys).not.toContain('rearLeft');
+    expect(keys).not.toContain('rearRight');
+    expect(keys).toContain('frontLeft');
   });
 });

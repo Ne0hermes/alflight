@@ -51,7 +51,7 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations, sho
   // dans la liste), mais le tracer à l'identique d'un cas validé revenait à
   // présenter comme vérifié un cas que le moteur a refusé de juger.
   const drawableRefCases = useMemo(
-    () => refCases.filter((c) => (c.status === 'pass' || c.status === 'fail') && c.resultPoint && c.points.length > 0),
+    () => refCases.filter((c) => (c.status === 'pass' || c.status === 'fail' || c.status === 'info') && c.resultPoint && c.points.length > 0),
     [refCases]
   );
   // Le cas AUTO de la pesée existe pour TOUS les avions : s'il suffisait à
@@ -563,14 +563,23 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations, sho
                 ? { text: '✓ PASS', color }
                 : c.status === 'fail'
                   ? { text: '✗ FAIL', color: 'var(--color-red-critical)' }
-                  : { text: '⚠ NON ÉVALUABLE', color: 'var(--scenario-landing)' };
+                  : c.status === 'info'
+                    // Chargement calculé, aucune comparaison demandée : pas d'alarme.
+                    ? { text: '• calculé', color }
+                    : { text: '⚠ NON ÉVALUABLE', color: 'var(--scenario-landing)' };
               return (
                 <div key={`bench-${c.id}`} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: tokens.spacing[2] }}>
                   <span style={{ color: badge.color, fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{badge.text}</span>
                   <span style={{ color, fontWeight: 600, fontSize: '0.85rem' }}>{c.label}</span>
                   {c.source && <span style={sx.combine(sx.text.xs, sx.text.secondary)}>({c.source})</span>}
-                  {c.status === 'error' ? (
-                    <span style={sx.combine(sx.text.xs, sx.text.secondary)}>{c.message}</span>
+                  {/* 28/08 — un chargement sans CG attendu ('info') n'est pas
+                      une erreur : on annonce ses chiffres, sans écart. */}
+                  {(c.status === 'error' || c.status === 'info') ? (
+                    <span style={sx.combine(sx.text.xs, sx.text.secondary)}>
+                      {c.status === 'info' && Number.isFinite(c.cgComputed)
+                        ? `Masse ${c.weightComputed.toFixed(1)} kg · CG calculé ${(c.cgComputed * 1000).toFixed(1)} mm`
+                        : c.message}
+                    </span>
                   ) : (
                     <span style={sx.combine(sx.text.xs, sx.text.secondary)}>
                       CG attendu {(c.cgExpected * 1000).toFixed(1)} mm · CG calculé {(c.cgComputed * 1000).toFixed(1)} mm

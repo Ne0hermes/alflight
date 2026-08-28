@@ -70,11 +70,14 @@ const render = (aircraft, showReferenceCases = true) => renderToStaticMarkup(
 );
 
 describe('WeightBalanceChart — cas de référence M&C', () => {
-  it('liste le banc (cas AUTO de la pesée + cas POH) avec verdict chiffré', () => {
+  // 28/08 — le cas AUTOMATIQUE « Fiche de pesée » a été retiré : il n'avait pas
+  // été demandé et s'affichait en avertissement sur toute la flotte. Seuls les
+  // cas SAISIS par le pilote sont listés et tracés.
+  it('liste les cas saisis avec leur verdict chiffré', () => {
     const html = render(AVION);
-    expect(html).toContain('Cas de référence M&amp;C (2)');
-    expect(html).toContain('Fiche de pesée — avion à vide');
+    expect(html).toContain('Cas de référence M&amp;C (1)');
     expect(html).toContain('Exemple de chargement POH');
+    expect(html).not.toContain('Fiche de pesée — avion à vide');
     expect(html).toContain('✓ PASS');
     expect(html).toMatch(/écart/);
     expect(html).toMatch(/tolérance/);
@@ -82,16 +85,16 @@ describe('WeightBalanceChart — cas de référence M&C', () => {
 
   it('trace UN LOSANGE PAR BRAS DE LEVIER sur les DEUX graphes (CG + Moment)', () => {
     const html = render(AVION);
-    // Cas AUTO : 1 point (masse à vide). Cas POH : 6 points (masse à vide,
-    // 2 sièges avant, siège arrière G, bagages, carburant). ×2 graphes = 14.
+    // Cas POH : 6 points (masse à vide, 2 sièges avant, siège arrière G,
+    // bagages, carburant). × 2 graphes = 12.
     const diamonds = (html.match(/rotate\(45 /g) || []).length;
-    expect(diamonds).toBe(14);
+    expect(diamonds).toBe(12);
     // Étiquette d'un poste à son bras (masse affichée en kg entiers).
     expect(html).toContain('Bagages · 20 kg');
     expect(html).toContain('Masse à vide · 600 kg');
   });
 
-  it('pesée incomplète → cas listés « NON ÉVALUABLE » explicites, AUCUN losange', () => {
+  it('pesée incomplète → cas listé « NON ÉVALUABLE » explicite, AUCUN losange', () => {
     const { weights, ...sansMasse } = AVION;
     const html = render(sansMasse);
     expect(html).toContain('NON ÉVALUABLE');
@@ -99,14 +102,16 @@ describe('WeightBalanceChart — cas de référence M&C', () => {
     expect((html.match(/rotate\(45 /g) || []).length).toBe(0);
   });
 
-  // 27/08 — un cas que le moteur refuse de juger n'est plus tracé comme un cas
-  // validé : sans les chiffres du rapport de pesée, le cas AUTO reste listé
-  // mais ne trace rien (seuls les 6 points du cas POH subsistent, ×2 graphes).
-  it('cas non vérifiable → listé mais NON tracé (fail-closed)', () => {
-    const { weighingReport, ...sansRapport } = AVION;
-    const html = render({ ...sansRapport, weighingReport: { certificationDate: '2024-03-12' } });
-    expect(html).toMatch(/rapport de pesée/i);
+  // 28/08 — un chargement sans CG attendu n'est plus une erreur : le pilote
+  // saisit ses masses pour VOIR les points. Il est donc tracé.
+  it('chargement sans CG attendu → tracé quand même, sans avertissement', () => {
+    const sansAttendu = {
+      ...AVION,
+      wbReferenceCases: [{ ...AVION.wbReferenceCases[0], cgAttendu: '' }],
+    };
+    const html = render(sansAttendu);
     expect((html.match(/rotate\(45 /g) || []).length).toBe(12);
+    expect(html).not.toContain('NON ÉVALUABLE');
   });
 
   // 27/08 — la couche ne s'impose plus au graphique de préparation de vol.

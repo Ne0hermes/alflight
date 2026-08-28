@@ -90,22 +90,52 @@ const SEAT_POSTES = {
 export function wbPostesForAircraft(aircraft) {
   if (!aircraft) return [];
   const a = normalized(aircraft);
-  const postes = Object.entries(SEAT_POSTES).map(([key, [, label]]) => ({ key, label, unite: 'kg' }));
+  const wb = resolveWbArms(a);
+  const postes = [];
+
+  // 28/08 — LE CATALOGUE PORTE LE BRAS, ET NE LISTE QUE CE QUI EXISTE.
+  // Il servait uniquement à peupler une liste déroulante ; il devient la
+  // matière du tableau de saisie, qui doit montrer le bras de chaque poste
+  // AVANT toute frappe. Deux corrections au passage :
+  //   • un siège dont le bras n'est pas renseigné n'est plus proposé — sur un
+  //     biplace, choisir « siège arrière » rendait tout le cas non évaluable ;
+  //   • le bloc « Carburant (bloc unique) » n'est plus offert quand l'avion a
+  //     des réservoirs à bras distincts : le moteur le refuse de toute façon.
+  for (const [key, [armKey, label]] of Object.entries(SEAT_POSTES)) {
+    const bras = parseFloat(wb?.[armKey]);
+    if (armOk(bras)) postes.push({ key, label, unite: 'kg', bras });
+  }
+
   if (Array.isArray(a.baggageCompartments) && a.baggageCompartments.length > 0) {
     a.baggageCompartments.forEach((c, i) => {
-      postes.push({ key: `baggage_${c.id || i}`, label: c.name || `Compartiment ${i + 1}`, unite: 'kg' });
+      const bras = parseFloat(c.arm);
+      if (armOk(bras)) postes.push({ key: `baggage_${c.id || i}`, label: c.name || `Compartiment ${i + 1}`, unite: 'kg', bras });
     });
   } else {
-    postes.push({ key: 'baggage', label: 'Bagages', unite: 'kg' });
-    postes.push({ key: 'auxiliary', label: 'Rangement auxiliaire', unite: 'kg' });
+    const bagBras = parseFloat(wb?.baggageArm);
+    if (armOk(bagBras)) postes.push({ key: 'baggage', label: 'Bagages', unite: 'kg', bras: bagBras });
+    const auxBras = parseFloat(wb?.auxiliaryArm);
+    if (armOk(auxBras)) postes.push({ key: 'auxiliary', label: 'Rangement auxiliaire', unite: 'kg', bras: auxBras });
   }
+
   const tanks = Array.isArray(a.additionalFuelTanks) ? a.additionalFuelTanks : [];
+  let tanksAvecBras = 0;
   tanks.forEach((t, i) => {
-    postes.push({ key: `fuel_${t.id ?? i}`, label: `${t.name || `Réservoir ${i + 1}`} — carburant`, unite: 'ltr' });
+    const bras = parseFloat(t.arm);
+    if (!armOk(bras)) return;
+    tanksAvecBras++;
+    postes.push({ key: `fuel_${t.id ?? i}`, label: `${t.name || `Réservoir ${i + 1}`} — carburant`, unite: 'ltr', bras });
   });
-  // Bloc carburant unique (kg) : valable seulement si le bras est non ambigu
-  // (mono-réservoir / bras identiques / legacy) — l'évaluation le vérifie.
-  postes.push({ key: 'fuel', label: 'Carburant (bloc unique)', unite: 'kg' });
+  // Bloc carburant unique (kg) : proposé UNIQUEMENT quand aucun réservoir n'est
+  // déjà listé ci-dessus. Sinon le pilote aurait deux façons de saisir le même
+  // carburant, et les mélanger fait perdre la masse du bloc (le moteur bascule
+  // en mode par réservoir dès qu'un réservoir est renseigné).
+  if (tanksAvecBras === 0) {
+    const fa = singleFuelArm(a, wb, null);
+    if (!fa.error && armOk(parseFloat(fa.arm))) {
+      postes.push({ key: 'fuel', label: 'Carburant', unite: 'kg', bras: parseFloat(fa.arm) });
+    }
+  }
   return postes;
 }
 
@@ -320,9 +350,20 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
   for (const p of (Array.isArray(refCase?.postes) ? refCase.postes : [])) {
     const key = p?.poste;
     const masse = parseFloat(p?.masse);
-    if (!key) { problemes.push('poste sans clé'); continue; }
+    // 28/08 — UNE LIGNE PAS ENCORE REMPLIE N'EST PAS UNE ERREUR. Le cas arrive
+    // désormais PRÉ-REMPLI avec tous les postes de l'avion, masses vides : le
+    // pilote les saisit une par une. Traiter chaque ligne vide comme une faute
+    // rendait le cas non évaluable, donc sans points, donc le tableau
+    // disparaissait à l'écran pendant toute la saisie — exactement ce que le
+    // pilote décrivait par « je ne peux rien faire ».
+    // Une ligne vide est simplement ignorée du bilan ; seule une valeur
+    // réellement fautive (négative, ou texte) reste signalée.
+    if (!key) continue;
+    const brut = p?.masse;
+    const vide = brut === '' || brut === null || brut === undefined;
+    if (vide) continue;
     if (!Number.isFinite(masse) || masse < 0) { problemes.push(`masse invalide pour « ${key} »`); continue; }
-    if (masse === 0) continue; // poste vide : aucun moment, aucun point
+    if (masse === 0) continue; // poste à zéro : aucun moment, aucun point
     if (loads[key] !== undefined) { problemes.push(`poste « ${key} » saisi deux fois`); continue; }
     const res = resolvePostePoint(a, wb, key, masse, density);
     if (res.error) { problemes.push(res.error); continue; }
@@ -391,13 +432,15 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
   // CG attendu : mm toléré en entrée (même garde-fou m/mm que les bras).
   const expRaw = parseFloat(refCase?.cgAttendu);
   const expected = Number.isFinite(expRaw) ? armToMeters(expRaw) : NaN;
+  // 28/08 — PAS DE CG ATTENDU N'EST PAS UNE ERREUR. Le pilote saisit ses masses
+  // pour VOIR où se posent les points sur l'enveloppe ; comparer à un centrage
+  // annoncé est facultatif. Un statut 'info' laisse les chiffres et les points
+  // s'afficher sans crier à l'avertissement.
   if (!Number.isFinite(expected)) {
     return {
       ...enriched,
-      status: 'error',
-      message: refCase?.manqueReference
-        ? 'Bras à vide du rapport de pesée non renseigné — saisissez-le dans « Fiche de pesée » pour confronter la fiche au document'
-        : 'CG attendu non renseigné — écart non vérifiable',
+      status: 'info',
+      message: 'Chargement calculé. Renseignez le CG total du document pour obtenir l\'écart.',
     };
   }
 
@@ -447,29 +490,12 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
  */
 export function evaluateAllWbReferenceCases(aircraft) {
   if (!aircraft) return [];
-  const results = [];
-  const auto = buildAutoWeighingCase(aircraft);
-  if (auto) {
-    results.push(evaluateWbReferenceCase(aircraft, auto));
-  } else {
-    results.push({
-      id: AUTO_WEIGHING_CASE_ID,
-      label: 'Fiche de pesée — avion à vide',
-      source: null,
-      auto: true,
-      status: 'error',
-      message: 'Masse à vide ou bras de la pesée non renseigné — cas non évaluable',
-      cgComputed: null,
-      cgExpected: null,
-      deviationMm: null,
-      toleranceMm: 1,
-      weightComputed: null,
-      isWithinLimits: null,
-      points: [],
-      resultPoint: null,
-    });
-  }
+  // 28/08 — LE CAS AUTOMATIQUE « FICHE DE PESÉE » EST RETIRÉ. Il n'avait pas
+  // été demandé, il s'affichait en avertissement sur les 13 avions sans qu'on
+  // puisse rien y saisir, et il renvoyait vers un bloc situé ailleurs dans
+  // l'écran — d'où le « tout est mélangé » du pilote. Il n'apportait aucune
+  // information : la masse à vide, à son bras de pesée, est de toute façon la
+  // PREMIÈRE LIGNE de chaque cas, ajoutée par le moteur.
   const stored = Array.isArray(aircraft.wbReferenceCases) ? aircraft.wbReferenceCases : [];
-  for (const rc of stored) results.push(evaluateWbReferenceCase(aircraft, rc));
-  return results;
+  return stored.map((rc) => evaluateWbReferenceCase(aircraft, rc));
 }
