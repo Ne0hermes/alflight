@@ -82,7 +82,7 @@ import { toLightAircraftRecord } from '@core/stores/lightAircraftRecord';
 // par configuration, dans le bloc « 2 · Configurations » plus bas — c'est là
 // que TANK_ROLES est consommé (importé du moteur, source unique de vérité).
 
-const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
+const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef, onSaveAircraft }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
   // Persistence locale UI uniquement : ne touche pas au store.
   // Restauré depuis la session du wizard : revenir sur cette étape rouvre la
@@ -3199,11 +3199,33 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               );
             })}
 
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            {/* 28/08 — ENREGISTRER SANS TRAVERSER TOUT LE TUNNEL. Le pilote
+                saisissait ses chargements et n'avait aucun moyen de les garder :
+                seule la dernière étape de l'assistant enregistrait. Ce bouton
+                emprunte le MÊME chemin que l'étape de revue (création ou mise à
+                jour, gestion des doublons). L'assistant se referme ensuite —
+                c'est le comportement de ce chemin, et il est annoncé. */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }}>
               <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={addWbRefCase}>
-                Ajouter un cas de référence
+                Ajouter un chargement
               </Button>
+              {onSaveAircraft && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={onSaveAircraft}
+                  disabled={wbRefCases.length === 0}
+                  title="Enregistre la fiche avion, chargements compris. L'assistant se referme ensuite."
+                >
+                  Enregistrer la fiche
+                </Button>
+              )}
             </Box>
+            {onSaveAircraft && wbRefCases.length > 0 && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 0.75 }}>
+                L'enregistrement porte sur toute la fiche avion et referme l'assistant.
+              </Typography>
+            )}
           </Box>
         </AccordionDetails>
       </Accordion>

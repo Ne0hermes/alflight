@@ -1572,7 +1572,13 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
       case 1:
         return <Step1BasicInfo data={aircraftData} updateData={updateData} errors={errors} />;
       case 2:
-        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} centrogramSessionRef={centrogramSessionRef} />;
+        // onSaveAircraft (28/08) : l'étape Masse & centrage peut déclencher
+        // l'enregistrement sans traverser tout le tunnel. Le pilote y saisit
+        // ses cas de référence et n'avait aucun moyen de les garder — seule la
+        // dernière étape enregistrait. C'est le MÊME chemin que l'étape de
+        // revue (création ou mise à jour, gestion des doublons) : aucune
+        // nouvelle voie de persistance.
+        return <Step3WeightBalance data={aircraftData} updateData={updateData} errors={errors} registerStepNav={registerStepNav} centrogramSessionRef={centrogramSessionRef} onSaveAircraft={() => handleAircraftSave(aircraftData)} />;
       case 3:
         return <Step2Speeds data={aircraftData} updateData={updateData} errors={errors} />;
       case 4:
