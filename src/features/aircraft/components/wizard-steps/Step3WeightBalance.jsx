@@ -2948,8 +2948,36 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         >
           <AutoGraphIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontSize: 'var(--fs-body)', fontWeight: 600 }}>
-            Cas de référence M&C — banc de test (pesée + manuel)
+            Cas de référence M&C — exemple de chargement de la fiche de pesée
           </Typography>
+          {/* 28/08 — ÉTAT VISIBLE SANS OUVRIR. Le panneau était replié et son
+              titre ne disait rien de son contenu : le verdict du banc, qui
+              existe pour TOUS les avions sans aucune saisie, restait invisible.
+              Le résumé se lit maintenant dans l'en-tête. */}
+          {(() => {
+            const total = wbBenchResults.length;
+            if (total === 0) return null;
+            const ok = wbBenchResults.filter((r) => r.status === 'pass').length;
+            const ko = wbBenchResults.filter((r) => r.status === 'fail').length;
+            const nonEval = total - ok - ko;
+            const couleur = ko > 0 ? 'error.main' : nonEval === total ? 'text.secondary' : 'success.main';
+            const texte = ko > 0
+              ? `${ko} écart${ko > 1 ? 's' : ''}`
+              : nonEval === total
+                ? 'à vérifier'
+                : `${ok}/${total} conforme${ok > 1 ? 's' : ''}`;
+            return (
+              <Typography
+                variant="caption"
+                sx={{
+                  ml: 'auto', mr: 1, px: 1, py: 0.25, borderRadius: 'var(--radius-sm)',
+                  border: '1px solid', borderColor: couleur, color: couleur, fontWeight: 700, whiteSpace: 'nowrap',
+                }}
+              >
+                {texte}
+              </Typography>
+            );
+          })()}
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 1, pb: 2 }}>
           <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
