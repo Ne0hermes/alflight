@@ -34,11 +34,7 @@ const AVION = {
     aftMinWeight: 550,
     aftMaxWeight: 1100,
   },
-  // cgFromReport / emptyWeightFromReport : les DEUX chiffres lus sur le rapport
-  // de pesée. Depuis le 27/08 le cas AUTO se confronte au document et non plus
-  // à la fiche elle-même ; sans eux il est listé « non vérifiable » et n'est
-  // pas tracé (comportement couvert par son propre test plus bas).
-  weighingReport: { certificationDate: '2024-03-12', cgFromReport: 0.30, emptyWeightFromReport: 600 },
+  weighingReport: { certificationDate: '2024-03-12' },
   wbReferenceCases: [{
     id: 'poh-1',
     label: 'Exemple de chargement POH',

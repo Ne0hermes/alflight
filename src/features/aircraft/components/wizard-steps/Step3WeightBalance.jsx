@@ -657,11 +657,11 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
     ...wbRefCases,
     {
       id: `wbref-${Date.now()}`,
-      label: '',
-      source: '',
+      label: `Chargement ${wbRefCases.length + 1}`,
       postes: wbPostesCatalog.map((p) => ({ poste: p.key, masse: '' })),
       cgAttendu: '',
       toleranceCgMm: DEFAULT_WB_TOLERANCE_CG_MM,
+      commentaire: '',
     }
   ]);
   const updateWbRefCase = (id, field, value) =>
@@ -3008,24 +3008,17 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               const result = wbBenchResults.find((r) => r.id === rc.id);
               return (
                 <Paper key={rc.id} elevation={0} sx={{ p: 2, mb: 2, border: '1px solid', borderColor: 'divider', borderRadius: 'var(--radius-sm)' }}>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1.5 }}>
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Nom du cas"
-                      value={rc.label || ''}
-                      onChange={(e) => updateWbRefCase(rc.id, 'label', e.target.value)}
-                      placeholder="Exemple de chargement POH"
-                    />
-                    <StyledTextField
-                      fullWidth
-                      size="small"
-                      label="Source"
-                      value={rc.source || ''}
-                      onChange={(e) => updateWbRefCase(rc.id, 'source', e.target.value)}
-                      placeholder="Manuel de vol §6.5"
-                    />
-                    <IconButton color="error" size="small" sx={{ mt: 0.5 }} onClick={() => removeWbRefCase(rc.id)}>
+                  {/* 28/08 — « Nom du cas » et « Source » retirés à la demande
+                      du pilote : le document est juste en dessous, ces deux
+                      champs ne faisaient que répéter ce qu'il a sous les yeux.
+                      Le libellé reste, posé automatiquement à la création, pour
+                      distinguer les chargements dans la liste et sur le
+                      graphique. */}
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1.5 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>
+                      {rc.label || 'Chargement'}
+                    </Typography>
+                    <IconButton color="error" size="small" onClick={() => removeWbRefCase(rc.id)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
@@ -3160,6 +3153,26 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                       </Typography>
                     </Box>
                   </Box>
+
+                  {/* 28/08 — COMMENTAIRE LIBRE, demandé par le pilote pour
+                      consigner ce qu'il constate en confrontant la fiche au
+                      document. Son premier usage, sur F-BXNG : le rapport
+                      imprime un moment à vide de 450,332 alors que 527,1 ×
+                      0,854 donne 450,143 — le moment du document correspond en
+                      réalité à un bras de 0,854358, arrondi à 0,854 dans la
+                      fiche. Ce genre d'observation n'a sa place ni dans un
+                      libellé ni dans un verdict : elle se note. */}
+                  <StyledTextField
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    size="small"
+                    label="Commentaire"
+                    value={rc.commentaire || ''}
+                    onChange={(e) => updateWbRefCase(rc.id, 'commentaire', e.target.value)}
+                    placeholder="Ce que vous constatez en comparant ce chargement au document (écart, arrondi, erreur du rapport…)"
+                    sx={{ mt: 1.5 }}
+                  />
 
                   {/* 28/08 — UN SEUL message, et jamais d'alarme tant que le
                       pilote n'a pas fini de saisir. « info » = chargement
@@ -3356,39 +3369,12 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   InputLabelProps={{ shrink: true }}
                   sx={{ minWidth: 220 }}
                 />
-                {/* 27/08 — LES DEUX CHIFFRES LUS SUR LE RAPPORT. Facultatifs,
-                    mais ce sont EUX qui rendent le cas de référence « Fiche de
-                    pesée » vérifiable : le banc confronte alors la fiche au
-                    DOCUMENT. Sans eux il ne pouvait que se comparer à lui-même,
-                    et affichait un ✓ rassurant sur une fiche fausse. */}
-                <StyledTextField
-                  label="Masse à vide LUE sur le rapport"
-                  type="number"
-                  size="small"
-                  value={data.weighingReport?.emptyWeightFromReport ?? ''}
-                  onChange={(e) => {
-                    const n = parseFloat(e.target.value);
-                    updateData('weighingReport.emptyWeightFromReport', Number.isFinite(n) ? n : undefined);
-                  }}
-                  helperText="Recopiez la valeur du document — le banc compare la fiche au rapport"
-                  InputProps={{ endAdornment: <InputAdornment position="end">kg</InputAdornment> }}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ minWidth: 250 }}
-                />
-                <StyledTextField
-                  label="Bras à vide LU sur le rapport"
-                  type="number"
-                  size="small"
-                  value={data.weighingReport?.cgFromReport ?? ''}
-                  onChange={(e) => {
-                    const n = parseFloat(e.target.value);
-                    updateData('weighingReport.cgFromReport', Number.isFinite(n) ? n : undefined);
-                  }}
-                  helperText="Bras de levier de la masse à vide, tel qu'imprimé"
-                  InputProps={{ endAdornment: <InputAdornment position="end">m</InputAdornment> }}
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ minWidth: 250 }}
-                />
+                {/* 28/08 — les deux champs « masse et bras LUS sur le rapport »
+                    qui vivaient ici sont RETIRÉS, à la demande du pilote : ces
+                    valeurs sont déjà dans la fiche (masse à vide et bras à vide,
+                    saisis plus haut dans ce même onglet), les redemander était un
+                    doublon — et elles servaient un cas automatique lui-même
+                    supprimé. */}
                 {age && (
                   <Typography
                     variant="caption"

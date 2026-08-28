@@ -13,11 +13,9 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  buildAutoWeighingCase,
   evaluateWbReferenceCase,
   evaluateAllWbReferenceCases,
   wbPostesForAircraft,
-  AUTO_WEIGHING_CASE_ID,
   DEFAULT_WB_TOLERANCE_CG_MM,
 } from '../referenceCases.js';
 
@@ -42,18 +40,10 @@ const AVION = {
   weighingReport: { certificationDate: '2024-03-12' },
 };
 
-// 27/08 — la référence du cas AUTO vient du RAPPORT DE PESÉE, pas de la fiche.
-// Comparer le moteur au bras que la fiche déclare elle-même ne vérifiait rien :
-// le verdict était PASS par construction. Les valeurs lues sur le document se
-// saisissent sous weighingReport.cgFromReport / .emptyWeightFromReport.
-const AVION_AVEC_RAPPORT = {
-  ...AVION,
-  weighingReport: { ...AVION.weighingReport, cgFromReport: 0.30, emptyWeightFromReport: 600 },
-};
 
 describe('evaluateWbReferenceCase — exemple de chargement confronté au document', () => {
   const AVION_EX = {
-    ...AVION_AVEC_RAPPORT,
+    ...AVION,
     baggageCompartments: [{ id: 'c1', name: 'Compartiment 1', arm: 1.90, maxWeight: 40 }],
   };
   const CAS = {

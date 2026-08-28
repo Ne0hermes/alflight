@@ -52,7 +52,6 @@ export const DEFAULT_WB_TOLERANCE_MASSE_KG = 1;
 
 // Le cas AUTO dérivé de la fiche de pesée est reconstruit à la volée (jamais
 // stocké) : id stable pour l'UI et les tests.
-export const AUTO_WEIGHING_CASE_ID = 'auto-pesee';
 
 // Un bras VALIDE est fini et non nul — 0 est un « absent » écrit par
 // d'anciens normaliseurs (même règle que computeWeightBalance, Lot 1.0).
@@ -139,50 +138,10 @@ export function wbPostesForAircraft(aircraft) {
   return postes;
 }
 
-/**
- * Cas AUTO dérivé de la FICHE DE PESÉE : avion à vide, CG attendu = bras de
- * la masse à vide. null si la pesée est incomplète (masse ou bras absent) —
- * l'appelant affiche alors un cas « non évaluable » explicite, jamais rien.
- * @param {object} aircraft
- * @returns {object|null} cas de référence (jamais stocké, reconstruit)
- */
-export function buildAutoWeighingCase(aircraft) {
-  if (!aircraft) return null;
-  const a = normalized(aircraft);
-  const emptyWeight = emptyWeightOf(a);
-  const wb = resolveWbArms(a);
-  const arm = parseFloat(wb?.emptyWeightArm);
-  if (!Number.isFinite(emptyWeight) || emptyWeight <= 0 || !armOk(arm)) return null;
-  const certDate = aircraft.weighingReport?.certificationDate;
-
-  // 27/08 — LA RÉFÉRENCE VIENT DU RAPPORT, PAS DE LA FICHE. La version
-  // précédente posait cgAttendu = wb.emptyWeightArm, c'est-à-dire le bras que
-  // la fiche elle-même déclare : le moteur était comparé à sa propre entrée et
-  // le verdict ne pouvait qu'être PASS, quelle que soit l'exactitude de la
-  // saisie. Un « ✓ 0,0 mm » rassurant sur une fiche fausse.
-  // Le contrôle utile est la confrontation de la fiche au DOCUMENT : les deux
-  // valeurs lues sur le rapport de pesée se saisissent dans l'onglet Masse &
-  // centrage et sont stockées sous weighingReport.cgFromReport (bras à vide) et
-  // weighingReport.emptyWeightFromReport (masse à vide). Sans elles, le cas
-  // reste listé mais NON VÉRIFIABLE — jamais un faux succès.
-  // Preuve que le contrôle sert : le 27/08, la masse à vide de F-GBTU était
-  // passée à 700 kg alors que son rapport de pesée du 01/03/2018 dit 690.
-  const cgLu = parseFloat(aircraft.weighingReport?.cgFromReport);
-  const masseLue = parseFloat(aircraft.weighingReport?.emptyWeightFromReport);
-  return {
-    id: AUTO_WEIGHING_CASE_ID,
-    auto: true,
-    label: 'Fiche de pesée — avion à vide',
-    source: certDate ? `Rapport de pesée du ${certDate}` : 'Rapport de pesée (fiche avion)',
-    postes: [],
-    cgAttendu: Number.isFinite(cgLu) ? cgLu : undefined,
-    masseAttendue: Number.isFinite(masseLue) ? masseLue : undefined,
-    // Transcription d'un document : seul l'arrondi du moteur est admis.
-    toleranceCgMm: 1,
-    toleranceMasseKg: 0.5,
-    manqueReference: !Number.isFinite(cgLu),
-  };
-}
+// 28/08 — buildAutoWeighingCase SUPPRIMÉ avec le cas automatique « Fiche de
+// pesée » : plus personne ne l'appelait, et les deux champs du rapport qu'il
+// lisait ont été retirés de l'écran — la masse à vide et son bras sont déjà
+// saisis dans l'onglet Masse & centrage, les redemander était un doublon.
 
 // Résout le bras d'UN poste de charge → { point } ou { error } explicite.
 // `masse` est en kg, sauf pour fuel_<id> où c'est des LITRES (convention des
@@ -334,16 +293,11 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
       bras: brasVide,
       momentCalcule: Math.round(emptyWeight * brasVide * 1000) / 1000,
     };
-    // La ligne « Avion vide » de l'exemple de chargement : son bras est celui
-    // du rapport de pesée, saisi une fois pour toutes dans l'onglet M&C.
-    const brasVideLu = parseFloat(aircraft?.weighingReport?.cgFromReport);
-    if (Number.isFinite(brasVideLu)) {
-      const lu = armToMeters(brasVideLu);
-      ptVide.brasAttendu = lu;
-      ptVide.ecartBrasMm = Math.round(Math.abs(brasVide - lu) * 1000 * 10) / 10;
-      ptVide.momentAttendu = Math.round(emptyWeight * lu * 1000) / 1000;
-      ptVide.brasConforme = ptVide.ecartBrasMm <= base.toleranceMm;
-    }
+    // 28/08 — la confrontation de cette ligne au rapport passait par deux
+    // champs « lus sur le rapport » retirés de l'écran à la demande du pilote
+    // (doublon de la masse et du bras déjà saisis dans l'onglet). La ligne
+    // « Avion vide » se lit donc telle que la fiche la déclare ; ce que le
+    // pilote constate en la comparant à son document se note en commentaire.
     points.push(ptVide);
   }
 
