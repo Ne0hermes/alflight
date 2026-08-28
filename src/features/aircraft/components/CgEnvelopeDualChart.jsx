@@ -25,7 +25,12 @@ const EnvelopeSubChart = ({
   yRange,
   formatX,
   formatY,
-  pointLabelSuffix
+  pointLabelSuffix,
+  // 28/08 — couche « chargements de référence » : une polyligne par cas, un
+  // sommet par bras de levier utilisé (devis cumulé), le dernier sommet étant
+  // le centrage total. Le pilote saisit ses chargements juste en dessous de ce
+  // graphique : ils se posent ici, sur l'enveloppe qu'il vient de définir.
+  chargements = []
 }) => {
   const [xMin, xMax] = xRange;
   const [yMin, yMax] = yRange;
@@ -153,6 +158,31 @@ const EnvelopeSubChart = ({
           </g>
         ))}
 
+        {/* Chargements de référence — un sommet par bras de levier utilisé */}
+        {chargements.map((c, ci) => {
+          const sommets = (c.sommets || []).filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+          if (sommets.length === 0) return null;
+          const couleur = c.couleur || 'var(--accent-primary)';
+          return (
+            <g key={`chargement-${ci}`}>
+              <polyline points={sommets.map((p) => `${toX(p.x)},${toY(p.y)}`).join(' ')}
+                fill="none" stroke={couleur} strokeWidth="1.4" strokeDasharray="3,3" opacity="0.75" />
+              {sommets.map((p, pi) => (
+                <g key={`s-${pi}`}>
+                  <rect x={toX(p.x) - 3.2} y={toY(p.y) - 3.2} width="6.4" height="6.4"
+                    transform={`rotate(45 ${toX(p.x)} ${toY(p.y)})`} fill={couleur} fillOpacity="0.9" />
+                  <text x={toX(p.x)} y={pi % 2 === 0 ? toY(p.y) - 6 : toY(p.y) + 13}
+                    textAnchor="middle" fontSize="7" fill={couleur}>{p.label}</text>
+                </g>
+              ))}
+              {sommets.length > 0 && (() => {
+                const d = sommets[sommets.length - 1];
+                return <circle cx={toX(d.x)} cy={toY(d.y)} r="5" fill="none" stroke={couleur} strokeWidth="2" />;
+              })()}
+            </g>
+          );
+        })}
+
         {/* Message si insuffisant */}
         {envelopePoints.length < 3 && (
           <text x="250" y="150" textAnchor="middle" fontSize="13" fill="var(--text-tertiary)">
@@ -164,7 +194,7 @@ const EnvelopeSubChart = ({
   );
 };
 
-const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' }) => {
+const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm', chargements = [] }) => {
   // ─── Extraction des points bruts ───────────────────────────────────────
   const forwardPoints = (cgEnvelope?.forwardPoints || [])
     .map(p => ({
@@ -222,12 +252,17 @@ const CGEnvelopeDualChart = memo(({ cgEnvelope, massUnit = 'kg', armUnit = 'mm' 
   const momentPoints = buildPoints(true);
 
   // ─── Échelles communes ─────────────────────────────────────────────────
-  const allWeights = [...cgPoints, ...momentPoints].map(p => p.y);
+  // 28/08 — les sommets des chargements entrent dans les échelles : ce sont de
+  // vraies masses et de vrais centrages de cet appareil. Sans cela, l'avion à
+  // vide sort par le bas sur les fiches dont l'enveloppe commence au-dessus de
+  // la masse à vide (cas des DA40), et le devis démarre hors du cadre.
+  const sommetsCharges = chargements.flatMap((c) => c.sommets || []).filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  const allWeights = [...cgPoints, ...momentPoints].map(p => p.y).concat(sommetsCharges.map((p) => p.y));
   const yMin = allWeights.length > 0 ? Math.min(...allWeights) - 50 : 900;
   const yMax = allWeights.length > 0 ? Math.max(...allWeights) + 50 : 1400;
 
   // Échelles X séparées pour les 2 graphes
-  const cgXs = cgPoints.map(p => p.x);
+  const cgXs = cgPoints.map(p => p.x).concat(sommetsCharges.map((p) => p.x));
   const momentXs = momentPoints.map(p => p.x);
   const cgXMin = cgXs.length > 0 ? Math.min(...cgXs) - (Math.max(...cgXs) - Math.min(...cgXs)) * 0.05 - 0.001 : 0;
   const cgXMax = cgXs.length > 0 ? Math.max(...cgXs) + (Math.max(...cgXs) - Math.min(...cgXs)) * 0.05 + 0.001 : 1;

@@ -3147,7 +3147,16 @@ export const AircraftModule = memo(() => {
                     // rouvrait « Configurer » après les avoir saisis dans
                     // l'assistant. On étale la fiche d'origine dessous : les
                     // champs du formulaire gagnent, les autres survivent.
-                    const updatedAircraft = {...editingAircraft, ...lightData, id: editingAircraft.id};
+                    // ⚠️ 28/08 — MAIS SANS LES BLOBS. La première rédaction
+                    // étalait `editingAircraft` tel quel et RÉINJECTAIT ainsi la
+                    // photo, le MANEX et le PDF de pesée en base64 dans la liste
+                    // en mémoire — exactement le vecteur d'OOM que la ligne
+                    // ci-dessus (`lightData`) existe pour fermer. Les trois clés
+                    // lourdes sont donc retirées de la base aussi ; elles sont
+                    // gérées juste après, par les drapeaux hasPhoto/hasManex/
+                    // hasWeighingReport et l'écriture IndexedDB.
+                    const { photo: _photoExistante, manex: _manexExistant, weighingReport: _peseeExistante, ...ficheSansBlobs } = editingAircraft;
+                    const updatedAircraft = {...ficheSansBlobs, ...lightData, id: editingAircraft.id};
 
                     // Marquer si l'avion a des données volumineuses (flags pour
                     // re-chargement lazy depuis IndexedDB lors d'une édition future)

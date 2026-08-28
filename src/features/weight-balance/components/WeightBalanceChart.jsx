@@ -122,6 +122,16 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations, sho
         cgVals.push(c.resultPoint.cg * 1000);
         wVals.push(c.resultPoint.w);
         if (Number.isFinite(c.cgExpected)) cgVals.push(c.cgExpected * 1000);
+        // 28/08 — les points CUMULÉS entrent dans le cadre, eux. Ce sont de
+        // vraies masses et de vrais centrages de l'appareil, homogènes aux axes
+        // (contrairement aux masses isolées des postes, qui les écrasaient).
+        // Sans cette extension, l'avion à vide sort par le bas sur les fiches
+        // dont l'enveloppe commence au-dessus de la masse à vide — cas des
+        // DA40, où le point de départ du devis serait invisible.
+        (c.points || []).forEach((p) => {
+          if (Number.isFinite(p.cgCumule)) cgVals.push(p.cgCumule * 1000);
+          if (Number.isFinite(p.masseCumulee)) wVals.push(p.masseCumulee);
+        });
       });
       if (cgVals.length > 0) {
         base.cgMin = Math.min(base.cgMin, Math.min(...cgVals) - 20);
@@ -405,27 +415,46 @@ export const WeightBalanceChart = memo(({ aircraft, scenarios, calculations, sho
             const ry = toSvgY(c.resultPoint.w);
             return (
               <g key={`refcase-${c.id}`}>
-                {c.points.map((p) => {
-                  const px = toX(xOf(p.masse, p.bras));
-                  const py = toSvgY(p.masse);
+                {/* 28/08 — CHARGEMENT CUMULÉ. Chaque poste était posé à (son
+                    bras, SA PROPRE MASSE) : un siège de 80 kg tombait à y = 80
+                    sur un axe qui commence à 650 kg, soit 200 px sous le cadre.
+                    Les marqueurs étaient émis mais invisibles — 10 sur 12 hors
+                    champ sur la fiche d'exemple. On trace désormais le devis de
+                    masse : on part de l'avion à vide et chaque poste ajouté
+                    déplace le point. Un point par bras de levier utilisé, tous
+                    lisibles, et le dernier est le centrage total. */}
+                {(() => {
+                  const sommets = c.points
+                    .filter((p) => Number.isFinite(p.cgCumule) && Number.isFinite(p.masseCumulee))
+                    .map((p) => ({
+                      p,
+                      x: toX(xOf(p.masseCumulee, p.cgCumule)),
+                      y: toSvgY(p.masseCumulee),
+                    }));
+                  if (sommets.length === 0) return null;
                   return (
-                    <line key={`spoke-${p.key}`} x1={px} y1={py} x2={rx} y2={ry} stroke={color} strokeWidth="1" strokeDasharray="2,3" opacity="0.45" />
+                    <>
+                      <polyline
+                        points={sommets.map((s) => `${s.x},${s.y}`).join(' ')}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth="1.2"
+                        strokeDasharray="2,3"
+                        opacity="0.6"
+                      />
+                      {sommets.map((s, pi) => (
+                        <g key={`pt-${s.p.key}`}>
+                          <rect x={s.x - 3} y={s.y - 3} width="6" height="6" transform={`rotate(45 ${s.x} ${s.y})`} fill={color} fillOpacity="0.9" />
+                          {/* Étiquettes alternées haut/bas pour limiter les
+                              collisions entre postes voisins. */}
+                          <text x={s.x} y={pi % 2 === 0 ? s.y - 6 : s.y + 13} textAnchor="middle" fontSize="7" fill={color}>
+                            {s.p.label} · {s.p.masse.toFixed(0)} kg
+                          </text>
+                        </g>
+                      ))}
+                    </>
                   );
-                })}
-                {c.points.map((p, pi) => {
-                  const px = toX(xOf(p.masse, p.bras));
-                  const py = toSvgY(p.masse);
-                  return (
-                    <g key={`pt-${p.key}`}>
-                      <rect x={px - 3} y={py - 3} width="6" height="6" transform={`rotate(45 ${px} ${py})`} fill={color} fillOpacity="0.9" />
-                      {/* Étiquettes alternées haut/bas pour limiter les collisions
-                          entre postes voisins (sièges à bras proches). */}
-                      <text x={px} y={pi % 2 === 0 ? py - 6 : py + 13} textAnchor="middle" fontSize="7" fill={color}>
-                        {p.label} · {p.masse.toFixed(0)} kg
-                      </text>
-                    </g>
-                  );
-                })}
+                })()}
                 {Number.isFinite(c.cgExpected) && (() => {
                   const ex = toX(xOf(c.resultPoint.w, c.cgExpected));
                   return (

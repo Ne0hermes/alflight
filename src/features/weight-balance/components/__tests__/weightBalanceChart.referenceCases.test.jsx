@@ -90,6 +90,21 @@ describe('WeightBalanceChart — cas de référence M&C', () => {
     expect(html).toContain('Masse à vide · 600 kg');
   });
 
+  // 28/08 — LE TEST QUI MANQUAIT. Compter les marqueurs ne dit pas OÙ ils
+  // tombent : la version précédente posait chaque poste à sa propre masse, un
+  // siège de 80 kg atterrissait 200 px sous un axe qui commence à 650 kg, et
+  // ce test restait vert sur une couche entièrement invisible. On vérifie
+  // désormais les COORDONNÉES : tout marqueur doit être dans l'aire de tracé.
+  it('les losanges tombent DANS l\'aire de tracé, pas hors du cadre', () => {
+    const html = render(AVION);
+    const coords = [...html.matchAll(/rotate\(45 ([\d.-]+) ([\d.-]+)\)/g)]
+      .map((m) => ({ x: parseFloat(m[1]), y: parseFloat(m[2]) }));
+    expect(coords.length).toBe(12);
+    // Aire utile des sous-graphes : x ∈ [50 ; 550], y ∈ [50 ; 350].
+    const dehors = coords.filter((c) => c.x < 50 || c.x > 550 || c.y < 50 || c.y > 350);
+    expect(dehors).toEqual([]);
+  });
+
   it('pesée incomplète → cas listé « NON ÉVALUABLE » explicite, AUCUN losange', () => {
     const { weights, ...sansMasse } = AVION;
     const html = render(sansMasse);

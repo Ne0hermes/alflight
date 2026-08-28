@@ -82,6 +82,11 @@ import { toLightAircraftRecord } from '@core/stores/lightAircraftRecord';
 // par configuration, dans le bloc « 2 · Configurations » plus bas — c'est là
 // que TANK_ROLES est consommé (importé du moteur, source unique de vérité).
 
+// Couleurs des chargements de référence tracés sur le centrogramme — les mêmes
+// jetons que le graphique de préparation de vol, pour qu'un cas garde sa couleur
+// d'un écran à l'autre.
+const WB_CHARGEMENT_COULEURS = ['var(--wb-ref-1)', 'var(--wb-ref-2)', 'var(--wb-ref-3)'];
+
 const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
   // Persistence locale UI uniquement : ne touche pas au store.
@@ -2909,7 +2914,13 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         </AccordionDetails>
       </Accordion>
 
-      {/* Double graphique de l'enveloppe — CG + Moment côte à côte (2 points aft) */}
+      {/* Double graphique de l'enveloppe — CG + Moment côte à côte (2 points aft).
+          28/08 — LES CHARGEMENTS DE RÉFÉRENCE SE POSENT ICI. Le pilote saisit
+          ses cas juste en dessous et demandait à les voir « sur les enveloppes
+          de centrage qui sont déjà présentes » : ce sont celles-ci. Un sommet
+          par bras de levier utilisé, en devis cumulé (avion à vide, puis chaque
+          poste ajouté), le dernier sommet étant le centrage total. Les valeurs
+          passent par dispArm/dispWeight, comme l'enveloppe elle-même. */}
       <CGEnvelopeDualChart
         cgEnvelope={{
           // Données canoniques (kg, m) converties en unité user POUR L'AFFICHAGE
@@ -2925,6 +2936,18 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
         }}
         massUnit={getUnitSymbol(units.weight)}
         armUnit={getUnitSymbol(units.armLength)}
+        chargements={wbBenchResults
+          .filter((r) => Array.isArray(r.points) && r.points.length > 0)
+          .map((r, i) => ({
+            couleur: WB_CHARGEMENT_COULEURS[i % WB_CHARGEMENT_COULEURS.length],
+            sommets: r.points
+              .filter((p) => Number.isFinite(p.cgCumule) && Number.isFinite(p.masseCumulee))
+              .map((p) => ({
+                x: parseFloat(dispArm(p.cgCumule)),
+                y: parseFloat(dispWeight(p.masseCumulee)),
+                label: p.label,
+              })),
+          }))}
       />
 
       {/* 🧪 Cas de référence M&C — banc de test permanent (27/08/2026).

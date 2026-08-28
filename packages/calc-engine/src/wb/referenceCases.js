@@ -400,6 +400,28 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
     return { ...base, message: `CG non calculable : ${detail || 'bilan non fiable'}` };
   }
 
+  // 28/08 — CHARGEMENT CUMULÉ : la seule projection LISIBLE d'un poste sur un
+  // centrogramme. La première version posait chaque poste à (son bras, SA
+  // PROPRE MASSE) — un siège de 80 kg se retrouvait à y = 80 kg sur un axe des
+  // masses qui court de 650 à 1105 kg, donc 200 px sous le cadre : les points
+  // étaient bien émis dans le SVG, et invisibles. Sur la flotte réelle, 10 des
+  // 12 marqueurs tombaient hors champ.
+  // La lecture juste est celle du devis de masse : on part de l'avion à vide à
+  // son bras, et chaque poste ajouté déplace le point (masse cumulée, CG
+  // cumulé). On obtient bien UN POINT PAR BRAS DE LEVIER UTILISÉ — la demande
+  // du pilote — mais tous dans le voisinage de l'enveloppe, et le dernier point
+  // EST le centrage total. C'est la construction classique du centrogramme.
+  {
+    let masseCum = 0;
+    let momentCum = 0;
+    for (const p of points) {
+      masseCum += p.masse;
+      momentCum += p.masse * p.bras;
+      p.masseCumulee = Math.round(masseCum * 10) / 10;
+      p.cgCumule = masseCum > 0 ? Math.round((momentCum / masseCum) * 1000) / 1000 : null;
+    }
+  }
+
   const enriched = {
     ...base,
     cgComputed: r.cg,
