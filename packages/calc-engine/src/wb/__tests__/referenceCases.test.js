@@ -99,6 +99,49 @@ describe('evaluateWbReferenceCase — exemple de chargement confronté au docume
   });
 });
 
+// 28/08 — LE CARBURANT SE SAISIT EN KILOS. Tous les exemples de chargement des
+// fiches de pesée donnent l'essence et sa répartition en kg (« Essence 55,000 kg
+// · 2,413 m · 132,715 »). Le moteur attend des litres pour fuel_<id> : la
+// conversion se fait à l'évaluation, pas dans la tête du pilote.
+describe('evaluateWbReferenceCase — carburant par réservoir saisi en kilos', () => {
+  const BIRESERVOIR_KG = {
+    ...AVION,
+    additionalFuelTanks: [{ id: 'g', name: 'Aile gauche', arm: 1.10, totalCapacity: 60, usableCapacity: 60 }],
+  };
+
+  it('kg par défaut : 28,8 kg à 1,10 m → 40 L pour le moteur, moment 31,68', () => {
+    const r = evaluateWbReferenceCase(BIRESERVOIR_KG, {
+      label: 'Cas', postes: [{ poste: 'fuel_g', masse: 28.8 }],
+    });
+    expect(r.status).toBe('info');
+    const carburant = r.points.find((p) => p.key === 'fuel_g');
+    expect(carburant.masse).toBeCloseTo(28.8, 5);   // les kg saisis, inchangés
+    expect(carburant.litres).toBeCloseTo(40, 5);    // convertis pour le moteur
+    expect(carburant.momentCalcule).toBeCloseTo(31.68, 2);
+    expect(r.weightComputed).toBeCloseTo(628.8, 1); // 600 à vide + 28,8
+  });
+
+  it('litres explicites : même résultat qu\'en kilos', () => {
+    const enKg = evaluateWbReferenceCase(BIRESERVOIR_KG, {
+      label: 'Cas', postes: [{ poste: 'fuel_g', masse: 28.8 }],
+    });
+    const enLitres = evaluateWbReferenceCase(BIRESERVOIR_KG, {
+      label: 'Cas', postes: [{ poste: 'fuel_g', masse: 40, unite: 'ltr' }],
+    });
+    expect(enLitres.weightComputed).toBeCloseTo(enKg.weightComputed, 5);
+    expect(enLitres.cgComputed).toBeCloseTo(enKg.cgComputed, 5);
+  });
+
+  it('type carburant inconnu → kg non convertibles, refus explicite', () => {
+    const sansType = { ...BIRESERVOIR_KG, fuelType: undefined };
+    const r = evaluateWbReferenceCase(sansType, {
+      label: 'Cas', postes: [{ poste: 'fuel_g', masse: 28.8 }],
+    });
+    expect(r.status).toBe('error');
+    expect(r.message).toMatch(/densité carburant inconnue/);
+  });
+});
+
 // 27/08 — carburant saisi en bloc unique ET par réservoir : le moteur bascule
 // en mode « par réservoir » et n'additionne jamais le bloc, ce qui pouvait
 // rendre PASS avec des dizaines de kilos manquants. Le cas est refusé.
@@ -275,9 +318,14 @@ describe('evaluateWbReferenceCase — carburant par réservoir (litres × densit
   it('40 L par aile (AVGAS 0.72) → un point PAR réservoir, à SON bras', () => {
     // 600×0.30 + 28.8×1.10 + 28.8×1.14 = 180 + 31.68 + 32.832 = 244.512 ; W = 657.6
     // CG = 244.512 / 657.6 = 0.371824… → 0.372 (arrondi moteur)
+    // 28/08 — la saisie carburant est en KILOS par défaut ; ce cas historique
+    // raisonne en litres, il le déclare donc explicitement.
     const r = evaluateWbReferenceCase(BIRESERVOIR, {
       label: 'Pleins partiels',
-      postes: [{ poste: 'fuel_g', masse: 40 }, { poste: 'fuel_d', masse: 40 }],
+      postes: [
+        { poste: 'fuel_g', masse: 40, unite: 'ltr' },
+        { poste: 'fuel_d', masse: 40, unite: 'ltr' },
+      ],
       cgAttendu: 0.372,
       toleranceCgMm: 2,
     });
@@ -314,7 +362,7 @@ describe('wbPostesForAircraft — postes de l\'avion, avec leur bras', () => {
     expect(postes.find((p) => p.key === 'auxiliary')).toBeUndefined();
   });
 
-  it('compartiments + réservoirs déclarés : un poste par réservoir, en litres, et PAS de bloc unique', () => {
+  it('compartiments + réservoirs déclarés : un poste par réservoir, en kilos, et PAS de bloc unique', () => {
     const avion = {
       ...AVION,
       baggageCompartments: [{ id: 'c1', name: 'Soute', arm: 1.85 }],
@@ -324,7 +372,10 @@ describe('wbPostesForAircraft — postes de l\'avion, avec leur bras', () => {
     expect(postes.map((p) => p.key)).toEqual([
       'frontLeft', 'frontRight', 'rearLeft', 'rearRight', 'baggage_c1', 'fuel_g',
     ]);
-    expect(postes.find((p) => p.key === 'fuel_g').unite).toBe('ltr');
+    // Unité de SAISIE proposée : kg, comme sur les fiches de pesée. Le drapeau
+    // `carburant` dit à l'écran d'offrir la bascule kg / litres sur cette ligne.
+    expect(postes.find((p) => p.key === 'fuel_g').unite).toBe('kg');
+    expect(postes.find((p) => p.key === 'fuel_g').carburant).toBe(true);
     expect(postes.find((p) => p.key === 'fuel_g').bras).toBe(1.10);
     // Deux façons de saisir le même carburant feraient perdre le bloc unique.
     expect(postes.find((p) => p.key === 'fuel')).toBeUndefined();

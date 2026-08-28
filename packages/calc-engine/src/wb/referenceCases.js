@@ -123,7 +123,11 @@ export function wbPostesForAircraft(aircraft) {
     const bras = parseFloat(t.arm);
     if (!armOk(bras)) return;
     tanksAvecBras++;
-    postes.push({ key: `fuel_${t.id ?? i}`, label: `${t.name || `Réservoir ${i + 1}`} — carburant`, unite: 'ltr', bras });
+    // 28/08 — `unite` est l'unité de SAISIE proposée au pilote, kg par défaut :
+    // les exemples de chargement donnent toujours l'essence en kilos. Le moteur,
+    // lui, reçoit des litres — la conversion est faite à l'évaluation.
+    // `carburant` permet à l'écran d'offrir le choix kg / litres sur ces lignes.
+    postes.push({ key: `fuel_${t.id ?? i}`, label: t.name || `Réservoir ${i + 1}`, unite: 'kg', carburant: true, bras });
   });
   // Bloc carburant unique (kg) : proposé UNIQUEMENT quand aucun réservoir n'est
   // déjà listé ci-dessus. Sinon le pilote aurait deux façons de saisir le même
@@ -319,9 +323,31 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
     if (!Number.isFinite(masse) || masse < 0) { problemes.push(`masse invalide pour « ${key} »`); continue; }
     if (masse === 0) continue; // poste à zéro : aucun moment, aucun point
     if (loads[key] !== undefined) { problemes.push(`poste « ${key} » saisi deux fois`); continue; }
-    const res = resolvePostePoint(a, wb, key, masse, density);
+
+    // 28/08 — CARBURANT EN KILOS PAR DÉFAUT. Le moteur attend des LITRES pour
+    // les postes fuel_<id> (il applique lui-même la densité), mais TOUS les
+    // exemples de chargement des fiches de pesée donnent l'essence et sa
+    // répartition en KILOS — « Essence 55,000 kg · 2,413 m ». Imposer les
+    // litres obligeait le pilote à diviser par une densité qu'il ne voit pas,
+    // pour recopier un document qui ne les mentionne jamais.
+    // La ligne porte donc son unité de SAISIE : kg par défaut, litres si le
+    // pilote le choisit. La conversion vers la convention du moteur se fait
+    // ici, une fois, au bon endroit.
+    let masseMoteur = masse;
+    if (key.startsWith('fuel_')) {
+      const enLitres = p?.unite === 'ltr';
+      if (!enLitres) {
+        if (density == null) {
+          problemes.push(`densité carburant inconnue (type non renseigné) — « ${key} » saisi en kg non convertible`);
+          continue;
+        }
+        masseMoteur = masse / density; // kg saisis → litres attendus par le moteur
+      }
+    }
+
+    const res = resolvePostePoint(a, wb, key, masseMoteur, density);
     if (res.error) { problemes.push(res.error); continue; }
-    loads[key] = masse;
+    loads[key] = masseMoteur;
 
     // 28/08 — CONFRONTATION POSTE PAR POSTE. L'exemple de chargement imprimé
     // sur une fiche de pesée donne, pour chaque ligne, la masse ET LE BRAS ET

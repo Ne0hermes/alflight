@@ -3104,13 +3104,29 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
 
                       {(rc.postes || []).map((p, pi) => {
                         const def = wbPostesCatalog.find((cat) => cat.key === p.poste);
-                        const isLtr = def?.unite === 'ltr';
+                        // 28/08 — CARBURANT EN KILOS PAR DÉFAUT. Les exemples de
+                        // chargement des fiches de pesée donnent toujours
+                        // l'essence en kg ; le pilote peut basculer en litres
+                        // ligne par ligne s'il en a besoin. La conversion vers
+                        // les litres attendus par le moteur est faite à
+                        // l'évaluation, pas ici.
+                        const estCarburant = def?.carburant === true;
+                        const isLtr = estCarburant ? p.unite === 'ltr' : def?.unite === 'ltr';
                         const pt = (result?.points || []).find((x) => x.key === p.poste);
                         return (
                           <Fragment key={`${rc.id}-poste-${pi}`}>
                             <Typography variant="caption">
                               {def?.label || p.poste}
-                              {isLtr ? ' (litres)' : ''}
+                              {estCarburant && (
+                                <Button
+                                  size="small"
+                                  onClick={() => updateWbRefPoste(rc.id, pi, 'unite', isLtr ? 'kg' : 'ltr')}
+                                  sx={{ ml: 0.5, minWidth: 0, px: 0.5, py: 0, fontSize: 10, textTransform: 'none', lineHeight: 1.4 }}
+                                  title={isLtr ? 'Saisir ce réservoir en kilogrammes' : 'Saisir ce réservoir en litres'}
+                                >
+                                  {isLtr ? '↔ kg' : '↔ L'}
+                                </Button>
+                              )}
                             </Typography>
                             <StyledTextField
                               size="small"
@@ -3133,6 +3149,9 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             </Typography>
                             <Typography variant="caption">
                               {pt ? pt.momentCalcule.toFixed(2) : '—'}
+                              {/* Saisi en litres : on rappelle la masse obtenue,
+                                  c'est elle qui entre dans le moment. */}
+                              {isLtr && pt ? ` (${dispWeight(pt.masse)} ${getUnitSymbol(units.weight)})` : ''}
                             </Typography>
                           </Fragment>
                         );
