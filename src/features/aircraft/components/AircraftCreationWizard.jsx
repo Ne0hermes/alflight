@@ -681,7 +681,8 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
     const segments = [];
     const parts = path.split('.');
     for (const part of parts) {
-      const match = part.match(/^([^\[]+)((?:\[\d+\])*)$/);
+      // 28/08 — `\[` inutile dans une classe de caractères (no-useless-escape).
+      const match = part.match(/^([^[]+)((?:\[\d+\])*)$/);
       if (!match) {
         segments.push(part);
         continue;
@@ -1126,6 +1127,16 @@ function AircraftCreationWizard({ onComplete, onCancel, onClose, existingAircraf
         // NB : dataToSave.tankVariants est assaini juste après ; on passe donc
         // les variantes de l'état WIZARD, source de vérité, via ensureDefaultVariant
         // (fiches sans configuration = tous les réservoirs installés ensemble).
+        // 🔧 28/08 — `tanks` N'EXISTAIT PAS DANS CETTE PORTÉE. La variable est
+        // déclarée l.820, dans une AUTRE fonction (la validation). Cette ligne
+        // levait donc une ReferenceError, avalée par le catch de fin de bloc qui
+        // la déclare « non bloquant » : depuis le 23/08, le recalcul des
+        // capacités annoncé par le commentaire ci-dessus n'avait JAMAIS lieu.
+        // Vérifié avant correction sur les 13 avions de la flotte : le recalcul
+        // rend exactement les valeurs déjà enregistrées (0 écart), la reprise du
+        // calcul ne modifie donc aucune fiche — elle remet seulement le filet en
+        // service pour les modifications futures de contenance.
+        const tanks = Array.isArray(aircraftData.additionalFuelTanks) ? aircraftData.additionalFuelTanks : [];
         if (tanks.length > 0) {
           const forCaps = ensureDefaultVariant({
             additionalFuelTanks: tanks,
