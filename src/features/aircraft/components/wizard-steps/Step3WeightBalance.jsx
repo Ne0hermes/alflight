@@ -82,7 +82,7 @@ import { toLightAircraftRecord } from '@core/stores/lightAircraftRecord';
 // par configuration, dans le bloc « 2 · Configurations » plus bas — c'est là
 // que TANK_ROLES est consommé (importé du moteur, source unique de vérité).
 
-const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef, onSaveAircraft }) => {
+const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious, registerStepNav, centrogramSessionRef }) => {
   // ─── Sélecteur de méthode : 'manual' | 'graphical' | null (pas encore choisi) ───
   // Persistence locale UI uniquement : ne touche pas au store.
   // Restauré depuis la session du wizard : revenir sur cette étape rouvre la
@@ -3017,7 +3017,35 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1.5 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>
                       {rc.label || 'Chargement'}
+                      {rc.verrouille && (
+                        <Typography component="span" variant="caption" sx={{ ml: 1, color: 'success.main', fontWeight: 700 }}>
+                          ✓ enregistré
+                        </Typography>
+                      )}
                     </Typography>
+                    {/* 28/08 — VERROUILLAGE DU CAS, sur le modèle exact du banc
+                        des abaques (« ✓ Enregistrer ce cas ») : le bouton fige
+                        le chargement dans la liste, il ne sauvegarde RIEN de la
+                        fiche avion. Le cas reste modifiable d'un clic. */}
+                    {rc.verrouille ? (
+                      <Button size="small" onClick={() => updateWbRefCase(rc.id, 'verrouille', false)} sx={{ textTransform: 'none' }}>
+                        Modifier
+                      </Button>
+                    ) : (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="success"
+                        onClick={() => updateWbRefCase(rc.id, 'verrouille', true)}
+                        disabled={!(result?.points?.length > 1)}
+                        title={result?.points?.length > 1
+                          ? 'Fige ce chargement — n\'enregistre pas la fiche avion'
+                          : 'Saisissez au moins une masse avant d\'enregistrer ce chargement'}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        ✓ Enregistrer ce cas
+                      </Button>
+                    )}
                     <IconButton color="error" size="small" onClick={() => removeWbRefCase(rc.id)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -3034,7 +3062,8 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           const c = inArm(e.target.value); // canonique m
                           updateWbRefCase(rc.id, 'cgAttendu', c === '' ? '' : c);
                         }}
-                        helperText="CG total donné par le manuel pour ce chargement"
+                        helperText="CG total donné par le document pour ce chargement"
+                        disabled={rc.verrouille}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
                         }}
@@ -3052,6 +3081,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           updateWbRefCase(rc.id, 'toleranceCgMm', Number.isFinite(n) ? n : '');
                         }}
                         helperText={`Défaut : ±${DEFAULT_WB_TOLERANCE_CG_MM} mm`}
+                        disabled={rc.verrouille}
                         InputProps={{
                           endAdornment: <InputAdornment position="end">mm</InputAdornment>,
                         }}
@@ -3117,7 +3147,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                           <Fragment key={`${rc.id}-poste-${pi}`}>
                             <Typography variant="caption">
                               {def?.label || p.poste}
-                              {estCarburant && (
+                              {estCarburant && !rc.verrouille && (
                                 <Button
                                   size="small"
                                   onClick={() => updateWbRefPoste(rc.id, pi, 'unite', isLtr ? 'kg' : 'ltr')}
@@ -3128,22 +3158,32 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                                 </Button>
                               )}
                             </Typography>
-                            <StyledTextField
-                              size="small"
-                              type="number"
-                              placeholder="—"
-                              value={isLtr ? (p.masse ?? '') : dispWeight(p.masse)}
-                              onChange={(e) => {
-                                const v = isLtr
-                                  ? (e.target.value === '' ? '' : parseFloat(e.target.value))
-                                  : inWeight(e.target.value);
-                                updateWbRefPoste(rc.id, pi, 'masse', v === '' ? '' : v);
-                              }}
-                              InputProps={{
-                                endAdornment: <InputAdornment position="end" sx={{ '& p': { fontSize: 11 } }}>{isLtr ? 'L' : getUnitSymbol(units.weight)}</InputAdornment>,
-                              }}
-                              sx={{ '& input': { fontSize: 12, py: 0.5 } }}
-                            />
+                            {/* Cas verrouillé : le tableau se lit, il ne se
+                                modifie plus — jusqu'au clic sur « Modifier ». */}
+                            {rc.verrouille ? (
+                              <Typography variant="caption">
+                                {p.masse === '' || p.masse === undefined
+                                  ? '—'
+                                  : `${isLtr ? p.masse : dispWeight(p.masse)} ${isLtr ? 'L' : getUnitSymbol(units.weight)}`}
+                              </Typography>
+                            ) : (
+                              <StyledTextField
+                                size="small"
+                                type="number"
+                                placeholder="—"
+                                value={isLtr ? (p.masse ?? '') : dispWeight(p.masse)}
+                                onChange={(e) => {
+                                  const v = isLtr
+                                    ? (e.target.value === '' ? '' : parseFloat(e.target.value))
+                                    : inWeight(e.target.value);
+                                  updateWbRefPoste(rc.id, pi, 'masse', v === '' ? '' : v);
+                                }}
+                                InputProps={{
+                                  endAdornment: <InputAdornment position="end" sx={{ '& p': { fontSize: 11 } }}>{isLtr ? 'L' : getUnitSymbol(units.weight)}</InputAdornment>,
+                                }}
+                                sx={{ '& input': { fontSize: 12, py: 0.5 } }}
+                              />
+                            )}
                             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                               {def ? dispArm(def.bras) : '—'}
                             </Typography>
@@ -3190,6 +3230,7 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     value={rc.commentaire || ''}
                     onChange={(e) => updateWbRefCase(rc.id, 'commentaire', e.target.value)}
                     placeholder="Ce que vous constatez en comparant ce chargement au document (écart, arrondi, erreur du rapport…)"
+                    disabled={rc.verrouille}
                     sx={{ mt: 1.5 }}
                   />
 
@@ -3218,33 +3259,16 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
               );
             })}
 
-            {/* 28/08 — ENREGISTRER SANS TRAVERSER TOUT LE TUNNEL. Le pilote
-                saisissait ses chargements et n'avait aucun moyen de les garder :
-                seule la dernière étape de l'assistant enregistrait. Ce bouton
-                emprunte le MÊME chemin que l'étape de revue (création ou mise à
-                jour, gestion des doublons). L'assistant se referme ensuite —
-                c'est le comportement de ce chemin, et il est annoncé. */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            {/* 28/08 — le bouton « Enregistrer la fiche » qui vivait ici a été
+                RETIRÉ : il déclenchait l'enregistrement de TOUT l'avion et
+                refermait l'assistant, alors que le pilote voulait seulement
+                figer son chargement. Chaque cas se verrouille désormais
+                lui-même, comme les cas de référence des abaques. */}
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={addWbRefCase}>
                 Ajouter un chargement
               </Button>
-              {onSaveAircraft && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={onSaveAircraft}
-                  disabled={wbRefCases.length === 0}
-                  title="Enregistre la fiche avion, chargements compris. L'assistant se referme ensuite."
-                >
-                  Enregistrer la fiche
-                </Button>
-              )}
             </Box>
-            {onSaveAircraft && wbRefCases.length > 0 && (
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 0.75 }}>
-                L'enregistrement porte sur toute la fiche avion et referme l'assistant.
-              </Typography>
-            )}
           </Box>
         </AccordionDetails>
       </Accordion>
