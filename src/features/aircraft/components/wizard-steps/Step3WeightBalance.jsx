@@ -3076,6 +3076,25 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                             endAdornment: <InputAdornment position="end">{isLtr ? 'L' : getUnitSymbol(units.weight)}</InputAdornment>,
                           }}
                         />
+                        {/* 28/08 — LE BRAS IMPRIMÉ SUR LE DOCUMENT. C'est lui qui
+                            permet de vérifier la fiche poste par poste : le bras
+                            que l'application applique doit être celui de l'exemple
+                            de chargement. Facultatif — laissé vide, la ligne est
+                            calculée sans être confrontée. */}
+                        <StyledTextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Bras du document"
+                          value={p.brasAttendu ?? ''}
+                          onChange={(e) => {
+                            const n = parseFloat(e.target.value);
+                            updateWbRefPoste(rc.id, pi, 'brasAttendu', Number.isFinite(n) ? n : '');
+                          }}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">{getUnitSymbol(units.armLength)}</InputAdornment>,
+                          }}
+                        />
                         <IconButton color="error" size="small" sx={{ mt: 0.5 }} onClick={() => removeWbRefPoste(rc.id, pi)}>
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -3086,6 +3105,68 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     Ajouter un poste
                   </Button>
 
+                  {/* 28/08 — LE TABLEAU DE L'EXEMPLE DE CHARGEMENT, rejoué.
+                      Une ligne par poste, comme sur la fiche de pesée : masse,
+                      bras appliqué par l'application, bras imprimé sur le
+                      document, écart, et les deux moments. C'est la comparaison
+                      que le pilote fait à la main aujourd'hui. */}
+                  {result && Array.isArray(result.points) && result.points.length > 0 && (
+                    <Box sx={{ mt: 1.5, overflowX: 'auto' }}>
+                      <Box sx={{ minWidth: 560, display: 'grid', gridTemplateColumns: '1.6fr repeat(5, 1fr)', gap: 0.5, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                        {['Poste', 'Masse', 'Bras appliqué', 'Bras document', 'Écart', 'Moment'].map((t) => (
+                          <Typography key={t} variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', borderBottom: '1px solid', borderColor: 'divider', pb: 0.5 }}>
+                            {t}
+                          </Typography>
+                        ))}
+                        {result.points.map((p, i) => {
+                          const ecartConnu = Number.isFinite(p.ecartBrasMm);
+                          const fautif = p.brasConforme === false;
+                          return (
+                            <React.Fragment key={`${rc.id}-ligne-${i}`}>
+                              <Typography variant="caption" sx={{ color: fautif ? 'error.main' : 'text.primary', fontWeight: fautif ? 700 : 400 }}>
+                                {p.label}{Number.isFinite(p.litres) ? ` (${p.litres} L)` : ''}
+                              </Typography>
+                              <Typography variant="caption">{p.masse.toFixed(1)} {getUnitSymbol(units.weight)}</Typography>
+                              <Typography variant="caption">{p.bras.toFixed(3)}</Typography>
+                              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                {Number.isFinite(p.brasAttendu) ? p.brasAttendu.toFixed(3) : '—'}
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: fautif ? 'error.main' : ecartConnu ? 'success.main' : 'text.secondary', fontWeight: fautif ? 700 : 400 }}>
+                                {ecartConnu ? `${p.ecartBrasMm.toFixed(1)} mm` : '—'}
+                              </Typography>
+                              <Typography variant="caption">
+                                {p.momentCalcule.toFixed(3)}
+                                {Number.isFinite(p.momentAttendu) && Math.abs(p.momentAttendu - p.momentCalcule) > 0.001
+                                  ? ` (doc ${p.momentAttendu.toFixed(3)})`
+                                  : ''}
+                              </Typography>
+                            </React.Fragment>
+                          );
+                        })}
+                        {/* Ligne TOTAL, comme sur le document. */}
+                        <Typography variant="caption" sx={{ fontWeight: 700, borderTop: '1px solid', borderColor: 'divider', pt: 0.5 }}>Total</Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, borderTop: '1px solid', borderColor: 'divider', pt: 0.5 }}>
+                          {Number.isFinite(result.weightComputed) ? `${result.weightComputed.toFixed(1)} ${getUnitSymbol(units.weight)}` : '—'}
+                          {Number.isFinite(result.masseExpected) ? ` / doc ${result.masseExpected.toFixed(1)}` : ''}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, borderTop: '1px solid', borderColor: 'divider', pt: 0.5 }}>
+                          {Number.isFinite(result.cgComputed) ? result.cgComputed.toFixed(3) : '—'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', borderTop: '1px solid', borderColor: 'divider', pt: 0.5 }}>
+                          {Number.isFinite(result.cgExpected) ? result.cgExpected.toFixed(3) : '—'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, borderTop: '1px solid', borderColor: 'divider', pt: 0.5, color: result.status === 'pass' ? 'success.main' : result.status === 'fail' ? 'error.main' : 'text.secondary' }}>
+                          {Number.isFinite(result.deviationMm) ? `${result.deviationMm.toFixed(1)} mm` : '—'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 700, borderTop: '1px solid', borderColor: 'divider', pt: 0.5 }}>
+                          {Number.isFinite(result.weightComputed) && Number.isFinite(result.cgComputed)
+                            ? (result.weightComputed * result.cgComputed).toFixed(3)
+                            : '—'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+
                   {result && (
                     <Alert
                       severity={result.status === 'pass' ? 'success' : result.status === 'fail' ? 'error' : 'warning'}
@@ -3093,7 +3174,15 @@ const Step3WeightBalance = ({ data, updateData, errors = {}, onNext, onPrevious,
                     >
                       {result.status === 'error'
                         ? result.message
-                        : `CG attendu ${(result.cgExpected * 1000).toFixed(1)} mm · calculé ${(result.cgComputed * 1000).toFixed(1)} mm · écart ${result.deviationMm.toFixed(1)} mm (tolérance ±${result.toleranceMm} mm)`}
+                        : [
+                            `CG attendu ${(result.cgExpected * 1000).toFixed(1)} mm · calculé ${(result.cgComputed * 1000).toFixed(1)} mm · écart ${result.deviationMm.toFixed(1)} mm (tolérance ±${result.toleranceMm} mm)`,
+                            Number.isFinite(result.ecartMasseKg)
+                              ? `Masse ${result.weightComputed.toFixed(1)} kg contre ${result.masseExpected.toFixed(1)} kg au document · écart ${result.ecartMasseKg.toFixed(1)} kg (tolérance ±${result.toleranceMasseKg} kg)`
+                              : null,
+                            result.brasFautifs?.length
+                              ? `Bras qui contredisent le document : ${result.brasFautifs.join(', ')}`
+                              : null,
+                          ].filter(Boolean).join(' — ')}
                     </Alert>
                   )}
                 </Paper>

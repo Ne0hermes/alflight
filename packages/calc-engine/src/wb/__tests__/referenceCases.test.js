@@ -98,7 +98,13 @@ describe('evaluateWbReferenceCase — cas AUTO (avion à vide)', () => {
     expect(r.deviationMm).toBe(0);
     expect(r.weightComputed).toBe(600);
     // UN POINT PAR BRAS UTILISÉ : ici un seul poste (masse à vide à son bras).
-    expect(r.points).toEqual([{ key: 'empty', label: 'Masse à vide', masse: 600, bras: 0.30 }]);
+    // Le point porte aussi, depuis le 28/08, sa confrontation au document :
+    // bras imprimé, écart et moment — les colonnes de l'exemple de chargement.
+    expect(r.points).toHaveLength(1);
+    expect(r.points[0]).toMatchObject({
+      key: 'empty', label: 'Masse à vide', masse: 600, bras: 0.30,
+      brasAttendu: 0.30, ecartBrasMm: 0, momentCalcule: 180, momentAttendu: 180, brasConforme: true,
+    });
     expect(r.resultPoint).toEqual({ w: 600, cg: 0.30 });
   });
 
@@ -125,6 +131,67 @@ describe('evaluateWbReferenceCase — cas AUTO (avion à vide)', () => {
     // Les chiffres calculés restent disponibles pour le pilote.
     expect(r.cgComputed).toBe(0.30);
     expect(r.weightComputed).toBe(600);
+  });
+});
+
+// 28/08 — L'EXEMPLE DE CHARGEMENT d'une fiche de pesée, rejoué ligne à ligne.
+// C'est la demande du pilote : confronter la fiche au tableau imprimé, poste par
+// poste (masse, bras, moment), et pas seulement sur le centrage total.
+describe('evaluateWbReferenceCase — exemple de chargement confronté au document', () => {
+  const AVION_EX = {
+    ...AVION_AVEC_RAPPORT,
+    baggageCompartments: [{ id: 'c1', name: 'Compartiment 1', arm: 1.90, maxWeight: 40 }],
+  };
+  const CAS = {
+    label: 'Exemple de chargement',
+    postes: [
+      { poste: 'frontLeft', masse: 77, brasAttendu: 0.41 },
+      { poste: 'baggage_c1', masse: 20, brasAttendu: 1.90 },
+    ],
+    // 600×0,30 + 77×0,41 + 20×1,90 = 249,57 m.kg ; 697 kg ; CG = 0,358 m
+    cgAttendu: 0.358,
+    masseAttendue: 697,
+    toleranceCgMm: 5,
+  };
+
+  it('bras conformes → PASS, et chaque ligne porte son bras et ses deux moments', () => {
+    const r = evaluateWbReferenceCase(AVION_EX, CAS);
+    expect(r.status).toBe('pass');
+    expect(r.weightComputed).toBe(697);
+    expect(r.brasFautifs).toEqual([]);
+    const bagages = r.points.find((p) => p.key === 'baggage_c1');
+    expect(bagages.bras).toBe(1.90);
+    expect(bagages.brasAttendu).toBe(1.90);
+    expect(bagages.ecartBrasMm).toBe(0);
+    expect(bagages.momentCalcule).toBe(38);
+    expect(bagages.momentAttendu).toBe(38);
+  });
+
+  // Le cœur du contrôle : un bras de la fiche qui contredit le document fait
+  // ÉCHOUER le cas, même si le centrage total tombait juste — deux erreurs de
+  // bras peuvent se compenser.
+  it('un bras qui contredit le document → FAIL, poste nommé', () => {
+    const r = evaluateWbReferenceCase(AVION_EX, {
+      ...CAS,
+      postes: [{ poste: 'frontLeft', masse: 77, brasAttendu: 0.45 }, ...CAS.postes.slice(1)],
+    });
+    expect(r.status).toBe('fail');
+    expect(r.brasFautifs).toContain('Siège avant gauche');
+    const siege = r.points.find((p) => p.key === 'frontLeft');
+    expect(siege.ecartBrasMm).toBe(40);
+    expect(siege.brasConforme).toBe(false);
+  });
+
+  it('bras du document non saisi → ligne calculée, aucun verdict de bras', () => {
+    const r = evaluateWbReferenceCase(AVION_EX, {
+      ...CAS,
+      postes: [{ poste: 'frontLeft', masse: 77 }, ...CAS.postes.slice(1)],
+    });
+    const siege = r.points.find((p) => p.key === 'frontLeft');
+    expect(siege.momentCalcule).toBeCloseTo(31.57, 2);
+    expect(siege.brasAttendu).toBeUndefined();
+    expect(siege.brasConforme).toBeUndefined();
+    expect(r.brasFautifs).toEqual([]);
   });
 });
 

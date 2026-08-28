@@ -296,7 +296,25 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
   } else if (!armOk(wb?.emptyWeightArm)) {
     problemes.push('bras de la masse à vide manquant');
   } else {
-    points.push({ key: 'empty', label: 'Masse à vide', masse: emptyWeight, bras: parseFloat(wb.emptyWeightArm) });
+    const brasVide = parseFloat(wb.emptyWeightArm);
+    const ptVide = {
+      key: 'empty',
+      label: 'Masse à vide',
+      masse: emptyWeight,
+      bras: brasVide,
+      momentCalcule: Math.round(emptyWeight * brasVide * 1000) / 1000,
+    };
+    // La ligne « Avion vide » de l'exemple de chargement : son bras est celui
+    // du rapport de pesée, saisi une fois pour toutes dans l'onglet M&C.
+    const brasVideLu = parseFloat(aircraft?.weighingReport?.cgFromReport);
+    if (Number.isFinite(brasVideLu)) {
+      const lu = armToMeters(brasVideLu);
+      ptVide.brasAttendu = lu;
+      ptVide.ecartBrasMm = Math.round(Math.abs(brasVide - lu) * 1000 * 10) / 10;
+      ptVide.momentAttendu = Math.round(emptyWeight * lu * 1000) / 1000;
+      ptVide.brasConforme = ptVide.ecartBrasMm <= base.toleranceMm;
+    }
+    points.push(ptVide);
   }
 
   for (const p of (Array.isArray(refCase?.postes) ? refCase.postes : [])) {
@@ -309,7 +327,25 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
     const res = resolvePostePoint(a, wb, key, masse, density);
     if (res.error) { problemes.push(res.error); continue; }
     loads[key] = masse;
-    points.push(res.point);
+
+    // 28/08 — CONFRONTATION POSTE PAR POSTE. L'exemple de chargement imprimé
+    // sur une fiche de pesée donne, pour chaque ligne, la masse ET LE BRAS ET
+    // LE MOMENT (« Pilote(s) 154,000 kg · 2,045 m · 314,930 m.kg »). C'est là
+    // que se vérifie vraiment une fiche : le bras que l'application applique à
+    // chaque poste doit être celui du document. Comparer le seul centrage
+    // total laissait passer deux erreurs de bras qui se compensent.
+    // `brasAttendu` est facultatif — sans lui, la ligne est simplement calculée.
+    const pt = res.point;
+    pt.momentCalcule = Math.round(pt.masse * pt.bras * 1000) / 1000;
+    const brasRaw = parseFloat(p?.brasAttendu);
+    if (Number.isFinite(brasRaw)) {
+      const brasLu = armToMeters(brasRaw);
+      pt.brasAttendu = brasLu;
+      pt.ecartBrasMm = Math.round(Math.abs(pt.bras - brasLu) * 1000 * 10) / 10;
+      pt.momentAttendu = Math.round(pt.masse * brasLu * 1000) / 1000;
+      pt.brasConforme = pt.ecartBrasMm <= base.toleranceMm;
+    }
+    points.push(pt);
   }
 
   // 27/08 — CARBURANT SAISI DEUX FOIS. Le moteur bascule en mode « par
@@ -384,6 +420,12 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
     masseTenue = ecartMasseKg <= toleranceMasseKg;
   }
 
+  // 28/08 — un BRAS qui contredit le document fait échouer le cas, même si le
+  // centrage total tombe juste : deux erreurs de bras peuvent se compenser et
+  // rendre un total conforme sur une fiche fausse. Les postes dont le bras
+  // attendu n'a pas été saisi ne participent pas à ce verdict.
+  const brasFautifs = points.filter((p) => p.brasConforme === false).map((p) => p.label);
+
   return {
     ...enriched,
     cgExpected: expected,
@@ -391,7 +433,8 @@ export function evaluateWbReferenceCase(aircraft, refCase) {
     masseExpected: Number.isFinite(masseRaw) ? masseRaw : null,
     ecartMasseKg,
     toleranceMasseKg,
-    status: cgTenu && masseTenue ? 'pass' : 'fail',
+    brasFautifs,
+    status: cgTenu && masseTenue && brasFautifs.length === 0 ? 'pass' : 'fail',
   };
 }
 
